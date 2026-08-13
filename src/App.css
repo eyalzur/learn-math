@@ -329,3 +329,104 @@ button.secondary {
   margin: 16px 0 32px;
   color: var(--text-h);
 }
+
+/* ---- topic picker ---- */
+
+.topic-picker {
+  padding: 32px 24px;
+}
+
+.history-link {
+  display: block;
+  margin: 0 0 20px auto;
+  font-size: 14px;
+}
+
+.topic-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+}
+
+.topic-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: right;
+  gap: 4px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.topic-card:hover {
+  border-color: var(--accent-border);
+  box-shadow: var(--shadow);
+}
+
+.topic-title {
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.topic-count {
+  font-size: 13px;
+  color: var(--text);
+  opacity: 0.8;
+}
+
+/* ---- history ---- */
+
+.history {
+  padding: 32px 24px;
+}
+
+.history-empty {
+  color: var(--text);
+  margin-top: 24px;
+}
+
+.history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-width: 480px;
+  margin-inline: auto;
+}
+
+.history-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  background: var(--bg);
+  text-align: right;
+}
+
+.history-what {
+  flex: 1;
+  font-size: 15px;
+  color: var(--text-h);
+}
+
+.history-score {
+  font-weight: 600;
+  color: var(--text-h);
+  direction: ltr;
+}
+
+.history-when {
+  font-size: 13px;
+  color: var(--text);
+  opacity: 0.8;
+  direction: ltr;
+}

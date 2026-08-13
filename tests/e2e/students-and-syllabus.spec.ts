@@ -1,5 +1,12 @@
 import { test, expect, type Page } from "@playwright/test";
 
+/** Grade 1 practises topic-by-topic, so its levels sit one screen deeper. */
+async function openLevels(page: Page, studentIndex: number, topicIndex = 0) {
+  await page.locator(".student-card").nth(studentIndex).click();
+  if (studentIndex === 0) await page.locator(".topic-card").nth(topicIndex).click();
+}
+
+
 /**
  * Acceptance criteria under test
  * (docs/features/students-and-syllabus/product-spec.md):
@@ -52,25 +59,24 @@ test("opens on the student picker with all three students and their grades", asy
 test("picking a student shows that grade's syllabus and three levels", async ({ page }) => {
   await pickStudent(page, 0);
 
-  await expect(page.locator(".grade-home h1")).toHaveText("כיתה א׳");
+  // Grade 1 practises topic by topic, so its first screen lists topics.
   await expect(page.locator(".greeting")).toContainText("מיקה");
-  await expect(page.locator(".topic-list")).toContainText("חיבור עד 10");
-  await expect(page.locator(".level-card")).toHaveCount(3);
+  await expect(page.locator(".topic-card")).toHaveCount(5);
+  await expect(page.locator(".topic-picker")).toContainText("חיבור עד 10");
 });
 
-test("every grade has exactly three levels of ten questions each", async ({ page }) => {
+test("every grade offers three levels of ten questions", async ({ page }) => {
+  // Grade 1 reaches them through a topic; grades 6 and 8 straight from the first screen.
   for (let studentIndex = 0; studentIndex < EXPECTED.length; studentIndex++) {
     await open(page);
-    await pickStudent(page, studentIndex);
+    await openLevels(page, studentIndex);
 
     const levels = page.locator(".level-card");
     await expect(levels).toHaveCount(3);
 
     for (let levelIndex = 0; levelIndex < 3; levelIndex++) {
       await expect(levels.nth(levelIndex).locator(".level-count")).toHaveText("10 שאלות");
-
       await levels.nth(levelIndex).click();
-      // The progress line is the app's own count of the level's questions.
       await expect(page.locator(".progress")).toContainText("מתוך 10");
       await page.getByRole("button", { name: "← חזרה" }).click();
     }
@@ -86,12 +92,21 @@ test("every question in every level belongs to its own grade's syllabus", async 
   const data = await page.evaluate(async () => {
     // Served under the app's Vite base path (see vite.config.ts).
     const mod = await import("/learn-math/src/data/curriculum.ts");
-    return mod.grades.map((g: { label: string; topics: string[]; levels: unknown[] }) => ({
+    type Lv = { questions: { id: string; topic: string }[] };
+    type G = {
+      label: string;
+      topics: string[];
+      practice: "topics" | "levels";
+      levels?: Lv[];
+      topicSets?: { levels: Lv[] }[];
+    };
+    return (mod.grades as G[]).map((g) => ({
       label: g.label,
       topics: g.topics,
-      levels: (g.levels as { questions: { id: string; topic: string }[] }[]).map((l) =>
-        l.questions.map((q) => ({ id: q.id, topic: q.topic })),
-      ),
+      levels: (g.practice === "topics"
+        ? g.topicSets!.flatMap((t) => t.levels)
+        : g.levels!
+      ).map((l) => l.questions.map((q) => ({ id: q.id, topic: q.topic }))),
     }));
   });
 
@@ -112,7 +127,7 @@ test("every question in every level belongs to its own grade's syllabus", async 
 test("picking a level runs its ten questions and ends on a score summary", async ({
   page,
 }) => {
-  await pickStudent(page, 0);
+  await openLevels(page, 0);
   await page.locator(".level-card").first().click();
 
   for (let i = 1; i <= 10; i++) {
@@ -127,23 +142,23 @@ test("picking a level runs its ten questions and ends on a score summary", async
 
 test("you can switch student from the grade screen", async ({ page }) => {
   await pickStudent(page, 2);
-  await expect(page.locator(".grade-home h1")).toHaveText("כיתה ח׳");
+  await expect(page.locator(".greeting")).toContainText("עומר");
 
   await page.getByRole("button", { name: "← החלף תלמיד" }).click();
   await expect(page.locator(".student-picker h1")).toBeVisible();
 
   await pickStudent(page, 0);
-  await expect(page.locator(".grade-home h1")).toHaveText("כיתה א׳");
+  await expect(page.locator(".greeting")).toContainText("מיקה");
 });
 
 test("the chosen student is remembered across a reload", async ({ page }) => {
   await pickStudent(page, 1);
-  await expect(page.locator(".grade-home h1")).toHaveText("כיתה ו׳");
+  await expect(page.locator(".greeting")).toContainText("רותם");
 
   await page.reload();
 
   // Straight back into Rotem's grade, no picker in between.
-  await expect(page.locator(".grade-home h1")).toHaveText("כיתה ו׳");
+  await expect(page.locator(".greeting")).toContainText("רותם");
   await expect(page.locator(".student-picker")).toHaveCount(0);
 });
 
@@ -189,7 +204,9 @@ test("word problems read right-to-left and their algebra stays left-to-right", a
 test("a bare expression is shown left-to-right with a trailing equals sign", async ({
   page,
 }) => {
-  await pickStudent(page, 0);
+  // Topic 1 is "חיבור עד 10" — bare arithmetic. Topic 0 is number-sense word questions,
+  // which are RTL by design and covered by the sibling test above.
+  await openLevels(page, 0, 1);
   await page.locator(".level-card").first().click();
 
   const box = page.locator(".problem-box");

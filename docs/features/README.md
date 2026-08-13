@@ -10,3 +10,4 @@ architecture, implementation notes, and tests.
 | הסבר דרך פתרון אחרי טעות | 🟡 ממתין לאישור ב-PR | [status](./mistake-explanation/status.md) |
 | משתמשים, סילבוס ורמות | 🟢 done | [status](./students-and-syllabus/status.md) |
 | מורה שמסבירה | 🟡 ממתין לאישור ב-PR | [status](./teaching-explanations/status.md) |
+| בחירת נושא והתקדמות אישית | 🟡 ממתין לאישור ב-PR | [status](./topics-and-progress/status.md) |
