@@ -1,6 +1,6 @@
-# הסבר דרך פתרון אחרי טעות
+# משתמשים, סילבוס ורמות
 
-כשתלמיד/ה טועים, מוצג פירוק קצר של דרך הפתרון שלב אחרי שלב.
+בחירת תלמיד/ה בפתיחה, סילבוס נושאים לכל כיתה, שלוש רמות ועשר שאלות בכל רמה.
 
 ## Progress
 - [x] Product spec — product-manager — 2026-08-13
@@ -10,8 +10,8 @@
 - [x] Tests — qa — 2026-08-13
 
 **Current phase:** done — ממתין לאישור ומיזוג
-**Branch:** `feature/mistake-explanation`
-**PR:** https://github.com/eyalzur/learn-math/pull/2
+**Branch:** `feature/students-and-syllabus`
+**PR:** not opened yet
 
 ## Open questions / blockers
 None.

@@ -1,14 +1,14 @@
-import type { ExerciseSet } from "../data/exerciseSets";
+import type { Level } from "../data/curriculum";
 
 interface ResultProps {
-  set: ExerciseSet;
+  level: Level;
   correctCount: number;
   onRetry: () => void;
   onHome: () => void;
 }
 
-export function Result({ set, correctCount, onRetry, onHome }: ResultProps) {
-  const total = set.problems.length;
+export function Result({ level, correctCount, onRetry, onHome }: ResultProps) {
+  const total = level.questions.length;
   const percent = Math.round((correctCount / total) * 100);
 
   let message = "כל הכבוד!";

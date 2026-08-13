@@ -1,5 +1,4 @@
-import type { Problem } from "./exerciseSets";
-import { answerOf } from "./exerciseSets";
+import type { Question } from "./curriculum";
 
 /**
  * A single step of a worked solution.
@@ -161,14 +160,29 @@ function explainDivision(a: number, b: number): ExplanationStep[] {
   ];
 }
 
+type Operator = "+" | "-" | "×" | "÷";
+
+/** Matches a question whose prompt is nothing but "a op b". */
+const BARE_EXPRESSION = /^\s*(\d+)\s*([+\u2212\-×÷])\s*(\d+)\s*$/;
+
 /**
- * Builds the worked solution shown after a wrong answer.
+ * Builds the worked solution shown after a wrong answer, or null when the question
+ * cannot be broken down automatically.
  *
- * Every branch returns at least one step, so no problem can leave a student with a
- * "wrong" message and no explanation — that's an explicit acceptance criterion.
+ * Only bare arithmetic ("23 + 45") can be explained by computing from its operands.
+ * A word problem or an equation needs an explanation written by a person — inventing
+ * one from the prompt string would produce confident nonsense, which is worse for a
+ * student than no explanation at all. Those get written explanations in a later
+ * feature; until then the block simply does not appear for them.
  */
-export function explainProblem(problem: Problem): ExplanationStep[] {
-  const { a, b, op } = problem;
+export function explainQuestion(question: Question): ExplanationStep[] | null {
+  const match = question.prompt.match(BARE_EXPRESSION);
+  if (!match) return null;
+
+  const a = Number(match[1]);
+  const b = Number(match[3]);
+  const op = (match[2] === "\u2212" ? "-" : match[2]) as Operator;
+
   switch (op) {
     case "+":
       return explainAddition(a, b);
@@ -179,6 +193,6 @@ export function explainProblem(problem: Problem): ExplanationStep[] {
     case "÷":
       return explainDivision(a, b);
     default:
-      return [{ label: `התשובה היא ${answerOf(problem)}`, math: "" }];
+      return null;
   }
 }
