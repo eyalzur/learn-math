@@ -22,6 +22,10 @@ export function Practice({ level, onFinish, onExit }: PracticeProps) {
   const [feedback, setFeedback] = useState<"correct" | "wrong" | null>(null);
   const [correctCount, setCorrectCount] = useState(0);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  /** How many hints the student has asked for: 0, 1 or 2. A counter rather than two
+   *  flags — the second is unreachable without the first, and one number resets in one
+   *  line when the question changes. */
+  const [hintsShown, setHintsShown] = useState(0);
 
   // Voices load asynchronously, so warm the list before the first press.
   useEffect(primeVoices, []);
@@ -52,6 +56,7 @@ export function Practice({ level, onFinish, onExit }: PracticeProps) {
     setIndex((i) => i + 1);
     setInput("");
     setFeedback(null);
+    setHintsShown(0);
   }
 
   function toggleSpeech() {
@@ -153,6 +158,35 @@ export function Practice({ level, onFinish, onExit }: PracticeProps) {
           <button onClick={next}>{isLast ? "סיום" : "הבא"}</button>
         )}
       </div>
+      {hintsShown > 0 && (
+        <div className="hints">
+          {question.hints!.slice(0, hintsShown).map((hint, i) => (
+            <p key={i} className="hint">
+              {/* Same isolation the prompts get: a hint like "כמה זה `8 + 2`?" is a
+                  Hebrew sentence wrapped around an expression, which is exactly what the
+                  bidi algorithm mangles. */}
+              {promptSegments(hint).map((segment, j) =>
+                segment.kind === "math" ? (
+                  <span key={j} className="prompt-math">
+                    {segment.value}
+                  </span>
+                ) : (
+                  <span key={j}>{segment.value}</span>
+                ),
+              )}
+            </p>
+          ))}
+        </div>
+      )}
+      {question.hints && feedback === null && hintsShown < 2 && (
+        <button
+          type="button"
+          className="hint-button"
+          onClick={() => setHintsShown((n) => n + 1)}
+        >
+          {hintsShown === 0 ? "רמז 💡" : "עוד רמז 💡"}
+        </button>
+      )}
     </div>
   );
 }

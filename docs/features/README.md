@@ -14,3 +14,4 @@ architecture, implementation notes, and tests.
 | הקראה בקול של ההסבר | 🟢 done | [status](./read-aloud/status.md) |
 | מספר גרסה במסך הראשון | 🟢 done | [status](./version-number/status.md) |
 | בחירת נושא לכיתות ו׳ ו-ח׳ | 🟢 done | [status](./topics-all-grades/status.md) |
+| שני רמזים לכל שאלה | 🟢 done | [status](./question-hints/status.md) |
