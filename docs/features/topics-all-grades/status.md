@@ -12,7 +12,7 @@
 
 **Current phase:** done
 **Branch:** `feature/topics-all-grades`
-**PR:** not opened yet
+**PR:** https://github.com/eyalzur/learn-math/pull/12
 
 ## Open questions / blockers
 None.
