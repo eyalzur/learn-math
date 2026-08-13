@@ -9,8 +9,8 @@
 - [x] Implementation — developer — 2026-08-13
 - [x] Tests — qa — 2026-08-13
 
-**Current phase:** done — ממתין לאישור ומיזוג
-**Branch:** `feature/mistake-explanation`
+**Current phase:** done — מוזג ל-main
+**Branch:** `feature/mistake-explanation` (שם הבראנץ' נשאר מהספק הקודם — ראו הערה ב-[mistake-explanation](../mistake-explanation/status.md))
 **PR:** https://github.com/eyalzur/learn-math/pull/2
 
 ## Open questions / blockers

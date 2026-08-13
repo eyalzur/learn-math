@@ -9,9 +9,9 @@
 - [x] Implementation — developer — 2026-08-13
 - [x] Tests — qa — 2026-08-13
 
-**Current phase:** done — ממתין לאישור ומיזוג
-**Branch:** `feature/students-and-syllabus`
-**PR:** not opened yet
+**Current phase:** done — מוזג ל-main
+**Branch:** `feature/students-and-syllabus` (מוזג)
+**PR:** https://github.com/eyalzur/learn-math/pull/3
 
 ## Open questions / blockers
 None.
