@@ -7,8 +7,8 @@ architecture, implementation notes, and tests.
 | Feature | Status | Details |
 |---|---|---|
 | הודעת עידוד לציון מושלם | 🟢 done | [status](./perfect-score-message/status.md) |
-| הסבר דרך פתרון אחרי טעות | 🟢 done | [status](./mistake-explanation/status.md) |
+| הסבר דרך פתרון אחרי טעות | 🔵 הוחלף על ידי "מורה שמסבירה" | [status](./mistake-explanation/status.md) |
 | משתמשים, סילבוס ורמות | 🟢 done | [status](./students-and-syllabus/status.md) |
 | מורה שמסבירה | 🟢 done | [status](./teaching-explanations/status.md) |
-| בחירת נושא והתקדמות אישית | 🟡 ממתין לאישור ב-PR | [status](./topics-and-progress/status.md) |
+| בחירת נושא והתקדמות אישית | 🟢 done | [status](./topics-and-progress/status.md) |
 | הקראה בקול של ההסבר | 🟢 done | [status](./read-aloud/status.md) |

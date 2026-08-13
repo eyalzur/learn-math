@@ -9,9 +9,9 @@
 - [x] Implementation — developer — 2026-08-13
 - [x] Tests — qa — 2026-08-13
 
-**Current phase:** done — ממתין לאישור ומיזוג
-**Branch:** `feature/topics-and-progress`
-**PR:** נפתח מיד אחרי PR #2
+**Current phase:** done — מוזג ל-main
+**Branch:** `feature/topics-and-progress` (מוזג)
+**PR:** #4
 
 ## Open questions / blockers
 - כיתות ו' ו-ח' עדיין על המבנה המעורב. הסבתן דורשת 360 שאלות נוספות עם הסבר ודימוי

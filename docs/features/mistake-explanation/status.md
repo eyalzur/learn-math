@@ -9,12 +9,17 @@
 - [x] Implementation — developer — 2026-08-13
 - [x] Tests — qa — 2026-08-13
 
-**Current phase:** done — ממתין לאישור ומיזוג
-**Branch:** `feature/mistake-explanation`
-**PR:** https://github.com/eyalzur/learn-math/pull/2
+**Current phase:** הוחלף — לא מוזג כפיצ'ר עצמאי
+
+## הערה
+המסמכים כאן הם הספק המקורי, שנכתב לפני שכיתות ו' וח' עברו למבנה השאלות החדש
+(`Question` עם `analogy` חובה, ב-PR #3). באותו בראנץ' (`feature/mistake-explanation`)
+הספק הורחב מ"הסבר רק כשטועים בכיתה א'" ל"הסבר ודימוי לכל 90 השאלות בכל הכיתות",
+ומוזג תחת PR #2 בשם **[מורה שמסבירה](../teaching-explanations/status.md)**.
+התיקייה הזו נשארת להיסטוריה בלבד; המימוש בפועל מתועד שם.
 
 ## Open questions / blockers
-None.
+None — סטטוס סופי הוא "הוחלף", לא "פתוח".
 
 ## Docs
 - [Product spec](./product-spec.md)
