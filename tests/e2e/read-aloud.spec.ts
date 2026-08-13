@@ -59,6 +59,10 @@ async function stubSpeech(page: Page, voices: FakeVoice[] = []) {
       configurable: true,
       writable: true,
     });
+    // A real engine finishes an utterance and fires `onend`; the app chains the next part
+    // off that event. A stub that only records would leave the chain stuck on part one
+    // forever, so the timer here is what makes it behave like an engine at all.
+    let pendingEnd: ReturnType<typeof setTimeout> | undefined;
     Object.defineProperty(window, "speechSynthesis", {
       configurable: true,
       value: {
@@ -66,6 +70,8 @@ async function stubSpeech(page: Page, voices: FakeVoice[] = []) {
         addEventListener: () => {},
         cancel: () => {
           cancels++;
+          clearTimeout(pendingEnd);
+          pendingEnd = undefined;
         },
         speak: (u: FakeUtterance) => {
           spoken.push({
@@ -75,10 +81,51 @@ async function stubSpeech(page: Page, voices: FakeVoice[] = []) {
             pitch: u.pitch,
             voiceName: u.voice?.name ?? null,
           });
+          pendingEnd = setTimeout(() => u.onend?.(), 10);
         },
       },
     });
   }, voices);
+}
+
+/** Waits until the app has dispatched at least `n` parts. */
+async function waitForParts(page: Page, n: number) {
+  await page.waitForFunction(
+    (count) => (window as unknown as { __spoken: Spoken[] }).__spoken.length >= count,
+    n,
+    { timeout: 8000 },
+  );
+}
+
+/**
+ * Waits until nothing new has been spoken for longer than the longest pause.
+ *
+ * The poll interval has to exceed the gap before the analogy, or "settled" just means
+ * "mid-pause" and every assertion after it reads a half-finished reading.
+ */
+async function waitUntilSettled(page: Page) {
+  let previous = -1;
+  for (let i = 0; i < 20; i++) {
+    const count = (await spokenText(page)).length;
+    if (count === previous) return;
+    previous = count;
+    await page.waitForTimeout(1200);
+  }
+}
+
+/** Walks the level until an explanation with at least two steps shows up, so the reading
+ *  is guaranteed to have a pause in the middle rather than being one part end to end. */
+async function failUntilMultiStep(page: Page) {
+  for (let i = 0; i < 10; i++) {
+    if ((await page.locator(".explanation-step").count()) >= 2) return true;
+    await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
+    // The last question leads to the result screen, not another question — stop rather
+    // than hanging on an input that is no longer there.
+    if ((await page.locator(".answer-input").count()) === 0) return false;
+    await page.locator(".answer-input").fill("999999");
+    await page.getByRole("button", { name: "בדיקה" }).click();
+  }
+  return false;
 }
 
 /** Removes speechSynthesis entirely, as on a browser without the API. */
@@ -121,17 +168,96 @@ test("pressing it speaks every step and the analogy, in Hebrew", async ({ page }
     .trim();
 
   await page.getByRole("button", { name: "הקריאו לי את ההסבר" }).click();
+  await waitUntilSettled(page);
 
   const spoken = await spokenText(page);
-  expect(spoken).toHaveLength(1);
-  expect(spoken[0].lang).toBe("he-IL");
+  const everything = spoken.map((s) => s.text).join(" ");
 
-  // The analogy is read, and every step contributes its prose.
-  expect(spoken[0].text).toContain(analogy);
+  for (const s of spoken) expect(s.lang).toBe("he-IL");
+
+  // The analogy is read, and every step contributes its prose. Which unit carries which
+  // sentence is the implementation's business; that all of it is said is the promise.
+  expect(everything).toContain(analogy);
   for (const step of steps) {
     const prose = step.split("\n")[0].trim();
-    if (prose) expect(spoken[0].text).toContain(prose);
+    if (prose) expect(everything).toContain(prose);
   }
+});
+
+test("the explanation is spoken as separate units, not one run-on block", async ({
+  page,
+}) => {
+  await stubSpeech(page);
+  await failFirstQuestion(page);
+
+  const stepCount = await page.locator(".explanation-step").count();
+
+  await page.getByRole("button", { name: "הקריאו לי את ההסבר" }).click();
+  await waitUntilSettled(page);
+
+  const spoken = await spokenText(page);
+  // One unit per step plus one for the analogy, at minimum — sentence ends inside a step
+  // may split it further, which is also correct.
+  expect(spoken.length).toBeGreaterThanOrEqual(stepCount + 1);
+});
+
+test("no part is swallowed and none is said twice", async ({ page }) => {
+  await stubSpeech(page);
+  await failFirstQuestion(page);
+
+  await page.getByRole("button", { name: "הקריאו לי את ההסבר" }).click();
+  await waitUntilSettled(page);
+
+  const parts = (await spokenText(page)).map((s) => s.text.trim());
+
+  for (const part of parts) expect(part.length).toBeGreaterThan(0);
+  expect(new Set(parts).size, `a part was spoken twice: ${JSON.stringify(parts)}`).toBe(
+    parts.length,
+  );
+
+  // A unit made of nothing but digits would mean a number was cut in half — the failure
+  // mode a naive split on "." produces on a decimal like 2.5.
+  for (const part of parts) {
+    expect(part, "a bare number was left as its own unit").not.toMatch(/^\d+$/);
+  }
+});
+
+test("the reading is slower than before, without dragging", async ({ page }) => {
+  await stubSpeech(page);
+  await failFirstQuestion(page);
+
+  await page.getByRole("button", { name: "הקריאו לי את ההסבר" }).click();
+  await waitUntilSettled(page);
+
+  for (const { rate } of await spokenText(page)) {
+    expect(rate, "should be slower than the 0.92 shipped before").toBeLessThan(0.92);
+    expect(rate, "below 0.7 an engine drags and a child gives up").toBeGreaterThanOrEqual(
+      0.7,
+    );
+  }
+});
+
+test("the button stays on stop through the pauses, and only resets at the end", async ({
+  page,
+}) => {
+  await stubSpeech(page);
+  // "מספרים עד 20" is where two-step explanations live; a single-part reading has no
+  // mid-sequence pause to test.
+  await failFirstQuestion(page, 0);
+
+  const found = await failUntilMultiStep(page);
+  expect(found, "no explanation in this level had two steps to pause between").toBe(true);
+
+  await page.getByRole("button", { name: "הקריאו לי את ההסבר" }).click();
+
+  // After the first unit finishes we are inside a pause, with parts still to come. If the
+  // icon flipped back to play here, it would tell a child the explanation was over and
+  // invite her to cut it off herself.
+  await waitForParts(page, 1);
+  await expect(page.getByRole("button", { name: "עצרו את ההקראה" })).toBeVisible();
+
+  await waitUntilSettled(page);
+  await expect(page.getByRole("button", { name: "הקריאו לי את ההסבר" })).toBeVisible();
 });
 
 test("arithmetic is spoken as Hebrew words rather than symbols", async ({ page }) => {
@@ -162,7 +288,9 @@ test("arithmetic is spoken as Hebrew words rather than symbols", async ({ page }
   expect(checked, "no explanation in this level contained an expression").toBe(true);
 });
 
-test("pressing the button again stops the reading", async ({ page }) => {
+test("pressing the button again stops the whole explanation, not just the current part", async ({
+  page,
+}) => {
   await stubSpeech(page);
   await failFirstQuestion(page);
 
@@ -170,28 +298,51 @@ test("pressing the button again stops the reading", async ({ page }) => {
   const stop = page.getByRole("button", { name: "עצרו את ההקראה" });
   await expect(stop).toBeVisible();
 
+  await waitForParts(page, 1);
   await stop.click();
   await expect(page.getByRole("button", { name: "הקריאו לי את ההסבר" })).toBeVisible();
-  expect(await page.evaluate(() => (window as never as { __cancels: () => number }).__cancels())).
-    toBeGreaterThan(1);
+
+  // The parts still queued must never arrive. A pending timer that survived the stop
+  // would speak the rest of the explanation after the child asked for silence.
+  const atStop = (await spokenText(page)).length;
+  await page.waitForTimeout(2000);
+  expect((await spokenText(page)).length, "a queued part was spoken after stopping").toBe(
+    atStop,
+  );
 });
 
-test("moving to the next question stops a reading in progress", async ({ page }) => {
+test("moving to the next question cancels every part still pending", async ({ page }) => {
   await stubSpeech(page);
   await failFirstQuestion(page);
 
   await page.getByRole("button", { name: "הקריאו לי את ההסבר" }).click();
-  const before = await page.evaluate(() =>
-    (window as never as { __cancels: () => number }).__cancels(),
-  );
+  await waitForParts(page, 1);
 
   await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
 
-  const after = await page.evaluate(() =>
-    (window as never as { __cancels: () => number }).__cancels(),
-  );
-  expect(after, "the previous explanation would keep playing over the new question").
-    toBeGreaterThan(before);
+  const atSwitch = (await spokenText(page)).length;
+  await page.waitForTimeout(2000);
+  expect(
+    (await spokenText(page)).length,
+    "a step of the previous explanation played over the new question",
+  ).toBe(atSwitch);
+});
+
+test("leaving the practice cancels every part still pending", async ({ page }) => {
+  await stubSpeech(page);
+  await failFirstQuestion(page);
+
+  await page.getByRole("button", { name: "הקריאו לי את ההסבר" }).click();
+  await waitForParts(page, 1);
+
+  await page.getByRole("button", { name: "← חזרה" }).click();
+
+  const atExit = (await spokenText(page)).length;
+  await page.waitForTimeout(2000);
+  expect(
+    (await spokenText(page)).length,
+    "the explanation kept playing after leaving the practice",
+  ).toBe(atExit);
 });
 
 test("a browser with no speech engine shows no button at all", async ({ page }) => {

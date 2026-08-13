@@ -1,18 +1,23 @@
 # הקראה בקול של ההסבר
 
 כפתור רמקול בבלוק ההסבר שמקריא את השלבים והדימוי בעברית, בקול שנבחר ומכוונן
-אוטומטית להישמע טבעי וחם ולא מכני.
+אוטומטית להישמע טבעי וחם, בקצב נינוח ועם הפסקה בין שלב לשלב.
 
 ## Progress
-- [x] Product spec — product-manager — 2026-08-13 (revision: שיפור טבעיות הקול)
-- [x] Design — designer — 2026-08-13 (revision: אין שינוי מסך, רק אישור שהשיפור בקול לא דורש UI)
-- [x] Architecture — tech-lead — 2026-08-13 (revision: לוגיקת בחירת קול + rate/pitch מפורשים ב-speech.ts, ללא שינוי בממשק הפומבי)
-- [x] Implementation — developer — 2026-08-13 (revision: hebrewVoice() משודרגת + rate/pitch מפורשים ב-speech.ts; build ו-lint נקיים)
-- [x] Tests — qa — 2026-08-13 (revision: 3 בדיקות חדשות; 41/41 עוברות)
+- [x] Product spec — product-manager — 2026-08-13 (revision 2: קצב איטי יותר והפסקות בגבולות)
+- [x] Design — designer — 2026-08-13 (revision 2: אין UI חדש, אבל הוכרע שהכפתור נשאר ⏹ לאורך ההפסקות ושהמעבר לדימוי מקבל הפסקה ארוכה יותר)
+- [x] Architecture — tech-lead — 2026-08-13 (revision 2: שרשור יחידות עם השהיה, ניקוי טיימר + מזהה רצף; תיקון לנימוק שגוי בארכיטקטורה הקודמת)
+- [x] Implementation — developer — 2026-08-13 (revision 2: שרשור יחידות ב-speech.ts, rate 0.82, גרסה 1.1.0; build ו-lint נקיים)
+- [x] Tests — qa — 2026-08-13 (revision 2: stub מפעיל onend, 8 בדיקות חדשות, אחת נכתבה מחדש; 55/55 עוברות)
 
 **Current phase:** done
-**Branch:** `fix/read-aloud`
-**PR:** https://github.com/eyalzur/learn-math/pull/8
+**Branch:** `feature/read-aloud`
+**PR:** https://github.com/eyalzur/learn-math/pull/11
+
+### היסטוריית סבבים
+- סבב 1 — ההקראה עצמה — PR #6
+- סבב 2 — שיפור טבעיות הקול (בחירת קול, rate/pitch) — PR #8
+- סבב 3 — קצב איטי יותר והפסקות בגבולות — PR #11, גרסה 1.1.0
 
 ## Open questions / blockers
 None. (הקראת השאלה עצמה, ולא רק ההסבר, סומנה מפורשות כמחוץ ל-scope והיא מועמדת
