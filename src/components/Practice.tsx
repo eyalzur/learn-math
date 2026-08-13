@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Level } from "../data/curriculum";
 import { isHebrewPrompt, promptSegments } from "../data/curriculum";
+import { explainQuestion } from "../data/explain";
 
 interface PracticeProps {
   level: Level;
@@ -17,6 +18,7 @@ export function Practice({ level, onFinish, onExit }: PracticeProps) {
   const question = level.questions[index];
   const isLast = index === level.questions.length - 1;
   const isWordProblem = isHebrewPrompt(question.prompt);
+  const explanation = explainQuestion(question);
 
   function checkAnswer() {
     if (input.trim() === "" || feedback !== null) return;
@@ -83,6 +85,18 @@ export function Practice({ level, onFinish, onExit }: PracticeProps) {
         <p className={`feedback ${feedback}`}>
           {feedback === "correct" ? "נכון מאוד! 🎉" : `לא נכון. התשובה היא ${question.answer}`}
         </p>
+      )}
+      {feedback === "wrong" && explanation !== null && (
+        <div className="explanation">
+          <h3>איך פותרים?</h3>
+          {explanation.steps.map((step, i) => (
+            <p key={i} className="explanation-step">
+              <span>{step.label}</span>
+              {step.math && <span className="explanation-math">{step.math}</span>}
+            </p>
+          ))}
+          <p className="explanation-analogy">💡 {explanation.analogy}</p>
+        </div>
       )}
       <div className="actions">
         {feedback === null ? (

@@ -7,4 +7,6 @@ architecture, implementation notes, and tests.
 | Feature | Status | Details |
 |---|---|---|
 | הודעת עידוד לציון מושלם | 🟢 done | [status](./perfect-score-message/status.md) |
-| משתמשים, סילבוס ורמות | 🟡 ממתין לאישור ב-PR | [status](./students-and-syllabus/status.md) |
+| הסבר דרך פתרון אחרי טעות | 🟡 ממתין לאישור ב-PR | [status](./mistake-explanation/status.md) |
+| משתמשים, סילבוס ורמות | 🟢 done | [status](./students-and-syllabus/status.md) |
+| מורה שמסבירה | 🟡 ממתין לאישור ב-PR | [status](./teaching-explanations/status.md) |
