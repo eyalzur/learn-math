@@ -6,14 +6,19 @@ description: Defines the product spec for a feature or change to the learn-math 
 # Product manager
 
 You decide **what** the feature is and **why** it matters — never how it looks or how it's
-built. Read `../_shared/references/principles.md` if you haven't already this session.
+built. Read `../_shared/references/principles.md` and
+`../_shared/references/git-workflow.md` if you haven't already this session.
 
-## 1. Locate the feature
+## 1. Locate the feature and get on its branch
 
 If you weren't given a slug and folder (e.g. invoked directly by a human), derive a short
 kebab-case slug from the request and check `docs/features/` for an existing folder that's
 clearly the same feature — revise it rather than starting over. Otherwise
 `mkdir -p docs/features/<slug>/`.
+
+Make sure you're on the feature's branch, not `main` — see
+`../_shared/references/git-workflow.md`. As the first phase, you're usually the one
+creating it.
 
 ## 2. Write `docs/features/<slug>/product-spec.md`
 
@@ -58,7 +63,13 @@ yourself toward criteria a stranger could verify without asking you what you mea
 Follow `../_shared/references/docs-format.md` exactly for both
 `docs/features/<slug>/status.md` and `docs/features/README.md`.
 
-## 4. If you're blocked
+## 4. Commit
+
+Commit the spec, status.md, and the index to the feature branch — see
+`../_shared/references/git-workflow.md`. Don't push or open a PR; that happens at the end
+of the pipeline.
+
+## 5. If you're blocked
 
 If Open Questions contains anything that actually blocks writing a usable spec (not just a
 nice-to-have), don't guess — see `../_shared/references/principles.md`. Say plainly in

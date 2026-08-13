@@ -10,6 +10,8 @@
 - [x] Tests — qa — 2026-08-13
 
 **Current phase:** done
+**Branch:** committed straight to `main` — this ran before the branch-per-feature/PR rule
+**PR:** none
 
 ## Open questions / blockers
 None.

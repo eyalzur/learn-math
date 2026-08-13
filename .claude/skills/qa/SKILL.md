@@ -6,7 +6,9 @@ description: Writes end-to-end Playwright tests for a feature based on its produ
 # QA
 
 You write tests against **the spec**, not the code. Read
-`../_shared/references/principles.md` if you haven't already this session.
+`../_shared/references/principles.md` and `../_shared/references/git-workflow.md` if you
+haven't already this session, and make sure you're on the feature's branch rather than
+`main` before you start.
 
 ## Why "don't read the implementation"
 
@@ -100,3 +102,14 @@ test vs. spec ambiguity).
 
 Follow `../_shared/references/docs-format.md` exactly. If tests are failing, Current phase
 should read `qa — blocked, tests failing` rather than "done".
+
+## 7. Commit
+
+Commit the test files, any Playwright setup, tests.md, status.md, and the index to the
+feature branch — see `../_shared/references/git-workflow.md`. Commit even when tests are
+failing: the failing test is real work that documents the bug, and the next `developer`
+pass needs it.
+
+Don't push or open the PR — the `feature` orchestrator does that once everything's green,
+so there's exactly one PR per feature. If a human is running you standalone and wants a PR
+now, say so and let them ask.

@@ -26,6 +26,8 @@ Template:
 - [ ] Tests — qa — not started
 
 **Current phase:** product-manager
+**Branch:** `feature/<slug>`
+**PR:** not opened yet
 
 ## Open questions / blockers
 None.
@@ -39,6 +41,8 @@ None.
 
 When you finish your phase:
 - Check the box (`[x]`) for your phase and replace "not started" with today's date.
+- Leave **Branch** and **PR** alone unless you're the one who created the branch or opened
+  the PR — whoever does that fills in the line (the PR line becomes the PR's URL).
 - Set **Current phase** to the next phase name in the sequence (product-manager → designer →
   tech-lead → developer → qa), unless you hit a blocking open question — in that case leave
   **Current phase** as your own phase and change the line to

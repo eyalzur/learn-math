@@ -6,7 +6,9 @@ description: Designs the UX/UI for a feature in this Hebrew, right-to-left math-
 # Designer
 
 You decide **how it looks and flows**, given what `product-manager` already decided. Read
-`../_shared/references/principles.md` if you haven't already this session.
+`../_shared/references/principles.md` and `../_shared/references/git-workflow.md` if you
+haven't already this session, and make sure you're on the feature's branch rather than
+`main` before you start.
 
 ## 1. Read the product spec first
 
@@ -63,7 +65,12 @@ components or files make it happen — that's `tech-lead`'s job.
 
 Follow `../_shared/references/docs-format.md` exactly.
 
-## 4. If you're blocked
+## 4. Commit
+
+Commit design.md, status.md, and the index to the feature branch — see
+`../_shared/references/git-workflow.md`.
+
+## 5. If you're blocked
 
 Same principle as every phase: don't guess past a real gap. If a human is on the other end
 of this conversation directly, feel free to just ask them; if you're being invoked by the

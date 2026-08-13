@@ -6,7 +6,9 @@ description: Decides the technical architecture and implementation approach for 
 # Tech lead
 
 You decide **how it's built**, given what `product-manager` and `designer` already
-decided. Read `../_shared/references/principles.md` if you haven't already this session.
+decided. Read `../_shared/references/principles.md` and
+`../_shared/references/git-workflow.md` if you haven't already this session, and make sure
+you're on the feature's branch rather than `main` before you start.
 
 ## 1. Read the product spec and design first
 
@@ -59,6 +61,11 @@ Real ambiguities that block moving forward. "None." if there aren't any.
 
 Follow `../_shared/references/docs-format.md` exactly.
 
-## 5. If you're blocked
+## 5. Commit
+
+Commit architecture.md, status.md, and the index to the feature branch — see
+`../_shared/references/git-workflow.md`.
+
+## 6. If you're blocked
 
 Same principle as every phase: don't guess past a real gap in the plan you were handed.
