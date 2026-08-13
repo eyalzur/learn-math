@@ -15,6 +15,7 @@ export const grade8Topics: Topic[] = [
   {
     id: "expressions",
     title: "ביטויים אלגבריים",
+    reviewed: false,
     levels: [
       level("easy", [
         { id: "g8-expressions-e1", topic: "ביטויים אלגבריים", prompt: "כמה זה `2x + 3` כאשר `x` שווה 4?", answer: 11, steps: [{ label: "מציבים 4 במקום x" }, { label: "2 × 4 = 8" }, { label: "8 + 3 = 11" }], analogy: "כרטיס עולה 2 שקל ליחידה ועוד 3 שקל דמי טיפול, עבור 4 יחידות" },
@@ -42,6 +43,7 @@ export const grade8Topics: Topic[] = [
   {
     id: "equations",
     title: "משוואות",
+    reviewed: false,
     levels: [
       level("easy", [
         { id: "g8-equations-e1", topic: "משוואות", prompt: "x + 7 = 12", answer: 5, steps: [{ label: "מעבירים את ה-7 לצד השני ומשנים סימן" }, { label: "x = 12 − 7" }, { label: "x = 5" }], analogy: "חסכת סכום כלשהו, קיבלת עוד 7 שקל ועכשיו יש לך 12" },
@@ -69,6 +71,7 @@ export const grade8Topics: Topic[] = [
   {
     id: "powers",
     title: "חזקות ושורשים",
+    reviewed: false,
     levels: [
       level("easy", [
         { id: "g8-powers-e1", topic: "חזקות ושורשים", prompt: "2³", answer: 8, steps: [{ label: "חזקה זה כמה פעמים מכפילים את המספר בעצמו" }, { label: "2 × 2 × 2 = 8" }], analogy: "קופסה שכל צלע שלה 2 - כמה קוביות נכנסות בה" },
@@ -96,6 +99,7 @@ export const grade8Topics: Topic[] = [
   {
     id: "pythagoras",
     title: "משפט פיתגורס",
+    reviewed: false,
     levels: [
       level("easy", [
         { id: "g8-pythagoras-e1", topic: "משפט פיתגורס", prompt: "במשולש ישר זווית הניצבים הם 3 ו-4. מה אורך היתר?", answer: 5, steps: [{ label: "במשולש ישר זווית: היתר בריבוע שווה לסכום ריבועי הניצבים" }, { label: "3² + 4² = 9 + 16 = 25" }, { label: "√25 = 5" }], analogy: "מדרגות שגובהן 3 ורוחבן 4 - כמה ארוך המעקה מעליהן" },
@@ -123,6 +127,7 @@ export const grade8Topics: Topic[] = [
   {
     id: "linear",
     title: "פונקציה קווית",
+    reviewed: false,
     levels: [
       level("easy", [
         { id: "g8-linear-e1", topic: "פונקציה קווית", prompt: "בפונקציה `y = x + 5`, כמה `y` כאשר `x` שווה 3?", answer: 8, steps: [{ label: "מציבים 3 במקום x" }, { label: "3 + 5 = 8" }], analogy: "חיסכון שמתחיל ב-5 שקל ומוסיפים לו שקל לכל יום" },
@@ -150,6 +155,7 @@ export const grade8Topics: Topic[] = [
   {
     id: "word",
     title: "בעיות מילוליות",
+    reviewed: false,
     levels: [
       level("easy", [
         { id: "g8-word-e1", topic: "בעיות מילוליות", prompt: "מכונית נסעה 120 קילומטר ב-2 שעות. מה המהירות הממוצעת?", answer: 60, steps: [{ label: "מהירות זה מרחק חלקי זמן" }, { label: "120 ÷ 2 = 60" }], analogy: "נסיעה קצרה בכביש מהיר - כמה קילומטר בשעה" },

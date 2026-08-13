@@ -12,6 +12,7 @@ export const grade1Topics: Topic[] = [
   {
     id: "numbers",
     title: "מספרים עד 20",
+    reviewed: true,
     levels: [
       level("easy", [
         { id: "g1-numbers-e1", topic: "מספרים עד 20", prompt: "איזה מספר בא אחרי 3?", answer: 4, steps: [{ label: "אחרי כל מספר בא המספר שגדול ממנו באחד" }, { label: "", math: "3 + 1 = 4" }], analogy: "עומדים על מדרגה 3 ועולים אחת - על איזו מדרגה אתם עכשיו?" },
@@ -54,6 +55,7 @@ export const grade1Topics: Topic[] = [
   {
     id: "add10",
     title: "חיבור עד 10",
+    reviewed: true,
     levels: [
       level("easy", [
         { id: "g1-add10-e1", topic: "חיבור עד 10", prompt: "1 + 2", answer: 3, analogy: "היו לך 1 סוכריות וקיבלת עוד 2" },
@@ -96,6 +98,7 @@ export const grade1Topics: Topic[] = [
   {
     id: "sub10",
     title: "חיסור עד 10",
+    reviewed: true,
     levels: [
       level("easy", [
         { id: "g1-sub10-e1", topic: "חיסור עד 10", prompt: "3 − 1", answer: 2, analogy: "היו 3 מדבקות, לקחו 1" },
@@ -138,6 +141,7 @@ export const grade1Topics: Topic[] = [
   {
     id: "addsub20",
     title: "חיבור וחיסור עד 20",
+    reviewed: true,
     levels: [
       level("easy", [
         { id: "g1-addsub20-e1", topic: "חיבור וחיסור עד 20", prompt: "12 + 5", answer: 17, analogy: "היו לך 12 עפרונות וקיבלת עוד 5", hints: ["מספר עשרה-ומשהו ועוד מספר קטן: העשרת לא זזה, מוסיפים רק ליחידות", "כמה זה `2 + 5`? עכשיו תוסיפי את זה ל-`10`"] as const },
@@ -180,6 +184,7 @@ export const grade1Topics: Topic[] = [
   {
     id: "place",
     title: "עשרות ויחידות",
+    reviewed: true,
     levels: [
       level("easy", [
         { id: "g1-place-e1", topic: "עשרות ויחידות", prompt: "כמה עשרות יש במספר 13?", answer: 1, steps: [{ label: "במספר דו-ספרתי הספרה השמאלית היא העשרות" }, { label: "ב-13 הספרה השמאלית היא 1, כלומר עשרת אחת" }], analogy: "13 סוכריות: כמה קופסאות מלאות של 10 אפשר למלא?" },

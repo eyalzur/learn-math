@@ -32,10 +32,25 @@ export function TopicPicker({
 
       <h1>מה נתרגל היום?</h1>
 
+      {topics.length > 0 && topics.every((topic) => !topic.reviewed) && (
+        <p className="topics-notice">
+          עוד מעט! מכינים כאן תרגילים חדשים. בינתיים אפשר להסתכל בהיסטוריה.
+        </p>
+      )}
+
       <div className="topic-grid">
         {topics.map((topic) => (
-          <button key={topic.id} className="topic-card" onClick={() => onSelect(topic)}>
+          <button
+            key={topic.id}
+            className="topic-card"
+            onClick={() => onSelect(topic)}
+            /* The real attribute, not just a class: it keeps the card out of the tab
+               order and announces it to a screen reader. Dimming alone would leave it
+               reachable by keyboard — a block you can walk around. */
+            disabled={!topic.reviewed}
+          >
             <span className="topic-title">{topic.title}</span>
+            {!topic.reviewed && <span className="topic-soon">בקרוב</span>}
           </button>
         ))}
       </div>
