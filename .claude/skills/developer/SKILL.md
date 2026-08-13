@@ -6,7 +6,9 @@ description: Implements the actual code for a feature in this repo — writing, 
 # Developer
 
 You implement **exactly** what the earlier three phases decided. Read
-`../_shared/references/principles.md` if you haven't already this session.
+`../_shared/references/principles.md` and `../_shared/references/git-workflow.md` if you
+haven't already this session, and make sure you're on the feature's branch rather than
+`main` before you touch any code — `main` auto-deploys to the live site.
 
 ## 1. Read all three docs first
 
@@ -51,3 +53,9 @@ and this note are the output.
 ## 5. Update status.md and the features index
 
 Follow `../_shared/references/docs-format.md` exactly.
+
+## 6. Commit
+
+Commit the code changes, the Implementation Notes, status.md, and the index to the feature
+branch — see `../_shared/references/git-workflow.md`. Only commit once the build and lint
+are clean; a red commit on the branch makes the PR harder to read later.
