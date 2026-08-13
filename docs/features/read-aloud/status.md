@@ -7,10 +7,10 @@
 - [x] Product spec — product-manager — 2026-08-13 (revision: שיפור טבעיות הקול)
 - [x] Design — designer — 2026-08-13 (revision: אין שינוי מסך, רק אישור שהשיפור בקול לא דורש UI)
 - [x] Architecture — tech-lead — 2026-08-13 (revision: לוגיקת בחירת קול + rate/pitch מפורשים ב-speech.ts, ללא שינוי בממשק הפומבי)
-- [ ] Implementation — developer — not started
+- [x] Implementation — developer — 2026-08-13 (revision: hebrewVoice() משודרגת + rate/pitch מפורשים ב-speech.ts; build ו-lint נקיים)
 - [ ] Tests — qa — not started
 
-**Current phase:** developer
+**Current phase:** qa
 **Branch:** `fix/read-aloud`
 **PR:** not opened yet
 

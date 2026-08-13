@@ -87,3 +87,19 @@
 
 ## Open Questions
 None.
+
+## Implementation Notes
+מומש בדיוק כמתוכנן, ב-`src/data/speech.ts` בלבד:
+
+- `hebrewVoice()` הפכה לפונקציה בת שני שלבים: קודם מסננת קולות עבריים (`lang`
+  שמתחיל ב-`he`), אחר כך מחפשת ביניהם התאמה לאחת מ-`QUALITY_HINTS`
+  (`Enhanced`/`Premium`/`Natural`/`Google`/`Neural`, case-insensitive, נבדק
+  גם על `voice.name` וגם על `voice.voiceURI`). ללא התאמה - מוחזר הקול הראשון
+  ברשימה המסוננת, בדיוק כמו הקוד הקודם.
+- `speak()` מגדיר עכשיו `utterance.rate = 0.92` (היה `0.95`) ו-
+  `utterance.pitch = 1.05` (חדש - ברירת המחדל הייתה `1`).
+- אין שינוי בחתימה המיוצאת של אף פונקציה במודול, ואין שינוי בשום קובץ אחר -
+  בדיוק כפי שקבע architecture.md. `Practice.tsx` ממשיך לקרוא ל-`speak()`
+  בדיוק כמו קודם.
+- `npm run build` ו-`npm run lint` נקיים.
+- לא נדרשה החלטה שלא הייתה מתוכננת - אין סטייה מהארכיטקטורה.
