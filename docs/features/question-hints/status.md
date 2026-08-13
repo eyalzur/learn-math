@@ -12,7 +12,7 @@
 
 **Current phase:** done
 **Branch:** `feature/question-hints`
-**PR:** not opened yet
+**PR:** https://github.com/eyalzur/learn-math/pull/14
 
 ## Open questions / blockers
 None.
