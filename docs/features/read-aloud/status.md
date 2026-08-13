@@ -1,18 +1,23 @@
 # הקראה בקול של ההסבר
 
 כפתור רמקול בבלוק ההסבר שמקריא את השלבים והדימוי בעברית, בקול שנבחר ומכוונן
-אוטומטית להישמע טבעי וחם ולא מכני.
+אוטומטית להישמע טבעי וחם, בקצב נינוח ועם הפסקה בין שלב לשלב.
 
 ## Progress
-- [x] Product spec — product-manager — 2026-08-13 (revision: שיפור טבעיות הקול)
-- [x] Design — designer — 2026-08-13 (revision: אין שינוי מסך, רק אישור שהשיפור בקול לא דורש UI)
-- [x] Architecture — tech-lead — 2026-08-13 (revision: לוגיקת בחירת קול + rate/pitch מפורשים ב-speech.ts, ללא שינוי בממשק הפומבי)
-- [x] Implementation — developer — 2026-08-13 (revision: hebrewVoice() משודרגת + rate/pitch מפורשים ב-speech.ts; build ו-lint נקיים)
-- [x] Tests — qa — 2026-08-13 (revision: 3 בדיקות חדשות; 41/41 עוברות)
+- [x] Product spec — product-manager — 2026-08-13 (revision 2: קצב איטי יותר והפסקות בגבולות)
+- [ ] Design — designer — not started
+- [ ] Architecture — tech-lead — not started
+- [ ] Implementation — developer — not started
+- [ ] Tests — qa — not started
 
-**Current phase:** done
-**Branch:** `fix/read-aloud`
-**PR:** https://github.com/eyalzur/learn-math/pull/8
+**Current phase:** designer
+**Branch:** `feature/read-aloud`
+**PR:** not opened yet
+
+### היסטוריית סבבים
+- סבב 1 — ההקראה עצמה — PR #6
+- סבב 2 — שיפור טבעיות הקול (בחירת קול, rate/pitch) — PR #8
+- סבב 3 — קצב איטי יותר והפסקות בגבולות — בעבודה
 
 ## Open questions / blockers
 None. (הקראת השאלה עצמה, ולא רק ההסבר, סומנה מפורשות כמחוץ ל-scope והיא מועמדת
