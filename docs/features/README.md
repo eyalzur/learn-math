@@ -15,4 +15,4 @@ architecture, implementation notes, and tests.
 | מספר גרסה במסך הראשון | 🟢 done | [status](./version-number/status.md) |
 | בחירת נושא לכיתות ו׳ ו-ח׳ | 🟢 done | [status](./topics-all-grades/status.md) |
 | שני רמזים לכל שאלה | 🟢 done | [status](./question-hints/status.md) |
-| סטטוס ריוויו | 🟡 בארכיטקטורה | [status](./review-status/status.md) |
+| סטטוס ריוויו | 🟡 בפיתוח | [status](./review-status/status.md) |
