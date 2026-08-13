@@ -1,7 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Level } from "../data/curriculum";
 import { isHebrewPrompt, promptSegments } from "../data/curriculum";
 import { explainQuestion } from "../data/explain";
+import {
+  explanationToSpeech,
+  primeVoices,
+  speak,
+  speechSupported,
+  stopSpeaking,
+} from "../data/speech";
 
 interface PracticeProps {
   level: Level;
@@ -14,6 +21,12 @@ export function Practice({ level, onFinish, onExit }: PracticeProps) {
   const [input, setInput] = useState("");
   const [feedback, setFeedback] = useState<"correct" | "wrong" | null>(null);
   const [correctCount, setCorrectCount] = useState(0);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+
+  // Voices load asynchronously, so warm the list before the first press.
+  useEffect(primeVoices, []);
+  // Leaving mid-sentence must not leave a voice talking over the next screen.
+  useEffect(() => stopSpeaking, []);
 
   const question = level.questions[index];
   const isLast = index === level.questions.length - 1;
@@ -28,6 +41,10 @@ export function Practice({ level, onFinish, onExit }: PracticeProps) {
   }
 
   function next() {
+    // Otherwise the previous question's explanation keeps playing over the new one.
+    stopSpeaking();
+    setIsSpeaking(false);
+
     if (isLast) {
       onFinish(correctCount);
       return;
@@ -35,6 +52,17 @@ export function Practice({ level, onFinish, onExit }: PracticeProps) {
     setIndex((i) => i + 1);
     setInput("");
     setFeedback(null);
+  }
+
+  function toggleSpeech() {
+    if (explanation === null) return;
+    if (isSpeaking) {
+      stopSpeaking();
+      setIsSpeaking(false);
+      return;
+    }
+    setIsSpeaking(true);
+    speak(explanationToSpeech(explanation), () => setIsSpeaking(false));
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -46,7 +74,13 @@ export function Practice({ level, onFinish, onExit }: PracticeProps) {
   return (
     <div className="practice">
       <div className="practice-header">
-        <button className="link-button" onClick={onExit}>
+        <button
+          className="link-button"
+          onClick={() => {
+            stopSpeaking();
+            onExit();
+          }}
+        >
           ← חזרה
         </button>
         <span className="progress">
@@ -88,7 +122,19 @@ export function Practice({ level, onFinish, onExit }: PracticeProps) {
       )}
       {feedback === "wrong" && explanation !== null && (
         <div className="explanation">
-          <h3>איך פותרים?</h3>
+          <div className="explanation-header">
+            <h3>איך פותרים?</h3>
+            {speechSupported() && (
+              <button
+                type="button"
+                className="speak-button"
+                onClick={toggleSpeech}
+                aria-label={isSpeaking ? "עצרו את ההקראה" : "הקריאו לי את ההסבר"}
+              >
+                {isSpeaking ? "⏹" : "🔊"}
+              </button>
+            )}
+          </div>
           {explanation.steps.map((step, i) => (
             <p key={i} className="explanation-step">
               <span>{step.label}</span>
