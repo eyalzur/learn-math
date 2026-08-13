@@ -43,8 +43,20 @@ export function explanationToSpeech(explanation: Explanation): string {
   return [...steps, explanation.analogy].filter(Boolean).join(". ");
 }
 
+const QUALITY_HINTS = [/enhanced/i, /premium/i, /natural/i, /google/i, /neural/i];
+
+/**
+ * Prefers a voice the platform marks as higher quality (name or voiceURI carries a hint
+ * like "Enhanced" or "Google") over the generic default. The Web Speech API exposes no
+ * real quality score, so this is a best-effort heuristic - if nothing matches, it falls
+ * back to the first Hebrew voice, exactly like before this preference existed.
+ */
 function hebrewVoice(): SpeechSynthesisVoice | undefined {
-  return window.speechSynthesis.getVoices().find((voice) => voice.lang.startsWith("he"));
+  const voices = window.speechSynthesis.getVoices().filter((voice) => voice.lang.startsWith("he"));
+  const preferred = voices.find((voice) =>
+    QUALITY_HINTS.some((hint) => hint.test(voice.name) || hint.test(voice.voiceURI)),
+  );
+  return preferred ?? voices[0];
 }
 
 /**
@@ -77,7 +89,10 @@ export function speak(text: string, onEnd?: () => void): void {
   // With no Hebrew voice installed, let the browser pick — a reading in an imperfect
   // voice still beats silence.
   if (voice) utterance.voice = voice;
-  utterance.rate = 0.95;
+  // Slightly slower and higher-pitched than the flat default, so the voice reads as warm
+  // and unhurried rather than mechanical - still fast enough to stay comprehensible.
+  utterance.rate = 0.92;
+  utterance.pitch = 1.05;
   if (onEnd) {
     utterance.onend = onEnd;
     utterance.onerror = onEnd;

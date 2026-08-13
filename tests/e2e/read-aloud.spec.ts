@@ -10,17 +10,29 @@ import { test, expect, type Page } from "@playwright/test";
  *  5. Pressing again stops it.
  *  6. Moving to the next question stops it.
  *  7. With no speech engine, no button is shown at all.
+ *  8. With multiple Hebrew voices available, a quality-hinted voice is preferred over a
+ *     generic one.
+ *  9. With no quality-hinted voice among the Hebrew ones, a Hebrew voice is still chosen
+ *     (never silently falls back to no voice at all).
+ *  10. Speech rate and pitch are set explicitly, not left on the browser's flat defaults.
  *
  * speechSynthesis is stubbed so the tests assert what the app asks to be said, which is
  * the part that can actually be wrong. Whether a given machine owns a Hebrew voice is
  * not something a test can or should pin down.
  */
 
-type Spoken = { text: string; lang: string };
+type FakeVoice = { name: string; lang: string; voiceURI: string };
+type Spoken = { text: string; lang: string; rate: number; pitch: number; voiceName: string | null };
 
-/** Replaces speechSynthesis with a recorder before any app code runs. */
-async function stubSpeech(page: Page) {
-  await page.addInitScript(() => {
+/**
+ * Replaces speechSynthesis with a recorder before any app code runs. `voices` lets a test
+ * control what getVoices() returns, to exercise voice-preference logic without reading the
+ * implementation - only the documented contract (docs/features/read-aloud/architecture.md):
+ * getVoices() entries expose lang/name/voiceURI, and a name or voiceURI containing
+ * "Enhanced"/"Premium"/"Natural"/"Google"/"Neural" marks a preferred voice.
+ */
+async function stubSpeech(page: Page, voices: FakeVoice[] = []) {
+  await page.addInitScript((voiceList) => {
     const spoken: Spoken[] = [];
     let cancels = 0;
     // @ts-expect-error test hook
@@ -31,8 +43,9 @@ async function stubSpeech(page: Page) {
     class FakeUtterance {
       text: string;
       lang = "";
-      voice: unknown = null;
+      voice: { name: string } | null = null;
       rate = 1;
+      pitch = 1;
       onend: (() => void) | null = null;
       onerror: (() => void) | null = null;
       constructor(text: string) {
@@ -49,17 +62,23 @@ async function stubSpeech(page: Page) {
     Object.defineProperty(window, "speechSynthesis", {
       configurable: true,
       value: {
-        getVoices: () => [],
+        getVoices: () => voiceList,
         addEventListener: () => {},
         cancel: () => {
           cancels++;
         },
-        speak: (u: { text: string; lang: string }) => {
-          spoken.push({ text: u.text, lang: u.lang });
+        speak: (u: FakeUtterance) => {
+          spoken.push({
+            text: u.text,
+            lang: u.lang,
+            rate: u.rate,
+            pitch: u.pitch,
+            voiceName: u.voice?.name ?? null,
+          });
         },
       },
     });
-  });
+  }, voices);
 }
 
 /** Removes speechSynthesis entirely, as on a browser without the API. */
@@ -182,4 +201,44 @@ test("a browser with no speech engine shows no button at all", async ({ page }) 
   // The explanation itself must still be there — only the button goes away.
   await expect(page.locator(".explanation")).toBeVisible();
   await expect(page.locator(".speak-button")).toHaveCount(0);
+});
+
+test("prefers a quality-hinted Hebrew voice over a generic one", async ({ page }) => {
+  await stubSpeech(page, [
+    { name: "Hebrew", lang: "he-IL", voiceURI: "he-generic" },
+    { name: "Hebrew (Enhanced)", lang: "he-IL", voiceURI: "he-enhanced" },
+  ]);
+  await failFirstQuestion(page);
+
+  await page.getByRole("button", { name: "הקריאו לי את ההסבר" }).click();
+
+  const spoken = await spokenText(page);
+  expect(spoken[0].voiceName).toBe("Hebrew (Enhanced)");
+});
+
+test("still picks a Hebrew voice when none is quality-hinted", async ({ page }) => {
+  await stubSpeech(page, [
+    { name: "Hebrew One", lang: "he-IL", voiceURI: "he-one" },
+    { name: "Hebrew Two", lang: "he-IL", voiceURI: "he-two" },
+  ]);
+  await failFirstQuestion(page);
+
+  await page.getByRole("button", { name: "הקריאו לי את ההסבר" }).click();
+
+  const spoken = await spokenText(page);
+  // No quality hint anywhere - falls back to an available Hebrew voice, never to none.
+  expect(spoken[0].voiceName).not.toBeNull();
+});
+
+test("sets an explicit speech rate and pitch instead of the browser defaults", async ({
+  page,
+}) => {
+  await stubSpeech(page);
+  await failFirstQuestion(page);
+
+  await page.getByRole("button", { name: "הקריאו לי את ההסבר" }).click();
+
+  const spoken = await spokenText(page);
+  expect(spoken[0].rate, "rate was left on the browser's default of 1").not.toBe(1);
+  expect(spoken[0].pitch, "pitch was left on the browser's default of 1").not.toBe(1);
 });
