@@ -8,9 +8,9 @@
 - [x] Design — designer — 2026-08-13 (revision: אין שינוי מסך, רק אישור שהשיפור בקול לא דורש UI)
 - [x] Architecture — tech-lead — 2026-08-13 (revision: לוגיקת בחירת קול + rate/pitch מפורשים ב-speech.ts, ללא שינוי בממשק הפומבי)
 - [x] Implementation — developer — 2026-08-13 (revision: hebrewVoice() משודרגת + rate/pitch מפורשים ב-speech.ts; build ו-lint נקיים)
-- [ ] Tests — qa — not started
+- [x] Tests — qa — 2026-08-13 (revision: 3 בדיקות חדשות; 41/41 עוברות)
 
-**Current phase:** qa
+**Current phase:** done
 **Branch:** `fix/read-aloud`
 **PR:** not opened yet
 
