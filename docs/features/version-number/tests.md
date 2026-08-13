@@ -1,0 +1,47 @@
+# מספר גרסה במסך הראשון — Tests
+
+## Coverage
+`tests/e2e/version-number.spec.ts`:
+- "מספר גרסה בפורמט `X.Y.Z` במסך הראשון" →
+  `the first screen shows a version number as three dot-separated integers`
+- "גלוי בלי שום פעולה (בלי לחיצה/גלילה/תפריט)" →
+  `the version is visible without any click, scroll or menu`
+- "המספר המוצג זהה למקור האמת היחיד" →
+  `the number shown is the one in package.json`
+- "הערך המשוחרר הוא `1.0.0`" → `the released version is 1.0.0`
+- "לא האלמנט הבולט ביותר במסך" →
+  `the version is not the most prominent element on the screen`
+- "מוצג במסך הראשון בלבד" → `the version appears on the first screen only`
+  ו-`the version does not appear on the history screen`
+
+מדרישת הכיווניות ב-design.md:
+- `the version number renders in its own isolated left-to-right context`
+- `the label and the number are separate elements, not one mixed string`
+
+## מה במפורש לא נבדק כאן
+**הכלל התהליכי** - "פיצ'ר מעלה middle, תיקון מעלה minor" - אינו נבדק ב-e2e, וזו
+החלטה ולא פספוס. זו התנהגות של הפייפליין ולא של האפליקציה; דפדפן לא יכול לראות
+אותה. ה-product-spec מפריד בין שני סוגי הקריטריונים במפורש מאותה סיבה.
+
+מה שכן אוכף אותו הוא `.github/workflows/version-check.yml`, שנכשל על PR שנוגע
+באפליקציה בלי להעלות גרסה. שלושת מסלולי הכשל והדילוג שלו הורצו ידנית בשלב
+המימוש (ראו Implementation Notes ב-architecture.md) - כולל אימות שהוא **באמת
+נכשל** כשלא מעלים, ולא רק עובר בשקט.
+
+## איך זה נבדק
+הבדיקות **קוראות את `package.json` בזמן ריצה** ומשוות אליו, במקום לקבע את
+המחרוזת `1.0.0` בקוד הבדיקה. זה מכוון: בדיקה שמקבעת את המספר הייתה נכשלת בכל
+העלאת גרסה עתידית ומאלצת עריכה של הבדיקה בכל פעם - כלומר הופכת את עצמה לרעש.
+היחידה שכן מקבעת את `1.0.0` היא הבדיקה שהקריטריון שלה *הוא* הערך הראשוני, וגם
+היא תצטרך עדכון בהעלאה הבאה - וזה נכון, כי הקריטריון עצמו הוא היסטורי.
+
+הבדיקה של הבולטות משווה גדלי גופן מחושבים (`getComputedStyle`) מול שם התלמיד/ה,
+הכותרת והכיתה, ולא מול מספר קבוע - כך שהיא ממשיכה לתפוס רגרסיה גם אם העיצוב
+הכללי של המסך ישתנה.
+
+## How to run
+`npm run test:e2e`
+
+## Status
+✅ 50/50 עוברות נכון ל-2026-08-13 (9 חדשות לפיצ'ר הזה + 41 קיימות).
+`npm run build` ו-`npm run lint` נקיים.
