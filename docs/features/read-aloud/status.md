@@ -12,7 +12,7 @@
 
 **Current phase:** done
 **Branch:** `fix/read-aloud`
-**PR:** not opened yet
+**PR:** https://github.com/eyalzur/learn-math/pull/8
 
 ## Open questions / blockers
 None. (הקראת השאלה עצמה, ולא רק ההסבר, סומנה מפורשות כמחוץ ל-scope והיא מועמדת
