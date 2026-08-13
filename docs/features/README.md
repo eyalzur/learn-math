@@ -18,3 +18,4 @@ architecture, implementation notes, and tests.
 | שני רמזים לכל שאלה | 🟡 בארכיטקטורה | [status](./question-hints/status.md) |
 | שני רמזים לכל שאלה | 🟡 בפיתוח | [status](./question-hints/status.md) |
 | שני רמזים לכל שאלה | 🟡 בבדיקות | [status](./question-hints/status.md) |
+| שני רמזים לכל שאלה | 🟢 done | [status](./question-hints/status.md) |
