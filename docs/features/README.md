@@ -13,3 +13,4 @@ architecture, implementation notes, and tests.
 | בחירת נושא והתקדמות אישית | 🟢 done | [status](./topics-and-progress/status.md) |
 | הקראה בקול של ההסבר | 🟢 done | [status](./read-aloud/status.md) |
 | מספר גרסה במסך הראשון | 🟢 done | [status](./version-number/status.md) |
+| בחירת נושא לכיתות ו׳ ו-ח׳ | 🟢 done | [status](./topics-all-grades/status.md) |

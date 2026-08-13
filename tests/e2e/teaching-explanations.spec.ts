@@ -1,9 +1,9 @@
 import { test, expect, type Page } from "@playwright/test";
 
-/** Grade 1 practises topic-by-topic, so its levels sit one screen deeper. */
+/** Every grade now practises topic by topic, so levels always sit one screen deeper. */
 async function openLevels(page: Page, studentIndex: number, topicIndex = 0) {
   await page.locator(".student-card").nth(studentIndex).click();
-  if (studentIndex === 0) await page.locator(".topic-card").nth(topicIndex).click();
+  await page.locator(".topic-card").nth(topicIndex).click();
 }
 
 
@@ -29,6 +29,14 @@ async function startLevel(page: Page, studentIndex: number, levelIndex: number) 
   await page.locator(".level-card").nth(levelIndex).click();
 }
 
+/** How many questions this level actually holds — grade 1 has ten, grades 6 and 8 five. */
+async function levelSize(page: Page) {
+  const text = await page.locator(".progress").innerText();
+  const total = Number(text.match(/מתוך\s+(\d+)/)?.[1]);
+  expect(total, `could not read the level size from "${text}"`).toBeGreaterThan(0);
+  return total;
+}
+
 async function answerWrong(page: Page) {
   await page.locator(".answer-input").fill("999999");
   await page.getByRole("button", { name: "בדיקה" }).click();
@@ -42,8 +50,9 @@ test("every question in every grade explains itself and offers an analogy", asyn
   for (let student = 0; student < 3; student++) {
     for (let level = 0; level < 3; level++) {
       await startLevel(page, student, level);
+      const size = await levelSize(page);
 
-      for (let q = 0; q < 10; q++) {
+      for (let q = 0; q < size; q++) {
         const prompt = await page.locator(".problem-text").innerText();
         await answerWrong(page);
 
@@ -72,8 +81,9 @@ test("arithmetic inside explanations is never left in the prose element", async 
   for (let student = 0; student < 3; student++) {
     for (let level = 0; level < 3; level++) {
       await startLevel(page, student, level);
+      const size = await levelSize(page);
 
-      for (let q = 0; q < 10; q++) {
+      for (let q = 0; q < size; q++) {
         const prompt = await page.locator(".problem-text").innerText();
         await answerWrong(page);
 
@@ -107,7 +117,8 @@ test("every analogy is written for its own question, not reused", async ({ page 
   for (let student = 0; student < 3; student++) {
     for (let level = 0; level < 3; level++) {
       await startLevel(page, student, level);
-      for (let q = 0; q < 10; q++) {
+      const size = await levelSize(page);
+      for (let q = 0; q < size; q++) {
         const prompt = await page.locator(".problem-text").innerText();
         await answerWrong(page);
 
@@ -124,8 +135,36 @@ test("every analogy is written for its own question, not reused", async ({ page 
     }
   }
 
-  expect(analogies).toHaveLength(90);
-  expect(new Set(analogies).size, "some analogy is reused across questions").toBe(90);
+  expect(analogies.length, "the walk should have collected something").toBeGreaterThan(0);
+  expect(
+    new Set(analogies).size,
+    "some analogy is reused across questions",
+  ).toBe(analogies.length);
+
+  // The walk above only covers one topic per grade — driving a browser through all 330
+  // questions would take minutes. The corpus-wide guarantee is checked against the data
+  // the app ships, which is instant and actually complete.
+  const duplicates = await page.evaluate(async () => {
+    const mod = await import("/learn-math/src/data/curriculum.ts");
+    type Q = { id: string; analogy: string };
+    type G = { topicSets: { levels: { questions: Q[] }[] }[] };
+    const all = (mod.grades as G[])
+      .flatMap((g) => g.topicSets)
+      .flatMap((t) => t.levels)
+      .flatMap((l) => l.questions);
+    const seen = new Map<string, string>();
+    const bad: string[] = [];
+    for (const q of all) {
+      if (!q.analogy || q.analogy.trim().length <= 10) bad.push(`${q.id}: analogy too short`);
+      const prev = seen.get(q.analogy);
+      if (prev) bad.push(`${q.id} reuses the analogy of ${prev}`);
+      else seen.set(q.analogy, q.id);
+    }
+    return { bad, total: all.length };
+  });
+
+  expect(duplicates.total, "every grade's questions should be reachable").toBeGreaterThan(300);
+  expect(duplicates.bad).toEqual([]);
 });
 
 test("the explanation refers to the numbers of the failed question", async ({ page }) => {
