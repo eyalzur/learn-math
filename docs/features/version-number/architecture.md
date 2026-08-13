@@ -174,3 +174,95 @@ None.
 שינוי ב-`major`, מדווחת עליו כהודעה ומאשרת — בדיוק ההתנהגות שתוכננה עבור
 העלאה ידנית. כלומר ה-PR שמכניס את הבדיקה הוא גם המקרה הראשון שמאמת את
 מסלול ה-major שלה.
+
+
+---
+
+## סבב 2: תיקון — הבדיקה יכולה להיעדר בלי שאיש ישים לב
+
+### Overview
+`workflow_dispatch` עם מספר PR שמפענח base ו-head דרך ה-API, `types` שכולל
+`edited`, ו-checkout מפורש ל-**HEAD של ה-PR** כדי שמה שנבדק ומה שמדווח יהיו
+אותו commit.
+
+### Affected Files / Components
+- **`.github/workflows/version-check.yml`** — `types` מפורש, `workflow_dispatch`
+  עם קלט, שלב שמפענח refs, ו-checkout ל-SHA מפורש.
+- **`scripts/check-version-bump.mjs`** — מדפיס את ה-commit שנבדק.
+- **`.claude/skills/_shared/references/git-workflow.md`** — הוראות
+  branch protection, כי שם יושבים כללי העבודה מול git ו-PR.
+
+### Technical Approach
+
+#### 1. `edited` — הפער הוודאי
+```yaml
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, edited]
+```
+`edited` נורה גם כששינוי base מתרחש. זה מטפל במקרה שנצפה ישירות.
+
+#### 2. הפעלה ידנית שבאמת עובדת
+
+**המלכודת:** `workflow_dispatch` רץ בהקשר של **ענף**, לא של PR. `github.base_ref`
+ו-`github.head_ref` ריקים, והסקריפט — שמדלג כשאין refs — היה מסיים ב-success
+בלי לבדוק דבר. זו הרצה ירוקה שלא בדקה כלום, כלומר בדיוק ביטחון השווא שהספק
+מזהיר מפניו, רק בעטיפה גרועה יותר: הפעם עם ✅ לידה.
+
+**הפתרון:** הקלט הוא **מספר ה-PR**, ושלב ייעודי מפענח ממנו את ה-refs:
+
+```yaml
+workflow_dispatch:
+  inputs:
+    pr:
+      description: "מספר ה-PR לבדיקה"
+      required: true
+```
+
+שלב `resolve` מוציא שלושה ערכים — `base_ref`, `head_ref`, `head_sha`:
+- באירוע `pull_request` הם נלקחים מההקשר (`github.event.pull_request.*`).
+- ב-`workflow_dispatch` הם נשלפים ב-`gh api repos/.../pulls/<n>` עם
+  `GH_TOKEN: ${{ github.token }}`.
+
+מספר PR שאינו קיים גורם ל-`gh` להיכשל, והמשימה נכשלת עם שגיאה — ולא מדלגת.
+
+#### 3. לבדוק ולדווח על אותו commit
+
+**המלכודת השנייה, והיא עדינה:** ב-`pull_request`, `actions/checkout` מוציא
+כברירת מחדל את **commit המיזוג** (`refs/pull/N/merge`) ולא את ה-HEAD של ה-PR.
+`git rev-parse HEAD` היה מחזיר SHA שלא מופיע בשום מקום בממשק, ודיווח עליו היה
+מבלבל יותר מלא לדווח בכלל.
+
+לכן ה-checkout מפורש:
+```yaml
+- uses: actions/checkout@v4
+  with:
+    ref: ${{ steps.resolve.outputs.head_sha }}
+    fetch-depth: 0
+```
+`fetch-depth: 0` נשאר — ההשוואה היא מול ה-base.
+
+הסקריפט מדפיס בפתיחה את ה-commit שהוא בודק ואת ה-base שמולו. מי שרואה ✅ יכול
+להשוות את השורה הזו ל-HEAD שמוצג ב-PR; אם הם שונים, ההרצה מתייחסת לקוד ישן.
+**זו לא אכיפה — זו יכולת לזהות.** ההבדל מודע.
+
+### Edge Cases
+- **`workflow_dispatch` בלי PR קיים** — `gh` נכשל, המשימה נכשלת. לא דילוג.
+- **PR מ-fork** — `head_ref` עדיין מגיע; אם ריק, הסקריפט מדלג כמו קודם.
+- **ה-PR הזה עצמו** — נוגע ב-`.github/` וב-`docs/` בלבד, ולכן שלב הדילוג של
+  הסקריפט חל עליו והוא **לא** נדרש להעלות גרסה. נבדק ולא הונח.
+- **הרצה ידנית על PR סגור** — מותרת ומדווחת; אין סיבה לחסום בדיקה של משהו
+  שכבר נסגר.
+
+### Risks / Tradeoffs
+- **התיקון מקטין הסתברות, לא מבטל אפשרות.** אם GitHub לא יורה אף אירוע —
+  התרחיש שלא הצלחתי להסביר — עדיין לא תהיה הרצה. ההפעלה הידנית היא המענה, אבל
+  היא דורשת שמישהו ישים לב. **branch protection הוא הדבר היחיד שהופך היעדר
+  הרצה לחוסם**, והוא הגדרת מאגר ולא קוד.
+- **`edited` נורה גם על שינוי כותרת או תיאור**, ולכן יהיו הרצות מיותרות.
+  המשימה נמשכת שניות ספורות; זה מחיר זניח לעומת בדיקה שלא רצה.
+- **`gh` בשלב הפענוח מוסיף תלות** בכלי שמותקן ב-runner של GitHub. אם הוא
+  ייעלם, ההפעלה הידנית תישבר — אבל מסלול ה-`pull_request` ימשיך לעבוד.
+
+### Open Questions
+None.

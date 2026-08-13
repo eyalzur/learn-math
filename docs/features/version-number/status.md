@@ -6,11 +6,11 @@
 ## Progress
 - [x] Product spec — product-manager — 2026-08-13 (fix: הבדיקה יכולה להיעדר בשקט)
 - [x] Design — designer — 2026-08-13 (fix: אין שטח עיצובי - התיקון לא נוגע במסך)
-- [ ] Architecture — tech-lead — not started
+- [x] Architecture — tech-lead — 2026-08-13 (fix: dispatch עם מספר PR, types מורחב, checkout ל-HEAD מפורש)
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** tech-lead
+**Current phase:** developer
 **Branch:** `fix/version-number`
 **PR:** not opened yet
 
