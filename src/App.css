@@ -103,13 +103,13 @@
   gap: 16px;
   margin: 40px 0;
   flex-wrap: wrap;
+  direction: ltr;
 }
 
 .problem-text {
   font-size: 40px;
   font-weight: 600;
   color: var(--text-h);
-  direction: ltr;
 }
 
 .answer-input {
