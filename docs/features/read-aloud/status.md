@@ -12,12 +12,12 @@
 
 **Current phase:** done
 **Branch:** `feature/read-aloud`
-**PR:** not opened yet
+**PR:** https://github.com/eyalzur/learn-math/pull/11
 
 ### היסטוריית סבבים
 - סבב 1 — ההקראה עצמה — PR #6
 - סבב 2 — שיפור טבעיות הקול (בחירת קול, rate/pitch) — PR #8
-- סבב 3 — קצב איטי יותר והפסקות בגבולות — גרסה 1.1.0
+- סבב 3 — קצב איטי יותר והפסקות בגבולות — PR #11, גרסה 1.1.0
 
 ## Open questions / blockers
 None. (הקראת השאלה עצמה, ולא רק ההסבר, סומנה מפורשות כמחוץ ל-scope והיא מועמדת
