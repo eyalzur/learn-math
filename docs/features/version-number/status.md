@@ -12,11 +12,11 @@
 
 **Current phase:** done
 **Branch:** `fix/version-number`
-**PR:** not opened yet
+**PR:** https://github.com/eyalzur/learn-math/pull/13
 
 ### היסטוריית סבבים
 - סבב 1 — מספר הגרסה ואכיפת ההעלאה — PR #10, גרסה 1.0.0
-- סבב 2 — תיקון: הבדיקה יכולה להיעדר בלי שאיש ישים לב — ללא שינוי גרסה
+- סבב 2 — תיקון: הבדיקה יכולה להיעדר בלי שאיש ישים לב — PR #13, ללא שינוי גרסה
 
 ## Open questions / blockers
 None.
