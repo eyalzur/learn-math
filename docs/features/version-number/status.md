@@ -12,7 +12,7 @@
 
 **Current phase:** done
 **Branch:** `feature/version-number`
-**PR:** not opened yet
+**PR:** https://github.com/eyalzur/learn-math/pull/10
 
 ## Open questions / blockers
 None.
