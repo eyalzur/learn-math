@@ -1,9 +1,9 @@
 import { test, expect, type Page } from "@playwright/test";
 
-/** Grade 1 practises topic-by-topic, so its levels sit one screen deeper. */
+/** Every grade now practises topic by topic, so levels always sit one screen deeper. */
 async function openLevels(page: Page, studentIndex: number, topicIndex = 0) {
   await page.locator(".student-card").nth(studentIndex).click();
-  if (studentIndex === 0) await page.locator(".topic-card").nth(topicIndex).click();
+  await page.locator(".topic-card").nth(topicIndex).click();
 }
 
 
@@ -12,10 +12,11 @@ async function openLevels(page: Page, studentIndex: number, topicIndex = 0) {
  * (docs/features/students-and-syllabus/product-spec.md):
  *  1. The app opens on a picker with Mika (grade 1), Rotem (grade 6), Omer (grade 8),
  *     each showing name and grade.
- *  2. Picking a student shows that grade's topics and three levels.
- *  3. Every grade has exactly three levels; every level exactly ten questions.
+ *  2. Picking a student shows that grade's topics; picking a topic shows three levels.
+ *  3. Every grade has exactly three levels; the questions per level are the grade's
+ *     own (ten for grade 1, five for grades 6 and 8 — see topics-all-grades).
  *  4. Every question belongs to a topic in its own grade's syllabus.
- *  5. Picking a level starts a practice run over its ten questions.
+ *  5. Picking a level starts a practice run over its questions.
  *  6. Finishing a level shows the score summary.
  *  7. You can go back and switch student.
  *  8. The last choice is remembered across a reload.
@@ -65,9 +66,16 @@ test("picking a student shows that grade's syllabus and three levels", async ({ 
   await expect(page.locator(".topic-picker")).toContainText("חיבור עד 10");
 });
 
-test("every grade offers three levels of ten questions", async ({ page }) => {
-  // Grade 1 reaches them through a topic; grades 6 and 8 straight from the first screen.
+test("every grade offers three levels, of the question count its own grade defines", async ({
+  page,
+}) => {
+  // The count is a property of the grade, not a global constant: a Pythagoras question is
+  // not the same size as "8 + 5", and ten of them in a row is a chore rather than
+  // practice. See docs/features/topics-all-grades/product-spec.md.
+  const QUESTIONS_PER_LEVEL = [10, 5, 5];
+
   for (let studentIndex = 0; studentIndex < EXPECTED.length; studentIndex++) {
+    const expected = QUESTIONS_PER_LEVEL[studentIndex];
     await open(page);
     await openLevels(page, studentIndex);
 
@@ -75,9 +83,11 @@ test("every grade offers three levels of ten questions", async ({ page }) => {
     await expect(levels).toHaveCount(3);
 
     for (let levelIndex = 0; levelIndex < 3; levelIndex++) {
-      await expect(levels.nth(levelIndex).locator(".level-count")).toHaveText("10 שאלות");
+      await expect(levels.nth(levelIndex).locator(".level-count")).toHaveText(
+        `${expected} שאלות`,
+      );
       await levels.nth(levelIndex).click();
-      await expect(page.locator(".progress")).toContainText("מתוך 10");
+      await expect(page.locator(".progress")).toContainText(`מתוך ${expected}`);
       await page.getByRole("button", { name: "← חזרה" }).click();
     }
   }
@@ -96,17 +106,14 @@ test("every question in every level belongs to its own grade's syllabus", async 
     type G = {
       label: string;
       topics: string[];
-      practice: "topics" | "levels";
-      levels?: Lv[];
-      topicSets?: { levels: Lv[] }[];
+      topicSets: { levels: Lv[] }[];
     };
     return (mod.grades as G[]).map((g) => ({
       label: g.label,
       topics: g.topics,
-      levels: (g.practice === "topics"
-        ? g.topicSets!.flatMap((t) => t.levels)
-        : g.levels!
-      ).map((l) => l.questions.map((q) => ({ id: q.id, topic: q.topic }))),
+      levels: g.topicSets
+        .flatMap((t) => t.levels)
+        .map((l) => l.questions.map((q) => ({ id: q.id, topic: q.topic }))),
     }));
   });
 
@@ -176,6 +183,9 @@ test("word problems read right-to-left and their algebra stays left-to-right", a
   // Guards the two-level bidi trap: the sentence must be RTL, but an algebraic run
   // inside it must be isolated LTR or its brackets get mirrored.
   await pickStudent(page, 2);
+  // Grade 8's algebra lives under its own topic now, so walk topics until a word problem
+  // with an algebraic run turns up rather than assuming which one holds it.
+  await page.locator(".topic-card").first().click();
   await page.locator(".level-card").nth(1).click();
 
   let found = false;
