@@ -89,12 +89,13 @@ export function Practice({ level, onFinish, onExit }: PracticeProps) {
       {feedback === "wrong" && explanation !== null && (
         <div className="explanation">
           <h3>איך פותרים?</h3>
-          {explanation.map((step, i) => (
+          {explanation.steps.map((step, i) => (
             <p key={i} className="explanation-step">
               <span>{step.label}</span>
               {step.math && <span className="explanation-math">{step.math}</span>}
             </p>
           ))}
+          <p className="explanation-analogy">💡 {explanation.analogy}</p>
         </div>
       )}
       <div className="actions">

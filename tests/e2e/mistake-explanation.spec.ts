@@ -8,12 +8,11 @@ import { test, expect, type Page } from "@playwright/test";
  *  3. It shows working steps, not only the result.
  *  4. It refers to the numbers of the problem that was actually failed.
  *  5. A correct answer shows no explanation at all.
- *  6. Every question that CAN be broken down automatically has an explanation.
+ *  6. Every question has an explanation.
  *
- * Criterion 6 was narrowed when the curriculum replaced {a, b, op} questions with
- * free-text prompts: only bare arithmetic can be explained by computing from its
- * operands. Word problems and equations show no block until the teacher feature adds
- * written explanations — see architecture.md's Implementation Notes.
+ * Criterion 6 is now covered by teaching-explanations.spec.ts, which sweeps all 90
+ * questions across the three grades. What stays here is the behaviour of the block
+ * itself on a computed, bare-arithmetic question.
  */
 
 /** A bare "a op b" prompt, the only shape that can be explained automatically. */
@@ -105,39 +104,5 @@ test("arithmetic inside the explanation stays left-to-right", async ({ page }) =
   expect(count).toBeGreaterThan(0);
   for (let i = 0; i < count; i++) {
     await expect(maths.nth(i)).toHaveCSS("direction", "ltr");
-  }
-});
-
-test("every bare arithmetic question is explained, and no other question claims to be", async ({
-  page,
-}) => {
-  // Walks all three grades. A bare expression must produce a block with steps; anything
-  // else must produce none — a guess dressed up as a worked solution would be worse for
-  // a student than staying quiet.
-  for (let studentIndex = 0; studentIndex < 3; studentIndex++) {
-    for (let levelIndex = 0; levelIndex < 3; levelIndex++) {
-      await page.goto("/learn-math/");
-      await page.evaluate(() => localStorage.clear());
-      await page.goto("/learn-math/");
-      await page.locator(".student-card").nth(studentIndex).click();
-      await page.locator(".level-card").nth(levelIndex).click();
-
-      for (let q = 0; q < 10; q++) {
-        const prompt = await page.locator(".problem-text").innerText();
-        await answerWrong(page);
-
-        const blocks = await page.locator(".explanation").count();
-        if (BARE_EXPRESSION.test(prompt)) {
-          expect(blocks, `expected an explanation for "${prompt}"`).toBe(1);
-          expect(
-            await page.locator(".explanation-step").count(),
-            `expected steps for "${prompt}"`,
-          ).toBeGreaterThan(0);
-        } else {
-          expect(blocks, `expected no explanation for "${prompt}"`).toBe(0);
-        }
-        await goNext(page);
-      }
-    }
   }
 });

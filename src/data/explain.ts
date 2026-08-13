@@ -13,6 +13,12 @@ export interface ExplanationStep {
   math: string;
 }
 
+export interface Explanation {
+  steps: ExplanationStep[];
+  /** One sentence tying the maths to something the student already knows. */
+  analogy: string;
+}
+
 const tensOf = (n: number) => Math.floor(n / 10) * 10;
 const unitsOf = (n: number) => n % 10;
 
@@ -165,18 +171,9 @@ type Operator = "+" | "-" | "×" | "÷";
 /** Matches a question whose prompt is nothing but "a op b". */
 const BARE_EXPRESSION = /^\s*(\d+)\s*([+\u2212\-×÷])\s*(\d+)\s*$/;
 
-/**
- * Builds the worked solution shown after a wrong answer, or null when the question
- * cannot be broken down automatically.
- *
- * Only bare arithmetic ("23 + 45") can be explained by computing from its operands.
- * A word problem or an equation needs an explanation written by a person — inventing
- * one from the prompt string would produce confident nonsense, which is worse for a
- * student than no explanation at all. Those get written explanations in a later
- * feature; until then the block simply does not appear for them.
- */
-export function explainQuestion(question: Question): ExplanationStep[] | null {
-  const match = question.prompt.match(BARE_EXPRESSION);
+/** Steps derived by computing from the operands. Only bare arithmetic qualifies. */
+function computedSteps(prompt: string): ExplanationStep[] | null {
+  const match = prompt.match(BARE_EXPRESSION);
   if (!match) return null;
 
   const a = Number(match[1]);
@@ -195,4 +192,49 @@ export function explainQuestion(question: Question): ExplanationStep[] | null {
     default:
       return null;
   }
+}
+
+/**
+ * Builds the worked solution shown after a wrong answer.
+ *
+ * Steps come from the question when it carries written ones, and are computed from the
+ * operands otherwise — a word problem or an equation cannot be broken down by parsing
+ * its prompt, and a fabricated breakdown would be worse for a student than none. The
+ * analogy always comes from the question, since tying the maths to something familiar
+ * is a judgement no formula makes.
+ */
+const HEBREW = /[\u0590-\u05FF]/;
+const CARRIES_MATH = /[0-9]\s*[+\u2212\-×÷=]|[+\u2212×÷=]\s*[0-9]|√/;
+
+/**
+ * Moves arithmetic out of an authored step's prose and into its `math` field.
+ *
+ * Only `math` is rendered in an isolated LTR element, so an expression left in `label`
+ * comes out reversed inside the RTL page — "20 ÷ 2 = 10" reads "10 = 2 ÷ 20". Relying on
+ * whoever writes a question to remember which field to use is exactly the kind of thing
+ * that gets forgotten, so the split is enforced here instead.
+ */
+function normalizeStep(step: { label: string; math?: string }): ExplanationStep {
+  if (step.math) return { label: step.label, math: step.math };
+
+  const label = step.label;
+  if (!CARRIES_MATH.test(label)) return { label, math: "" };
+
+  // "קודם העשרות: 23 + 40 = 63" -> prose keeps the colon, the expression moves.
+  const colon = label.match(/^(.*?[:])\s*(.+)$/);
+  if (colon && !HEBREW.test(colon[2])) return { label: colon[1], math: colon[2] };
+
+  // A bare expression with no prose around it.
+  if (!HEBREW.test(label)) return { label: "", math: label };
+
+  return { label, math: "" };
+}
+
+export function explainQuestion(question: Question): Explanation | null {
+  const steps = question.steps
+    ? question.steps.map(normalizeStep)
+    : computedSteps(question.prompt);
+
+  if (steps === null || steps.length === 0) return null;
+  return { steps, analogy: question.analogy };
 }

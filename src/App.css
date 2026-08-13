@@ -274,6 +274,17 @@
   margin-bottom: 0;
 }
 
+/* Set apart from the steps by a rule, so it reads as another way of seeing the same
+   thing rather than one more line of arithmetic. */
+.explanation-analogy {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 15px;
+  line-height: 160%;
+  color: var(--text);
+}
+
 /* Arithmetic must read left-to-right inside the RTL page, or "67 + 10 = 77"
    renders reversed. Same fix as .problem-box. */
 .explanation-math {
