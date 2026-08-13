@@ -3,7 +3,7 @@ import type { Level } from "../data/curriculum";
 import { isHebrewPrompt, promptSegments } from "../data/curriculum";
 import { explainQuestion } from "../data/explain";
 import {
-  explanationToSpeech,
+  explanationToSpeechParts,
   primeVoices,
   speak,
   speechSupported,
@@ -62,7 +62,7 @@ export function Practice({ level, onFinish, onExit }: PracticeProps) {
       return;
     }
     setIsSpeaking(true);
-    speak(explanationToSpeech(explanation), () => setIsSpeaking(false));
+    speak(explanationToSpeechParts(explanation), () => setIsSpeaking(false));
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {

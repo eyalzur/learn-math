@@ -7,10 +7,10 @@
 - [x] Product spec — product-manager — 2026-08-13 (revision 2: קצב איטי יותר והפסקות בגבולות)
 - [x] Design — designer — 2026-08-13 (revision 2: אין UI חדש, אבל הוכרע שהכפתור נשאר ⏹ לאורך ההפסקות ושהמעבר לדימוי מקבל הפסקה ארוכה יותר)
 - [x] Architecture — tech-lead — 2026-08-13 (revision 2: שרשור יחידות עם השהיה, ניקוי טיימר + מזהה רצף; תיקון לנימוק שגוי בארכיטקטורה הקודמת)
-- [ ] Implementation — developer — not started
+- [x] Implementation — developer — 2026-08-13 (revision 2: שרשור יחידות ב-speech.ts, rate 0.82, גרסה 1.1.0; build ו-lint נקיים)
 - [ ] Tests — qa — not started
 
-**Current phase:** developer
+**Current phase:** qa
 **Branch:** `feature/read-aloud`
 **PR:** not opened yet
 
