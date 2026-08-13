@@ -7,4 +7,4 @@ architecture, implementation notes, and tests.
 | Feature | Status | Details |
 |---|---|---|
 | הודעת עידוד לציון מושלם | 🟢 done | [status](./perfect-score-message/status.md) |
-| הסבר דרך פתרון אחרי טעות | 🟡 in testing | [status](./mistake-explanation/status.md) |
+| הסבר דרך פתרון אחרי טעות | 🟡 ממתין לאישור ב-PR | [status](./mistake-explanation/status.md) |
