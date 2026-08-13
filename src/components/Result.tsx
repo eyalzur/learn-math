@@ -14,7 +14,8 @@ export function Result({ set, correctCount, onRetry, onHome }: ResultProps) {
   let message = "כל הכבוד!";
   if (percent < 50) message = "כדאי לתרגל עוד קצת";
   else if (percent < 80) message = "יפה מאוד, המשיכו כך!";
-  else message = "מצוין! שליטה מלאה!";
+  else if (percent < 100) message = "מצוין! שליטה מלאה!";
+  else message = "🌟 ציון מושלם! פתרת הכל נכון!";
 
   return (
     <div className="result">
