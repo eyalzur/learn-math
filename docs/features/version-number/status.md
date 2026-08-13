@@ -8,15 +8,15 @@
 - [x] Design — designer — 2026-08-13 (fix: אין שטח עיצובי - התיקון לא נוגע במסך)
 - [x] Architecture — tech-lead — 2026-08-13 (fix: dispatch עם מספר PR, types מורחב, checkout ל-HEAD מפורש)
 - [x] Implementation — developer — 2026-08-13 (fix: workflow + סקריפט; אין שינוי ב-src ולכן ללא העלאת גרסה)
-- [ ] Tests — qa — not started
+- [x] Tests — qa — 2026-08-13 (fix: אין שטח ל-e2e; אומת ידנית, ומגבלת ההפעלה הידנית תועדה)
 
-**Current phase:** qa
+**Current phase:** done
 **Branch:** `fix/version-number`
 **PR:** not opened yet
 
 ### היסטוריית סבבים
 - סבב 1 — מספר הגרסה ואכיפת ההעלאה — PR #10, גרסה 1.0.0
-- סבב 2 — תיקון: הבדיקה יכולה להיעדר בלי שאיש ישים לב — בעבודה
+- סבב 2 — תיקון: הבדיקה יכולה להיעדר בלי שאיש ישים לב — ללא שינוי גרסה
 
 ## Open questions / blockers
 None.
