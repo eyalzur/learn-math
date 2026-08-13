@@ -142,6 +142,46 @@
   color: #dc2626;
 }
 
+.explanation {
+  max-width: 420px;
+  margin: 0 auto 24px;
+  padding: 16px 20px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--code-bg);
+  text-align: right;
+}
+
+.explanation h3 {
+  margin: 0 0 10px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.explanation-step {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 15px;
+  color: var(--text);
+}
+
+.explanation-step:last-child {
+  margin-bottom: 0;
+}
+
+/* Arithmetic must read left-to-right inside the RTL page, or "67 + 10 = 77"
+   renders reversed. Same fix as .problem-box. */
+.explanation-math {
+  direction: ltr;
+  unicode-bidi: embed;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
 .actions {
   display: flex;
   gap: 12px;

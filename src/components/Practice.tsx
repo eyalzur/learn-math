@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { ExerciseSet } from "../data/exerciseSets";
 import { answerOf } from "../data/exerciseSets";
+import { explainProblem } from "../data/explain";
 
 interface PracticeProps {
   set: ExerciseSet;
@@ -70,6 +71,17 @@ export function Practice({ set, onFinish, onExit }: PracticeProps) {
         <p className={`feedback ${feedback}`}>
           {feedback === "correct" ? "נכון מאוד! 🎉" : `לא נכון. התשובה היא ${answerOf(problem)}`}
         </p>
+      )}
+      {feedback === "wrong" && (
+        <div className="explanation">
+          <h3>איך פותרים?</h3>
+          {explainProblem(problem).map((step, i) => (
+            <p key={i} className="explanation-step">
+              <span>{step.label}</span>
+              {step.math && <span className="explanation-math">{step.math}</span>}
+            </p>
+          ))}
+        </div>
       )}
       <div className="actions">
         {feedback === null ? (

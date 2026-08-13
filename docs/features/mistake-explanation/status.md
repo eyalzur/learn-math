@@ -6,10 +6,10 @@
 - [x] Product spec — product-manager — 2026-08-13
 - [x] Design — designer — 2026-08-13
 - [x] Architecture — tech-lead — 2026-08-13
-- [ ] Implementation — developer — not started
+- [x] Implementation — developer — 2026-08-13
 - [ ] Tests — qa — not started
 
-**Current phase:** developer
+**Current phase:** qa
 **Branch:** `feature/mistake-explanation`
 **PR:** not opened yet
 
