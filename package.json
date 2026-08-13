@@ -1,14 +1,16 @@
 {
   "name": "learn-math",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "bump:feature": "node scripts/bump-version.mjs feature",
+    "bump:fix": "node scripts/bump-version.mjs fix"
   },
   "dependencies": {
     "react": "^19.2.8",

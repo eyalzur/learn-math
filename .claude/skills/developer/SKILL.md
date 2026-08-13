@@ -31,7 +31,22 @@ something that changes what gets built — treat it as a blocker like any other 
 than quietly deciding architecture on the fly. See
 `../_shared/references/principles.md`.
 
-## 3. Verify before calling it done
+## 3. Raise the version number
+
+If you changed anything under `src/`, `public/` or `index.html`, raise the version — it's
+shown on the app's first screen and lives in `package.json`:
+
+```bash
+npm run bump:feature   # on a feature/<slug> branch
+npm run bump:fix       # on a fix/<slug> branch
+```
+
+Do it now, so it lands in the same commit as the code. See
+`../_shared/references/git-workflow.md`. A PR without it fails the Version bump check.
+
+Skip this if your change was docs-only.
+
+## 4. Verify before calling it done
 
 From the repo root, run:
 
@@ -43,18 +58,18 @@ npm run lint
 Fix issues until both are clean. A feature isn't implemented until these pass — don't move
 on with a red build.
 
-## 4. Record what actually happened
+## 5. Record what actually happened
 
 Append a `## Implementation Notes` section to the **end** of `architecture.md` (don't
 create a separate file) summarizing what was actually built and any deviations from the
 plan, with why. This is the one phase that doesn't get its own top-level doc — the code
 and this note are the output.
 
-## 5. Update status.md and the features index
+## 6. Update status.md and the features index
 
 Follow `../_shared/references/docs-format.md` exactly.
 
-## 6. Commit
+## 7. Commit
 
 Commit the code changes, the Implementation Notes, status.md, and the index to the feature
 branch — see `../_shared/references/git-workflow.md`. Only commit once the build and lint

@@ -139,3 +139,38 @@ npm run bump:fix       # minor+1
 
 ## Open Questions
 None.
+
+## Implementation Notes
+
+מומש כמתוכנן, בלי סטיות ארכיטקטוניות.
+
+**התצוגה:**
+- `package.json`: `0.0.0` → `1.0.0`, ונוספו `bump:feature` ו-`bump:fix`.
+- `vite.config.ts`: קורא את `package.json` ומזריק `__APP_VERSION__` דרך `define`.
+- `src/env.d.ts` (חדש): הצהרת הטיפוס לגלובל.
+- `src/data/version.ts` (חדש): מייצא `APP_VERSION`. מייבא **אפס** מודולים.
+- `StudentPicker.tsx`: `<p class="app-version">גרסה <span
+  class="app-version-number">{APP_VERSION}</span></p>` — שני אלמנטים, כנדרש.
+- `App.css`: `.app-version` (12px, `--text`, opacity 0.6, מרווח 28px מלמעלה)
+  ו-`.app-version-number` עם `direction: ltr` + `unicode-bidi: isolate`.
+
+**האוטומציה:**
+- `scripts/bump-version.mjs`, `scripts/check-version-bump.mjs` (שניהם ללא
+  תלויות חיצוניות), ו-`.github/workflows/version-check.yml`.
+- הכלל תועד ב-`git-workflow.md` וכשלב 3 ב-`developer/SKILL.md` (מספור השלבים
+  שאחריו הוזז בהתאם).
+
+**מה נבדק בפועל:**
+- `npm run build` ו-`npm run lint` נקיים. אומת שה-bundle הבנוי מכיל גם את
+  המחרוזת `גרסה` וגם את `1.0.0` — כלומר ההזרקה עובדת ולא נשארה כטקסט גולמי.
+- `bump:fix` העלה `1.0.0 → 1.0.1`; `bump:feature` העלה `1.0.1 → 1.1.0`;
+  `major` נדחה עם קוד יציאה 1. הקובץ הוחזר ל-`1.0.0` אחרי הבדיקה, לפי
+  ההחלטה ב-product-spec שהגרסה הראשונה היא הבסיס.
+- סקריפט הבדיקה: מסלול הדילוג בלי refs עובד, ומסלול הדילוג על שינוי שאינו
+  נוגע ב-`src/` עובד.
+
+**דבר אחד ששווה לדעת ולא נצפה מראש:** ב-PR הזה עצמו `major` עולה מ-`0` ל-`1`
+(כי `package.json` ישב על `0.0.0` מברירת המחדל של Vite). בדיקת ה-CI מזהה
+שינוי ב-`major`, מדווחת עליו כהודעה ומאשרת — בדיוק ההתנהגות שתוכננה עבור
+העלאה ידנית. כלומר ה-PR שמכניס את הבדיקה הוא גם המקרה הראשון שמאמת את
+מסלול ה-major שלה.

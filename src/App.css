@@ -50,6 +50,25 @@
   color: var(--text);
 }
 
+/* Deliberately the smallest and faintest thing on the screen. It exists for the adult
+   checking which build a device actually loaded, and must stay out of the way of a
+   seven-year-old scanning for her own name. */
+.app-version {
+  margin: 28px 0 0;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text);
+  opacity: 0.6;
+}
+
+/* Same isolation the arithmetic elements get. Very likely unnecessary for "1.0.0" — dots
+   between digits resolve as one numeric run — but this project has paid three times for
+   assuming bidi would sort itself out, and the guard costs two lines. */
+.app-version-number {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
 /* ---- grade home ---- */
 
 .grade-header {

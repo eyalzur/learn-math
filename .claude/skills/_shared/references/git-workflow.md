@@ -48,6 +48,25 @@ git commit -m "<short description of this phase's contribution>"
 Commit only what your phase actually produced — the doc you wrote plus, for `developer`,
 the code, and for `qa`, the tests. Don't sweep unrelated modified files into your commit.
 
+## Raising the version number
+
+The app shows its version on the first screen, and the number lives in `package.json` —
+the only place it's written down. Any change that touches `src/`, `public/` or
+`index.html` has to raise it, in the same commit as the change itself:
+
+```bash
+npm run bump:feature   # new capability  — middle + 1, minor back to 0
+npm run bump:fix       # fixing behavior — minor + 1
+```
+
+`major` is never raised by a script. It's a deliberate decision, edited by hand.
+
+Which one you run follows the branch you're on: `feature/<slug>` → `bump:feature`,
+`fix/<slug>` → `bump:fix`. A PR that changes the app without a matching bump fails the
+**Version bump check** workflow, so this isn't something to remember so much as something
+you'll be told about. Docs-only changes are exempt and skip the check — raising the number
+for a documentation edit would announce an app change that never happened.
+
 ## Opening the PR
 
 Only the last phase (`qa`, or the `feature` orchestrator after it) opens the PR, once the
