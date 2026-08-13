@@ -2,18 +2,55 @@ name: Version bump check
 
 on:
   pull_request:
+    # `edited` matters: it is what fires when a pull request is retargeted at a different
+    # base branch, and the default set leaves it out. A retargeted PR must be rechecked
+    # against the base it will actually merge into.
+    types: [opened, reopened, synchronize, edited]
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: "Pull request number to check"
+        required: true
 
 jobs:
   check:
     runs-on: ubuntu-latest
     steps:
+      # A manual run happens on a branch, not on a pull request, so github.base_ref and
+      # github.head_ref are both empty and the script would skip — a green run that
+      # checked nothing, which is worse than no run at all because it carries a tick.
+      # Taking the PR number as input and resolving it here is what makes manual runs real.
+      - id: resolve
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            pr=$(gh api "repos/${{ github.repository }}/pulls/${{ inputs.pr }}")
+            echo "base_ref=$(echo "$pr" | jq -r .base.ref)" >> "$GITHUB_OUTPUT"
+            echo "head_ref=$(echo "$pr" | jq -r .head.ref)" >> "$GITHUB_OUTPUT"
+            echo "head_sha=$(echo "$pr" | jq -r .head.sha)" >> "$GITHUB_OUTPUT"
+          else
+            echo "base_ref=${{ github.base_ref }}" >> "$GITHUB_OUTPUT"
+            echo "head_ref=${{ github.head_ref }}" >> "$GITHUB_OUTPUT"
+            echo "head_sha=${{ github.event.pull_request.head.sha }}" >> "$GITHUB_OUTPUT"
+          fi
+
       - uses: actions/checkout@v4
         with:
-          # The check compares against the base branch, so the shallow default clone is
-          # not enough.
+          # Explicitly the PR head. The default for a pull_request event is the merge
+          # commit, whose SHA appears nowhere in the UI — reporting that back would be
+          # more confusing than reporting nothing.
+          ref: ${{ steps.resolve.outputs.head_sha }}
+          # The check compares against the base branch, so a shallow clone is not enough.
           fetch-depth: 0
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: git fetch origin "${{ github.base_ref }}"
-      - run: node scripts/check-version-bump.mjs "${{ github.base_ref }}" "${{ github.head_ref }}"
+
+      - run: git fetch origin "${{ steps.resolve.outputs.base_ref }}"
+
+      - run: >
+          node scripts/check-version-bump.mjs
+          "${{ steps.resolve.outputs.base_ref }}"
+          "${{ steps.resolve.outputs.head_ref }}"
