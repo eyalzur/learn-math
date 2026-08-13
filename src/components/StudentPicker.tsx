@@ -1,5 +1,6 @@
 import { students, grades } from "../data/curriculum";
 import type { Student } from "../data/curriculum";
+import { APP_VERSION } from "../data/version";
 
 interface StudentPickerProps {
   onSelect: (student: Student) => void;
@@ -24,6 +25,12 @@ export function StudentPicker({ onSelect }: StudentPickerProps) {
           );
         })}
       </div>
+      {/* Label and number are separate elements on purpose: a mixed Hebrew/LTR string
+          handed to the browser's bidi algorithm is how this project shipped three
+          direction bugs already. */}
+      <p className="app-version">
+        גרסה <span className="app-version-number">{APP_VERSION}</span>
+      </p>
     </div>
   );
 }
