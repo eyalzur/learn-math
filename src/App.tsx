@@ -75,19 +75,6 @@ function App() {
   }
 
   if (screen.name === "home") {
-    // Grades still on mixed levels skip the topic step entirely.
-    if (grade.practice === "levels") {
-      return (
-        <LevelPicker
-          heading={grade.label}
-          subheading={`שלום ${student.name}!`}
-          levels={grade.levels}
-          onSelect={(level) => setScreen({ name: "practice", topic: null, level })}
-          onBack={switchStudent}
-          onHistory={() => setScreen({ name: "history" })}
-        />
-      );
-    }
     return (
       <TopicPicker
         gradeLabel={`שלום ${student.name}! · ${grade.label}`}
@@ -145,7 +132,7 @@ function App() {
 
   return <TopicPicker
     gradeLabel={grade.label}
-    topics={grade.practice === "topics" ? grade.topicSets : []}
+    topics={grade.topicSets}
     onSelect={(topic) => setScreen({ name: "levels", topic })}
     onBack={switchStudent}
     onHistory={() => setScreen({ name: "history" })}
