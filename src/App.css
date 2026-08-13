@@ -253,8 +253,32 @@
   text-align: right;
 }
 
+.explanation-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+/* Icon only, no label: it has to be usable by a child who cannot read yet, which is the
+   whole point of the feature. The name lives in aria-label. */
+.speak-button {
+  padding: 4px 10px;
+  font-size: 18px;
+  line-height: 1;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.speak-button:hover {
+  border-color: var(--accent-border);
+}
+
 .explanation h3 {
-  margin: 0 0 10px;
+  margin: 0;
   font-size: 15px;
   font-weight: 600;
   color: var(--text-h);
