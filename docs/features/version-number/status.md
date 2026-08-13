@@ -4,15 +4,19 @@
 פיצ'ר (middle) ובכל תיקון (minor).
 
 ## Progress
-- [x] Product spec — product-manager — 2026-08-13
-- [x] Design — designer — 2026-08-13
-- [x] Architecture — tech-lead — 2026-08-13
-- [x] Implementation — developer — 2026-08-13
-- [x] Tests — qa — 2026-08-13
+- [x] Product spec — product-manager — 2026-08-13 (fix: הבדיקה יכולה להיעדר בשקט)
+- [ ] Design — designer — not started
+- [ ] Architecture — tech-lead — not started
+- [ ] Implementation — developer — not started
+- [ ] Tests — qa — not started
 
-**Current phase:** done
-**Branch:** `feature/version-number`
-**PR:** https://github.com/eyalzur/learn-math/pull/10
+**Current phase:** designer
+**Branch:** `fix/version-number`
+**PR:** not opened yet
+
+### היסטוריית סבבים
+- סבב 1 — מספר הגרסה ואכיפת ההעלאה — PR #10, גרסה 1.0.0
+- סבב 2 — תיקון: הבדיקה יכולה להיעדר בלי שאיש ישים לב — בעבודה
 
 ## Open questions / blockers
 None.
