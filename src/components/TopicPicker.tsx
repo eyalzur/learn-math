@@ -36,7 +36,6 @@ export function TopicPicker({
         {topics.map((topic) => (
           <button key={topic.id} className="topic-card" onClick={() => onSelect(topic)}>
             <span className="topic-title">{topic.title}</span>
-            <span className="topic-count">{topic.levels.length} רמות</span>
           </button>
         ))}
       </div>

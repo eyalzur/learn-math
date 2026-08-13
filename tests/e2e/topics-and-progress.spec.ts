@@ -48,6 +48,12 @@ test("picking a student shows the grade's topics, and a topic shows its levels",
   await expect(topics).toHaveCount(5);
   await expect(topics.first().locator(".topic-title")).not.toBeEmpty();
 
+  // A topic card shows its name and nothing else — the level count told a child
+  // nothing they could act on, and every card said the same number anyway.
+  await expect(topics.first()).toHaveText(
+    await topics.first().locator(".topic-title").innerText(),
+  );
+
   await topics.nth(1).click();
   await expect(page.locator(".level-card")).toHaveCount(3);
 });

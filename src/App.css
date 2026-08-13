@@ -349,12 +349,9 @@ button.secondary {
 }
 
 .topic-card {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  display: block;
   text-align: right;
-  gap: 4px;
-  padding: 20px;
+  padding: 22px 20px;
   border: 1px solid var(--border);
   border-radius: 12px;
   background: var(--bg);
@@ -373,12 +370,6 @@ button.secondary {
   font-size: 19px;
   font-weight: 600;
   color: var(--text-h);
-}
-
-.topic-count {
-  font-size: 13px;
-  color: var(--text);
-  opacity: 0.8;
 }
 
 /* ---- history ---- */
