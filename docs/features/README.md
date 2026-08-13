@@ -11,4 +11,4 @@ architecture, implementation notes, and tests.
 | משתמשים, סילבוס ורמות | 🟢 done | [status](./students-and-syllabus/status.md) |
 | מורה שמסבירה | 🟢 done | [status](./teaching-explanations/status.md) |
 | בחירת נושא והתקדמות אישית | 🟡 ממתין לאישור ב-PR | [status](./topics-and-progress/status.md) |
-| הקראה בקול של ההסבר | 🟡 בארכיטקטורה | [status](./read-aloud/status.md) |
+| הקראה בקול של ההסבר | 🟡 בפיתוח | [status](./read-aloud/status.md) |

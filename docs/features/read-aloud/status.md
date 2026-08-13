@@ -6,11 +6,11 @@
 ## Progress
 - [x] Product spec — product-manager — 2026-08-13 (revision: שיפור טבעיות הקול)
 - [x] Design — designer — 2026-08-13 (revision: אין שינוי מסך, רק אישור שהשיפור בקול לא דורש UI)
-- [ ] Architecture — tech-lead — not started
+- [x] Architecture — tech-lead — 2026-08-13 (revision: לוגיקת בחירת קול + rate/pitch מפורשים ב-speech.ts, ללא שינוי בממשק הפומבי)
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** tech-lead
+**Current phase:** developer
 **Branch:** `fix/read-aloud`
 **PR:** not opened yet
 
