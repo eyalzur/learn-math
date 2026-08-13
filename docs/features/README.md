@@ -16,3 +16,4 @@ architecture, implementation notes, and tests.
 | בחירת נושא לכיתות ו׳ ו-ח׳ | 🟢 done | [status](./topics-all-grades/status.md) |
 | שני רמזים לכל שאלה | 🟡 בעיצוב | [status](./question-hints/status.md) |
 | שני רמזים לכל שאלה | 🟡 בארכיטקטורה | [status](./question-hints/status.md) |
+| שני רמזים לכל שאלה | 🟡 בפיתוח | [status](./question-hints/status.md) |
