@@ -1,19 +1,98 @@
-.home {
+.student-picker,
+.grade-home {
   padding: 32px 24px;
 }
 
 .subtitle {
   color: var(--text);
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
-.set-grid {
+/* ---- student picker ---- */
+
+.student-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 380px;
+  margin: 0 auto;
+}
+
+.student-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 20px 24px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  text-align: right;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.student-card:hover {
+  border-color: var(--accent-border);
+  box-shadow: var(--shadow);
+}
+
+.student-name {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.student-grade {
+  font-size: 15px;
+  color: var(--text);
+}
+
+/* ---- grade home ---- */
+
+.grade-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.greeting {
+  font-size: 15px;
+  color: var(--text);
+}
+
+.syllabus {
+  max-width: 480px;
+  margin: 0 auto 28px;
+  padding: 16px 20px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--code-bg);
+  text-align: right;
+}
+
+.syllabus h2 {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.topic-list {
+  font-size: 15px;
+  color: var(--text);
+  line-height: 165%;
+}
+
+.level-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 16px;
 }
 
-.set-card {
+.level-card {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -29,45 +108,37 @@
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
-.set-card:hover {
+.level-card:hover {
   border-color: var(--accent-border);
   box-shadow: var(--shadow);
 }
 
-.set-card h2 {
-  margin: 0;
+.level-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-h);
 }
 
-.set-card p {
+.level-description {
+  font-size: 14px;
   color: var(--text);
-  font-size: 15px;
 }
 
-.problem-count {
+.level-count {
   font-size: 13px;
   color: var(--text);
   opacity: 0.8;
 }
 
-.level-badge {
-  font-size: 12px;
-  font-weight: 600;
-  padding: 2px 10px;
-  border-radius: 999px;
-}
-
-.level-easy {
-  background: rgba(34, 197, 94, 0.15);
+.level-easy .level-title {
   color: #16a34a;
 }
 
-.level-medium {
-  background: rgba(234, 179, 8, 0.15);
+.level-medium .level-title {
   color: #ca8a04;
 }
 
-.level-hard {
-  background: rgba(239, 68, 68, 0.15);
+.level-hard .level-title {
   color: #dc2626;
 }
 
@@ -103,13 +174,43 @@
   gap: 16px;
   margin: 40px 0;
   flex-wrap: wrap;
+}
+
+/* A bare expression reads left-to-right with the input after it; a Hebrew word
+   problem reads right-to-left and gets the input on its own line below, since the
+   sentence is too long to sit beside it. */
+.problem-box.box-ltr {
   direction: ltr;
 }
 
+.problem-box.box-rtl {
+  direction: rtl;
+  flex-direction: column;
+  gap: 20px;
+}
+
 .problem-text {
-  font-size: 40px;
   font-weight: 600;
   color: var(--text-h);
+}
+
+.prompt-ltr {
+  font-size: 40px;
+}
+
+.prompt-rtl {
+  font-size: 21px;
+  line-height: 155%;
+  max-width: 420px;
+}
+
+/* An algebraic run inside a Hebrew sentence needs its own isolated LTR context, or the
+   bidi algorithm mirrors its brackets and reorders its terms: "3(x + 2)" comes out as
+   "3)2 + x(". Isolation, not just direction, is what fixes it. */
+.prompt-math {
+  direction: ltr;
+  unicode-bidi: isolate;
+  white-space: nowrap;
 }
 
 .answer-input {

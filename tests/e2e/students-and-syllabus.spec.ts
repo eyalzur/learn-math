@@ -1,0 +1,199 @@
+import { test, expect, type Page } from "@playwright/test";
+
+/**
+ * Acceptance criteria under test
+ * (docs/features/students-and-syllabus/product-spec.md):
+ *  1. The app opens on a picker with Mika (grade 1), Rotem (grade 6), Omer (grade 8),
+ *     each showing name and grade.
+ *  2. Picking a student shows that grade's topics and three levels.
+ *  3. Every grade has exactly three levels; every level exactly ten questions.
+ *  4. Every question belongs to a topic in its own grade's syllabus.
+ *  5. Picking a level starts a practice run over its ten questions.
+ *  6. Finishing a level shows the score summary.
+ *  7. You can go back and switch student.
+ *  8. The last choice is remembered across a reload.
+ *
+ * Screens and copy come from design.md.
+ */
+
+const EXPECTED = [
+  { name: "מיקה", grade: "כיתה א׳" },
+  { name: "רותם", grade: "כיתה ו׳" },
+  { name: "עומר", grade: "כיתה ח׳" },
+];
+
+async function open(page: Page) {
+  await page.goto("/learn-math/");
+  await page.evaluate(() => localStorage.clear());
+  await page.goto("/learn-math/");
+}
+
+async function pickStudent(page: Page, index: number) {
+  await page.locator(".student-card").nth(index).click();
+}
+
+test.beforeEach(async ({ page }) => {
+  await open(page);
+});
+
+test("opens on the student picker with all three students and their grades", async ({
+  page,
+}) => {
+  await expect(page.locator(".student-picker h1")).toHaveText("מי לומד היום?");
+  const cards = page.locator(".student-card");
+  await expect(cards).toHaveCount(3);
+
+  for (const [i, student] of EXPECTED.entries()) {
+    await expect(cards.nth(i).locator(".student-name")).toHaveText(student.name);
+    await expect(cards.nth(i).locator(".student-grade")).toHaveText(student.grade);
+  }
+});
+
+test("picking a student shows that grade's syllabus and three levels", async ({ page }) => {
+  await pickStudent(page, 0);
+
+  await expect(page.locator(".grade-home h1")).toHaveText("כיתה א׳");
+  await expect(page.locator(".greeting")).toContainText("מיקה");
+  await expect(page.locator(".topic-list")).toContainText("חיבור עד 10");
+  await expect(page.locator(".level-card")).toHaveCount(3);
+});
+
+test("every grade has exactly three levels of ten questions each", async ({ page }) => {
+  for (let studentIndex = 0; studentIndex < EXPECTED.length; studentIndex++) {
+    await open(page);
+    await pickStudent(page, studentIndex);
+
+    const levels = page.locator(".level-card");
+    await expect(levels).toHaveCount(3);
+
+    for (let levelIndex = 0; levelIndex < 3; levelIndex++) {
+      await expect(levels.nth(levelIndex).locator(".level-count")).toHaveText("10 שאלות");
+
+      await levels.nth(levelIndex).click();
+      // The progress line is the app's own count of the level's questions.
+      await expect(page.locator(".progress")).toContainText("מתוך 10");
+      await page.getByRole("button", { name: "← חזרה" }).click();
+    }
+  }
+});
+
+test("every question in every level belongs to its own grade's syllabus", async ({
+  page,
+}) => {
+  // Read the data the app itself ships, then check it against the syllabus each grade
+  // home screen displays — a question tagged with a topic from another grade, or one
+  // not listed at all, is a content error a reader of the docs would never catch.
+  const data = await page.evaluate(async () => {
+    // Served under the app's Vite base path (see vite.config.ts).
+    const mod = await import("/learn-math/src/data/curriculum.ts");
+    return mod.grades.map((g: { label: string; topics: string[]; levels: unknown[] }) => ({
+      label: g.label,
+      topics: g.topics,
+      levels: (g.levels as { questions: { id: string; topic: string }[] }[]).map((l) =>
+        l.questions.map((q) => ({ id: q.id, topic: q.topic })),
+      ),
+    }));
+  });
+
+  expect(data).toHaveLength(3);
+  const offenders: string[] = [];
+  for (const grade of data) {
+    for (const questions of grade.levels) {
+      for (const question of questions) {
+        if (!grade.topics.includes(question.topic)) {
+          offenders.push(`${question.id} ("${question.topic}" not in ${grade.label})`);
+        }
+      }
+    }
+  }
+  expect(offenders).toEqual([]);
+});
+
+test("picking a level runs its ten questions and ends on a score summary", async ({
+  page,
+}) => {
+  await pickStudent(page, 0);
+  await page.locator(".level-card").first().click();
+
+  for (let i = 1; i <= 10; i++) {
+    await expect(page.locator(".progress")).toContainText(`שאלה ${i} מתוך 10`);
+    await page.locator(".answer-input").fill("0");
+    await page.getByRole("button", { name: "בדיקה" }).click();
+    await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
+  }
+
+  await expect(page.locator(".result .score")).toContainText("מתוך 10");
+});
+
+test("you can switch student from the grade screen", async ({ page }) => {
+  await pickStudent(page, 2);
+  await expect(page.locator(".grade-home h1")).toHaveText("כיתה ח׳");
+
+  await page.getByRole("button", { name: "← החלף תלמיד" }).click();
+  await expect(page.locator(".student-picker h1")).toBeVisible();
+
+  await pickStudent(page, 0);
+  await expect(page.locator(".grade-home h1")).toHaveText("כיתה א׳");
+});
+
+test("the chosen student is remembered across a reload", async ({ page }) => {
+  await pickStudent(page, 1);
+  await expect(page.locator(".grade-home h1")).toHaveText("כיתה ו׳");
+
+  await page.reload();
+
+  // Straight back into Rotem's grade, no picker in between.
+  await expect(page.locator(".grade-home h1")).toHaveText("כיתה ו׳");
+  await expect(page.locator(".student-picker")).toHaveCount(0);
+});
+
+test("switching student is also forgotten across a reload", async ({ page }) => {
+  await pickStudent(page, 1);
+  await page.getByRole("button", { name: "← החלף תלמיד" }).click();
+  await page.reload();
+
+  await expect(page.locator(".student-picker h1")).toBeVisible();
+});
+
+test("word problems read right-to-left and their algebra stays left-to-right", async ({
+  page,
+}) => {
+  // Guards the two-level bidi trap: the sentence must be RTL, but an algebraic run
+  // inside it must be isolated LTR or its brackets get mirrored.
+  await pickStudent(page, 2);
+  await page.locator(".level-card").nth(1).click();
+
+  let found = false;
+  for (let i = 0; i < 10; i++) {
+    const box = page.locator(".problem-box");
+    if ((await box.getAttribute("class"))?.includes("box-rtl")) {
+      await expect(box).toHaveCSS("direction", "rtl");
+
+      const maths = page.locator(".prompt-math");
+      if ((await maths.count()) > 0) {
+        await expect(maths.first()).toHaveCSS("direction", "ltr");
+        await expect(maths.first()).toHaveCSS("unicode-bidi", "isolate");
+        found = true;
+        break;
+      }
+    }
+    await page.locator(".answer-input").fill("0");
+    await page.getByRole("button", { name: "בדיקה" }).click();
+    await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
+  }
+  expect(found, "expected at least one word problem containing an algebraic run").toBe(
+    true,
+  );
+});
+
+test("a bare expression is shown left-to-right with a trailing equals sign", async ({
+  page,
+}) => {
+  await pickStudent(page, 0);
+  await page.locator(".level-card").first().click();
+
+  const box = page.locator(".problem-box");
+  await expect(box).toHaveClass(/box-ltr/);
+  await expect(box).toHaveCSS("direction", "ltr");
+  await expect(page.locator(".problem-text")).toContainText("=");
+});

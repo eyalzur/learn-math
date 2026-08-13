@@ -1,38 +1,87 @@
 import { useState } from "react";
-import { Home } from "./components/Home";
+import { StudentPicker } from "./components/StudentPicker";
+import { GradeHome } from "./components/GradeHome";
 import { Practice } from "./components/Practice";
 import { Result } from "./components/Result";
-import type { ExerciseSet } from "./data/exerciseSets";
+import { students } from "./data/curriculum";
+import type { Level, Student } from "./data/curriculum";
 import "./App.css";
 
+const STORAGE_KEY = "learn-math:student";
+
+/** localStorage throws in private mode in some browsers — remembering a preference is
+ *  never worth taking the app down with it. */
+function loadStudent(): Student | null {
+  try {
+    const id = localStorage.getItem(STORAGE_KEY);
+    return students.find((s) => s.id === id) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function rememberStudent(id: string | null) {
+  try {
+    if (id === null) localStorage.removeItem(STORAGE_KEY);
+    else localStorage.setItem(STORAGE_KEY, id);
+  } catch {
+    // ignore
+  }
+}
+
 type Screen =
-  | { name: "home" }
-  | { name: "practice"; set: ExerciseSet }
-  | { name: "result"; set: ExerciseSet; correctCount: number };
+  | { name: "grade" }
+  | { name: "practice"; level: Level }
+  | { name: "result"; level: Level; correctCount: number };
 
 function App() {
-  const [screen, setScreen] = useState<Screen>({ name: "home" });
+  const [student, setStudent] = useState<Student | null>(loadStudent);
+  const [screen, setScreen] = useState<Screen>({ name: "grade" });
 
-  if (screen.name === "home") {
-    return <Home onSelect={(set) => setScreen({ name: "practice", set })} />;
+  function selectStudent(next: Student) {
+    rememberStudent(next.id);
+    setStudent(next);
+    setScreen({ name: "grade" });
+  }
+
+  function switchStudent() {
+    rememberStudent(null);
+    setStudent(null);
+    setScreen({ name: "grade" });
+  }
+
+  if (student === null) {
+    return <StudentPicker onSelect={selectStudent} />;
+  }
+
+  if (screen.name === "grade") {
+    return (
+      <GradeHome
+        student={student}
+        onSelectLevel={(level) => setScreen({ name: "practice", level })}
+        onSwitchStudent={switchStudent}
+      />
+    );
   }
 
   if (screen.name === "practice") {
     return (
       <Practice
-        set={screen.set}
-        onFinish={(correctCount) => setScreen({ name: "result", set: screen.set, correctCount })}
-        onExit={() => setScreen({ name: "home" })}
+        level={screen.level}
+        onFinish={(correctCount) =>
+          setScreen({ name: "result", level: screen.level, correctCount })
+        }
+        onExit={() => setScreen({ name: "grade" })}
       />
     );
   }
 
   return (
     <Result
-      set={screen.set}
+      level={screen.level}
       correctCount={screen.correctCount}
-      onRetry={() => setScreen({ name: "practice", set: screen.set })}
-      onHome={() => setScreen({ name: "home" })}
+      onRetry={() => setScreen({ name: "practice", level: screen.level })}
+      onHome={() => setScreen({ name: "grade" })}
     />
   );
 }
