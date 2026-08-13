@@ -6,11 +6,11 @@
 ## Progress
 - [x] Product spec — product-manager — 2026-08-13 (revision 2: קצב איטי יותר והפסקות בגבולות)
 - [x] Design — designer — 2026-08-13 (revision 2: אין UI חדש, אבל הוכרע שהכפתור נשאר ⏹ לאורך ההפסקות ושהמעבר לדימוי מקבל הפסקה ארוכה יותר)
-- [ ] Architecture — tech-lead — not started
+- [x] Architecture — tech-lead — 2026-08-13 (revision 2: שרשור יחידות עם השהיה, ניקוי טיימר + מזהה רצף; תיקון לנימוק שגוי בארכיטקטורה הקודמת)
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** tech-lead
+**Current phase:** developer
 **Branch:** `feature/read-aloud`
 **PR:** not opened yet
 
