@@ -1,5 +1,12 @@
 import { test, expect, type Page } from "@playwright/test";
 
+/** Grade 1 practises topic-by-topic, so its levels sit one screen deeper. */
+async function openLevels(page: Page, studentIndex: number, topicIndex = 0) {
+  await page.locator(".student-card").nth(studentIndex).click();
+  if (studentIndex === 0) await page.locator(".topic-card").nth(topicIndex).click();
+}
+
+
 /**
  * Acceptance criteria under test
  * (docs/features/perfect-score-message/product-spec.md):
@@ -41,7 +48,7 @@ async function startLevel(page: Page, studentIndex: number, levelIndex: number) 
   await page.goto("/learn-math/");
   await page.evaluate(() => localStorage.clear());
   await page.goto("/learn-math/");
-  await page.locator(".student-card").nth(studentIndex).click();
+  await openLevels(page, studentIndex);
   await page.locator(".level-card").nth(levelIndex).click();
 }
 

@@ -1,5 +1,12 @@
 import { test, expect, type Page } from "@playwright/test";
 
+/** Grade 1 practises topic-by-topic, so its levels sit one screen deeper. */
+async function openLevels(page: Page, studentIndex: number, topicIndex = 0) {
+  await page.locator(".student-card").nth(studentIndex).click();
+  if (studentIndex === 0) await page.locator(".topic-card").nth(topicIndex).click();
+}
+
+
 /**
  * Acceptance criteria under test
  * (docs/features/mistake-explanation/product-spec.md):
@@ -15,24 +22,17 @@ import { test, expect, type Page } from "@playwright/test";
  * itself on a computed, bare-arithmetic question.
  */
 
-/** A bare "a op b" prompt, the only shape that can be explained automatically. */
-const BARE_EXPRESSION = /^\s*\d+\s*[+−\-×÷]\s*\d+\s*=?\s*$/;
-
 async function startGrade1Easy(page: Page) {
   await page.goto("/learn-math/");
   await page.evaluate(() => localStorage.clear());
   await page.goto("/learn-math/");
-  await page.locator(".student-card").first().click();
+  await openLevels(page, 0);
   await page.locator(".level-card").first().click();
 }
 
 async function answerWrong(page: Page) {
   await page.locator(".answer-input").fill("999999");
   await page.getByRole("button", { name: "בדיקה" }).click();
-}
-
-async function goNext(page: Page) {
-  await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
 }
 
 test.beforeEach(async ({ page }) => {

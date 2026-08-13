@@ -1,3 +1,8 @@
+import { grade1Topics } from "./grade1";
+import { level } from "./level";
+
+export { level };
+
 export interface Question {
   id: string;
   /** Must be one of the owning grade's `topics`. */
@@ -26,36 +31,34 @@ export interface Level {
   questions: Question[];
 }
 
-export interface Grade {
+export interface Topic {
+  id: string;
+  title: string;
+  levels: Level[];
+}
+
+/**
+ * A grade practises either topic by topic or straight from mixed levels.
+ *
+ * The union is deliberate rather than two optional fields: grades 6 and 8 are still on
+ * the mixed shape while their topic content is written, and a discriminated union makes
+ * the compiler point at every place that has to handle both instead of letting one path
+ * quietly go unhandled.
+ */
+export type Grade = {
   id: string;
   label: string;
   topics: string[];
-  levels: Level[];
-}
+} & (
+  | { practice: "topics"; topicSets: Topic[] }
+  | { practice: "levels"; levels: Level[] }
+);
 
 export interface Student {
   id: string;
   name: string;
   gradeId: string;
 }
-
-export const students: Student[] = [
-  { id: "mika", name: "מיקה", gradeId: "1" },
-  { id: "rotem", name: "רותם", gradeId: "6" },
-  { id: "omer", name: "עומר", gradeId: "8" },
-];
-
-const LEVEL_META = {
-  easy: { title: "קל", description: "להתחלה בטוחה" },
-  medium: { title: "בינוני", description: "כשכבר יודעים את הבסיס" },
-  hard: { title: "מתקדם", description: "לאתגר אמיתי" },
-} as const;
-
-function level(id: Level["id"], questions: Question[]): Level {
-  return { id, ...LEVEL_META[id], questions };
-}
-
-// ---------------------------------------------------------------- כיתה א׳
 
 const GRADE_1_TOPICS = [
   "מספרים עד 20",
@@ -65,48 +68,21 @@ const GRADE_1_TOPICS = [
   "עשרות ויחידות",
 ];
 
+export const students: Student[] = [
+  { id: "mika", name: "מיקה", gradeId: "1" },
+  { id: "rotem", name: "רותם", gradeId: "6" },
+  { id: "omer", name: "עומר", gradeId: "8" },
+];
+
+
+// ---------------------------------------------------------------- כיתה א׳
+
 const grade1: Grade = {
   id: "1",
   label: "כיתה א׳",
   topics: GRADE_1_TOPICS,
-  levels: [
-    level("easy", [
-      { id: "g1-e1", topic: "חיבור עד 10", prompt: "3 + 2", answer: 5, analogy: "יש לך 3 סוכריות וחבר נותן לך עוד 2 - תספרי אותן ביחד" },
-      { id: "g1-e2", topic: "חיבור עד 10", prompt: "4 + 5", answer: 9, analogy: "4 בלונים ועוד 5 בלונים במסיבה" },
-      { id: "g1-e3", topic: "חיבור עד 10", prompt: "6 + 1", answer: 7, analogy: "6 עפרונות בקלמר, שמים עוד אחד" },
-      { id: "g1-e4", topic: "חיבור עד 10", prompt: "2 + 2", answer: 4, analogy: "2 גרביים ועוד 2 גרביים - זה שני זוגות" },
-      { id: "g1-e5", topic: "חיסור עד 10", prompt: "7 − 3", answer: 4, analogy: "היו 7 עוגיות בצלחת, אכלתם 3" },
-      { id: "g1-e6", topic: "חיסור עד 10", prompt: "9 − 6", answer: 3, analogy: "9 ילדים במגרש, 6 הלכו הביתה" },
-      { id: "g1-e7", topic: "חיסור עד 10", prompt: "8 − 2", answer: 6, analogy: "8 מדבקות באלבום, 2 נפלו" },
-      { id: "g1-e8", topic: "חיסור עד 10", prompt: "10 − 5", answer: 5, analogy: "10 אצבעות, מסתירים 5 מאחורי הגב" },
-      { id: "g1-e9", topic: "מספרים עד 20", prompt: "איזה מספר בא אחרי 7?", answer: 8, steps: [{ label: "אחרי כל מספר בא המספר שגדול ממנו באחד" }, { label: "7 + 1 = 8" }], analogy: "כשעולים במדרגות אחרי מדרגה 7 באה המדרגה הבאה" },
-      { id: "g1-e10", topic: "מספרים עד 20", prompt: "מה גדול יותר, 6 או 9?", answer: 9, steps: [{ label: "ככל שסופרים רחוק יותר, המספר גדול יותר" }, { label: "9 בא אחרי 6, אז 9 גדול יותר" }], analogy: "אם ל-6 ילדים יש בלון ול-9 ילדים יש בלון, לאיזו קבוצה יש יותר?" },
-    ]),
-    level("medium", [
-      { id: "g1-m1", topic: "חיבור וחיסור עד 20", prompt: "12 + 5", answer: 17, analogy: "12 קוביות במגדל, מוסיפים עוד 5" },
-      { id: "g1-m2", topic: "חיבור וחיסור עד 20", prompt: "14 + 3", answer: 17, analogy: "14 חרוזים בשרשרת, משחילים עוד 3" },
-      { id: "g1-m3", topic: "חיבור וחיסור עד 20", prompt: "11 + 8", answer: 19, analogy: "11 ילדים בגן, מגיעים עוד 8" },
-      { id: "g1-m4", topic: "חיבור וחיסור עד 20", prompt: "18 − 4", answer: 14, analogy: "18 ענבים בצלוחית, אכלתם 4" },
-      { id: "g1-m5", topic: "חיבור וחיסור עד 20", prompt: "16 − 5", answer: 11, analogy: "16 גפרורים בקופסה, השתמשו ב-5" },
-      { id: "g1-m6", topic: "חיבור וחיסור עד 20", prompt: "19 − 7", answer: 12, analogy: "19 מדבקות, נתת 7 לחברה" },
-      { id: "g1-m7", topic: "עשרות ויחידות", prompt: "כמה עשרות יש במספר 15?", answer: 1, steps: [{ label: "במספר דו-ספרתי הספרה השמאלית היא העשרות" }, { label: "ב-15 יש ספרה 1 בעשרות, כלומר עשרת אחת" }], analogy: "בקופסאות של 10 - כמה קופסאות מלאות אפשר לעשות מ-15 סוכריות?" },
-      { id: "g1-m8", topic: "עשרות ויחידות", prompt: "כמה יחידות יש במספר 13?", answer: 3, steps: [{ label: "הספרה הימנית היא היחידות" }, { label: "ב-13 היחידות הן 3" }], analogy: "מ-13 סוכריות: קופסה מלאה של 10, וכמה נשארות בחוץ?" },
-      { id: "g1-m9", topic: "עשרות ויחידות", prompt: "10 + 7", answer: 17, analogy: "קופסה מלאה של 10 סוכריות ועוד 7 בודדות" },
-      { id: "g1-m10", topic: "מספרים עד 20", prompt: "איזה מספר בא לפני 20?", answer: 19, steps: [{ label: "לפני כל מספר בא המספר שקטן ממנו באחד" }, { label: "20 − 1 = 19" }], analogy: "כשסופרים אחורה מ-20, איזה מספר בא ראשון?" },
-    ]),
-    level("hard", [
-      { id: "g1-h1", topic: "חיבור וחיסור עד 20", prompt: "8 + 5", answer: 13, analogy: "8 בלונים ועוד 5 - צריך לעבור את ה-10" },
-      { id: "g1-h2", topic: "חיבור וחיסור עד 20", prompt: "7 + 8", answer: 15, analogy: "7 ילדים במגרש ועוד 8 שהגיעו" },
-      { id: "g1-h3", topic: "חיבור וחיסור עד 20", prompt: "9 + 7", answer: 16, analogy: "9 מדבקות ועוד 7 שקיבלת" },
-      { id: "g1-h4", topic: "חיבור וחיסור עד 20", prompt: "6 + 9", answer: 15, analogy: "6 עוגיות בצלחת ועוד 9 שאפיתם" },
-      { id: "g1-h5", topic: "חיבור וחיסור עד 20", prompt: "9 + 9", answer: 18, analogy: "9 אצבעות ועוד 9 - כמעט 20" },
-      { id: "g1-h6", topic: "חיבור וחיסור עד 20", prompt: "15 − 8", answer: 7, analogy: "היו 15 ענבים, אכלתם 8" },
-      { id: "g1-h7", topic: "חיבור וחיסור עד 20", prompt: "13 − 9", answer: 4, analogy: "13 קוביות במגדל, 9 נפלו" },
-      { id: "g1-h8", topic: "חיבור וחיסור עד 20", prompt: "17 − 8", answer: 9, analogy: "17 חרוזים, 8 התפזרו" },
-      { id: "g1-h9", topic: "חיבור וחיסור עד 20", prompt: "14 − 6", answer: 8, analogy: "14 עפרונות בקלמר, 6 אבדו" },
-      { id: "g1-h10", topic: "עשרות ויחידות", prompt: "20 − 12", answer: 8, analogy: "20 סוכריות בשתי קופסאות מלאות, לקחו 12" },
-    ]),
-  ],
+  practice: "topics",
+  topicSets: grade1Topics,
 };
 
 // ---------------------------------------------------------------- כיתה ו׳
@@ -124,6 +100,7 @@ const grade6: Grade = {
   id: "6",
   label: "כיתה ו׳",
   topics: GRADE_6_TOPICS,
+  practice: "levels",
   levels: [
     level("easy", [
       { id: "g6-e1", topic: "שברים פשוטים", prompt: "כמה זה חצי מ-20?", answer: 10, steps: [{ label: "חצי זה לחלק לשני חלקים שווים" }, { label: "20 ÷ 2 = 10" }], analogy: "20 שקל שמתחלקים שווה בשווה בין שניים - כל אחד מקבל 10" },
@@ -179,6 +156,7 @@ const grade8: Grade = {
   id: "8",
   label: "כיתה ח׳",
   topics: GRADE_8_TOPICS,
+  practice: "levels",
   levels: [
     level("easy", [
       { id: "g8-e1", topic: "משוואות", prompt: "x + 7 = 12", answer: 5, steps: [{ label: "מעבירים את ה-7 לצד השני ומשנים סימן" }, { label: "x = 12 − 7" }, { label: "x = 5" }], analogy: "חסכת סכום כלשהו, קיבלת עוד 7 שקל ועכשיו יש לך 12" },
