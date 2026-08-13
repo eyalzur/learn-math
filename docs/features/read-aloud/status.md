@@ -8,16 +8,16 @@
 - [x] Design — designer — 2026-08-13 (revision 2: אין UI חדש, אבל הוכרע שהכפתור נשאר ⏹ לאורך ההפסקות ושהמעבר לדימוי מקבל הפסקה ארוכה יותר)
 - [x] Architecture — tech-lead — 2026-08-13 (revision 2: שרשור יחידות עם השהיה, ניקוי טיימר + מזהה רצף; תיקון לנימוק שגוי בארכיטקטורה הקודמת)
 - [x] Implementation — developer — 2026-08-13 (revision 2: שרשור יחידות ב-speech.ts, rate 0.82, גרסה 1.1.0; build ו-lint נקיים)
-- [ ] Tests — qa — not started
+- [x] Tests — qa — 2026-08-13 (revision 2: stub מפעיל onend, 8 בדיקות חדשות, אחת נכתבה מחדש; 55/55 עוברות)
 
-**Current phase:** qa
+**Current phase:** done
 **Branch:** `feature/read-aloud`
 **PR:** not opened yet
 
 ### היסטוריית סבבים
 - סבב 1 — ההקראה עצמה — PR #6
 - סבב 2 — שיפור טבעיות הקול (בחירת קול, rate/pitch) — PR #8
-- סבב 3 — קצב איטי יותר והפסקות בגבולות — בעבודה
+- סבב 3 — קצב איטי יותר והפסקות בגבולות — גרסה 1.1.0
 
 ## Open questions / blockers
 None. (הקראת השאלה עצמה, ולא רק ההסבר, סומנה מפורשות כמחוץ ל-scope והיא מועמדת
