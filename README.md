@@ -11,14 +11,20 @@ npm run dev
 
 ## מבנה הפרויקט
 
-- `src/data/exerciseSets.ts` - תרגולים מוכנים מראש, מחולקים לפי רמת קושי
-- `src/components/Home.tsx` - מסך בחירת תרגול
-- `src/components/Practice.tsx` - מסך תרגול עם בדיקת תשובות ומשוב מיידי
-- `src/components/Result.tsx` - מסך סיכום ציון בסוף תרגול
+- `src/data/curriculum.ts` - התלמידים, הכיתות והטיפוסים
+- `src/data/grade1.ts` - 150 השאלות של כיתה א׳, מסודרות לפי נושא
+- `src/data/explain.ts` - בניית ההסבר שמוצג אחרי טעות
+- `src/data/progress.ts` - היסטוריית התרגולים
+- `src/data/speech.ts` - הקראה בקול
+- `src/components/` - מסכי בחירת תלמיד, נושא, רמה, תרגול, תוצאה והתקדמות
 
 ## טכנולוגיה
 
 React + TypeScript + Vite.
+
+## המשך עבודה
+
+מפתח/ת או סוכן שמתחילים לעבוד על הפרויקט - קראו קודם את [`CLAUDE.md`](./CLAUDE.md).
 
 ## תהליך פיתוח פיצ'רים
 
