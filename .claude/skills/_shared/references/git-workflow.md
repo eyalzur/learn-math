@@ -67,6 +67,34 @@ Which one you run follows the branch you're on: `feature/<slug>` → `bump:featu
 you'll be told about. Docs-only changes are exempt and skip the check — raising the number
 for a documentation edit would announce an app change that never happened.
 
+### Check that the check actually ran
+
+The workflow prints the commit it looked at, on its first line:
+
+```
+checking feature/my-thing @ ea86e09 against origin/main
+```
+
+Compare that short SHA against the head the PR shows. They should match. If a run is
+missing entirely, or reports an older commit — this happened once after a rebase — the
+result on screen is describing code that is not the code about to merge. Re-run it from
+the **Actions** tab: *Version bump check* → *Run workflow* → enter the PR number.
+
+**A PR with no checks at all looks exactly like a PR whose checks passed.** GitHub shows
+nothing in both cases and the merge button is equally available, which is why the SHA line
+above is worth a glance before merging.
+
+The only thing that turns a missing run into a blocked merge is a repository setting, not
+a file in this repo:
+
+> **Settings → Branches → Add branch ruleset** (or *Add rule*) for `main` →
+> tick **Require status checks to pass** → search for and select **check** →
+> save.
+
+Once that is on, a pull request cannot be merged while the check is absent or failing.
+Until then, the workflow reduces how often the gap happens and makes it visible — it does
+not close it.
+
 ## Opening the PR
 
 Only the last phase (`qa`, or the `feature` orchestrator after it) opens the PR, once the

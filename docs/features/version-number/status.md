@@ -7,10 +7,10 @@
 - [x] Product spec — product-manager — 2026-08-13 (fix: הבדיקה יכולה להיעדר בשקט)
 - [x] Design — designer — 2026-08-13 (fix: אין שטח עיצובי - התיקון לא נוגע במסך)
 - [x] Architecture — tech-lead — 2026-08-13 (fix: dispatch עם מספר PR, types מורחב, checkout ל-HEAD מפורש)
-- [ ] Implementation — developer — not started
+- [x] Implementation — developer — 2026-08-13 (fix: workflow + סקריפט; אין שינוי ב-src ולכן ללא העלאת גרסה)
 - [ ] Tests — qa — not started
 
-**Current phase:** developer
+**Current phase:** qa
 **Branch:** `fix/version-number`
 **PR:** not opened yet
 

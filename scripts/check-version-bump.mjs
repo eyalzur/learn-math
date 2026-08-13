@@ -46,6 +46,11 @@ if (!baseRef || !headRef) skip("no base or head ref was passed (fork PR?)");
 
 const base = `origin/${baseRef}`;
 
+// Print what is actually under test. A green tick says nothing about *which* commit it
+// looked at, and a run left over from before a rebase looks identical to a current one —
+// so the SHA is written out to be compared against the head the pull request shows.
+console.log(`checking ${headRef} @ ${git("rev-parse", "--short", "HEAD")} against ${base}`);
+
 // Only changes a user could actually see require a bump. A docs-only PR that raised the
 // number would be announcing an app change that never happened — the number has to keep
 // meaning something.

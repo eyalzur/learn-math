@@ -266,3 +266,31 @@ workflow_dispatch:
 
 ### Open Questions
 None.
+
+### Implementation Notes — סבב 2
+
+מומש כמתוכנן, בלי סטיות.
+
+- **`.github/workflows/version-check.yml`** — `types: [opened, reopened,
+  synchronize, edited]`; `workflow_dispatch` עם קלט `pr`; שלב `resolve` שמפענח
+  `base_ref`/`head_ref`/`head_sha` (מההקשר באירוע PR, מ-`gh api` בהפעלה ידנית);
+  ו-checkout ל-`head_sha` המפורש במקום ל-commit המיזוג.
+- **`scripts/check-version-bump.mjs`** — שורה אחת נוספה, שמדפיסה את הענף,
+  ה-SHA המקוצר וה-base לפני כל בדיקה.
+- **`git-workflow.md`** — נוסף סעיף "Check that the check actually ran": איך
+  להשוות את ה-SHA, איך להפעיל ידנית, ו**ההוראות המדויקות ל-branch protection**
+  שהיא הדבר היחיד שהופך היעדר הרצה לחוסם.
+
+**נבדק מקומית, שני המסלולים:**
+
+| תרחיש | פלט |
+|---|---|
+| ה-PR הזה (`.github/` + `docs/` בלבד) | `checking fix/version-number @ 9460d40 against origin/main` ואז דילוג. exit 0 |
+| אותו ענף לו נגע ב-`src/` בלי העלאה | אותה שורת SHA, ואז כשל עם `expected: 1.1.1`. exit 1 |
+
+כלומר שורת ה-SHA מודפסת **בשני המקרים** — גם כשמדלגים — כי הרצה שדילגה היא
+בדיוק המקרה שבו כדאי לדעת על איזה commit היא דילגה.
+
+**מה שהתיקון הזה לא עושה, שוב:** הוא לא הופך את הבדיקה לחוסמת. אם GitHub לא
+יורה אף אירוע, לא תהיה הרצה, ו-GitHub לא יציג דבר. ההגנה היחידה מפני זה היא
+ההגדרה שמתועדת ב-`git-workflow.md`, והיא פעולה של בעל המאגר.
