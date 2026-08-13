@@ -248,6 +248,43 @@
   border-color: var(--accent);
 }
 
+/* Secondary on purpose: it sits below the check button so it never competes with the
+   question itself, which is what a seven-year-old is scanning for. */
+.hint-button {
+  display: block;
+  margin: 14px auto 0;
+  padding: 6px 16px;
+  font-size: 14px;
+  background: var(--code-bg);
+  color: var(--text-h);
+  border: 1px solid var(--border);
+}
+
+.hint-button:hover {
+  border-color: var(--accent-border);
+}
+
+.hints {
+  max-width: 420px;
+  margin: 16px auto 0;
+  text-align: right;
+}
+
+.hint {
+  margin: 0 0 8px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  font-size: 15px;
+  line-height: 160%;
+  color: var(--text);
+}
+
+.hint:last-child {
+  margin-bottom: 0;
+}
+
 .feedback {
   font-size: 18px;
   font-weight: 600;
