@@ -19,4 +19,4 @@ architecture, implementation notes, and tests.
 | כללי תוכן שנאכפים | 🟢 done | [status](./content-rules/status.md) |
 | אבחון הטעות ושיחה עליה | 🟢 done | [status](./mistake-diagnosis/status.md) |
 | הקראת השאלה | 🟢 done | [status](./read-aloud-questions/status.md) |
-| ציור לשברים | 🟡 בעיצוב | [status](./fraction-diagram/status.md) |
+| ציור לשברים | 🟡 בתכנון טכני | [status](./fraction-diagram/status.md) |
