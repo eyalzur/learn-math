@@ -755,3 +755,56 @@ button.secondary {
   color: var(--text);
   text-align: center;
 }
+
+/* ---- four-layer explanation: the method sentence and the vertical sum ---- */
+
+/* The sentence a teacher opens with. Emphasised as the box's opening line, but it is a
+   spoken sentence, not a numbered step. */
+.explanation-method {
+  margin: 0 0 14px;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 170%;
+  color: var(--text-h);
+}
+
+.vertical-figure {
+  margin: 0 0 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+/* One LTR island inside the RTL page. The rows arrive pre-padded to a single width, so a
+   uniform-width digit font plus `pre` IS the column alignment — nothing here depends on
+   the bidi algorithm, and there is no grid to drift. */
+.vertical-sum {
+  direction: ltr;
+  unicode-bidi: isolate;
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 135%;
+  white-space: pre;
+  color: var(--text-h);
+}
+
+/* Carry digits live above their columns, distinguished by size — never by colour alone. */
+.vs-carries {
+  font-size: 13px;
+  line-height: 100%;
+  color: var(--text);
+}
+
+.vs-result {
+  border-top: 2px solid var(--text-h);
+}
+
+.vertical-caption {
+  font-size: 14px;
+  line-height: 160%;
+  color: var(--text);
+  text-align: center;
+}

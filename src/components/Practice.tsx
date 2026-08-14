@@ -5,6 +5,8 @@ import type { Diagnosis } from "../data/diagnose";
 import { diagnose } from "../data/diagnose";
 import { explainQuestion } from "../data/explain";
 import { fractionDiagram } from "../data/fractionDiagram";
+import { methodSentence } from "../data/method";
+import { verticalSum } from "../data/verticalSum";
 import { FractionCircle } from "./FractionCircle";
 import {
   explanationToSpeechParts,
@@ -70,6 +72,10 @@ export function Practice({ level, onFinish, onExit, readAloud }: PracticeProps) 
   const explanation = explainQuestion(question);
   /** A picture of the fraction, when one can be drawn honestly from this question. */
   const diagram = fractionDiagram(question);
+  /** How to approach this kind of exercise — the sentence a teacher opens with. */
+  const method = methodSentence(question);
+  /** The exercise in columns, when the column arithmetic reproduces the answer. */
+  const vertical = verticalSum(question);
 
   /**
    * What has already been read out on its own, so it is never read twice.
@@ -186,7 +192,9 @@ export function Practice({ level, onFinish, onExit, readAloud }: PracticeProps) 
         : box === "diagnosis"
           ? diagnosis && speechParts([diagnosis.headline, diagnosis.question])
           : explanation && [
+            ...(method ? speechParts([method]) : []),
             ...(diagram ? speechParts([diagram.caption]) : []),
+            ...(vertical ? speechParts([vertical.caption]) : []),
             ...explanationToSpeechParts(explanation),
           ];
     if (!parts?.length) return;
@@ -249,6 +257,7 @@ export function Practice({ level, onFinish, onExit, readAloud }: PracticeProps) 
         </span>
         <input
           type="number"
+          inputMode="decimal"
           step="any"
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -284,6 +293,7 @@ export function Practice({ level, onFinish, onExit, readAloud }: PracticeProps) 
           <div className="followup-row">
             <input
               type="number"
+              inputMode="decimal"
               step="any"
               value={followUpInput}
               onChange={(e) => setFollowUpInput(e.target.value)}
@@ -335,10 +345,35 @@ export function Practice({ level, onFinish, onExit, readAloud }: PracticeProps) 
               </button>
             )}
           </div>
+          {method && <p className="explanation-method">{segmented(method)}</p>}
           {diagram && (
             <figure className="fraction-figure">
               <FractionCircle diagram={diagram} label={diagram.caption.replace(/`/g, "")} />
               <figcaption className="fraction-caption">{segmented(diagram.caption)}</figcaption>
+            </figure>
+          )}
+          {vertical && (
+            <figure className="vertical-figure">
+              {/* One LTR island. Rows arrive pre-padded from the data module, so the
+                  alignment lives where a test can read it off a string — never in CSS,
+                  and never at the mercy of the page's bidi algorithm. */}
+              <div className="vertical-sum" role="img" aria-label={vertical.caption.replace(/`/g, "")}>
+                {vertical.carries && (
+                  <div className="vs-carries" aria-hidden="true">
+                    {vertical.carries}
+                  </div>
+                )}
+                <div className="vs-row" aria-hidden="true">
+                  {vertical.top}
+                </div>
+                <div className="vs-row" aria-hidden="true">
+                  {vertical.bottom}
+                </div>
+                <div className="vs-row vs-result" aria-hidden="true">
+                  {vertical.result}
+                </div>
+              </div>
+              <figcaption className="vertical-caption">{segmented(vertical.caption)}</figcaption>
             </figure>
           )}
           {explanation.steps.map((step, i) => (

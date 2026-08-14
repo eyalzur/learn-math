@@ -1,4 +1,5 @@
 import type { Question } from "./curriculum";
+import { bareExpression } from "./expression";
 
 /**
  * A single step of a worked solution.
@@ -166,19 +167,16 @@ function explainDivision(a: number, b: number): ExplanationStep[] {
   ];
 }
 
-type Operator = "+" | "-" | "×" | "÷";
-
-/** Matches a question whose prompt is nothing but "a op b". */
-const BARE_EXPRESSION = /^\s*(\d+)\s*([+\u2212\-×÷])\s*(\d+)\s*$/;
-
 /** Steps derived by computing from the operands. Only bare arithmetic qualifies. */
 function computedSteps(prompt: string): ExplanationStep[] | null {
-  const match = prompt.match(BARE_EXPRESSION);
-  if (!match) return null;
+  const expr = bareExpression(prompt);
+  if (!expr) return null;
 
-  const a = Number(match[1]);
-  const b = Number(match[3]);
-  const op = (match[2] === "\u2212" ? "-" : match[2]) as Operator;
+  const { a, op, b } = expr;
+  // The strategies below are whole-number strategies ("count up", "work off the ten").
+  // The shared parser also recognises decimals and negatives, which the old local regex
+  // did not — keep the old boundary so behaviour does not move.
+  if (!Number.isInteger(a) || !Number.isInteger(b) || a < 0 || b < 0) return null;
 
   switch (op) {
     case "+":

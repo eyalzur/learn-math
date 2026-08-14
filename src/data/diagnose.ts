@@ -1,4 +1,5 @@
 import type { Question } from "./curriculum";
+import { bareExpression } from "./expression";
 
 /**
  * What a wrong answer says about the thinking behind it.
@@ -33,12 +34,6 @@ function twoDigitInPrompt(prompt: string): number | null {
   return found ?? null;
 }
 
-/** Splits "12 + 5" into its parts. Word problems return null — they are not parsed. */
-function bareExpression(prompt: string): { a: number; op: string; b: number } | null {
-  const m = prompt.trim().match(/^(-?\d+(?:\.\d+)?)\s*([+\-−×÷*/])\s*(-?\d+(?:\.\d+)?)$/);
-  return m ? { a: Number(m[1]), op: m[2], b: Number(m[3]) } : null;
-}
-
 /**
  * Whether counting is how you get to this answer at all — stepping along the numbers, or a
  * sum small enough to reach on fingers.
@@ -51,7 +46,7 @@ function bareExpression(prompt: string): { a: number; op: string; b: number } | 
 function isCounted(question: Question): boolean {
   if (/בא אחרי|בא לפני/.test(question.prompt)) return true;
   const expr = bareExpression(question.prompt);
-  return expr !== null && (expr.op === "+" || expr.op === "−" || expr.op === "-");
+  return expr !== null && (expr.op === "+" || expr.op === "-");
 }
 
 type Pattern = (question: Question, given: number) => Diagnosis | null;
@@ -97,8 +92,8 @@ const PATTERNS: Pattern[] = [
     const { a, op, b } = expr;
     const opposite =
       op === "+" ? a - b
-      : op === "−" || op === "-" ? a + b
-      : op === "×" || op === "*" ? (b === 0 ? null : a / b)
+      : op === "-" ? a + b
+      : op === "×" ? (b === 0 ? null : a / b)
       : b === 0 ? null
       : a * b;
     if (opposite === null || given !== opposite) return null;
