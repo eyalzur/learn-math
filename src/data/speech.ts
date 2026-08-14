@@ -54,6 +54,23 @@ const SENTENCE_END = /\.(?=\s|$)/;
  * second arrives while a seven-year-old is still digesting the first. The boundaries here
  * are where the pauses go.
  */
+/**
+ * Hebrew sentences carrying backtick-marked arithmetic, as the units they should be
+ * spoken in.
+ *
+ * The question, the hints and the diagnosis all need exactly this, and they all mark
+ * their arithmetic the same way. Three copies of the conversion would be three places to
+ * drift apart, which is why it lives here — this is a fact about speech, not about any
+ * one screen.
+ */
+export function speechParts(texts: string[]): string[] {
+  return texts
+    .map((text) => text.replace(/`([^`]+)`/g, (_, expr: string) => mathToWords(expr)))
+    .flatMap((text) => text.split(SENTENCE_END))
+    .map((part) => part.replace(/\s+/g, " ").trim())
+    .filter(Boolean);
+}
+
 export function explanationToSpeechParts(explanation: Explanation): string[] {
   const blocks = [
     ...explanation.steps.map((step) =>

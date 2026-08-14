@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Level } from "../data/curriculum";
 import { isHebrewPrompt, promptSegments } from "../data/curriculum";
 import type { Diagnosis } from "../data/diagnose";
@@ -6,20 +6,18 @@ import { diagnose } from "../data/diagnose";
 import { explainQuestion } from "../data/explain";
 import {
   explanationToSpeechParts,
-  mathToWords,
   primeVoices,
   speak,
+  speechParts,
   speechSupported,
   stopSpeaking,
 } from "../data/speech";
 
-/** The diagnosis as spoken units: the sentence naming the mistake, then the question. */
-function diagnosisToSpeechParts(diagnosis: Diagnosis): string[] {
-  return [diagnosis.headline, diagnosis.question]
-    .map((text) => text.replace(/`([^`]+)`/g, (_, expr) => mathToWords(expr)))
-    .map((text) => text.replace(/\s+/g, " ").trim())
-    .filter(Boolean);
-}
+/**
+ * Which box is talking. One engine, three speak buttons — a boolean would light up "stop"
+ * on all of them while only one is being read.
+ */
+type SpeakingBox = "question" | "diagnosis" | "explanation" | null;
 
 /** Hebrew wrapped around an arithmetic run, split so the run can be isolated. */
 function segmented(text: string) {
@@ -38,16 +36,16 @@ interface PracticeProps {
   level: Level;
   onFinish: (correctCount: number) => void;
   onExit: () => void;
+  /** This student has every new question read to them without asking. */
+  readAloud: boolean;
 }
 
-export function Practice({ level, onFinish, onExit }: PracticeProps) {
+export function Practice({ level, onFinish, onExit, readAloud }: PracticeProps) {
   const [index, setIndex] = useState(0);
   const [input, setInput] = useState("");
   const [feedback, setFeedback] = useState<"correct" | "wrong" | null>(null);
   const [correctCount, setCorrectCount] = useState(0);
-  /** Which box is talking. One engine, two speak buttons — a boolean would light up
-   *  "stop" on both while only one of them is being read. */
-  const [speakingBox, setSpeakingBox] = useState<"diagnosis" | "explanation" | null>(null);
+  const [speakingBox, setSpeakingBox] = useState<SpeakingBox>(null);
   /** How many hints the student has asked for: 0, 1 or 2. A counter rather than two
    *  flags — the second is unreachable without the first, and one number resets in one
    *  line when the question changes. */
@@ -70,6 +68,45 @@ export function Practice({ level, onFinish, onExit }: PracticeProps) {
   const explanation = explainQuestion(question);
 
   /**
+   * What has already been read out on its own, so it is never read twice.
+   *
+   * Not defensive clutter: StrictMode runs effects twice on purpose, and it caught this —
+   * the question was spoken two times over. A remount would have done the same in
+   * production. Recording what was said is what makes "read each new question once" true
+   * rather than approximately true.
+   */
+  const autoSpoken = useRef<string | null>(null);
+
+  // A new question reads itself when this student asked for that. Keyed on the question's
+  // id rather than the object: every keystroke in the answer field is a render, and a
+  // dependency on the object would restart the sentence on each one.
+  useEffect(() => {
+    if (!readAloud || !speechSupported()) return;
+    const key = `q:${question.id}`;
+    if (autoSpoken.current === key) return;
+    autoSpoken.current = key;
+    stopSpeaking();
+    setSpeakingBox("question");
+    speak(questionParts(), () => setSpeakingBox(null));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [question.id, readAloud]);
+
+  // A hint that appears is text too, and a child who cannot read cannot use it. Only the
+  // newly opened one is spoken, not the whole list from the top.
+  useEffect(() => {
+    if (!readAloud || hintsShown === 0 || !speechSupported()) return;
+    const hint = question.hints?.[hintsShown - 1];
+    if (!hint) return;
+    const key = `h:${question.id}:${hintsShown}`;
+    if (autoSpoken.current === key) return;
+    autoSpoken.current = key;
+    stopSpeaking();
+    setSpeakingBox("question");
+    speak(speechParts([hint]), () => setSpeakingBox(null));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hintsShown]);
+
+  /**
    * Whether the correct answer and the worked explanation are on screen yet.
    *
    * Derived rather than stored: it is already fully determined by how the conversation
@@ -79,7 +116,26 @@ export function Practice({ level, onFinish, onExit }: PracticeProps) {
    */
   const revealed = diagnosis === null || followUpResult !== null || askedToSee;
 
+  /**
+   * The question, plus any hints already opened, as spoken units.
+   *
+   * A bare expression prompt ("12 + 5") carries no Hebrew and is converted whole; a word
+   * problem is already split into text and arithmetic runs, and only the runs need
+   * turning into words.
+   */
+  function questionParts(): string[] {
+    const prompt = isWordProblem
+      ? promptSegments(question.prompt)
+          .map((s) => (s.kind === "math" ? `\`${s.value}\`` : s.value))
+          .join(" ")
+      : `\`${question.prompt}\``;
+    return speechParts([prompt, ...(question.hints?.slice(0, hintsShown) ?? [])]);
+  }
+
   function checkAnswer() {
+    // Pressing "check" means she is done listening.
+    stopSpeaking();
+    setSpeakingBox(null);
     if (input.trim() === "" || feedback !== null) return;
     const isCorrect = Number(input) === question.answer;
     setFeedback(isCorrect ? "correct" : "wrong");
@@ -113,7 +169,7 @@ export function Practice({ level, onFinish, onExit }: PracticeProps) {
     setAskedToSee(false);
   }
 
-  function toggleSpeech(box: "diagnosis" | "explanation") {
+  function toggleSpeech(box: Exclude<SpeakingBox, null>) {
     if (speakingBox !== null) {
       stopSpeaking();
       setSpeakingBox(null);
@@ -122,10 +178,12 @@ export function Practice({ level, onFinish, onExit }: PracticeProps) {
       if (speakingBox === box) return;
     }
     const parts =
-      box === "diagnosis"
-        ? diagnosis && diagnosisToSpeechParts(diagnosis)
-        : explanation && explanationToSpeechParts(explanation);
-    if (!parts) return;
+      box === "question"
+        ? questionParts()
+        : box === "diagnosis"
+          ? diagnosis && speechParts([diagnosis.headline, diagnosis.question])
+          : explanation && explanationToSpeechParts(explanation);
+    if (!parts?.length) return;
     setSpeakingBox(box);
     speak(parts, () => setSpeakingBox(null));
   }
@@ -153,6 +211,20 @@ export function Practice({ level, onFinish, onExit }: PracticeProps) {
         </span>
       </div>
       <h2>{level.title}</h2>
+      {/* Outside .problem-box on purpose: that box forces a direction, and a button
+          inside it would join the isolated context and shift the expression's alignment. */}
+      {speechSupported() && (
+        <div className="question-speech">
+          <button
+            type="button"
+            className="speak-button"
+            onClick={() => toggleSpeech("question")}
+            aria-label={speakingBox === "question" ? "עצרו את ההקראה" : "הקריאו לי את השאלה"}
+          >
+            {speakingBox === "question" ? "⏹" : "🔊"}
+          </button>
+        </div>
+      )}
       <div className={`problem-box ${isWordProblem ? "box-rtl" : "box-ltr"}`}>
         <span className={`problem-text ${isWordProblem ? "prompt-rtl" : "prompt-ltr"}`}>
           {isWordProblem ? (

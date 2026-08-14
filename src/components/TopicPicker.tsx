@@ -1,4 +1,5 @@
 import type { Topic } from "../data/curriculum";
+import { speechSupported } from "../data/speech";
 
 interface TopicPickerProps {
   gradeLabel: string;
@@ -7,6 +8,9 @@ interface TopicPickerProps {
   onBack: () => void;
   /** Only offered from the first screen, where "back" means switching student. */
   onHistory?: () => void;
+  /** Read every question aloud for this student. Absent when there is no student yet. */
+  readAloud?: boolean;
+  onReadAloudChange?: (value: boolean) => void;
 }
 
 export function TopicPicker({
@@ -15,7 +19,13 @@ export function TopicPicker({
   onSelect,
   onBack,
   onHistory,
+  readAloud,
+  onReadAloudChange,
 }: TopicPickerProps) {
+  // The setting belongs to a student, so it only appears once one is chosen — and only
+  // where a voice exists to honour it.
+  const showReadAloud =
+    readAloud !== undefined && onReadAloudChange !== undefined && speechSupported();
   return (
     <div className="topic-picker">
       <div className="grade-header">
@@ -28,6 +38,28 @@ export function TopicPicker({
         <button className="link-button history-link" onClick={onHistory}>
           ההתקדמות שלי →
         </button>
+      )}
+
+      {showReadAloud && (
+        <div className="read-aloud-setting">
+          <span className="read-aloud-icon" aria-hidden="true">
+            🔊
+          </span>
+          <span className="read-aloud-text">
+            <span className="read-aloud-title">להקריא את השאלות בקול</span>
+            <span className="read-aloud-note">מומלץ למי שעדיין לומד/ת לקרוא</span>
+          </span>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={readAloud}
+            className={`read-aloud-switch ${readAloud ? "on" : "off"}`}
+            onClick={() => onReadAloudChange(!readAloud)}
+          >
+            <span className="read-aloud-knob" />
+            <span className="visually-hidden">להקריא את השאלות בקול</span>
+          </button>
+        </div>
       )}
 
       <h1>מה נתרגל היום?</h1>
