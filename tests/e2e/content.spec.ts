@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 import { grades, promptSegments } from "../../src/data/curriculum";
 import type { Question } from "../../src/data/curriculum";
 import { explainQuestion } from "../../src/data/explain";
+import { fractionDiagram } from "../../src/data/fractionDiagram";
 
 /**
  * Content correctness, checked against the data rather than through the browser.
@@ -234,6 +235,40 @@ test("every question carries hints, and the compiler is what guarantees it", () 
   const all = everyQuestion();
   const withHints = all.filter(({ q }) => q.hints?.length === 2);
   expect(withHints.length, "some question is missing its two hints").toBe(all.length);
+});
+
+test("every fraction-of-a-number question still draws its circle", () => {
+  // The diagram is read out of the prompt rather than stored on the question, which keeps
+  // it from ever contradicting the question — but it also means a reworded prompt drops
+  // the picture in silence. This count is what turns that silence into a failure.
+  //
+  // Twenty-four of the topic's thirty questions are "כמה זה <שבר> מ-<מספר>?". The other
+  // six describe shapes one circle cannot, and deliberately have none.
+  const fractions = everyQuestion().filter(({ topic }) => topic === "שברים פשוטים");
+  expect(fractions.length, "the fractions topic changed size").toBe(30);
+
+  const drawn = fractions.filter(({ q }) => fractionDiagram(q) !== null);
+  const missing = fractions
+    .filter(({ q }) => q.prompt.startsWith("כמה זה") && fractionDiagram(q) === null)
+    .map(({ q }) => `${q.id} — "${q.prompt}"`);
+
+  expect(missing, `\n${missing.join("\n")}\n`).toEqual([]);
+  expect(drawn.length, "the number of questions with a diagram changed").toBe(24);
+});
+
+test("no diagram ever disagrees with its own question", () => {
+  // The picture claims the whole splits into `denominator` parts worth `perPart` each, and
+  // that `numerator` of them is the answer. If that arithmetic does not reproduce the
+  // recorded answer, the picture is teaching something false.
+  const wrong: string[] = [];
+  for (const { q } of everyQuestion()) {
+    const d = fractionDiagram(q);
+    if (!d) continue;
+    if (d.perPart * d.denominator !== d.whole) wrong.push(`${q.id}: parts do not rebuild the whole`);
+    if (d.perPart * d.numerator !== q.answer) wrong.push(`${q.id}: the picture does not give the answer`);
+    if (d.numerator > d.denominator) wrong.push(`${q.id}: more parts taken than exist`);
+  }
+  expect(wrong, `\n${wrong.join("\n")}\n`).toEqual([]);
 });
 
 test("review status is decided for every topic", () => {
