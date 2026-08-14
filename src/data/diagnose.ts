@@ -16,7 +16,7 @@ import { bareExpression } from "./expression";
  */
 export interface Diagnosis {
   /** Which pattern matched. Not shown — it is what tests and bug reports can name. */
-  id: "sign" | "operation" | "reversed" | "tens" | "offByOne";
+  id: "sign" | "operation" | "decimalPoint" | "reversed" | "tens" | "offByOne";
   /** Replaces the "wrong, the answer is X" line. */
   headline: string;
   /** One small question isolating the misunderstanding. Never the original question. */
@@ -47,6 +47,20 @@ function isCounted(question: Question): boolean {
   if (/בא אחרי|בא לפני/.test(question.prompt)) return true;
   const expr = bareExpression(question.prompt);
   return expr !== null && (expr.op === "+" || expr.op === "-");
+}
+
+/**
+ * The significant digits of a number, with the point taken out: `0.6` and `6` both give
+ * "6". Two numbers that share this and differ in value are the same digits with the
+ * point in a different place.
+ */
+function digitsOf(n: number): string {
+  return String(Math.abs(n)).replace(".", "").replace(/^0+/, "") || "0";
+}
+
+/** Whether a decimal point is even in play — nothing to lose without one. */
+function involvesDecimals(question: Question): boolean {
+  return question.prompt.includes(".") || !Number.isInteger(question.answer);
 }
 
 type Pattern = (question: Question, given: number) => Diagnosis | null;
@@ -112,7 +126,35 @@ const PATTERNS: Pattern[] = [
     };
   },
 
-  // 3. The digits came out backwards. Both sides must be at least two digits: without
+  // 3. The digits are right; the decimal point is not.
+  //
+  //    Reported from the live app: "0.4 + 0.2" answered `6`. That is not a wrong sum — it
+  //    is the *right* sum with the point dropped. The child added four tenths and two
+  //    tenths, got six, and wrote six wholes. Announcing "the answer is 0.6" answers a
+  //    question she did not ask; she already had the six.
+  //
+  //    The signature is exact rather than interpreted: strip the point from both numbers
+  //    and the digits match, while the values do not. That is an arithmetic identity, so
+  //    this pattern never guesses — which is why it belongs here and not in a model.
+  (question, given) => {
+    const correct = question.answer;
+    if (!Number.isFinite(given) || given === correct) return null;
+    if (!involvesDecimals(question)) return null;
+    if (digitsOf(given) !== digitsOf(correct)) return null;
+
+    const bigger = Math.abs(given) > Math.abs(correct) ? given : correct;
+    return {
+      id: "decimalPoint",
+      // Credits what she got right before naming what she missed. She did the arithmetic.
+      headline: `רגע — כתבת \`${given}\`. הספרות נכונות, אבל הנקודה לא במקום`,
+      question: `מה גדול יותר, \`${correct}\` או \`${given}\`?`,
+      answer: bigger,
+      onRight: "נכון. הנקודה קובעת כמה גדול המספר",
+      onWrong: `\`${bigger}\` גדול יותר. הנקודה קובעת כמה גדול המספר`,
+    };
+  },
+
+  // 4. The digits came out backwards. Both sides must be at least two digits: without
   //    that guard, answering `1` where `10` was wanted would be called a reversal, when
   //    it is far more likely to be something else entirely.
   (question, given) => {
@@ -130,7 +172,7 @@ const PATTERNS: Pattern[] = [
     };
   },
 
-  // 4. The tens were not read.
+  // 5. The tens were not read.
   //
   //    The tell is not that the answer equals a digit in the question — it is that the
   //    answer is what you get by doing the question right on a number read wrong. "What
@@ -159,7 +201,7 @@ const PATTERNS: Pattern[] = [
     };
   },
 
-  // 5. Off by one. Last, always. It is the only pattern that can land on a guess that
+  // 6. Off by one. Last, always. It is the only pattern that can land on a guess that
   //    happened to fall nearby, so it may only speak once every structural pattern has
   //    declined — never as the explanation for an answer that has a better one.
   //
