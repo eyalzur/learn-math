@@ -172,6 +172,22 @@ const RULES: {
       return null;
     },
   },
+  {
+    name: "names the target a hint is working towards",
+    check: (q, gradeId) => {
+      // Reported on g1-addsub20-m3: "`9` צריך עוד `1`. מתוך `4`, כמה נשאר להוסיף?" —
+      // needs one more *to reach what?* The method being taught is completing to ten, and
+      // leaving the ten unsaid asks the child to already know the thing the hint exists to
+      // teach. Five of the ten read that way; only one was noticed by eye.
+      if (gradeId !== "1" || !q.hints) return null;
+      for (const hint of q.hints) {
+        if (/צריך עוד|כמה חסר/.test(hint) && !/10/.test(hint)) {
+          return `a hint says what is needed without naming the target — "${hint}"`;
+        }
+      }
+      return null;
+    },
+  },
 ];
 
 test("every question passes every content rule", () => {
