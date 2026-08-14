@@ -12,7 +12,7 @@
 
 **Current phase:** done
 **Branch:** `feature/mistake-diagnosis`
-**PR:** not opened yet
+**PR:** https://github.com/eyalzur/learn-math/pull/18
 
 ## Open questions / blockers
 None.
