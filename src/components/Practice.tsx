@@ -95,8 +95,7 @@ export function Practice({ level, onFinish, onExit, readAloud }: PracticeProps) 
   // newly opened one is spoken, not the whole list from the top.
   useEffect(() => {
     if (!readAloud || hintsShown === 0 || !speechSupported()) return;
-    const hint = question.hints?.[hintsShown - 1];
-    if (!hint) return;
+    const hint = question.hints[hintsShown - 1];
     const key = `h:${question.id}:${hintsShown}`;
     if (autoSpoken.current === key) return;
     autoSpoken.current = key;
@@ -129,7 +128,7 @@ export function Practice({ level, onFinish, onExit, readAloud }: PracticeProps) 
           .map((s) => (s.kind === "math" ? `\`${s.value}\`` : s.value))
           .join(" ")
       : `\`${question.prompt}\``;
-    return speechParts([prompt, ...(question.hints?.slice(0, hintsShown) ?? [])]);
+    return speechParts([prompt, ...question.hints.slice(0, hintsShown)]);
   }
 
   function checkAnswer() {
@@ -349,7 +348,7 @@ export function Practice({ level, onFinish, onExit, readAloud }: PracticeProps) 
       </div>
       {hintsShown > 0 && (
         <div className="hints">
-          {question.hints!.slice(0, hintsShown).map((hint, i) => (
+          {question.hints.slice(0, hintsShown).map((hint, i) => (
             <p key={i} className="hint">
               {/* Same isolation the prompts get: a hint like "כמה זה `8 + 2`?" is a
                   Hebrew sentence wrapped around an expression, which is exactly what the
@@ -359,7 +358,7 @@ export function Practice({ level, onFinish, onExit, readAloud }: PracticeProps) 
           ))}
         </div>
       )}
-      {question.hints && feedback === null && hintsShown < 2 && (
+      {feedback === null && hintsShown < 2 && (
         <button
           type="button"
           className="hint-button"

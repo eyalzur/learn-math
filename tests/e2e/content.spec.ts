@@ -131,7 +131,6 @@ const RULES: {
   {
     name: "keeps its hints to exactly two, without giving the answer away",
     check: (q) => {
-      if (!q.hints) return null; // not every topic has hints yet
       if (q.hints.length !== 2) return `${q.hints.length} hints instead of two`;
 
       // Numbers are compared as numbers, not as text.
@@ -195,7 +194,7 @@ const RULES: {
       // needs one more *to reach what?* The method being taught is completing to ten, and
       // leaving the ten unsaid asks the child to already know the thing the hint exists to
       // teach. Five of the ten read that way; only one was noticed by eye.
-      if (gradeId !== "1" || !q.hints) return null;
+      if (gradeId !== "1") return null;
       for (const hint of q.hints) {
         if (/צריך עוד|כמה חסר/.test(hint) && !/10/.test(hint)) {
           return `a hint says what is needed without naming the target — "${hint}"`;
@@ -228,11 +227,13 @@ test("every analogy is written for its own question, not reused", () => {
   }
 });
 
-test("hints exist somewhere", () => {
-  // The hint rule above only fires on questions that have hints, so it would pass happily
-  // on a codebase where every hint had been deleted. This is the floor under it.
-  const withHints = everyQuestion().filter(({ q }) => q.hints);
-  expect(withHints.length, "no question has hints at all").toBeGreaterThan(0);
+test("every question carries hints, and the compiler is what guarantees it", () => {
+  // `hints` is a required field, so a question without them does not compile. This test
+  // is here to state the fact rather than to catch it: if the field is ever loosened back
+  // to optional, the count is what notices.
+  const all = everyQuestion();
+  const withHints = all.filter(({ q }) => q.hints?.length === 2);
+  expect(withHints.length, "some question is missing its two hints").toBe(all.length);
 });
 
 test("review status is decided for every topic", () => {

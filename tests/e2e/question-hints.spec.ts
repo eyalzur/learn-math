@@ -121,10 +121,22 @@ test("taking a hint does not cost anything in the score", async ({ page }) => {
   await expect(page.locator(".score")).toContainText("10");
 });
 
-test("a question with no written hints shows no button", async ({ page }) => {
-  // Other topics have not been given hints yet, and must not sprout a dead button.
+test("every topic offers hints, not just the one they were written for first", async ({
+  page,
+}) => {
+  // This test used to assert the opposite: that a topic without hints shows no button.
+  // That state no longer exists — `hints` is a required field, so a question without them
+  // does not compile. The check that remains is the one that still means something: a
+  // topic that was never part of the original hint work offers them all the same.
   await openTopic(page, "חיבור עד 10");
 
   await expect(page.locator(".answer-input")).toBeVisible();
+  await expect(page.locator(".hint-button")).toBeVisible();
+
+  await page.locator(".hint-button").click();
+  await expect(page.locator(".hint")).toHaveCount(1);
+  await page.locator(".hint-button").click();
+  await expect(page.locator(".hint")).toHaveCount(2);
+  // Two and no more.
   await expect(page.locator(".hint-button")).toHaveCount(0);
 });
