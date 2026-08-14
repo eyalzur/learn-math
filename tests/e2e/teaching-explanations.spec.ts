@@ -19,23 +19,12 @@ async function openLevels(page: Page, studentIndex: number, topicIndex = 0) {
  * checked 3 topics out of 17 while claiming to cover every question.
  */
 
-/** Arithmetic left in the prose element renders reversed inside the RTL page. */
-const MATH_RUN = /[0-9]\s*[+−\-×÷=]|[+−×÷=]\s*[0-9]|√/;
-
 async function startLevel(page: Page, studentIndex: number, levelIndex: number) {
   await page.goto("/learn-math/");
   await page.evaluate(() => localStorage.clear());
   await page.goto("/learn-math/");
   await openLevels(page, studentIndex);
   await page.locator(".level-card").nth(levelIndex).click();
-}
-
-/** How many questions this level actually holds — grade 1 has ten, grades 6 and 8 five. */
-async function levelSize(page: Page) {
-  const text = await page.locator(".progress").innerText();
-  const total = Number(text.match(/מתוך\s+(\d+)/)?.[1]);
-  expect(total, `could not read the level size from "${text}"`).toBeGreaterThan(0);
-  return total;
 }
 
 async function answerWrong(page: Page) {

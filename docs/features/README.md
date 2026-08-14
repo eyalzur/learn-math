@@ -16,3 +16,4 @@ architecture, implementation notes, and tests.
 | בחירת נושא לכיתות ו׳ ו-ח׳ | 🟢 done | [status](./topics-all-grades/status.md) |
 | שני רמזים לכל שאלה | 🟢 done | [status](./question-hints/status.md) |
 | סטטוס ריוויו | 🟢 done | [status](./review-status/status.md) |
+| כללי תוכן שנאכפים | 🟢 done | [status](./content-rules/status.md) |

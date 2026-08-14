@@ -35,7 +35,7 @@ jobs:
             echo "head_sha=${{ github.event.pull_request.head.sha }}" >> "$GITHUB_OUTPUT"
           fi
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           # Explicitly the PR head. The default for a pull_request event is the merge
           # commit, whose SHA appears nowhere in the UI — reporting that back would be
@@ -44,9 +44,9 @@ jobs:
           # The check compares against the base branch, so a shallow clone is not enough.
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 24
 
       - run: git fetch origin "${{ steps.resolve.outputs.base_ref }}"
 
