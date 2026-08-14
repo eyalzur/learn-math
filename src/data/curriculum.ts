@@ -12,15 +12,19 @@ export interface Question {
   /** Shown as-is. Either a bare expression ("23 + 45") or a Hebrew word problem. */
   prompt: string;
   /**
-   * Two hints, asked for before answering: the method stated generally, then a smaller
-   * worked example of the same shape.
+   * Two hints, asked for before answering: the method stated generally, then the first
+   * concrete step on the question's own numbers.
    *
    * A fixed pair rather than an array — the spec calls for exactly two, and a `string[]`
    * would push "not one, not three" out to a runtime check the compiler could have made.
-   * Optional only while the content is being written topic by topic; once every question
-   * carries hints this should become required, and the compiler will list what is missing.
+   *
+   * Required, now that all 330 questions carry hints. It was optional while the content
+   * was being written topic by topic, and the moment that finished it stopped being
+   * honest: optional means a new question with no hints compiles, and the child who meets
+   * it gets no help. Required means the compiler refuses, and names the question — the
+   * same reason `analogy` is required.
    */
-  hints?: readonly [string, string];
+  hints: readonly [string, string];
   answer: number;
   /**
    * Worked steps for questions that cannot be broken down by computing from operands —
