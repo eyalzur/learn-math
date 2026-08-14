@@ -129,28 +129,51 @@ const PATTERNS: Pattern[] = [
   // 3. The digits are right; the decimal point is not.
   //
   //    Reported from the live app: "0.4 + 0.2" answered `6`. That is not a wrong sum — it
-  //    is the *right* sum with the point dropped. The child added four tenths and two
-  //    tenths, got six, and wrote six wholes. Announcing "the answer is 0.6" answers a
-  //    question she did not ask; she already had the six.
+  //    is the *right* sum with the point dropped. She added four tenths and two tenths,
+  //    got six, and wrote six wholes. Announcing "the answer is 0.6" answers a question
+  //    she did not ask; she already had the six.
   //
   //    The signature is exact rather than interpreted: strip the point from both numbers
   //    and the digits match, while the values do not. That is an arithmetic identity, so
-  //    this pattern never guesses — which is why it belongs here and not in a model.
+  //    this pattern never guesses.
+  //
+  //    What it teaches is the user's correction, in his words: "להגיד מה גדול יותר לא
+  //    עוזר לילד" — she already knows six is more than six tenths. The lesson is the
+  //    habit she skipped: we added numbers smaller than one, so the result cannot be that
+  //    big, and six is six whole things. Check the size of an answer before finishing.
+  //    So the follow-up asks for the size, explicitly without computing.
   (question, given) => {
     const correct = question.answer;
-    if (!Number.isFinite(given) || given === correct) return null;
+    if (!Number.isFinite(given) || given === correct || correct === 0) return null;
     if (!involvesDecimals(question)) return null;
     if (digitsOf(given) !== digitsOf(correct)) return null;
 
-    const bigger = Math.abs(given) > Math.abs(correct) ? given : correct;
+    const expr = bareExpression(question.prompt);
+    // The case the user described: adding two numbers each below one. Naming that out
+    // loud is the concrete version of "the result cannot be that big".
+    const bothUnderOne =
+      expr !== null && expr.op === "+" && Math.abs(expr.a) < 1 && Math.abs(expr.b) < 1;
+    const tooBig = Math.abs(given) > Math.abs(correct);
+    const factor = Math.round(
+      tooBig ? Math.abs(given) / Math.abs(correct) : Math.abs(correct) / Math.abs(given),
+    );
+    // How many whole things the answer is — 0 for six tenths, 3 for three and seven.
+    const wholes = Math.floor(Math.abs(correct));
+
     return {
       id: "decimalPoint",
-      // Credits what she got right before naming what she missed. She did the arithmetic.
-      headline: `רגע — כתבת \`${given}\`. הספרות נכונות, אבל הנקודה לא במקום`,
-      question: `מה גדול יותר, \`${correct}\` או \`${given}\`?`,
-      answer: bigger,
-      onRight: "נכון. הנקודה קובעת כמה גדול המספר",
-      onWrong: `\`${bigger}\` גדול יותר. הנקודה קובעת כמה גדול המספר`,
+      // Credits the arithmetic she got right, then points at the size — never at the
+      // point itself, which is the symptom rather than the habit.
+      headline: bothUnderOne
+        ? `רגע — הספרות נכונות. אבל \`${expr.a}\` ו-\`${expr.b}\` שניהם קטנים מ-\`1\`, ולכן לא יכולים לתת \`${given}\``
+        : `רגע — הספרות נכונות, אבל \`${given}\` ${tooBig ? "גדול" : "קטן"} פי \`${factor}\` מהתשובה`,
+      question: "בלי לחשב בדיוק — כמה שלמים צריכים לצאת?",
+      answer: wholes,
+      onRight:
+        wholes === 0
+          ? "יפה — אף שלם. זו בדיקת הגודל, וכדאי לעשות אותה לפני שמסיימים"
+          : "יפה. זו בדיקת הגודל, וכדאי לעשות אותה לפני שמסיימים",
+      onWrong: `\`${wholes}\`. בדיקת הגודל הזו שווה שנייה לפני שמסיימים`,
     };
   },
 

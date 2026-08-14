@@ -250,7 +250,37 @@ test("a dropped decimal point is named, not treated as a wrong sum", async ({ pa
   // The sentence has to credit the digits she got right — that is the whole point of
   // naming this mistake rather than announcing the answer.
   expect(said, "the diagnosis does not say the digits were right").toContain("הספרות נכונות");
+  // And it has to argue from size: both numbers are under one, so six cannot come out.
+  expect(said, "the diagnosis does not argue from the size of the numbers").toContain("קטנים מ");
   await expect(page.locator(".followup")).toBeVisible();
+});
+
+test("the follow-up builds the size-check habit instead of quizzing a known fact", async ({
+  page,
+}) => {
+  await page.goto("/learn-math/");
+  await page.evaluate(() => localStorage.clear());
+  await page.goto("/learn-math/");
+  await page.locator(".student-card").nth(1).click();
+  await page.locator(".topic-card").nth(1).click();
+  await page.locator(".level-card").nth(0).click();
+  for (let i = 0; i < 12; i++) {
+    const prompt = await page.locator(".problem-text").innerText();
+    if (prompt.includes("0.4 + 0.2")) break;
+    await answer(page, "999999");
+    await page.getByRole("button", { name: /הבא|סיום/ }).click();
+  }
+  await answer(page, "6");
+
+  const asked = await page.locator(".followup-question").innerText();
+  // "Which is bigger, 0.6 or 6?" tests something she already knows. The question has to
+  // ask for the *size* of the answer instead — the check she skipped.
+  expect(asked, "the follow-up is still a comparison").not.toContain("גדול יותר");
+  expect(asked, "the follow-up does not ask about size").toContain("שלמים");
+
+  // Six tenths is zero whole things, and that is the realisation.
+  await answerFollowUp(page, "0");
+  await expect(page.locator(".followup-reply")).toContainText("בדיקת הגודל");
 });
 
 test.describe("without the browser", () => {
