@@ -39,6 +39,21 @@ function bareExpression(prompt: string): { a: number; op: string; b: number } | 
   return m ? { a: Number(m[1]), op: m[2], b: Number(m[3]) } : null;
 }
 
+/**
+ * Whether counting is how you get to this answer at all — stepping along the numbers, or a
+ * sum small enough to reach on fingers.
+ *
+ * This is the guard on off-by-one, and it exists because distance of one is not by itself
+ * evidence of anything. "כמה זה רבע מ-20" answered `6` is one away from `5` and is not a
+ * counting slip in any sense: a child who cannot yet divide by four has not miscounted, and
+ * being told "כמעט!" confirms a method she does not have.
+ */
+function isCounted(question: Question): boolean {
+  if (/בא אחרי|בא לפני/.test(question.prompt)) return true;
+  const expr = bareExpression(question.prompt);
+  return expr !== null && (expr.op === "+" || expr.op === "−" || expr.op === "-");
+}
+
 type Pattern = (question: Question, given: number) => Diagnosis | null;
 
 /**
@@ -152,17 +167,34 @@ const PATTERNS: Pattern[] = [
   // 5. Off by one. Last, always. It is the only pattern that can land on a guess that
   //    happened to fall nearby, so it may only speak once every structural pattern has
   //    declined — never as the explanation for an answer that has a better one.
+  //
+  //    Two things narrow it, and both were learned from one screenshot of "כמה זה רבע
+  //    מ-20?" answered `6`:
+  //
+  //    `isCounted` keeps it to questions a counting slip can actually explain. Nearness is
+  //    not evidence on its own, and on a fraction question this pattern was speaking about
+  //    a mistake that was not there.
+  //
+  //    And direction is part of the mistake, not a detail of it. One too many and one too
+  //    few are different errors; the version that shipped assumed the answer was always
+  //    short, so a student who overshot was told to add another one — walked away from the
+  //    answer, and then told the one she had been missing was found.
   (question, given) => {
     const correct = question.answer;
     if (!isInteger(correct) || !isInteger(given)) return null;
     if (Math.abs(given - correct) !== 1) return null;
+    if (!isCounted(question)) return null;
+
+    const short = given < correct;
+    const wasMissing = short ? "רק אחד היה חסר" : "היה אחד יותר מדי";
     return {
       id: "offByOne",
-      headline: "כמעט! פספסת בדיוק באחד",
-      question: `כמה זה \`${given} + 1\`?`,
-      answer: given + 1,
-      onRight: "יפה. רק אחד היה חסר",
-      onWrong: `זה \`${given + 1}\`. רק אחד היה חסר`,
+      headline: short ? "כמעט! חסר בדיוק אחד" : "כמעט! זה אחד יותר מדי",
+      // Written in logical order inside its own run, never hand-reversed for an RTL line.
+      question: `כמה זה \`${given} ${short ? "+" : "−"} 1\`?`,
+      answer: correct,
+      onRight: `יפה. ${wasMissing}`,
+      onWrong: `זה \`${correct}\`. ${wasMissing}`,
     };
   },
 ];
