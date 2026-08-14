@@ -46,16 +46,13 @@ Check whether `playwright.config.ts` and a `tests/e2e/` directory already exist.
        url: 'http://localhost:5173/learn-math/',
        reuseExistingServer: !process.env.CI,
      },
-     projects: [
-       {
-         name: 'chromium',
-         use: {
-           launchOptions: { executablePath: '/opt/pw-browsers/chromium' },
-         },
-       },
-     ],
+     projects: [{ name: 'chromium', use: { launchOptions } }],
    });
    ```
+
+   `launchOptions` points at `/opt/pw-browsers/chromium` **only when that file exists** —
+   the dev container has a browser there and forbids `playwright install`, while CI is the
+   exact opposite. See the real `playwright.config.ts` for the check.
 
    The app's Vite base path is `/learn-math/` (see `vite.config.ts`) — every test URL and
    the webServer readiness check need that prefix, or Playwright will wait on the wrong
@@ -70,7 +67,19 @@ failure points straight back to the doc that justifies it (e.g.
 `test('shows the correct answer after an incorrect guess', ...)`). Use design.md's
 Screens/States and Interaction Flow to know what selectors and steps to actually use.
 
-## 4. Run and report
+## 4. Turn content comments into rules
+
+If this feature touched the questions — added them, edited them, changed hints or analogies
+— and a human commented on the content along the way, ask of each comment: **does it
+describe a pattern, or one question?** A pattern belongs in the `RULES` list in
+`tests/e2e/content.spec.ts`, where it runs against all 330 questions instead of the one
+that was pointed at. Read `../_shared/references/content-rules.md` before writing one.
+
+A rule written this way usually catches more than the comment did. That is the whole
+reason for the list, and finding extra cases is a success, not a setback — fix them in the
+same pass.
+
+## 5. Run and report
 
 ```bash
 npm run test:e2e
@@ -81,7 +90,7 @@ plainly — don't edit the test to force it green. That defeats the point: a tes
 adjusted to match broken behavior can't tell anyone the behavior is broken. Flag it back as
 work for another `developer` pass.
 
-## 5. Write `docs/features/<slug>/tests.md`
+## 6. Write `docs/features/<slug>/tests.md`
 
 ```markdown
 # <Feature name> — Tests
@@ -98,12 +107,12 @@ Pass/fail as of <date>. If failing, what's failing and why (implementation bug v
 test vs. spec ambiguity).
 ```
 
-## 6. Update status.md and the features index
+## 7. Update status.md and the features index
 
 Follow `../_shared/references/docs-format.md` exactly. If tests are failing, Current phase
 should read `qa — blocked, tests failing` rather than "done".
 
-## 7. Commit
+## 8. Commit
 
 Commit the test files, any Playwright setup, tests.md, status.md, and the index to the
 feature branch — see `../_shared/references/git-workflow.md`. Commit even when tests are

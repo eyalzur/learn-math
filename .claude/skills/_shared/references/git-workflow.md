@@ -88,12 +88,30 @@ The only thing that turns a missing run into a blocked merge is a repository set
 a file in this repo:
 
 > **Settings → Branches → Add branch ruleset** (or *Add rule*) for `main` →
-> tick **Require status checks to pass** → search for and select **check** →
-> save.
+> tick **Require status checks to pass** → search for and select both **check** and
+> **test** → save.
 
-Once that is on, a pull request cannot be merged while the check is absent or failing.
-Until then, the workflow reduces how often the gap happens and makes it visible — it does
+Once that is on, a pull request cannot be merged while a check is absent or failing.
+Until then, the workflows reduce how often the gap happens and make it visible — they do
 not close it.
+
+## The tests run themselves
+
+**Tests** (`.github/workflows/tests.yml`) runs the build, the lint and the full suite on
+every pull request and on every push to `main` — including the content rules that hold the
+questions to what review has already found. `main` is checked too, not just pull requests,
+because two changes that are fine apart can break together, and `main` is what the children
+are using.
+
+That does not replace running them before you say something is ready:
+
+```bash
+npm run build && npm run lint && npm run test:e2e
+```
+
+When a content check fails, read
+[`content-rules.md`](./content-rules.md) before touching the question — sometimes the rule
+is the thing that's wrong.
 
 ## Opening the PR
 
