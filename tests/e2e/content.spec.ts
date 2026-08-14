@@ -152,7 +152,7 @@ const RULES: {
     },
   },
   {
-    name: "puts its hints in a first-grader's Hebrew, not a textbook's",
+    name: "speaks a first-grader's Hebrew, not a textbook's",
     check: (q, gradeId) => {
       // Reported on g1-addsub20-e1: "העשרת לא זזה, מוסיפים רק ליחידות". The idea was
       // right and the wording was a teacher's manual. Mika is seven and still learning to
@@ -162,12 +162,20 @@ const RULES: {
       // fair game in the topic that exists to teach them, which is why the topic title is
       // consulted instead of banning them outright: a hint for "עשרות ויחידות" has no
       // other way to name its own subject.
-      if (gradeId !== "1" || !q.hints) return null;
+      if (gradeId !== "1") return null;
       const TEXTBOOK = /עשרת|עשרות|יחידות|מחוברים|סכום|הפרש|מחובר/;
       if (TEXTBOOK.test(q.topic)) return null;
-      for (const hint of q.hints) {
-        const found = hint.match(TEXTBOOK);
-        if (found) return `textbook Hebrew for a seven-year-old — "${found[0]}" in "${hint}"`;
+
+      // Hints and explanation steps both. The explanation is what she reads at the moment
+      // she got it wrong, so it is if anything the more important of the two — and it was
+      // still saying "היחידות מתחברות בלי מעבר עשרת" long after the hints were plain.
+      const written = [
+        ...(q.hints ?? []),
+        ...explainQuestion(q)!.steps.map((s) => s.label ?? ""),
+      ];
+      for (const text of written) {
+        const found = text.match(TEXTBOOK);
+        if (found) return `textbook Hebrew for a seven-year-old — "${found[0]}" in "${text}"`;
       }
       return null;
     },

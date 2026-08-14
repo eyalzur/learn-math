@@ -61,25 +61,25 @@ function explainAddition(a: number, b: number): ExplanationStep[] {
   if (tens === 0) {
     const gap = 10 - unitsOf(a);
     if (b < gap) {
-      return [{ label: "היחידות מתחברות בלי מעבר עשרת:", math: `${a} + ${b} = ${total}` }];
+      return [{ label: "מחברים רק את המספרים הקטנים:", math: `${a} + ${b} = ${total}` }];
     }
     if (b === gap) {
-      return [{ label: "זה בדיוק משלים לעשרת:", math: `${a} + ${b} = ${total}` }];
+      return [{ label: "זה מגיע בדיוק למספר עגול:", math: `${a} + ${b} = ${total}` }];
     }
     const ten = a + gap;
     return [
-      { label: "קודם עד העשרת:", math: `${a} + ${gap} = ${ten}` },
+      { label: "קודם עולים למספר עגול:", math: `${a} + ${gap} = ${ten}` },
       { label: `נשאר להוסיף ${b - gap}:`, math: `${ten} + ${b - gap} = ${total}` },
     ];
   }
 
   if (units === 0) {
-    return [{ label: "חבר את העשרות:", math: `${a} + ${tens} = ${total}` }];
+    return [{ label: "מוסיפים מספר עגול:", math: `${a} + ${tens} = ${total}` }];
   }
 
   return [
-    { label: "קודם העשרות:", math: `${a} + ${tens} = ${a + tens}` },
-    { label: "אחר כך היחידות:", math: `${a + tens} + ${units} = ${total}` },
+    { label: "קודם החלק העגול:", math: `${a} + ${tens} = ${a + tens}` },
+    { label: "ואחר כך מה שנשאר:", math: `${a + tens} + ${units} = ${total}` },
   ];
 }
 
@@ -94,11 +94,11 @@ function explainSubtraction(a: number, b: number): ExplanationStep[] {
     const tens = tensOf(b);
     const units = unitsOf(b);
     if (units === 0) {
-      return [{ label: "החסר את העשרות:", math: `${a} − ${tens} = ${result}` }];
+      return [{ label: "מורידים מספר עגול:", math: `${a} − ${tens} = ${result}` }];
     }
     return [
-      { label: "קודם העשרות:", math: `${a} − ${tens} = ${a - tens}` },
-      { label: "אחר כך היחידות:", math: `${a - tens} − ${units} = ${result}` },
+      { label: "קודם החלק העגול:", math: `${a} − ${tens} = ${a - tens}` },
+      { label: "ואחר כך מה שנשאר:", math: `${a - tens} − ${units} = ${result}` },
     ];
   }
 
@@ -107,7 +107,7 @@ function explainSubtraction(a: number, b: number): ExplanationStep[] {
     const ten = a - units;
     const rest = b - units;
     return [
-      { label: "קודם עד העשרת:", math: `${a} − ${units} = ${ten}` },
+      { label: "קודם יורדים למספר עגול:", math: `${a} − ${units} = ${ten}` },
       { label: `נשאר להוריד ${rest}:`, math: `${ten} − ${rest} = ${result}` },
     ];
   }
@@ -220,7 +220,7 @@ function normalizeStep(step: { label: string; math?: string }): ExplanationStep 
   const label = step.label;
   if (!CARRIES_MATH.test(label)) return { label, math: "" };
 
-  // "קודם העשרות: 23 + 40 = 63" -> prose keeps the colon, the expression moves.
+  // "קודם החלק העגול: 23 + 40 = 63" -> prose keeps the colon, the expression moves.
   const colon = label.match(/^(.*?[:])\s*(.+)$/);
   if (colon && !HEBREW.test(colon[2])) return { label: colon[1], math: colon[2] };
 
