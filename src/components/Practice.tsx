@@ -4,6 +4,8 @@ import { isHebrewPrompt, promptSegments } from "../data/curriculum";
 import type { Diagnosis } from "../data/diagnose";
 import { diagnose } from "../data/diagnose";
 import { explainQuestion } from "../data/explain";
+import { fractionDiagram } from "../data/fractionDiagram";
+import { FractionCircle } from "./FractionCircle";
 import {
   explanationToSpeechParts,
   primeVoices,
@@ -66,6 +68,8 @@ export function Practice({ level, onFinish, onExit, readAloud }: PracticeProps) 
   const isLast = index === level.questions.length - 1;
   const isWordProblem = isHebrewPrompt(question.prompt);
   const explanation = explainQuestion(question);
+  /** A picture of the fraction, when one can be drawn honestly from this question. */
+  const diagram = fractionDiagram(question);
 
   /**
    * What has already been read out on its own, so it is never read twice.
@@ -181,7 +185,10 @@ export function Practice({ level, onFinish, onExit, readAloud }: PracticeProps) 
         ? questionParts()
         : box === "diagnosis"
           ? diagnosis && speechParts([diagnosis.headline, diagnosis.question])
-          : explanation && explanationToSpeechParts(explanation);
+          : explanation && [
+            ...(diagram ? speechParts([diagram.caption]) : []),
+            ...explanationToSpeechParts(explanation),
+          ];
     if (!parts?.length) return;
     setSpeakingBox(box);
     speak(parts, () => setSpeakingBox(null));
@@ -328,6 +335,12 @@ export function Practice({ level, onFinish, onExit, readAloud }: PracticeProps) 
               </button>
             )}
           </div>
+          {diagram && (
+            <figure className="fraction-figure">
+              <FractionCircle diagram={diagram} label={diagram.caption.replace(/`/g, "")} />
+              <figcaption className="fraction-caption">{segmented(diagram.caption)}</figcaption>
+            </figure>
+          )}
           {explanation.steps.map((step, i) => (
             <p key={i} className="explanation-step">
               <span>{step.label}</span>
