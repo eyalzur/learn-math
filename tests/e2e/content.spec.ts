@@ -134,14 +134,22 @@ const RULES: {
       if (!q.hints) return null; // not every topic has hints yet
       if (q.hints.length !== 2) return `${q.hints.length} hints instead of two`;
 
+      // Numbers are compared as numbers, not as text.
+      //
+      // A character-boundary check reads the `5` inside `2.5` as a bare 5, and grade 6 is
+      // full of decimals — it flagged "פי `2.5`" on a question whose answer was `5`, which
+      // is a step towards the answer and not the answer. Pulling whole numeric tokens out
+      // and comparing values is what makes the distinction the rule was always after.
+      const numbersIn = (text: string) =>
+        (text.match(/\d+(?:\.\d+)?/g) ?? []).map(Number);
       // A number already in the question is a given, not a leak.
-      const answer = String(q.answer);
-      const leak = new RegExp(`(^|[^0-9])${answer}([^0-9]|$)`);
-      const isGiven = leak.test(q.prompt);
+      const isGiven = numbersIn(q.prompt).includes(q.answer);
 
       for (const hint of q.hints) {
         if (!hint.trim()) return "an empty hint";
-        if (!isGiven && leak.test(hint)) return `a hint hands over the answer — "${hint}"`;
+        if (!isGiven && numbersIn(hint).includes(q.answer)) {
+          return `a hint hands over the answer — "${hint}"`;
+        }
         const unmarked = promptSegments(hint)
           .filter((s) => s.kind === "text")
           .map((s) => s.value)
