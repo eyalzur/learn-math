@@ -17,3 +17,4 @@ architecture, implementation notes, and tests.
 | שני רמזים לכל שאלה | 🟢 done | [status](./question-hints/status.md) |
 | סטטוס ריוויו | 🟢 done | [status](./review-status/status.md) |
 | כללי תוכן שנאכפים | 🟢 done | [status](./content-rules/status.md) |
+| אבחון הטעות ושיחה עליה | 🟢 done | [status](./mistake-diagnosis/status.md) |
