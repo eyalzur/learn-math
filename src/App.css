@@ -299,6 +299,85 @@
   color: #dc2626;
 }
 
+/* The diagnosis line replaces the red verdict when the mistake is understood. Amber
+   rather than red on purpose: it points at something, it does not mark work as failed. */
+.diagnosis {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: #b45309;
+}
+
+.followup {
+  max-width: 420px;
+  margin: 0 auto 24px;
+  padding: 16px 20px;
+  border: 1px solid #f0c78a;
+  border-radius: 12px;
+  background: #fdf6ec;
+  text-align: right;
+}
+
+.followup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.followup-header h3 {
+  margin: 0;
+  font-size: 16px;
+  color: var(--text-h);
+}
+
+.followup-question {
+  margin: 0 0 12px;
+  font-size: 17px;
+  line-height: 160%;
+}
+
+.followup-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.followup-input {
+  width: 96px;
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 20px;
+  text-align: center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  /* A number field, like the main answer: same keyboard on a phone, and digits stay
+     left-to-right whatever the page direction is. */
+  direction: ltr;
+}
+
+.followup-reply {
+  margin: 12px 0 0;
+  font-size: 15px;
+  line-height: 160%;
+  font-weight: 600;
+}
+
+.followup-reply.right {
+  color: #16a34a;
+}
+
+.followup-reply.wrong {
+  color: var(--text);
+}
+
+.reveal-link {
+  display: block;
+  margin-top: 12px;
+  font-size: 14px;
+}
+
 .explanation {
   max-width: 420px;
   margin: 0 auto 24px;
