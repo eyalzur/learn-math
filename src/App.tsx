@@ -8,6 +8,7 @@ import { Result } from "./components/Result";
 import { students, gradeOf } from "./data/curriculum";
 import type { Level, Student, Topic } from "./data/curriculum";
 import { recordPractice } from "./data/progress";
+import { readAloud as readAloudFor, setReadAloud } from "./data/preferences";
 import "./App.css";
 
 const STORAGE_KEY = "learn-math:student";
@@ -42,6 +43,8 @@ type Screen =
 function App() {
   const [student, setStudent] = useState<Student | null>(loadStudent);
   const [screen, setScreen] = useState<Screen>({ name: "home" });
+  /** The read-aloud setting is stored, not held in state; this forces a re-read of it. */
+  const [, setReadAloudTick] = useState(0);
 
   function selectStudent(next: Student) {
     rememberStudent(next.id);
@@ -60,6 +63,7 @@ function App() {
   }
 
   const grade = gradeOf(student);
+  const readAloud = readAloudFor(student.id);
 
   function finish(topic: Topic | null, level: Level, correctCount: number) {
     recordPractice({
@@ -82,6 +86,12 @@ function App() {
         onSelect={(topic) => setScreen({ name: "levels", topic })}
         onBack={switchStudent}
         onHistory={() => setScreen({ name: "history" })}
+        readAloud={readAloud}
+        onReadAloudChange={(value) => {
+          setReadAloud(student.id, value);
+          // The value lives in storage, so a render is needed to pick it back up.
+          setReadAloudTick((n) => n + 1);
+        }}
       />
     );
   }
@@ -112,6 +122,7 @@ function App() {
         onExit={() =>
           setScreen(topic === null ? { name: "home" } : { name: "levels", topic })
         }
+        readAloud={readAloud}
       />
     );
   }
