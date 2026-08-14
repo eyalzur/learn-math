@@ -15,7 +15,7 @@ export const grade6Topics: Topic[] = [
   {
     id: "fractions",
     title: "שברים פשוטים",
-    reviewed: false,
+    reviewed: true,
     levels: [
       level("easy", [
         { id: "g6-fractions-e1", topic: "שברים פשוטים", prompt: "כמה זה חצי מ-20?", answer: 10, hints: ["חצי זה לחלק ל`2` חלקים שווים", "מחלקים את `20` ל-`2` חלקים שווים"] as const, steps: [{ label: "חצי זה לחלק לשני חלקים שווים" }, { label: "20 ÷ 2 = 10" }], analogy: "20 שקל שמתחלקים שווה בשווה בין שניים - כל אחד מקבל 10" },
@@ -58,7 +58,7 @@ export const grade6Topics: Topic[] = [
   {
     id: "decimals",
     title: "שברים עשרוניים",
-    reviewed: false,
+    reviewed: true,
     levels: [
       level("easy", [
         { id: "g6-decimals-e1", topic: "שברים עשרוניים", prompt: "0.5 + 0.3", answer: 0.8, hints: ["מיישרים את הנקודה זו מתחת לזו ומחברים כרגיל", "מחברים קודם את מה שאחרי הנקודה: `0.5` ו-`0.3`"] as const, steps: [{ label: "מחברים עשירית לעשירית" }, { label: "0.5 + 0.3 = 0.8" }], analogy: "חצי שקל ועוד 30 אגורות" },
@@ -101,7 +101,7 @@ export const grade6Topics: Topic[] = [
   {
     id: "percent",
     title: "אחוזים",
-    reviewed: false,
+    reviewed: true,
     levels: [
       level("easy", [
         { id: "g6-percent-e1", topic: "אחוזים", prompt: "כמה זה 10% מ-200?", answer: 20, hints: ["`10%` הם עשירית: מחלקים ב-`10`", "`200` חלקי `10`"] as const, steps: [{ label: "10% זה עשירית מהמספר" }, { label: "200 ÷ 10 = 20" }], analogy: "הנחה של 10% על מוצר ב-200 שקל - כמה חוסכים" },
@@ -144,7 +144,7 @@ export const grade6Topics: Topic[] = [
   {
     id: "ratio",
     title: "יחס ופרופורציה",
-    reviewed: false,
+    reviewed: true,
     levels: [
       level("easy", [
         { id: "g6-ratio-e1", topic: "יחס ופרופורציה", prompt: "היחס הוא 1 ל-2. אם החלק הראשון הוא 3, כמה השני?", answer: 6, hints: ["ביחס, מה שעושים לצד אחד עושים בדיוק גם לשני", "מ-`1` הגיעו ל-`3` — פי כמה? אותו דבר עושים ל-`2`"] as const, steps: [{ label: "ביחס 1 ל-2, השני גדול פי שניים" }, { label: "3 × 2 = 6" }], analogy: "על כל ילד בטיול צריך שני מבוגרים - יש 3 ילדים" },
@@ -187,7 +187,7 @@ export const grade6Topics: Topic[] = [
   {
     id: "geometry",
     title: "שטח והיקף",
-    reviewed: false,
+    reviewed: true,
     levels: [
       level("easy", [
         { id: "g6-geometry-e1", topic: "שטח והיקף", prompt: "שטח מלבן שאורכו 5 ורוחבו 4", answer: 20, hints: ["שטח מלבן הוא אורך כפול רוחב", "כופלים `5` ב-`4`"] as const, steps: [{ label: "שטח מלבן זה אורך כפול רוחב" }, { label: "5 × 4 = 20" }], analogy: "כמה ריצפות של מטר על מטר נכנסות בחדר 5 על 4" },
@@ -230,7 +230,7 @@ export const grade6Topics: Topic[] = [
   {
     id: "average",
     title: "ממוצע",
-    reviewed: false,
+    reviewed: true,
     levels: [
       level("easy", [
         { id: "g6-average-e1", topic: "ממוצע", prompt: "הממוצע של 4 ושל 8", answer: 6, hints: ["ממוצע הוא הסכום, חלקי כמה מספרים יש", "מחברים את כל `2` המספרים, ואז מחלקים ב-`2`"] as const, steps: [{ label: "ממוצע זה לחבר הכל ולחלק בכמות" }, { label: "4 + 8 = 12" }, { label: "12 ÷ 2 = 6" }], analogy: "שני מבחנים, 4 ו-8 - מה הציון ה״ממוצע״" },
