@@ -20,4 +20,4 @@ architecture, implementation notes, and tests.
 | אבחון הטעות ושיחה עליה | 🟢 done | [status](./mistake-diagnosis/status.md) |
 | הקראת השאלה | 🟢 done | [status](./read-aloud-questions/status.md) |
 | ציור לשברים | 🟢 done | [status](./fraction-diagram/status.md) |
-| הסבר בארבע שכבות — שיטה ומאונך | 🟡 בארכיטקטורה | [status](./clearer-explanations/status.md) |
+| הסבר בארבע שכבות — שיטה ומאונך | 🟡 במימוש | [status](./clearer-explanations/status.md) |

@@ -1,0 +1,135 @@
+# הסבר בארבע שכבות — Architecture
+
+## Overview
+שני מודולי נתונים חדשים בתבנית של `fractionDiagram.ts` — טהורים, `import type`
+בלבד, נצרכים רק ממסך התרגול — ומודול שלישי קטן שמאחד את פירוק הביטוי החשוף שכבר
+משוכפל היום בין `explain.ts` ל-`diagnose.ts`. המאונך מרונדר ב-HTML, לא SVG.
+
+## Affected Files / Components
+
+| קובץ | מה משתנה |
+|---|---|
+| `src/data/expression.ts` | **חדש.** `bareExpression(prompt)` אחד, מפרק `a op b` כולל עשרוניים ושני סימני המינוס. לא מייבא כלום. |
+| `src/data/method.ts` | **חדש.** `methodSentence(question): string \| null` — שמונה הנוסחים מהעיצוב, מוצמדים ל-(`topic`, צורה מחושבת). `import type` בלבד. |
+| `src/data/verticalSum.ts` | **חדש.** `verticalSum(question): VerticalSum \| null` — בנייה, אימות מול `answer`, והכיתוב. `import type` בלבד. |
+| `src/data/explain.ts` | `BARE_EXPRESSION` המקומי מוחלף בייבוא מ-`expression.ts`. שום שינוי התנהגותי — ראו Edge Cases. |
+| `src/data/diagnose.ts` | `bareExpression` המקומי מוחלף באותו ייבוא. |
+| `src/components/Practice.tsx` | שכבת השיטה והמאונך בקופסת ההסבר; סדר ההקראה; `inputMode="decimal"` לשני שדות המספר. |
+| `src/App.css` | `.explanation-method`, `.vertical-sum` על שורותיו, `.vertical-caption`. |
+
+אין נגיעה ב-`curriculum.ts` ואין שדה חדש בשאלות — ולכן אין סיכון תלות מעגלית:
+שני המודולים החדשים הם עלים שרק `Practice.tsx` צורך, בדיוק כמו `diagnose.ts`
+ו-`fractionDiagram.ts`.
+
+## Data / State Changes
+
+```ts
+export interface VerticalSum {
+  /** Rows as pre-padded, equal-width strings: the alignment is computed here,
+      not left to the renderer. */
+  top: string;          // "  0.5"
+  bottom: string;       // "+ 0.3" — the operator occupies the first cell
+  result: string;       // "  0.8" (or "  3.0" — trailing digit kept, see below)
+  /** Carry digits above their columns, e.g. " 1   ", or null when no carry. */
+  carries: string | null;
+  caption: string;      // one line: alt text, visible caption, and speech
+}
+```
+
+אין state חדש ב-`Practice` — כמו `diagram`, הערכים נגזרים מ-`question` בכל רינדור.
+
+## Technical Approach
+
+### `expression.ts` — איחוד במקום שכפול שלישי
+הפונקציה הקיימת ב-`diagnose.ts` (עשרוניים, שני מינוסים, שליליים) הופכת למודול.
+`explain.ts` ו-`diagnose.ts` מייבאים ממנו. זה ייבוא ריצה רגיל — `expression.ts`
+לא מייבא כלום, אז מעגל אינו אפשרי.
+
+### `method.ts` — טבלה של (נושא, צורה) → משפט
+לא שדה על השאלה: שמונה משפטים על 150 שאלות היו 150 עותקים שמתפצלים בעריכה
+הראשונה. הפונקציה מזהה את הנושא לפי `question.topic` (המחרוזת שכבר קיימת על כל
+שאלה) ואת הצורה מהאופרנדים:
+
+- חיבור/חיסור עד 10 — לפי הפעולה בלבד.
+- עד 20: בלי מעבר עשרת (`unitsA + unitsB < 10`), עם מעבר, או פריטה
+  (`unitsA < unitsB` בחיסור) — מחושב, לא מסומן.
+- עשרות ויחידות — משפט אחד לנושא כולו.
+- עשרוניים — לפי הפעולה; כפל וחילוק מחזירים `null`.
+
+שאלה מילולית בנושא מכוסה (אין ביטוי חשוף) מקבלת את משפט הנושא רק אם הוא צורתי
+(עשרות ויחידות); אחרת `null` — משפט על חיבור לא ינחת על שאלה שאיננו יודעים לזהות.
+
+### `verticalSum.ts` — חישוב בשלמים, אף פעם לא בצפים
+1. `bareExpression`; רק `+`/`−`; שני האופרנדים אי-שליליים.
+2. `scale = max(decimalPlaces(a), decimalPlaces(b))`;
+   `A = Math.round(a * 10**scale)` וכן `B`. **מכאן והלאה הכל שלמים** —
+   `0.1 + 0.2` לא קיים בעולם הזה.
+3. סף: `max(A, B) >= 10` בעמודות שלמים או `scale > 0` — אחרת `null` (אין עמודות).
+4. חיבור: עמודה-עמודה מימין עם נשא; רישום עמודת הנשא. חיסור: אם בעמודה כלשהי
+   `digitA < digitB` (פריטה) — `null` מיד; אחרת עמודה-עמודה.
+5. אימות: `resultInt === Math.round(question.answer * 10**scale)` — השוואת
+   שלמים, לא `===` על צפים. נכשל → `null`, ואין מאונך ואין כיתוב.
+6. פורמט: מרפדים את שלוש השורות לרוחב אחיד; נקודה מוחזרת למקומה
+   (`3.0` נשאר `3.0` — לעמודת העשיריות חייבת להיות ספרה); הסימן בתא הראשון של
+   השורה התחתונה; `carries` מחרוזת באותו רוחב עם הספרה מעל העמודה הנכונה.
+7. הכיתוב: שלוש התבניות מהעיצוב, נבנות מאותם משתני עמודות — לא מנוסחות בנפרד.
+
+### רינדור — HTML, לא SVG
+העיגול הוא גיאומטריה; המאונך הוא **טקסט מיושר**, וזה בדיוק מה ש-HTML עושה טוב:
+
+```html
+<div class="vertical-sum" role="img" aria-label="{caption ללא גרשיים}">
+  <div class="vs-carries" aria-hidden="true"> 1  </div>
+  <div class="vs-row" aria-hidden="true">  0.5</div>
+  <div class="vs-row" aria-hidden="true">+ 0.3</div>
+  <div class="vs-row vs-result" aria-hidden="true">  0.8</div>
+</div>
+<p class="vertical-caption">…segmented(caption)…</p>
+```
+
+- `direction: ltr; unicode-bidi: isolate` על הבלוק — אי אחד, שום הסתמכות על bidi.
+- `font-family: var(--mono)` + `white-space: pre` — הריפוד שחושב במודול הוא
+  היישור; אין רשת CSS לתחזק. `--mono` כבר מוגדר ב-`index.css`.
+- הקו: `border-top` על `vs-result`, ברוחב הבלוק (הבלוק `inline-block`).
+- הנשא: שורת `vs-carries` בגופן קטן יותר ובצבע `--text` — מובחן בגודל.
+- SVG היה מחייב חישובי `x` ידניים לכל ספרה בלי להרוויח כלום.
+
+### הקראה וסדר
+ב-`Practice.tsx`, מערך ההקראה של ההסבר נהיה:
+`[method?, verticalCaption? | diagramCaption?, ...explanationToSpeechParts(explanation)]`
+— והתצוגה באותו סדר בדיוק: `.explanation-method`, המאונך, השלבים, הדימוי.
+`speechParts` הקיים כבר ממיר ביטויים מסומנים למילים.
+
+### `inputMode="decimal"`
+על שני שדות ה-`type="number"` ב-`Practice.tsx` (התשובה והשאלה הקטנה). שינוי
+תכונה, בלי לוגיקה.
+
+## Edge Cases
+- **`1.5 + 1.5 = 3`** — המקרה היחיד עם נשא: `resultInt = 30`, scale 1 →
+  מוצג `3.0`, מאומת מול `3` בשלמים (`30 === 30`). הכיתוב מוסיף ש-`3.0` הוא `3`.
+- **`9.9 − 4.9 = 5`** — אותו עניין בחיסור: `5.0` מוצג, `50 === 50` מאומת.
+- **`20 − 13`** — פריטה בעמודת היחידות (`0 < 3`) → `null`, כמו כל 15 שאלות
+  הפריטה. הכלל שיספור 30 ב-`content.spec.ts` הוא מה שמונע מהרשימה לזלוג.
+- **`10 + 6`** — עמודת יחידות `0 + 6`; הכיתוב אומר זאת כפשוטו והתבנית תקפה.
+- **איחוד `bareExpression`**: הגרסה המאוחדת מזהה גם עשרוניים — בעוד שהישנה של
+  `explain.ts` הכירה רק שלמים. כל 15 השאלות העשרוניות החשופות נושאות `steps`
+  כתובים, ולכן `computedSteps` ממילא לא רץ עליהן; ליתר ביטחון `computedSteps`
+  שומר על סף השלמים (`Number.isInteger`) כדי שההתנהגות לא תזוז גם אם יתווסף
+  תוכן עשרוני בלי שלבים.
+- **שאלה שההיפוך שלה נכשל באימות** — לא אמורה להתקיים, אבל אם ניסוח ישתנה
+  והחישוב לא ישחזר את `answer`, המאונך והכיתוב נעלמים יחד ובשקט, כמו בעיגול.
+
+## Risks / Tradeoffs
+- **נגיעה ב-`explain.ts` וב-`diagnose.ts`** לצורך האיחוד היא הסיכון היחיד לקוד
+  קיים. שניהם מכוסים היטב (113 בדיקות עוברות היום) — הרצה מלאה אחרי האיחוד היא
+  תנאי לקומיט, לא אחריו.
+- **בדיקות הקראה קיימות יישברו בכוונה**: `read-aloud.spec.ts` בודק את רצף
+  ההקראה של הסבר בנושא "חיבור עד 10" — שמקבל עכשיו משפט שיטה ראשון. זו התנהגות
+  חדשה נכונה; QA מעדכן את הציפייה, לא עוקף אותה. בדיקות שסופרות
+  `.explanation-step` אינן מושפעות — השכבות החדשות הן אלמנטים אחרים.
+- **`white-space: pre` עם ריפוד מחושב** מעביר את נטל היישור למודול הנתונים,
+  ששם הוא ניתן לבדיקה כמחרוזות — במקום ל-CSS, ששם הוא לא.
+
+## Open Questions
+
+None.
