@@ -18,3 +18,4 @@ architecture, implementation notes, and tests.
 | סטטוס ריוויו | 🟢 done | [status](./review-status/status.md) |
 | כללי תוכן שנאכפים | 🟢 done | [status](./content-rules/status.md) |
 | אבחון הטעות ושיחה עליה | 🟢 done | [status](./mistake-diagnosis/status.md) |
+| הקראת השאלה | 🟡 בעיצוב | [status](./read-aloud-questions/status.md) |
