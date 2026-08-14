@@ -12,7 +12,7 @@
 
 **Current phase:** done
 **Branch:** `feature/content-rules`
-**PR:** not opened yet
+**PR:** https://github.com/eyalzur/learn-math/pull/16
 
 ## Open questions / blockers
 None.
