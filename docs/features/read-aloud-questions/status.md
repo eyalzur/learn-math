@@ -12,7 +12,7 @@
 
 **Current phase:** done
 **Branch:** `feature/read-aloud-questions`
-**PR:** not opened yet
+**PR:** https://github.com/eyalzur/learn-math/pull/19
 
 ## Open questions / blockers
 None.
