@@ -12,7 +12,7 @@
 
 **Current phase:** done
 **Branch:** `feature/review-status`
-**PR:** not opened yet
+**PR:** https://github.com/eyalzur/learn-math/pull/15
 
 ## Open questions / blockers
 - **נסיגת כיסוי מודעת:** הליכה אחורה ורישום היסטוריה **בכיתות ו׳ וח׳** הוסרו,
