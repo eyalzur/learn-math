@@ -21,7 +21,7 @@ import { explainQuestion } from "../../src/data/explain";
  */
 
 /** How many questions a level of this grade should hold. */
-const LEVEL_SIZE: Record<string, number> = { "1": 10, "6": 10, "8": 5 };
+const LEVEL_SIZE: Record<string, number> = { "1": 10, "6": 10, "8": 10 };
 
 const everyQuestion = (): { gradeId: string; topic: string; q: Question }[] =>
   grades.flatMap((g) =>
