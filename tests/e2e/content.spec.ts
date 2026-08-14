@@ -72,7 +72,13 @@ test("every question sits under the topic it claims, and that topic is in the sy
  * `.claude/skills/_shared/references/content-rules.md` for when a review comment is worth
  * turning into one, and when it is better fixed in place.
  */
-const RULES: { name: string; check: (q: Question) => string | null }[] = [
+const RULES: {
+  name: string;
+  // Most rules need only the question. `gradeId` is there for the ones that don't mean the
+  // same thing in every grade — "סכום" is ordinary vocabulary in grade 8 and textbook
+  // language to a seven-year-old. Rules that don't care simply declare one parameter.
+  check: (q: Question, gradeId: string) => string | null;
+}[] = [
   {
     name: "has an explanation with steps and an analogy",
     check: (q) => {
@@ -145,13 +151,34 @@ const RULES: { name: string; check: (q: Question) => string | null }[] = [
       return null;
     },
   },
+  {
+    name: "puts its hints in a first-grader's Hebrew, not a textbook's",
+    check: (q, gradeId) => {
+      // Reported on g1-addsub20-e1: "העשרת לא זזה, מוסיפים רק ליחידות". The idea was
+      // right and the wording was a teacher's manual. Mika is seven and still learning to
+      // read; "ה-10 נשאר במקום, ומחברים רק את המספרים הקטנים" says the same thing.
+      //
+      // Grade 1 only — "סכום" and "הפרש" are just words by grade 6. And the terms are
+      // fair game in the topic that exists to teach them, which is why the topic title is
+      // consulted instead of banning them outright: a hint for "עשרות ויחידות" has no
+      // other way to name its own subject.
+      if (gradeId !== "1" || !q.hints) return null;
+      const TEXTBOOK = /עשרת|עשרות|יחידות|מחוברים|סכום|הפרש|מחובר/;
+      if (TEXTBOOK.test(q.topic)) return null;
+      for (const hint of q.hints) {
+        const found = hint.match(TEXTBOOK);
+        if (found) return `textbook Hebrew for a seven-year-old — "${found[0]}" in "${hint}"`;
+      }
+      return null;
+    },
+  },
 ];
 
 test("every question passes every content rule", () => {
   const violations: string[] = [];
-  for (const { q } of everyQuestion()) {
+  for (const { gradeId, q } of everyQuestion()) {
     for (const rule of RULES) {
-      const problem = rule.check(q);
+      const problem = rule.check(q, gradeId);
       if (problem) violations.push(`${q.id} — ${rule.name}: ${problem}`);
     }
   }
