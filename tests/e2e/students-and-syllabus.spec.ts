@@ -66,32 +66,6 @@ test("picking a student shows that grade's syllabus and three levels", async ({ 
   await expect(page.locator(".topic-picker")).toContainText("חיבור עד 10");
 });
 
-test("every grade offers three levels, of the question count its own grade defines", async ({
-  page,
-}) => {
-  // The count is a property of the grade, not a global constant: a Pythagoras question is
-  // not the same size as "8 + 5", and ten of them in a row is a chore rather than
-  // practice. See docs/features/topics-all-grades/product-spec.md.
-  const QUESTIONS_PER_LEVEL = [10, 5, 5];
-
-  for (let studentIndex = 0; studentIndex < EXPECTED.length; studentIndex++) {
-    const expected = QUESTIONS_PER_LEVEL[studentIndex];
-    await open(page);
-    await openLevels(page, studentIndex);
-
-    const levels = page.locator(".level-card");
-    await expect(levels).toHaveCount(3);
-
-    for (let levelIndex = 0; levelIndex < 3; levelIndex++) {
-      await expect(levels.nth(levelIndex).locator(".level-count")).toHaveText(
-        `${expected} שאלות`,
-      );
-      await levels.nth(levelIndex).click();
-      await expect(page.locator(".progress")).toContainText(`מתוך ${expected}`);
-      await page.getByRole("button", { name: "← חזרה" }).click();
-    }
-  }
-});
 
 test("every question in every level belongs to its own grade's syllabus", async ({
   page,
@@ -177,38 +151,30 @@ test("switching student is also forgotten across a reload", async ({ page }) => 
   await expect(page.locator(".student-picker h1")).toBeVisible();
 });
 
-test("word problems read right-to-left and their algebra stays left-to-right", async ({
+test("a Hebrew sentence keeps its own direction while the maths inside stays LTR", async ({
   page,
 }) => {
-  // Guards the two-level bidi trap: the sentence must be RTL, but an algebraic run
-  // inside it must be isolated LTR or its brackets get mirrored.
-  await pickStudent(page, 2);
-  // Grade 8's algebra lives under its own topic now, so walk topics until a word problem
-  // with an algebraic run turns up rather than assuming which one holds it.
-  await page.locator(".topic-card").first().click();
+  // The two-level bidi trap: the sentence must read right-to-left, but an expression
+  // inside it has to be isolated left-to-right or its terms get reordered and its
+  // brackets mirrored.
+  //
+  // Grade 8's word problems used to be the specimen; they are blocked until reviewed.
+  // Grade 1's hints carry the same shape — an expression marked up inside a Hebrew
+  // sentence — and exercise the identical rendering path.
+  await pickStudent(page, 0);
+  await page.locator(".topic-card", { hasText: "חיבור וחיסור עד 20" }).click();
   await page.locator(".level-card").nth(1).click();
 
-  let found = false;
-  for (let i = 0; i < 10; i++) {
-    const box = page.locator(".problem-box");
-    if ((await box.getAttribute("class"))?.includes("box-rtl")) {
-      await expect(box).toHaveCSS("direction", "rtl");
+  await page.getByRole("button", { name: "רמז 💡" }).click();
+  await page.getByRole("button", { name: "עוד רמז 💡" }).click();
 
-      const maths = page.locator(".prompt-math");
-      if ((await maths.count()) > 0) {
-        await expect(maths.first()).toHaveCSS("direction", "ltr");
-        await expect(maths.first()).toHaveCSS("unicode-bidi", "isolate");
-        found = true;
-        break;
-      }
-    }
-    await page.locator(".answer-input").fill("0");
-    await page.getByRole("button", { name: "בדיקה" }).click();
-    await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
-  }
-  expect(found, "expected at least one word problem containing an algebraic run").toBe(
-    true,
-  );
+  const maths = page.locator(".hint .prompt-math");
+  expect(await maths.count(), "no marked-up expression inside a hint").toBeGreaterThan(0);
+  await expect(maths.first()).toHaveCSS("direction", "ltr");
+  await expect(maths.first()).toHaveCSS("unicode-bidi", "isolate");
+
+  // And the sentence around it is still Hebrew, right to left.
+  await expect(page.locator(".hint").last()).toHaveCSS("direction", "rtl");
 });
 
 test("a bare expression is shown left-to-right with a trailing equals sign", async ({

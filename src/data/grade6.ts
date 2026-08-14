@@ -15,6 +15,7 @@ export const grade6Topics: Topic[] = [
   {
     id: "fractions",
     title: "שברים פשוטים",
+    reviewed: false,
     levels: [
       level("easy", [
         { id: "g6-fractions-e1", topic: "שברים פשוטים", prompt: "כמה זה חצי מ-20?", answer: 10, steps: [{ label: "חצי זה לחלק לשני חלקים שווים" }, { label: "20 ÷ 2 = 10" }], analogy: "20 שקל שמתחלקים שווה בשווה בין שניים - כל אחד מקבל 10" },
@@ -42,6 +43,7 @@ export const grade6Topics: Topic[] = [
   {
     id: "decimals",
     title: "שברים עשרוניים",
+    reviewed: false,
     levels: [
       level("easy", [
         { id: "g6-decimals-e1", topic: "שברים עשרוניים", prompt: "0.5 + 0.3", answer: 0.8, steps: [{ label: "מחברים עשירית לעשירית" }, { label: "0.5 + 0.3 = 0.8" }], analogy: "חצי שקל ועוד 30 אגורות" },
@@ -55,7 +57,7 @@ export const grade6Topics: Topic[] = [
         { id: "g6-decimals-m2", topic: "שברים עשרוניים", prompt: "7.5 − 2.5", answer: 5, steps: [{ label: "קודם השלמים: 7 − 2 = 5" }, { label: "החצאים מתבטלים: 0.5 − 0.5 = 0" }, { label: "נשאר: 5" }], analogy: "היו לך 7 שקלים וחצי, הוצאת 2 וחצי" },
         { id: "g6-decimals-m3", topic: "שברים עשרוניים", prompt: "3.6 × 10", answer: 36, steps: [{ label: "כפל ב-10 מזיז את הנקודה מקום ימינה" }, { label: "3.6 × 10 = 36" }], analogy: "מתכון ל-3.6 כוסות שמכינים פי 10 לכיתה שלמה" },
         { id: "g6-decimals-m4", topic: "שברים עשרוניים", prompt: "5.5 − 1.5", answer: 4, steps: [{ label: "קודם השלמים: 5 − 1 = 4" }, { label: "החצאים מתבטלים" }, { label: "נשאר: 4" }], analogy: "5.5 ק״ג קמח שממנו לקחו 1.5" },
-        { id: "g6-decimals-m5", topic: "שברים עשרוניים", prompt: "0.6 × 5", answer: 3, steps: [{ label: "0.6 זה שש עשיריות" }, { label: "6 × 5 = 30 עשיריות" }, { label: "30 עשיריות זה 3" }], analogy: "חמישה בקבוקים של 0.6 ליטר כל אחד" },
+        { id: "g6-decimals-m5", topic: "שברים עשרוניים", prompt: "0.6 × 5", answer: 3, steps: [{ label: "0.6 זה שש עשיריות" }, { label: "שש עשיריות כפול חמש:", math: "6 × 5 = 30" }, { label: "30 עשיריות זה 3" }], analogy: "חמישה בקבוקים של 0.6 ליטר כל אחד" },
       ]),
       level("hard", [
         { id: "g6-decimals-h1", topic: "שברים עשרוניים", prompt: "0.25 × 80", answer: 20, steps: [{ label: "0.25 זה בדיוק רבע" }, { label: "80 ÷ 4 = 20" }], analogy: "רבע מ-80 - כמו לחלק 80 שקל לארבעה" },
@@ -69,6 +71,7 @@ export const grade6Topics: Topic[] = [
   {
     id: "percent",
     title: "אחוזים",
+    reviewed: false,
     levels: [
       level("easy", [
         { id: "g6-percent-e1", topic: "אחוזים", prompt: "כמה זה 10% מ-200?", answer: 20, steps: [{ label: "10% זה עשירית מהמספר" }, { label: "200 ÷ 10 = 20" }], analogy: "הנחה של 10% על מוצר ב-200 שקל - כמה חוסכים" },
@@ -96,6 +99,7 @@ export const grade6Topics: Topic[] = [
   {
     id: "ratio",
     title: "יחס ופרופורציה",
+    reviewed: false,
     levels: [
       level("easy", [
         { id: "g6-ratio-e1", topic: "יחס ופרופורציה", prompt: "היחס הוא 1 ל-2. אם החלק הראשון הוא 3, כמה השני?", answer: 6, steps: [{ label: "ביחס 1 ל-2, השני גדול פי שניים" }, { label: "3 × 2 = 6" }], analogy: "על כל ילד בטיול צריך שני מבוגרים - יש 3 ילדים" },
@@ -123,6 +127,7 @@ export const grade6Topics: Topic[] = [
   {
     id: "geometry",
     title: "שטח והיקף",
+    reviewed: false,
     levels: [
       level("easy", [
         { id: "g6-geometry-e1", topic: "שטח והיקף", prompt: "שטח מלבן שאורכו 5 ורוחבו 4", answer: 20, steps: [{ label: "שטח מלבן זה אורך כפול רוחב" }, { label: "5 × 4 = 20" }], analogy: "כמה ריצפות של מטר על מטר נכנסות בחדר 5 על 4" },
@@ -150,6 +155,7 @@ export const grade6Topics: Topic[] = [
   {
     id: "average",
     title: "ממוצע",
+    reviewed: false,
     levels: [
       level("easy", [
         { id: "g6-average-e1", topic: "ממוצע", prompt: "הממוצע של 4 ושל 8", answer: 6, steps: [{ label: "ממוצע זה לחבר הכל ולחלק בכמות" }, { label: "4 + 8 = 12" }, { label: "12 ÷ 2 = 6" }], analogy: "שני מבחנים, 4 ו-8 - מה הציון ה״ממוצע״" },

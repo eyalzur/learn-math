@@ -46,6 +46,16 @@ export interface Level {
 export interface Topic {
   id: string;
   title: string;
+  /**
+   * Has a person actually read this topic's content?
+   *
+   * Required, not optional, and that is the whole point: optional would make forgetting
+   * count as approval — a new topic with no decision would arrive as `undefined` and any
+   * reasonable check would treat it as fine. The content that most needs reading is
+   * exactly the content nobody has read yet. Required means the compiler refuses a topic
+   * whose status nobody decided, the same reason `analogy` is required.
+   */
+  reviewed: boolean;
   levels: Level[];
 }
 
