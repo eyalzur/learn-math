@@ -57,7 +57,7 @@ export const grade6Topics: Topic[] = [
         { id: "g6-decimals-m2", topic: "שברים עשרוניים", prompt: "7.5 − 2.5", answer: 5, steps: [{ label: "קודם השלמים: 7 − 2 = 5" }, { label: "החצאים מתבטלים: 0.5 − 0.5 = 0" }, { label: "נשאר: 5" }], analogy: "היו לך 7 שקלים וחצי, הוצאת 2 וחצי" },
         { id: "g6-decimals-m3", topic: "שברים עשרוניים", prompt: "3.6 × 10", answer: 36, steps: [{ label: "כפל ב-10 מזיז את הנקודה מקום ימינה" }, { label: "3.6 × 10 = 36" }], analogy: "מתכון ל-3.6 כוסות שמכינים פי 10 לכיתה שלמה" },
         { id: "g6-decimals-m4", topic: "שברים עשרוניים", prompt: "5.5 − 1.5", answer: 4, steps: [{ label: "קודם השלמים: 5 − 1 = 4" }, { label: "החצאים מתבטלים" }, { label: "נשאר: 4" }], analogy: "5.5 ק״ג קמח שממנו לקחו 1.5" },
-        { id: "g6-decimals-m5", topic: "שברים עשרוניים", prompt: "0.6 × 5", answer: 3, steps: [{ label: "0.6 זה שש עשיריות" }, { label: "6 × 5 = 30 עשיריות" }, { label: "30 עשיריות זה 3" }], analogy: "חמישה בקבוקים של 0.6 ליטר כל אחד" },
+        { id: "g6-decimals-m5", topic: "שברים עשרוניים", prompt: "0.6 × 5", answer: 3, steps: [{ label: "0.6 זה שש עשיריות" }, { label: "שש עשיריות כפול חמש:", math: "6 × 5 = 30" }, { label: "30 עשיריות זה 3" }], analogy: "חמישה בקבוקים של 0.6 ליטר כל אחד" },
       ]),
       level("hard", [
         { id: "g6-decimals-h1", topic: "שברים עשרוניים", prompt: "0.25 × 80", answer: 20, steps: [{ label: "0.25 זה בדיוק רבע" }, { label: "80 ÷ 4 = 20" }], analogy: "רבע מ-80 - כמו לחלק 80 שקל לארבעה" },
