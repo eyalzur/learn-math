@@ -10,7 +10,18 @@ import { test, expect, type Page } from "@playwright/test";
  *  5. A grade with nothing reviewed explains itself instead of looking broken.
  *  6. History survives and stays reachable for a blocked topic.
  *  7. Opening state: grade 1 reviewed, grades 6 and 8 not.
+ *
+ * **Every topic is now reviewed**, so the blocking half of this feature has no content
+ * left to exercise through the screen. The mechanism is intact and still matters — the
+ * next unreviewed topic must be blocked exactly the same way — so those tests are kept
+ * and made conditional rather than deleted. They arm themselves again the moment any
+ * topic goes back to `reviewed: false`.
  */
+
+/** Topics that a person has not signed off on, if there are any left. */
+async function blockedTopics(page: Page) {
+  return page.locator(".topic-card:disabled");
+}
 
 async function pickStudent(page: Page, index: number) {
   await page.goto("/learn-math/");
@@ -35,45 +46,36 @@ test("grade 1 is reviewed and behaves exactly as before", async ({ page }) => {
   await expect(page.locator(".level-card").first()).toBeVisible();
 });
 
-test("an unreviewed topic is shown but disabled, and says so", async ({ page }) => {
-  await pickStudent(page, ROTEM);
+test("every student can now open every topic", async ({ page }) => {
+  // The state this feature was built to manage has been cleared: all three children have
+  // their whole syllabus approved. That is the thing worth asserting today.
+  for (const student of [MIKA, ROTEM, OMER]) {
+    await pickStudent(page, student);
+    await expect(page.locator(".topic-card")).not.toHaveCount(0);
+    await expect(await blockedTopics(page)).toHaveCount(0);
+    await expect(page.locator(".topics-notice")).toHaveCount(0);
 
-  const cards = page.locator(".topic-card");
-  await expect(cards).toHaveCount(6);
-  // Shown, not hidden — the writer needs to see what is left.
-  await expect(cards.first()).toBeVisible();
-  await expect(page.locator(".topic-card:disabled")).toHaveCount(6);
-  await expect(page.locator(".topic-soon").first()).toHaveText("בקרוב");
+    await page.locator(".topic-card").first().click();
+    await expect(page.locator(".level-card").first()).toBeVisible();
+  }
 });
 
-test("clicking a blocked topic does nothing at all", async ({ page }) => {
-  await pickStudent(page, ROTEM);
-
-  await page.locator(".topic-card").first().click({ force: true });
-
-  // Still on the topic screen: no levels, no navigation, no dialog.
-  await expect(page.locator(".level-card")).toHaveCount(0);
-  await expect(page.locator(".topic-card")).toHaveCount(6);
-});
-
-test("a blocked card cannot be reached with the keyboard either", async ({ page }) => {
-  await pickStudent(page, ROTEM);
-
-  // A dimmed-but-focusable card would be a block you can walk around.
-  const focusable = await page
-    .locator(".topic-card")
-    .evaluateAll((els) => els.filter((el) => !(el as HTMLButtonElement).disabled).length);
-  expect(focusable, "a blocked topic was still focusable").toBe(0);
-});
-
-test("a grade with nothing reviewed explains itself", async ({ page }) => {
-  await pickStudent(page, OMER);
-
-  const notice = page.locator(".topics-notice");
-  await expect(notice).toBeVisible();
-  await expect(notice).toContainText("עוד מעט");
-  // Not a dead end: the cards stay, so the student sees what is coming.
-  await expect(page.locator(".topic-card")).toHaveCount(6);
+test("wherever a topic is still unreviewed, it is blocked and says so", async ({ page }) => {
+  // Conditional on purpose. Nothing is unreviewed right now, so this passes without
+  // asserting much — and it starts asserting again by itself the day new content arrives
+  // unapproved, which is exactly when the guard matters.
+  for (const student of [MIKA, ROTEM, OMER]) {
+    await pickStudent(page, student);
+    const blocked = await blockedTopics(page);
+    const count = await blocked.count();
+    for (let i = 0; i < count; i++) {
+      // Shown, not hidden — the writer needs to see what is left.
+      await expect(blocked.nth(i)).toBeVisible();
+      await expect(blocked.nth(i).locator(".topic-soon")).toHaveText("בקרוב");
+      // Disabled is what makes it unreachable by click and by keyboard alike.
+      await expect(blocked.nth(i)).toBeDisabled();
+    }
+  }
 });
 
 test("history stays reachable for a student whose topics are all blocked", async ({
