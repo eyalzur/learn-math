@@ -271,7 +271,11 @@ test("arithmetic is spoken as Hebrew words rather than symbols", async ({ page }
     const shown = await page.locator(".explanation").innerText();
     if (/[−+×÷=]/.test(shown)) {
       await page.getByRole("button", { name: "הקריאו לי את ההסבר" }).click();
-      const spoken = (await spokenText(page)).at(-1)!.text;
+      // The explanation now opens with the method sentence — prose with no arithmetic —
+      // so sampling any single part proves nothing. The promise is about the whole
+      // reading: no symbol survives anywhere, and the operator words appear somewhere.
+      await waitUntilSettled(page);
+      const spoken = (await spokenText(page)).map((s) => s.text).join(" ");
 
       // Left as symbols, a speech engine reads them in English or skips them entirely.
       for (const symbol of ["−", "+", "×", "÷", "="]) {

@@ -3,6 +3,7 @@ import { grades, promptSegments } from "../../src/data/curriculum";
 import type { Question } from "../../src/data/curriculum";
 import { explainQuestion } from "../../src/data/explain";
 import { fractionDiagram } from "../../src/data/fractionDiagram";
+import { verticalSum } from "../../src/data/verticalSum";
 
 /**
  * Content correctness, checked against the data rather than through the browser.
@@ -267,6 +268,70 @@ test("no diagram ever disagrees with its own question", () => {
     if (d.perPart * d.denominator !== d.whole) wrong.push(`${q.id}: parts do not rebuild the whole`);
     if (d.perPart * d.numerator !== q.answer) wrong.push(`${q.id}: the picture does not give the answer`);
     if (d.numerator > d.denominator) wrong.push(`${q.id}: more parts taken than exist`);
+  }
+  expect(wrong, `\n${wrong.join("\n")}\n`).toEqual([]);
+});
+
+test("exactly thirty questions write themselves in columns", () => {
+  // Eligibility is recomputed here from the spec's own words — a bare `a + b` / `a − b`,
+  // columns worth aligning, no borrowing, and column arithmetic that lands on the
+  // recorded answer — independently of the module that draws the block. If the two ever
+  // disagree, one of them is wrong about what the product promised, and this is what
+  // says so out loud. A reworded prompt that silently drops its vertical fails the same
+  // way the fraction count fails.
+  const decimals = (n: number) => {
+    const s = String(n);
+    const i = s.indexOf(".");
+    return i === -1 ? 0 : s.length - i - 1;
+  };
+  const eligible = (q: Question): boolean => {
+    const m = q.prompt.trim().match(/^(\d+(?:\.\d+)?)\s*([+−-])\s*(\d+(?:\.\d+)?)$/);
+    if (!m) return false;
+    const a = Number(m[1]);
+    const b = Number(m[3]);
+    const scale = Math.max(decimals(a), decimals(b));
+    const A = Math.round(a * 10 ** scale);
+    const B = Math.round(b * 10 ** scale);
+    if (scale === 0 && A < 10 && B < 10) return false; // nothing to align
+    const width = Math.max(String(A).length, String(B).length);
+    const digit = (n: number, i: number) => Math.floor(n / 10 ** i) % 10;
+    if (m[2] !== "+") {
+      for (let i = 0; i < width; i++) if (digit(A, i) < digit(B, i)) return false; // borrow
+    }
+    const result = m[2] === "+" ? A + B : A - B;
+    return result === Math.round(q.answer * 10 ** scale);
+  };
+
+  const all = everyQuestion();
+  const expected = all.filter(({ q }) => eligible(q));
+  expect(expected.length, "the set of column-writable questions changed size").toBe(30);
+
+  const disagreements = all
+    .filter(({ q }) => (verticalSum(q) !== null) !== eligible(q))
+    .map(({ q }) => `${q.id} — "${q.prompt}"`);
+  expect(disagreements, `\n${disagreements.join("\n")}\n`).toEqual([]);
+});
+
+test("no vertical ever disagrees with its own question", () => {
+  // The rows are the figure. If they are ragged, or the bottom line does not read back
+  // as the recorded answer, the block is teaching something false.
+  const wrong: string[] = [];
+  for (const { q } of everyQuestion()) {
+    const v = verticalSum(q);
+    if (!v) continue;
+    const rows = [v.top, v.bottom, v.result];
+    if (new Set(rows.map((r) => r.length)).size !== 1) {
+      wrong.push(`${q.id}: rows are not one width`);
+    }
+    if (new Set(rows.map((r) => r.indexOf("."))).size !== 1) {
+      wrong.push(`${q.id}: the decimal points are not in one column`);
+    }
+    if (Number(v.result.trim()) !== q.answer) {
+      wrong.push(`${q.id}: the bottom line is not the answer`);
+    }
+    if (v.carries !== null && v.carries.length !== v.top.length) {
+      wrong.push(`${q.id}: the carry row is not aligned with the digits`);
+    }
   }
   expect(wrong, `\n${wrong.join("\n")}\n`).toEqual([]);
 });
