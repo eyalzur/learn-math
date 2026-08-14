@@ -12,7 +12,7 @@
 
 **Current phase:** done — ממתין ל-PR
 **Branch:** `feature/clearer-explanations`
-**PR:** not opened yet
+**PR:** https://github.com/eyalzur/learn-math/pull/27
 
 ## Open questions / blockers
 None. שלוש הכרעות שהתקבלו בספק ורשומות בו: סף המאונך הוא "יש עמודות ליישר";
