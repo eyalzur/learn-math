@@ -191,6 +191,35 @@ test("a correct answer behaves exactly as before — no diagnosis, no conversati
   await expect(page.locator(".explanation")).toHaveCount(0);
 });
 
+// ------------------------------------------------------- off by one, and in which direction
+
+/**
+ * Reported from the live app: "כמה זה רבע מ-20?" answered `6` was met with "כמעט! פספסת
+ * בדיוק באחד", then asked "כמה זה `6 + 1`?" — one step further from `5` — and finally told
+ * "רק אחד היה חסר" about an answer that had one too many.
+ */
+
+test("answering one too many is not treated as answering one too few", async ({ page }) => {
+  // "איזה מספר בא אחרי 12?" — the answer is 13, and 14 overshoots it.
+  await answer(page, "14");
+
+  const said = await page.locator(".diagnosis").innerText();
+  expect(said, "an answer that overshot is called short").not.toContain("חסר");
+
+  // The small question has to walk toward the answer, so `13` — the number wanted all
+  // along — is the right answer to it. The shipped version asked for `15`.
+  await answerFollowUp(page, "13");
+  await expect(page.locator(".followup-reply")).toContainText("יפה");
+});
+
+test("answering one too few still reads as one too few", async ({ page }) => {
+  await answer(page, "12");
+
+  await expect(page.locator(".diagnosis")).toContainText("חסר");
+  await answerFollowUp(page, "13");
+  await expect(page.locator(".followup-reply")).toContainText("חסר");
+});
+
 // -------------------------------------------------------------- beyond grade 1, in data
 
 /**
@@ -214,6 +243,49 @@ test.describe("without the browser", () => {
       (q) => q.answer !== 0 && diagnose(q, -q.answer) !== null,
     );
     expect(diagnosed.length, "no grade 8 question yields any diagnosis").toBeGreaterThan(0);
+  });
+
+  test("nearness alone is not a diagnosis, on any question in the app", async () => {
+    const all = grades.flatMap((g) =>
+      g.topicSets.flatMap((t) => t.levels.flatMap((l) => l.questions)),
+    );
+
+    // The reported question. Six is one away from five and means nothing of the sort.
+    const reported = all.find((q) => q.id === "g6-fractions-e5")!;
+    expect(reported.prompt).toContain("רבע");
+    expect(diagnose(reported, reported.answer + 1)).toBeNull();
+    expect(diagnose(reported, reported.answer - 1)).toBeNull();
+
+    // And it is a rule, not a patch on one question: wherever off-by-one still speaks, the
+    // way to the answer has to be counting or a bare sum.
+    const speaks = all.filter(
+      (q) => diagnose(q, q.answer + 1)?.id === "offByOne" || diagnose(q, q.answer - 1)?.id === "offByOne",
+    );
+    expect(speaks.length, "off-by-one went silent everywhere").toBeGreaterThan(0);
+    for (const q of speaks) {
+      expect(
+        /בא אחרי|בא לפני/.test(q.prompt) || /^-?\d+(\.\d+)?\s*[+\-−]\s*-?\d+(\.\d+)?$/.test(q.prompt.trim()),
+        `"${q.prompt}" is not a question you get to by counting`,
+      ).toBe(true);
+    }
+  });
+
+  test("the small question walks toward the answer, never away from it", async () => {
+    const all = grades.flatMap((g) =>
+      g.topicSets.flatMap((t) => t.levels.flatMap((l) => l.questions)),
+    );
+
+    // Whichever side the student landed on, the number the follow-up asks for is the one
+    // the original question wanted. Overshooting used to be told to add one more.
+    for (const q of all) {
+      for (const given of [q.answer - 1, q.answer + 1]) {
+        const found = diagnose(q, given);
+        if (found?.id !== "offByOne") continue;
+        expect(found.answer, `"${q.prompt}" answered ${given} leads to ${found.answer}`).toBe(
+          q.answer,
+        );
+      }
+    }
   });
 
   test("an answer nothing describes is left alone", async () => {
