@@ -10,8 +10,13 @@
 - [ ] Tests — qa — not started
 
 **Current phase:** tech-lead — **עוצר לדיון עם המשתמש לפני שממשיכים**
-**Branch:** `feature/more-diagrams`
+**Branch:** `feature/more-diagrams` — **מסתעף מ-`feature/fraction-diagram`, לא מ-`main`**
 **PR:** not opened yet
+
+> **לפני שממשיכים כאן:** הבראנץ' הזה יושב על `feature/fraction-diagram` (PR #22), שטרם
+> מוזג. אחרי שיימוזג צריך
+> `git rebase --onto origin/main feature/fraction-diagram feature/more-diagrams`,
+> אחרת ה-PR של הפיצ'ר הזה יכלול גם את הדיף של #22 ובדיקת הגרסה תיפול.
 
 ## Open questions / blockers
 אין שאלה שחוסמת את התכנון, אבל **המשתמש ביקש שנעצור אחרי העיצוב ונדבר** — ולכן
