@@ -26,7 +26,10 @@ async function openTopic(page: Page, topicTitle: string) {
   await page.goto("/learn-math/");
   await page.locator(".student-card").first().click();
   await page.locator(".topic-card", { hasText: topicTitle }).click();
-  await page.locator(".level-card").first().click();
+  // Grade 1's multi-style topics are entered by style; the rest still ask for a level.
+  const byStyle = page.locator(".style-card");
+  if (await byStyle.count()) await byStyle.first().click();
+  else await page.locator(".level-card").first().click();
 }
 
 const openHinted = (page: Page) => openTopic(page, "חיבור וחיסור עד 20");
@@ -102,8 +105,12 @@ test("the next question starts over with no hints shown", async ({ page }) => {
 test("taking a hint does not cost anything in the score", async ({ page }) => {
   await openHinted(page);
 
-  // Answer all ten correctly, taking both hints on every question.
-  for (let i = 0; i < 10; i++) {
+  // How many questions this lesson holds is a property of the lesson, not a fixed ten —
+  // read it rather than assume it.
+  const total = Number((await page.locator(".progress").innerText()).match(/(\d+)\s*$/)![1]);
+
+  // Answer every one correctly, taking both hints on every question.
+  for (let i = 0; i < total; i++) {
     await page.getByRole("button", { name: HINT }).click();
     await page.getByRole("button", { name: MORE_HINT }).click();
 
@@ -118,7 +125,7 @@ test("taking a hint does not cost anything in the score", async ({ page }) => {
   }
 
   // A perfect score after using every hint available.
-  await expect(page.locator(".score")).toContainText("10");
+  await expect(page.locator(".score")).toContainText(`${total} מתוך ${total}`);
 });
 
 test("every topic offers hints, not just the one they were written for first", async ({
