@@ -44,9 +44,19 @@ function twoDigitInPrompt(prompt: string): number | null {
  * being told "כמעט!" confirms a method she does not have.
  */
 function isCounted(question: Question): boolean {
+  // Nothing about a decimal is counted. "7.5 − 2.5" answered `6` is one away from `5`,
+  // and the app called it "כמעט! זה אחד יותר מדי" — but nobody counts back two and a
+  // half on their fingers, and the miss has nothing to do with counting. Reported from
+  // the live app, and the same failure the fraction case had: nearness is not evidence.
+  if (!Number.isInteger(question.answer)) return false;
   if (/בא אחרי|בא לפני/.test(question.prompt)) return true;
   const expr = bareExpression(question.prompt);
-  return expr !== null && (expr.op === "+" || expr.op === "-");
+  return (
+    expr !== null &&
+    (expr.op === "+" || expr.op === "-") &&
+    Number.isInteger(expr.a) &&
+    Number.isInteger(expr.b)
+  );
 }
 
 /**
@@ -149,16 +159,21 @@ const PATTERNS: Pattern[] = [
     if (digitsOf(given) !== digitsOf(correct)) return null;
 
     const expr = bareExpression(question.prompt);
+    // The follow-up is built from the first operand, so without one there is no question
+    // to ask — and a word problem is not parsed here anyway.
+    if (!expr) return null;
+    const firstInAgorot = Math.round(expr.a * 100);
+    const answerInAgorot = Math.round(correct * 100);
+    // Agora only divide a shekel a hundred ways; anything finer is not money.
+    if (Math.abs(expr.a * 100 - firstInAgorot) > 1e-9) return null;
+
     // The case the user described: adding two numbers each below one. Naming that out
     // loud is the concrete version of "the result cannot be that big".
-    const bothUnderOne =
-      expr !== null && expr.op === "+" && Math.abs(expr.a) < 1 && Math.abs(expr.b) < 1;
+    const bothUnderOne = expr.op === "+" && Math.abs(expr.a) < 1 && Math.abs(expr.b) < 1;
     const tooBig = Math.abs(given) > Math.abs(correct);
     const factor = Math.round(
       tooBig ? Math.abs(given) / Math.abs(correct) : Math.abs(correct) / Math.abs(given),
     );
-    // How many whole things the answer is — 0 for six tenths, 3 for three and seven.
-    const wholes = Math.floor(Math.abs(correct));
 
     return {
       id: "decimalPoint",
@@ -167,13 +182,14 @@ const PATTERNS: Pattern[] = [
       headline: bothUnderOne
         ? `רגע — הספרות נכונות. אבל \`${expr.a}\` ו-\`${expr.b}\` שניהם קטנים מ-\`1\`, ולכן לא יכולים לתת \`${given}\``
         : `רגע — הספרות נכונות, אבל \`${given}\` ${tooBig ? "גדול" : "קטן"} פי \`${factor}\` מהתשובה`,
-      question: "בלי לחשב בדיוק — כמה שלמים צריכים לצאת?",
-      answer: wholes,
-      onRight:
-        wholes === 0
-          ? "יפה — אף שלם. זו בדיקת הגודל, וכדאי לעשות אותה לפני שמסיימים"
-          : "יפה. זו בדיקת הגודל, וכדאי לעשות אותה לפני שמסיימים",
-      onWrong: `\`${wholes}\`. בדיקת הגודל הזו שווה שנייה לפני שמסיימים`,
+      // Answerable by the child who just got it wrong — that is the whole bar. Asking
+      // her to estimate without computing demanded the very skill she was missing.
+      // Converting one shekel amount to agora is something she can simply do, and it
+      // is the place-value insight itself: forty agora are not forty shekels.
+      question: `\`${expr.a}\` שקל — כמה אגורות זה?`,
+      answer: firstInAgorot,
+      onRight: `נכון. והתשובה יוצאת \`${answerInAgorot}\` אגורות — כלומר \`${correct}\` שקל, לא \`${given}\``,
+      onWrong: `\`${firstInAgorot}\` אגורות. והתשובה יוצאת \`${answerInAgorot}\` אגורות — כלומר \`${correct}\` שקל`,
     };
   },
 

@@ -51,13 +51,16 @@ export function methodSentence(question: Question): string | null {
   }
 
   if (topic === "שברים עשרוניים") {
-    // The user's sentence, word for word. Multiplication and division wait for a later
-    // wave — a wrong sentence is worse than none.
+    // The user gave this sentence, then corrected his own ending: "רק צריך לשים לב
+    // לנקודה" says to be careful without saying *what to do*, and what to do is the
+    // whole method — "הכי חשוב בכל תרגיל במאונך זה שהנקודות יהיו אחת מתחת לשניה".
+    // Multiplication and division wait for a later wave; a wrong sentence is worse
+    // than none.
     if (op === "+") {
-      return "חיבור עושים במאונך, קודם מימין לנקודה. בדיוק כמו במספרים שלמים. רק צריך לשים לב לנקודה";
+      return "חיבור עושים במאונך, קודם מימין לנקודה, בדיוק כמו במספרים שלמים. הכי חשוב — שהנקודות יהיו אחת בדיוק מתחת לשנייה";
     }
     if (op === "-") {
-      return "חיסור עושים במאונך, קודם מימין לנקודה. בדיוק כמו במספרים שלמים. רק צריך לשים לב לנקודה";
+      return "חיסור עושים במאונך, קודם מימין לנקודה, בדיוק כמו במספרים שלמים. הכי חשוב — שהנקודות יהיו אחת בדיוק מתחת לשנייה";
     }
   }
 

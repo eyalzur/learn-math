@@ -273,14 +273,45 @@ test("the follow-up builds the size-check habit instead of quizzing a known fact
   await answer(page, "6");
 
   const asked = await page.locator(".followup-question").innerText();
-  // "Which is bigger, 0.6 or 6?" tests something she already knows. The question has to
-  // ask for the *size* of the answer instead — the check she skipped.
+  // Two rejected shapes, both for the same reason. "Which is bigger, 0.6 or 6?" tests
+  // something she already knows. "Without computing, how many wholes?" demands the very
+  // estimation skill she was missing — a child who just erred cannot answer it.
   expect(asked, "the follow-up is still a comparison").not.toContain("גדול יותר");
-  expect(asked, "the follow-up does not ask about size").toContain("שלמים");
+  expect(asked, "the follow-up still asks her to estimate").not.toContain("בלי לחשב");
+  // What she *can* do: turn shekels into agora. That is the place-value insight itself.
+  expect(asked, "the follow-up does not use money").toContain("אגורות");
 
-  // Six tenths is zero whole things, and that is the realisation.
-  await answerFollowUp(page, "0");
-  await expect(page.locator(".followup-reply")).toContainText("בדיקת הגודל");
+  await answerFollowUp(page, "40");
+  const reply = await page.locator(".followup-reply").innerText();
+  expect(reply, "the reply does not land on the real answer").toContain("60");
+  expect(reply).toContain("0.6");
+});
+
+test("a decimal near-miss is never called almost — counting has nothing to do with it", async ({
+  page,
+}) => {
+  // Reported from the live app: "7.5 − 2.5" answered `6` was met with "כמעט! זה אחד
+  // יותר מדי" and asked "כמה זה 6 − 1?". Nobody counts back two and a half on their
+  // fingers; the distance of one is a coincidence, not a slip.
+  await page.goto("/learn-math/");
+  await page.evaluate(() => localStorage.clear());
+  await page.goto("/learn-math/");
+  await page.locator(".student-card").nth(1).click();
+  await page.locator(".topic-card").nth(1).click();
+  await page.locator(".level-card").nth(1).click();
+  for (let i = 0; i < 12; i++) {
+    const prompt = await page.locator(".problem-text").innerText();
+    if (prompt.includes("7.5 − 2.5")) break;
+    await answer(page, "999999");
+    await page.getByRole("button", { name: /הבא|סיום/ }).click();
+  }
+  await expect(page.locator(".problem-text")).toContainText("7.5 − 2.5");
+
+  await answer(page, "6");
+  const said = await page.locator(".diagnosis").count()
+    ? await page.locator(".diagnosis").innerText()
+    : "";
+  expect(said, "a decimal miss was called a counting slip").not.toContain("כמעט");
 });
 
 test.describe("without the browser", () => {
