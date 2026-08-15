@@ -4,12 +4,12 @@
 
 ## Progress
 - [x] Product spec — product-manager — 2026-08-15 (גל תיקונים אחרי ריוויו)
-- [ ] Design — designer — גל תיקונים, טרם
+- [x] Design — designer — 2026-08-15 (גל תיקונים)
 - [ ] Architecture — tech-lead — גל תיקונים, טרם
 - [ ] Implementation — developer — גל תיקונים, טרם
 - [ ] Tests — qa — גל תיקונים, טרם
 
-**Current phase:** designer — גל התיקונים שאחרי הריוויו
+**Current phase:** tech-lead — גל התיקונים שאחרי הריוויו
 **Branch:** `feature/mika-diagrams` (התכנון מוזג ב-#31)
 **PR:** תכנון — #31 · גל ראשון — #32, פתוח, מקבל את גל התיקונים
 
