@@ -23,4 +23,4 @@ architecture, implementation notes, and tests.
 | הסבר בארבע שכבות — שיטה ומאונך | 🟢 done | [status](./clearer-explanations/status.md) |
 | ציורים לשאר הנושאים | 🟡 גל א׳ נפרס · חמש צורות נותרו | [status](./more-diagrams/status.md) |
 | שיעור על סגנון תרגיל | 🟡 מוכן ל-PR — גל א׳ (מיקה) | [status](./style-lessons/status.md) |
-| ספירה לאחור למעבר לשאלה הבאה | 🟡 בעיצוב | [status](./countdown-next/status.md) |
+| ספירה לאחור למעבר לשאלה הבאה | 🟢 done — ממתין ל-PR | [status](./countdown-next/status.md) |
