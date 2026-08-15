@@ -142,7 +142,11 @@ async function failFirstQuestion(page: Page, topicIndex = 1) {
   await page.goto("/learn-math/");
   await page.locator(".student-card").first().click();
   await page.locator(".topic-card").nth(topicIndex).click();
-  await page.locator(".level-card").first().click();
+  // Grade 1's multi-style topics are entered by style, the rest by level. These tests are
+  // about what gets spoken, not about which screen led there.
+  const byStyle = page.locator(".style-card");
+  if (await byStyle.count()) await byStyle.first().click();
+  else await page.locator(".level-card").first().click();
   await page.locator(".answer-input").fill("999999");
   await page.getByRole("button", { name: "בדיקה" }).click();
 }

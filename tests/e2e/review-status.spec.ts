@@ -41,9 +41,10 @@ test("grade 1 is reviewed and behaves exactly as before", async ({ page }) => {
   await expect(page.locator(".topic-soon")).toHaveCount(0);
   await expect(page.locator(".topics-notice")).toHaveCount(0);
 
-  // Still fully usable: a topic opens its levels.
+  // Still fully usable: a topic opens onto a choice of lessons — styles for the topics
+  // that hold several kinds of question, levels for the rest.
   await cards.first().click();
-  await expect(page.locator(".level-card").first()).toBeVisible();
+  await expect(page.locator(".style-card, .level-card").first()).toBeVisible();
 });
 
 test("every student can now open every topic", async ({ page }) => {
@@ -56,7 +57,7 @@ test("every student can now open every topic", async ({ page }) => {
     await expect(page.locator(".topics-notice")).toHaveCount(0);
 
     await page.locator(".topic-card").first().click();
-    await expect(page.locator(".level-card").first()).toBeVisible();
+    await expect(page.locator(".style-card, .level-card").first()).toBeVisible();
   }
 });
 
@@ -93,7 +94,7 @@ test("grade 1 keeps working end to end while other grades are blocked", async ({
 }) => {
   await pickStudent(page, MIKA);
   await page.locator(".topic-card").first().click();
-  await page.locator(".level-card").first().click();
+  await page.locator(".style-card, .level-card").first().click();
 
   await expect(page.locator(".answer-input")).toBeVisible();
 });
