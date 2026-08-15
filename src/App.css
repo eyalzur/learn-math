@@ -812,7 +812,8 @@ button.secondary {
 /* ---- Mika's two shapes: the number line and the ten-frame ---- */
 
 .number-line-figure,
-.ten-frame-figure {
+.ten-frame-figure,
+.twenty-strip-figure {
   margin: 0 0 16px;
   display: flex;
   flex-direction: column;
@@ -823,7 +824,8 @@ button.secondary {
 /* An SVG does not inherit the page's direction habits. The line ascends left to right
    inside the right-to-left page, the way it is drawn on the classroom board. */
 .number-line,
-.ten-frame {
+.ten-frame,
+.twenty-strip {
   direction: ltr;
   max-width: 100%;
   height: auto;
@@ -863,8 +865,15 @@ button.secondary {
 }
 
 /* Filled versus empty, never one hue versus another. */
-.tf-dot.filled {
+.tf-dot.filled,
+.ts-dot.filled {
   fill: #c4b5fd;
+}
+
+.ts-dot {
+  fill: none;
+  stroke: var(--text-h);
+  stroke-width: 1.5;
 }
 
 .tf-caption {
@@ -880,4 +889,14 @@ button.secondary {
   line-height: 160%;
   color: var(--text);
   text-align: center;
+}
+
+/* The number line's caption is two sentences — what the line is, then what this
+   question shows on it — and they read as two lines rather than one paragraph. */
+.caption-line {
+  display: block;
+}
+
+.caption-line + .caption-line {
+  margin-top: 4px;
 }

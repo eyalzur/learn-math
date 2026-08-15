@@ -21,8 +21,14 @@ export function methodSentence(question: Question): string | null {
   const topic = question.topic;
 
   // One concept sentence, true for every form in the topic — including the word problems.
+  //
+  // It names both digits now, in the review's words: "מידי פעם צריך להזכיר שהיחידות היא
+  // הימנית והעשרות היא השמאלית". The earlier wording described the two digits without
+  // ever saying `עשרות` or `יחידות` — the exact vocabulary the questions ask in — so the
+  // explanation spoke of boxes while the question asked about digits, and the child was
+  // left to bridge the two. The metaphor stays; what is added is its name.
   if (topic === "עשרות ויחידות") {
-    return "הספרה השמאלית סופרת קופסאות מלאות של עשר, והימנית את הבודדים שבחוץ";
+    return "במספר דו-ספרתי, הספרה השמאלית היא העשרות — קופסאות מלאות של עשר, והספרה הימנית היא היחידות — הבודדים שבחוץ";
   }
 
   const expr = bareExpression(question.prompt);

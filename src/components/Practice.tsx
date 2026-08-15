@@ -9,8 +9,10 @@ import { methodSentence } from "../data/method";
 import { verticalSum } from "../data/verticalSum";
 import { numberLine } from "../data/numberLine";
 import { tenFrame } from "../data/tenFrame";
+import { twentyStrip } from "../data/twentyStrip";
 import { NumberLine } from "./NumberLine";
 import { TenFrame } from "./TenFrame";
+import { TwentyStrip } from "./TwentyStrip";
 import { FractionCircle } from "./FractionCircle";
 import {
   explanationToSpeechParts,
@@ -84,6 +86,8 @@ export function Practice({ level, onFinish, onExit, readAloud }: PracticeProps) 
   const line = numberLine(question);
   /** Full boxes of ten and the loose ones beside them — Mika's second topic. */
   const frame = tenFrame(question);
+  /** Twenty circles, some filled — how many are missing to reach twenty. */
+  const strip = twentyStrip(question);
 
   /**
    * What has already been read out on its own, so it is never read twice.
@@ -203,8 +207,11 @@ export function Practice({ level, onFinish, onExit, readAloud }: PracticeProps) 
             ...(method ? speechParts([method]) : []),
             ...(diagram ? speechParts([diagram.caption]) : []),
             ...(frame ? speechParts([frame.caption]) : []),
+            ...(strip ? speechParts([strip.caption]) : []),
             ...(vertical ? speechParts([vertical.caption]) : []),
-            ...(line ? speechParts([line.caption]) : []),
+            // Already an array of lines: the rule, then this question. Separate parts so
+            // a listener gets a pause between them rather than twenty words in one breath.
+            ...(line ? speechParts(line.caption) : []),
             ...explanationToSpeechParts(explanation),
           ];
     if (!parts?.length) return;
@@ -368,6 +375,12 @@ export function Practice({ level, onFinish, onExit, readAloud }: PracticeProps) 
               <figcaption className="figure-caption">{segmented(frame.caption)}</figcaption>
             </figure>
           )}
+          {strip && (
+            <figure className="twenty-strip-figure">
+              <TwentyStrip strip={strip} label={strip.caption.replace(/`/g, "")} />
+              <figcaption className="figure-caption">{segmented(strip.caption)}</figcaption>
+            </figure>
+          )}
           {vertical && (
             <figure className="vertical-figure">
               {/* One LTR island. Rows arrive pre-padded from the data module, so the
@@ -394,8 +407,16 @@ export function Practice({ level, onFinish, onExit, readAloud }: PracticeProps) 
           )}
           {line && (
             <figure className="number-line-figure">
-              <NumberLine line={line} label={line.caption.replace(/`/g, "")} />
-              <figcaption className="figure-caption">{segmented(line.caption)}</figcaption>
+              {/* One aria-label because it is one picture, even though the caption is
+                  two lines and is spoken as two parts. */}
+              <NumberLine line={line} label={line.caption.join(" ").replace(/`/g, "")} />
+              <figcaption className="figure-caption">
+                {line.caption.map((part, i) => (
+                  <span key={i} className="caption-line">
+                    {segmented(part)}
+                  </span>
+                ))}
+              </figcaption>
             </figure>
           )}
           {explanation.steps.map((step, i) => (

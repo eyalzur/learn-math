@@ -6,10 +6,10 @@
 - [x] Product spec — product-manager — 2026-08-15 (גל תיקונים אחרי ריוויו)
 - [x] Design — designer — 2026-08-15 (גל תיקונים)
 - [x] Architecture — tech-lead — 2026-08-15 (גל תיקונים)
-- [ ] Implementation — developer — גל תיקונים, טרם
+- [x] Implementation — developer — 2026-08-15 (גל תיקונים)
 - [ ] Tests — qa — גל תיקונים, טרם
 
-**Current phase:** developer — גל התיקונים שאחרי הריוויו
+**Current phase:** qa — גל התיקונים שאחרי הריוויו
 **Branch:** `feature/mika-diagrams` (התכנון מוזג ב-#31)
 **PR:** תכנון — #31 · גל ראשון — #32, פתוח, מקבל את גל התיקונים
 
