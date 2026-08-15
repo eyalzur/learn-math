@@ -7,6 +7,10 @@ import { explainQuestion } from "../data/explain";
 import { fractionDiagram } from "../data/fractionDiagram";
 import { methodSentence } from "../data/method";
 import { verticalSum } from "../data/verticalSum";
+import { numberLine } from "../data/numberLine";
+import { tenFrame } from "../data/tenFrame";
+import { NumberLine } from "./NumberLine";
+import { TenFrame } from "./TenFrame";
 import { FractionCircle } from "./FractionCircle";
 import {
   explanationToSpeechParts,
@@ -76,6 +80,10 @@ export function Practice({ level, onFinish, onExit, readAloud }: PracticeProps) 
   const method = methodSentence(question);
   /** The exercise in columns, when the column arithmetic reproduces the answer. */
   const vertical = verticalSum(question);
+  /** Where the question's numbers sit on a line — Mika's first topic. */
+  const line = numberLine(question);
+  /** Full boxes of ten and the loose ones beside them — Mika's second topic. */
+  const frame = tenFrame(question);
 
   /**
    * What has already been read out on its own, so it is never read twice.
@@ -194,7 +202,9 @@ export function Practice({ level, onFinish, onExit, readAloud }: PracticeProps) 
           : explanation && [
             ...(method ? speechParts([method]) : []),
             ...(diagram ? speechParts([diagram.caption]) : []),
+            ...(frame ? speechParts([frame.caption]) : []),
             ...(vertical ? speechParts([vertical.caption]) : []),
+            ...(line ? speechParts([line.caption]) : []),
             ...explanationToSpeechParts(explanation),
           ];
     if (!parts?.length) return;
@@ -352,6 +362,12 @@ export function Practice({ level, onFinish, onExit, readAloud }: PracticeProps) 
               <figcaption className="fraction-caption">{segmented(diagram.caption)}</figcaption>
             </figure>
           )}
+          {frame && (
+            <figure className="ten-frame-figure">
+              <TenFrame frame={frame} label={frame.caption.replace(/`/g, "")} />
+              <figcaption className="figure-caption">{segmented(frame.caption)}</figcaption>
+            </figure>
+          )}
           {vertical && (
             <figure className="vertical-figure">
               {/* One LTR island. Rows arrive pre-padded from the data module, so the
@@ -374,6 +390,12 @@ export function Practice({ level, onFinish, onExit, readAloud }: PracticeProps) 
                 </div>
               </div>
               <figcaption className="vertical-caption">{segmented(vertical.caption)}</figcaption>
+            </figure>
+          )}
+          {line && (
+            <figure className="number-line-figure">
+              <NumberLine line={line} label={line.caption.replace(/`/g, "")} />
+              <figcaption className="figure-caption">{segmented(line.caption)}</figcaption>
             </figure>
           )}
           {explanation.steps.map((step, i) => (
