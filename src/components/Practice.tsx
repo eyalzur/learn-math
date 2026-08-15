@@ -1,5 +1,5 @@
+import type { Lesson } from "../data/style";
 import { useEffect, useRef, useState } from "react";
-import type { Level } from "../data/curriculum";
 import { isHebrewPrompt, promptSegments } from "../data/curriculum";
 import type { Diagnosis } from "../data/diagnose";
 import { diagnose } from "../data/diagnose";
@@ -43,14 +43,18 @@ function segmented(text: string) {
 }
 
 interface PracticeProps {
-  level: Level;
+  /**
+   * What is being practised: a difficulty level, or a lesson on one style of exercise.
+   * Both are just a title and a list of questions, so this screen never learns which.
+   */
+  lesson: Lesson;
   onFinish: (correctCount: number) => void;
   onExit: () => void;
   /** This student has every new question read to them without asking. */
   readAloud: boolean;
 }
 
-export function Practice({ level, onFinish, onExit, readAloud }: PracticeProps) {
+export function Practice({ lesson, onFinish, onExit, readAloud }: PracticeProps) {
   const [index, setIndex] = useState(0);
   const [input, setInput] = useState("");
   const [feedback, setFeedback] = useState<"correct" | "wrong" | null>(null);
@@ -72,8 +76,8 @@ export function Practice({ level, onFinish, onExit, readAloud }: PracticeProps) 
   // Leaving mid-sentence must not leave a voice talking over the next screen.
   useEffect(() => stopSpeaking, []);
 
-  const question = level.questions[index];
-  const isLast = index === level.questions.length - 1;
+  const question = lesson.questions[index];
+  const isLast = index === lesson.questions.length - 1;
   const isWordProblem = isHebrewPrompt(question.prompt);
   const explanation = explainQuestion(question);
   /** A picture of the fraction, when one can be drawn honestly from this question. */
@@ -238,10 +242,10 @@ export function Practice({ level, onFinish, onExit, readAloud }: PracticeProps) 
           ← חזרה
         </button>
         <span className="progress">
-          שאלה {index + 1} מתוך {level.questions.length}
+          שאלה {index + 1} מתוך {lesson.questions.length}
         </span>
       </div>
-      <h2>{level.title}</h2>
+      <h2>{lesson.title}</h2>
       {/* Outside .problem-box on purpose: that box forces a direction, and a button
           inside it would join the isolated context and shift the expression's alignment. */}
       {speechSupported() && (

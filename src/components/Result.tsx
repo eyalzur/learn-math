@@ -1,14 +1,17 @@
-import type { Level } from "../data/curriculum";
-
+import type { Lesson } from "../data/style";
 interface ResultProps {
-  level: Level;
+  /**
+   * What is being practised: a difficulty level, or a lesson on one style of exercise.
+   * Both are just a title and a list of questions, so this screen never learns which.
+   */
+  lesson: Lesson;
   correctCount: number;
   onRetry: () => void;
   onHome: () => void;
 }
 
-export function Result({ level, correctCount, onRetry, onHome }: ResultProps) {
-  const total = level.questions.length;
+export function Result({ lesson, correctCount, onRetry, onHome }: ResultProps) {
+  const total = lesson.questions.length;
   const percent = Math.round((correctCount / total) * 100);
 
   let message = "כל הכבוד!";

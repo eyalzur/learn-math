@@ -44,12 +44,24 @@ async function harvestAnswers(page: Page, count: number): Promise<number[]> {
   return answers;
 }
 
-async function startLevel(page: Page, studentIndex: number, levelIndex: number) {
+/**
+ * Opens a lesson and reports how many questions it holds.
+ *
+ * Grade 1's first topic is entered by style now, and a style lesson holds however many
+ * questions that style has — not a fixed ten. So the length is read off the screen rather
+ * than assumed, which is what these tests needed all along: they are about the message at
+ * 100%, not about the number of questions behind it.
+ */
+async function startLesson(page: Page, studentIndex: number, index: number): Promise<number> {
   await page.goto("/learn-math/");
   await page.evaluate(() => localStorage.clear());
   await page.goto("/learn-math/");
   await openLevels(page, studentIndex);
-  await page.locator(".level-card").nth(levelIndex).click();
+  const byStyle = page.locator(".style-card");
+  if (await byStyle.count()) await byStyle.nth(index).click();
+  else await page.locator(".level-card").nth(index).click();
+  const progress = await page.locator(".progress").innerText();
+  return Number(progress.match(/(\d+)\s*$/)![1]);
 }
 
 async function completeLevel(page: Page, answers: number[], { missOne }: { missOne: boolean }) {
@@ -62,8 +74,8 @@ async function completeLevel(page: Page, answers: number[], { missOne }: { missO
 }
 
 test("shows the perfect-score message when every answer is correct", async ({ page }) => {
-  await startLevel(page, 0, 0);
-  const answers = await harvestAnswers(page, 10);
+  const total = await startLesson(page, 0, 0);
+  const answers = await harvestAnswers(page, total);
   await completeLevel(page, answers, { missOne: false });
 
   await expect(page.locator(".result h1")).toHaveText("🌟 ציון מושלם! פתרת הכל נכון!");
@@ -71,8 +83,8 @@ test("shows the perfect-score message when every answer is correct", async ({ pa
 });
 
 test("keeps the existing message when the score is below 100%", async ({ page }) => {
-  await startLevel(page, 0, 0);
-  const answers = await harvestAnswers(page, 10);
+  const total = await startLesson(page, 0, 0);
+  const answers = await harvestAnswers(page, total);
   await completeLevel(page, answers, { missOne: true });
 
   await expect(page.locator(".result h1")).toHaveText("מצוין! שליטה מלאה!");
@@ -82,10 +94,10 @@ test("keeps the existing message when the score is below 100%", async ({ page })
 test("the perfect-score message never appears during practice, only on the result screen", async ({
   page,
 }) => {
-  await startLevel(page, 0, 0);
+  const total = await startLesson(page, 0, 0);
   await expect(page.locator(".practice")).not.toContainText("ציון מושלם");
 
-  const answers = await harvestAnswers(page, 10);
+  const answers = await harvestAnswers(page, total);
   await completeLevel(page, answers, { missOne: false });
   await expect(page.locator(".result")).toContainText("ציון מושלם");
 });

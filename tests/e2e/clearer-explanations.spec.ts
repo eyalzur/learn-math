@@ -17,13 +17,22 @@ import { test, expect, type Page } from "@playwright/test";
  * The vertical block is HTML, so `innerText` works on it (unlike the fraction SVG).
  */
 
-async function start(page: Page, student: number, topicIdx: number, levelIdx: number) {
+/**
+ * Grade 1's multi-style topics are entered by picking a style; every other topic still
+ * asks for a level. Passing a string means "this style", a number means "this level", so
+ * each call site says which screen it is actually going through.
+ */
+async function start(page: Page, student: number, topicIdx: number, pick: number | string) {
   await page.goto("/learn-math/");
   await page.evaluate(() => localStorage.clear());
   await page.goto("/learn-math/");
   await page.locator(".student-card").nth(student).click();
   await page.locator(".topic-card").nth(topicIdx).click();
-  await page.locator(".level-card").nth(levelIdx).click();
+  if (typeof pick === "string") {
+    await page.locator(".style-card").filter({ hasText: pick }).first().click();
+  } else {
+    await page.locator(".level-card").nth(pick).click();
+  }
 }
 
 const answerWrong = async (page: Page) => {
@@ -104,7 +113,7 @@ test("the one carrying question shows the carry mark, and 3.0 is explained as 3"
 test("a subtraction question gets a subtraction sentence, never an addition one", async ({
   page,
 }) => {
-  await start(page, 0, 3, 0);
+  await start(page, 0, 3, "חיסור");
   await failAt(page, "18 − 4");
 
   const method = await page.locator(".explanation-method").innerText();
@@ -119,8 +128,10 @@ test("a subtraction question gets a subtraction sentence, never an addition one"
 test("borrowing questions show no vertical, and the explanation still stands", async ({
   page,
 }) => {
-  await start(page, 0, 3, 2); // the hard level is all borrowing
-  await answerWrong(page);
+  // A lesson now climbs from the easy end, so the borrowing questions are no longer
+  // whatever comes first — walk to one by name.
+  await start(page, 0, 3, "חיסור");
+  await failAt(page, "15 − 8");
 
   await expect(page.locator(".vertical-sum")).toHaveCount(0);
   // The method sentence still teaches the borrow-free strategy the steps use.
@@ -235,7 +246,7 @@ test("numeric answer fields ask for a decimal keyboard", async ({ page }) => {
 
   // The follow-up field appears only inside a diagnosed conversation: 12 + 5 answered 7
   // is 17 with its ten dropped, which the tens pattern picks up.
-  await start(page, 0, 3, 0);
+  await start(page, 0, 3, "חיבור");
   await page.locator(".answer-input").fill("7");
   await page.getByRole("button", { name: "בדיקה" }).first().click();
   await expect(page.locator(".followup-input")).toHaveAttribute("inputmode", "decimal");
