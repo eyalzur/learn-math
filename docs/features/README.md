@@ -21,4 +21,4 @@ architecture, implementation notes, and tests.
 | הקראת השאלה | 🟢 done | [status](./read-aloud-questions/status.md) |
 | ציור לשברים | 🟢 done | [status](./fraction-diagram/status.md) |
 | הסבר בארבע שכבות — שיטה ומאונך | 🟢 done | [status](./clearer-explanations/status.md) |
-| ציורים לשאר הנושאים | 🟡 גל א׳ במימוש | [status](./more-diagrams/status.md) |
+| ציורים לשאר הנושאים | 🟡 גל א׳ — תיקונים אחרי ריוויו | [status](./more-diagrams/status.md) |
