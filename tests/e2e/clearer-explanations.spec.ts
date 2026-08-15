@@ -62,10 +62,12 @@ test("the decimal addition opens with the user's method sentence and a point-ali
   await start(page, 1, 1, 0);
   await failAt(page, "0.5 + 0.3");
 
-  // The sentence the user gave, word for word, opening the box.
+  // The sentence the user gave, then sharpened himself: "רק צריך לשים לב לנקודה" told
+  // the child to be careful without telling her what to do, and what to do is the whole
+  // method — the points must sit one exactly under the other.
   const method = await page.locator(".explanation-method").innerText();
   expect(method).toContain("מאונך");
-  expect(method).toContain("לשים לב לנקודה");
+  expect(method, "the sentence still only says to be careful").toContain("אחת בדיוק מתחת לשנייה");
 
   // Point under point, digit under digit: the rows are pre-padded strings, so the
   // alignment is checkable as character indexes.

@@ -220,6 +220,145 @@ test("answering one too few still reads as one too few", async ({ page }) => {
   await expect(page.locator(".followup-reply")).toContainText("חסר");
 });
 
+// -------------------------------------------------- the digits are right, the point is not
+
+/**
+ * Reported from the live app: "0.4 + 0.2" answered `6`. The screen said only "לא נכון,
+ * התשובה היא 0.6" — but the child had already done the arithmetic. She added four tenths
+ * and two tenths, got six, and lost the point on the way to the box.
+ */
+
+test("a dropped decimal point is named, not treated as a wrong sum", async ({ page }) => {
+  // Rotem → decimals → easy, walking to the reported question.
+  await page.goto("/learn-math/");
+  await page.evaluate(() => localStorage.clear());
+  await page.goto("/learn-math/");
+  await page.locator(".student-card").nth(1).click();
+  await page.locator(".topic-card").nth(1).click();
+  await page.locator(".level-card").nth(0).click();
+  for (let i = 0; i < 12; i++) {
+    const prompt = await page.locator(".problem-text").innerText();
+    if (prompt.includes("0.4 + 0.2")) break;
+    await answer(page, "999999");
+    await page.getByRole("button", { name: /הבא|סיום/ }).click();
+  }
+  await expect(page.locator(".problem-text")).toContainText("0.4 + 0.2");
+
+  await answer(page, "6");
+
+  const said = await page.locator(".diagnosis").innerText();
+  // The sentence has to credit the digits she got right — that is the whole point of
+  // naming this mistake rather than announcing the answer.
+  expect(said, "the diagnosis does not say the digits were right").toContain("הספרות נכונות");
+  // And it has to argue from size: both numbers are under one, so six cannot come out.
+  expect(said, "the diagnosis does not argue from the size of the numbers").toContain("קטנים מ");
+  await expect(page.locator(".followup")).toBeVisible();
+});
+
+test("the follow-up builds the size-check habit instead of quizzing a known fact", async ({
+  page,
+}) => {
+  await page.goto("/learn-math/");
+  await page.evaluate(() => localStorage.clear());
+  await page.goto("/learn-math/");
+  await page.locator(".student-card").nth(1).click();
+  await page.locator(".topic-card").nth(1).click();
+  await page.locator(".level-card").nth(0).click();
+  for (let i = 0; i < 12; i++) {
+    const prompt = await page.locator(".problem-text").innerText();
+    if (prompt.includes("0.4 + 0.2")) break;
+    await answer(page, "999999");
+    await page.getByRole("button", { name: /הבא|סיום/ }).click();
+  }
+  await answer(page, "6");
+
+  const asked = await page.locator(".followup-question").innerText();
+  // Two rejected shapes, both for the same reason. "Which is bigger, 0.6 or 6?" tests
+  // something she already knows. "Without computing, how many wholes?" demands the very
+  // estimation skill she was missing — a child who just erred cannot answer it.
+  expect(asked, "the follow-up is still a comparison").not.toContain("גדול יותר");
+  expect(asked, "the follow-up still asks her to estimate").not.toContain("בלי לחשב");
+  // What she *can* do: turn shekels into agora. That is the place-value insight itself.
+  expect(asked, "the follow-up does not use money").toContain("אגורות");
+
+  await answerFollowUp(page, "40");
+  const reply = await page.locator(".followup-reply").innerText();
+  expect(reply, "the reply does not land on the real answer").toContain("60");
+  expect(reply).toContain("0.6");
+});
+
+test("a decimal near-miss is never called almost — counting has nothing to do with it", async ({
+  page,
+}) => {
+  // Reported from the live app: "7.5 − 2.5" answered `6` was met with "כמעט! זה אחד
+  // יותר מדי" and asked "כמה זה 6 − 1?". Nobody counts back two and a half on their
+  // fingers; the distance of one is a coincidence, not a slip.
+  await page.goto("/learn-math/");
+  await page.evaluate(() => localStorage.clear());
+  await page.goto("/learn-math/");
+  await page.locator(".student-card").nth(1).click();
+  await page.locator(".topic-card").nth(1).click();
+  await page.locator(".level-card").nth(1).click();
+  for (let i = 0; i < 12; i++) {
+    const prompt = await page.locator(".problem-text").innerText();
+    if (prompt.includes("7.5 − 2.5")) break;
+    await answer(page, "999999");
+    await page.getByRole("button", { name: /הבא|סיום/ }).click();
+  }
+  await expect(page.locator(".problem-text")).toContainText("7.5 − 2.5");
+
+  await answer(page, "6");
+  const said = await page.locator(".diagnosis").count()
+    ? await page.locator(".diagnosis").innerText()
+    : "";
+  expect(said, "a decimal miss was called a counting slip").not.toContain("כמעט");
+});
+
+test.describe("without the browser", () => {
+  test.use({ baseURL: undefined });
+
+  test("every question where a point can be dropped says so", async () => {
+    const all = grades.flatMap((g) =>
+      g.topicSets.flatMap((t) => t.levels.flatMap((l) => l.questions)),
+    );
+
+    // Writing the answer's digits with no point is a mistake by construction wherever the
+    // answer has a fractional part. Every one of those has to be recognised — silence
+    // there is the bug that was reported.
+    const droppable = all.filter((q) => !Number.isInteger(q.answer));
+    expect(droppable.length, "no question has a fractional answer any more").toBeGreaterThan(0);
+
+    const silent: string[] = [];
+    for (const q of droppable) {
+      const places = String(q.answer).split(".")[1].length;
+      const asIfDropped = Math.round(q.answer * 10 ** places);
+      if (diagnose(q, asIfDropped)?.id !== "decimalPoint") {
+        silent.push(`${q.id} — "${q.prompt}" answered ${asIfDropped}`);
+      }
+    }
+    expect(silent, `\n${silent.join("\n")}\n`).toEqual([]);
+  });
+
+  test("the point pattern stays out of questions that have no point to lose", async () => {
+    const all = grades.flatMap((g) =>
+      g.topicSets.flatMap((t) => t.levels.flatMap((l) => l.questions)),
+    );
+
+    // A whole-number question can never produce this mistake, so the pattern must never
+    // claim it — the same discipline that took off-by-one off fraction questions.
+    const wrong: string[] = [];
+    for (const q of all) {
+      if (q.prompt.includes(".") || !Number.isInteger(q.answer)) continue;
+      for (const given of [q.answer * 10, q.answer / 10, q.answer + 1, -q.answer]) {
+        if (diagnose(q, given)?.id === "decimalPoint") {
+          wrong.push(`${q.id} — "${q.prompt}" answered ${given}`);
+        }
+      }
+    }
+    expect(wrong, `\n${wrong.join("\n")}\n`).toEqual([]);
+  });
+});
+
 // -------------------------------------------------------------- beyond grade 1, in data
 
 /**

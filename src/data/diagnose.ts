@@ -16,7 +16,7 @@ import { bareExpression } from "./expression";
  */
 export interface Diagnosis {
   /** Which pattern matched. Not shown — it is what tests and bug reports can name. */
-  id: "sign" | "operation" | "reversed" | "tens" | "offByOne";
+  id: "sign" | "operation" | "decimalPoint" | "reversed" | "tens" | "offByOne";
   /** Replaces the "wrong, the answer is X" line. */
   headline: string;
   /** One small question isolating the misunderstanding. Never the original question. */
@@ -44,9 +44,33 @@ function twoDigitInPrompt(prompt: string): number | null {
  * being told "כמעט!" confirms a method she does not have.
  */
 function isCounted(question: Question): boolean {
+  // Nothing about a decimal is counted. "7.5 − 2.5" answered `6` is one away from `5`,
+  // and the app called it "כמעט! זה אחד יותר מדי" — but nobody counts back two and a
+  // half on their fingers, and the miss has nothing to do with counting. Reported from
+  // the live app, and the same failure the fraction case had: nearness is not evidence.
+  if (!Number.isInteger(question.answer)) return false;
   if (/בא אחרי|בא לפני/.test(question.prompt)) return true;
   const expr = bareExpression(question.prompt);
-  return expr !== null && (expr.op === "+" || expr.op === "-");
+  return (
+    expr !== null &&
+    (expr.op === "+" || expr.op === "-") &&
+    Number.isInteger(expr.a) &&
+    Number.isInteger(expr.b)
+  );
+}
+
+/**
+ * The significant digits of a number, with the point taken out: `0.6` and `6` both give
+ * "6". Two numbers that share this and differ in value are the same digits with the
+ * point in a different place.
+ */
+function digitsOf(n: number): string {
+  return String(Math.abs(n)).replace(".", "").replace(/^0+/, "") || "0";
+}
+
+/** Whether a decimal point is even in play — nothing to lose without one. */
+function involvesDecimals(question: Question): boolean {
+  return question.prompt.includes(".") || !Number.isInteger(question.answer);
 }
 
 type Pattern = (question: Question, given: number) => Diagnosis | null;
@@ -112,7 +136,64 @@ const PATTERNS: Pattern[] = [
     };
   },
 
-  // 3. The digits came out backwards. Both sides must be at least two digits: without
+  // 3. The digits are right; the decimal point is not.
+  //
+  //    Reported from the live app: "0.4 + 0.2" answered `6`. That is not a wrong sum — it
+  //    is the *right* sum with the point dropped. She added four tenths and two tenths,
+  //    got six, and wrote six wholes. Announcing "the answer is 0.6" answers a question
+  //    she did not ask; she already had the six.
+  //
+  //    The signature is exact rather than interpreted: strip the point from both numbers
+  //    and the digits match, while the values do not. That is an arithmetic identity, so
+  //    this pattern never guesses.
+  //
+  //    What it teaches is the user's correction, in his words: "להגיד מה גדול יותר לא
+  //    עוזר לילד" — she already knows six is more than six tenths. The lesson is the
+  //    habit she skipped: we added numbers smaller than one, so the result cannot be that
+  //    big, and six is six whole things. Check the size of an answer before finishing.
+  //    So the follow-up asks for the size, explicitly without computing.
+  (question, given) => {
+    const correct = question.answer;
+    if (!Number.isFinite(given) || given === correct || correct === 0) return null;
+    if (!involvesDecimals(question)) return null;
+    if (digitsOf(given) !== digitsOf(correct)) return null;
+
+    const expr = bareExpression(question.prompt);
+    // The follow-up is built from the first operand, so without one there is no question
+    // to ask — and a word problem is not parsed here anyway.
+    if (!expr) return null;
+    const firstInAgorot = Math.round(expr.a * 100);
+    const answerInAgorot = Math.round(correct * 100);
+    // Agora only divide a shekel a hundred ways; anything finer is not money.
+    if (Math.abs(expr.a * 100 - firstInAgorot) > 1e-9) return null;
+
+    // The case the user described: adding two numbers each below one. Naming that out
+    // loud is the concrete version of "the result cannot be that big".
+    const bothUnderOne = expr.op === "+" && Math.abs(expr.a) < 1 && Math.abs(expr.b) < 1;
+    const tooBig = Math.abs(given) > Math.abs(correct);
+    const factor = Math.round(
+      tooBig ? Math.abs(given) / Math.abs(correct) : Math.abs(correct) / Math.abs(given),
+    );
+
+    return {
+      id: "decimalPoint",
+      // Credits the arithmetic she got right, then points at the size — never at the
+      // point itself, which is the symptom rather than the habit.
+      headline: bothUnderOne
+        ? `רגע — הספרות נכונות. אבל \`${expr.a}\` ו-\`${expr.b}\` שניהם קטנים מ-\`1\`, ולכן לא יכולים לתת \`${given}\``
+        : `רגע — הספרות נכונות, אבל \`${given}\` ${tooBig ? "גדול" : "קטן"} פי \`${factor}\` מהתשובה`,
+      // Answerable by the child who just got it wrong — that is the whole bar. Asking
+      // her to estimate without computing demanded the very skill she was missing.
+      // Converting one shekel amount to agora is something she can simply do, and it
+      // is the place-value insight itself: forty agora are not forty shekels.
+      question: `\`${expr.a}\` שקל — כמה אגורות זה?`,
+      answer: firstInAgorot,
+      onRight: `נכון. והתשובה יוצאת \`${answerInAgorot}\` אגורות — כלומר \`${correct}\` שקל, לא \`${given}\``,
+      onWrong: `\`${firstInAgorot}\` אגורות. והתשובה יוצאת \`${answerInAgorot}\` אגורות — כלומר \`${correct}\` שקל`,
+    };
+  },
+
+  // 4. The digits came out backwards. Both sides must be at least two digits: without
   //    that guard, answering `1` where `10` was wanted would be called a reversal, when
   //    it is far more likely to be something else entirely.
   (question, given) => {
@@ -130,7 +211,7 @@ const PATTERNS: Pattern[] = [
     };
   },
 
-  // 4. The tens were not read.
+  // 5. The tens were not read.
   //
   //    The tell is not that the answer equals a digit in the question — it is that the
   //    answer is what you get by doing the question right on a number read wrong. "What
@@ -159,7 +240,7 @@ const PATTERNS: Pattern[] = [
     };
   },
 
-  // 5. Off by one. Last, always. It is the only pattern that can land on a guess that
+  // 6. Off by one. Last, always. It is the only pattern that can land on a guess that
   //    happened to fall nearby, so it may only speak once every structural pattern has
   //    declined — never as the explanation for an answer that has a better one.
   //
