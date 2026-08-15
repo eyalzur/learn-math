@@ -808,3 +808,95 @@ button.secondary {
   color: var(--text);
   text-align: center;
 }
+
+/* ---- Mika's two shapes: the number line and the ten-frame ---- */
+
+.number-line-figure,
+.ten-frame-figure,
+.twenty-strip-figure {
+  margin: 0 0 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+/* An SVG does not inherit the page's direction habits. The line ascends left to right
+   inside the right-to-left page, the way it is drawn on the classroom board. */
+.number-line,
+.ten-frame,
+.twenty-strip {
+  direction: ltr;
+  max-width: 100%;
+  height: auto;
+}
+
+.nl-axis,
+.nl-tick {
+  stroke: var(--text-h);
+  stroke-width: 1.5;
+  fill: none;
+}
+
+.nl-arrow,
+.nl-from,
+.nl-to {
+  fill: var(--text-h);
+}
+
+.nl-label {
+  font-size: 15px;
+  font-weight: 600;
+  fill: var(--text);
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+.tf-box {
+  fill: none;
+  stroke: var(--text-h);
+  stroke-width: 1.5;
+}
+
+.tf-dot {
+  fill: none;
+  stroke: var(--text-h);
+  stroke-width: 1.5;
+}
+
+/* Filled versus empty, never one hue versus another. */
+.tf-dot.filled,
+.ts-dot.filled {
+  fill: #c4b5fd;
+}
+
+.ts-dot {
+  fill: none;
+  stroke: var(--text-h);
+  stroke-width: 1.5;
+}
+
+.tf-caption {
+  font-size: 13px;
+  font-weight: 600;
+  fill: var(--text);
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+.figure-caption {
+  font-size: 14px;
+  line-height: 160%;
+  color: var(--text);
+  text-align: center;
+}
+
+/* The number line's caption is two sentences — what the line is, then what this
+   question shows on it — and they read as two lines rather than one paragraph. */
+.caption-line {
+  display: block;
+}
+
+.caption-line + .caption-line {
+  margin-top: 4px;
+}
