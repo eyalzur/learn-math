@@ -1,0 +1,119 @@
+# ספירה לאחור למעבר לשאלה הבאה — Architecture
+
+## Overview
+שני שדות state ושני effects ב-`Practice.tsx`. אין מודול חדש, אין רכיב חדש, ואין
+מסלול מעבר שני — הספירה קוראת ל-`next()` הקיים.
+
+## Affected Files / Components
+
+| קובץ | מה משתנה |
+|---|---|
+| `src/components/Practice.tsx` | שני שדות state, שני effects, ושורת הספירה ברינדור. |
+| `src/App.css` | `.countdown` והספרה שבתוכה. |
+| `tests/e2e/countdown-next.spec.ts` | **חדש** — עבודת QA. |
+
+## Data / State Changes
+
+```ts
+/** Seconds still to wait, or null when nothing is counting. */
+const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
+/** The child asked to stay on this question. Cleared when the question changes. */
+const [countdownStopped, setCountdownStopped] = useState(false);
+```
+
+אין שינוי ב-props, בטיפוסים או בנתונים.
+
+## Technical Approach
+
+### 1. שני effects, ולא אחד
+
+**Effect א׳ — מפעיל את השעון:**
+
+```
+תנאי הפעלה: feedback === "correct" && !isLast && !countdownStopped && speakingBox === null
+פעולה:      setInterval שמוריד שנייה כל 1000ms
+ניקוי:      clearInterval
+```
+
+**Effect ב׳ — מבצע את המעבר:**
+
+```
+תנאי: secondsLeft === 0
+פעולה: next()
+```
+
+**הפיצול הזה הוא ההכרעה המרכזית, והוא מה שמונע closure מיושן.** אינטרוול שקורא
+ל-`next()` מתוכו לוכד את `correctCount`, `index` ו-`isLast` מהרינדור שבו נוצר —
+ואלה בדיוק המשתנים ש-`next()` מסתמך עליהם. אינטרוול שרק מוריד מונה בצורה
+פונקציונלית (`s => s - 1`) אינו לוכד דבר, ו-effect נפרד שרואה `0` רץ ברינדור
+טרי עם `next` הנוכחי.
+
+החלופה — `useRef` שמצביע על `next` ומתעדכן בכל רינדור — עובדת, ומחייבת לזכור
+לעדכן אותה. מונה ותנאי לא מחייבים לזכור כלום.
+
+### 2. השקט הוא reactive, ולא נסקר
+
+`speakingBox` הוא כבר state: `null` פירושו שאיש אינו מדבר, והוא מתאפס ב-callback
+של `speak`. **הוא נכנס למערך התלויות של Effect א׳**, ולכן:
+
+- הקראה בעיצומה → התנאי לא מתקיים → אין אינטרוול, והספרה עומדת על `5`.
+- ההקראה נגמרת → `setSpeakingBox(null)` → רינדור → ה-effect רץ ומתחיל לספור.
+
+**אפס polling.** המנגנון שכבר קיים כדי לדעת איזה כפתור מציג "עצרו" הוא אותו
+מנגנון שאומר מתי מותר להתחיל.
+
+### 3. `StrictMode` — בטוח כאן, ומסיבה שונה מ-`autoSpoken`
+
+StrictMode מריץ `mount → effect → cleanup → effect`. שני אינטרוולים נוצרים, אבל
+**ה-cleanup שביניהם מנקה את הראשון**, ונשאר אחד.
+
+**וזה בדיוק ההבדל מ-`autoSpoken`:** `speak()` הוא תופעת לוואי שיוצאת מיד ואי אפשר
+לבטל אותה בסימטריה — ברגע שהמשפט התחיל, cleanup לא מחזיר אותו. לכן שם נדרש שומר
+שזוכר מה כבר נאמר. `setInterval` **כן** סימטרי: `clearInterval` מבטל אותו לגמרי
+לפני שנשמע ממנו דבר.
+
+**ולכן הטיימר חייב לחיות ב-effect ולא ב-handler של הלחיצה.** טיימר שנפתח בתוך
+`checkAnswer()` הוא טיימר בלי cleanup — ואת זה StrictMode לא היה תופס, כי הכפילות
+הייתה מגיעה רק מהמשתמש.
+
+### 4. מסלול מעבר אחד
+
+הספירה קוראת ל-`next()` הקיים ואינה משכפלת ולו שורה ממנו. `next()` כבר עושה
+`stopSpeaking()`, מאפס את כל ה-state של השאלה, ומטפל ב-`isLast` — ואף אחד מאלה
+לא צריך להיכתב שוב.
+
+**מה שנוסף ל-`next()`:** איפוס `secondsLeft` ל-`null` ו-`countdownStopped`
+ל-`false`, כי הם state של שאלה כמו `hintsShown` ו-`diagnosis` ושייכים לאותה
+רשימה בדיוק.
+
+**מה שנוסף ל-`checkAnswer()`:** בתשובה נכונה, `setSecondsLeft(5)`. זו כל ההתחלה
+— ה-effect עושה את השאר.
+
+### 5. העצירה
+הקשה על השורה → `setCountdownStopped(true)` ו-`setSecondsLeft(null)`. הראשון מונע
+מ-Effect א׳ להתחיל שוב על השאלה הזו; השני מסלק את השורה מהמסך.
+
+## Edge Cases
+- **יציאה מהתרגול** (`onExit`) — `Practice` יורד מהעץ, ה-cleanup רץ, האינטרוול
+  מתבטל. **זה מה שמונע דילוג על שאלה אחרי שהילד/ה כבר לא שם**, וזה עובד בגלל
+  שהטיימר ב-effect.
+- **לחיצה על "הבא" באמצע** — `next()` מאפס `secondsLeft` ל-`null`, התנאי נשבר,
+  ה-cleanup מנקה. אין מרוץ בין השניים.
+- **תשובה נכונה על השאלה האחרונה** — `isLast` חוסם, אין ספירה, מסך הסיום בלחיצה.
+- **הקראה שמתחילה אחרי שהספירה כבר רצה** — התנאי נשבר, האינטרוול מתנקה, והספרה
+  קופאת במקום שבו הייתה. כשהשקט חוזר היא ממשיכה משם. זה נכון יותר מאשר לאתחל
+  ל-`5`, וזו התנהגות שנופלת מהמבנה ולא נכתבה בנפרד.
+- **`secondsLeft` שיורד מתחת ל-`0`** — בלתי אפשרי: Effect ב׳ קורא ל-`next()`
+  ב-`0`, ו-`next()` מאפס ל-`null` באותו מחזור.
+
+## Risks / Tradeoffs
+- **שני effects במקום אחד** הם יותר קוד ופחות מקום לטעות. הבחירה מנומקת בסעיף `1`.
+- **`secondsLeft` הוא state ולא ref**, כלומר רינדור בכל שנייה. במסך הזה זה זניח,
+  והחלופה היא ספרה שלא מתעדכנת.
+- **הבראנץ' יושב על `feature/style-lessons`** כי שניהם עורכים את `Practice.tsx`,
+  ושם שונה שם ה-prop מ-`level` ל-`lesson`. מיזוג בסדר הפוך ייצור התנגשות בכל
+  hunk שנוגע בשורות האלה.
+
+## Open Questions
+
+None.
