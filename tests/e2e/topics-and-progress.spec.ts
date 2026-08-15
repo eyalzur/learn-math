@@ -59,6 +59,9 @@ test("picking a student shows the grade's topics, and a topic shows its levels",
 });
 
 test("grade 1 has three levels of ten questions for every topic", async ({ page }) => {
+  // Only the topics that still offer levels — the ones holding a single kind of question.
+  // The rest are entered by style and run however many that style has; style-lessons
+  // covers them.
   await page.locator(".student-card").nth(MIKA).click();
   const topicCount = await page.locator(".topic-card").count();
   expect(topicCount).toBe(5);
@@ -66,6 +69,11 @@ test("grade 1 has three levels of ten questions for every topic", async ({ page 
   for (let t = 0; t < topicCount; t++) {
     await page.locator(".topic-card").nth(t).click();
     const levels = page.locator(".level-card");
+    if (!(await levels.count())) {
+      await expect(page.locator(".style-card").first()).toBeVisible();
+      await page.getByRole("button", { name: "← חזרה" }).click();
+      continue;
+    }
     await expect(levels).toHaveCount(3);
 
     for (let l = 0; l < 3; l++) {
@@ -77,6 +85,26 @@ test("grade 1 has three levels of ten questions for every topic", async ({ page 
     await page.getByRole("button", { name: "← חזרה" }).click();
   }
 });
+
+/**
+ * Enters the lesson chooser a topic actually shows, and reports the chosen lesson's name.
+ *
+ * Grade 1's multi-style topics are entered by style; the rest still by level. Tests that
+ * are about history or navigation do not care which — they care that a lesson was entered
+ * and what it was called.
+ */
+async function enterFirstLesson(page: Page): Promise<string> {
+  const style = page.locator(".style-card").first();
+  if (await page.locator(".style-card").count()) {
+    const title = await style.locator(".style-title").innerText();
+    await style.click();
+    return title;
+  }
+  const level = page.locator(".level-card").first();
+  const title = await level.locator(".level-title").innerText();
+  await level.click();
+  return title;
+}
 
 test("a level practises only its own topic", async ({ page }) => {
   // Every question in "חיסור עד 10" must be a subtraction — the whole point of choosing
@@ -97,7 +125,7 @@ test("a level practises only its own topic", async ({ page }) => {
 test("you can walk back from level to topic to student", async ({ page }) => {
   await page.locator(".student-card").nth(MIKA).click();
   await page.locator(".topic-card").first().click();
-  await expect(page.locator(".level-card")).toHaveCount(3);
+  await expect(page.locator(".style-card, .level-card").first()).toBeVisible();
 
   await page.getByRole("button", { name: "← חזרה" }).click();
   await expect(page.locator(".topic-card")).toHaveCount(5);
@@ -121,8 +149,7 @@ test("finishing a practice records the topic, level and score, and it survives a
   await page.locator(".student-card").nth(MIKA).click();
   const topicTitle = await page.locator(".topic-card").first().locator(".topic-title").innerText();
   await page.locator(".topic-card").first().click();
-  const levelTitle = await page.locator(".level-card").first().locator(".level-title").innerText();
-  await page.locator(".level-card").first().click();
+  const levelTitle = await enterFirstLesson(page);
 
   const total = await playLevel(page, "999999");
   await expect(page.locator(".result")).toBeVisible();
@@ -143,7 +170,7 @@ test("history is newest first", async ({ page }) => {
 
   for (const topicIndex of [0, 1]) {
     await page.locator(".topic-card").nth(topicIndex).click();
-    await page.locator(".level-card").first().click();
+    await enterFirstLesson(page);
     await playLevel(page, "999999");
     await page.getByRole("button", { name: "חזרה לתפריט" }).click();
     await page.getByRole("button", { name: "← חזרה" }).click();
@@ -161,7 +188,7 @@ test("history is newest first", async ({ page }) => {
 test("each student's history is their own", async ({ page }) => {
   await page.locator(".student-card").nth(MIKA).click();
   await page.locator(".topic-card").first().click();
-  await page.locator(".level-card").first().click();
+  await enterFirstLesson(page);
   await playLevel(page, "999999");
   await page.getByRole("button", { name: "חזרה לתפריט" }).click();
   await page.getByRole("button", { name: "← חזרה" }).click();
