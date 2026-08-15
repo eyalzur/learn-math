@@ -4,12 +4,12 @@
 
 ## Progress
 - [x] Product spec — product-manager — 2026-08-15
-- [ ] Design — designer — not started
+- [x] Design — designer — 2026-08-15
 - [ ] Architecture — tech-lead — not started
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** designer
+**Current phase:** tech-lead
 **Branch:** `feature/countdown-next` — **יושב על `feature/style-lessons`**, לא על `main`
 **PR:** not opened yet
 
