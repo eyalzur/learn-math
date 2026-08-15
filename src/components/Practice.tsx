@@ -29,6 +29,9 @@ import {
  */
 type SpeakingBox = "question" | "diagnosis" | "explanation" | null;
 
+/** How long a correct answer rests on screen before the next question opens itself. */
+const COUNTDOWN_SECONDS = 5;
+
 /** Hebrew wrapped around an arithmetic run, split so the run can be isolated. */
 function segmented(text: string) {
   return promptSegments(text).map((segment, i) =>
@@ -71,6 +74,11 @@ export function Practice({ lesson, onFinish, onExit, readAloud }: PracticeProps)
   const [followUpResult, setFollowUpResult] = useState<"right" | "wrong" | null>(null);
   const [askedToSee, setAskedToSee] = useState(false);
 
+  /** Seconds still to wait before the next question opens itself, or null when idle. */
+  const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
+  /** The child asked to stay here. Cleared when the question changes, never before. */
+  const [countdownStopped, setCountdownStopped] = useState(false);
+
   // Voices load asynchronously, so warm the list before the first press.
   useEffect(primeVoices, []);
   // Leaving mid-sentence must not leave a voice talking over the next screen.
@@ -92,6 +100,39 @@ export function Practice({ lesson, onFinish, onExit, readAloud }: PracticeProps)
   const frame = tenFrame(question);
   /** Twenty circles, some filled — how many are missing to reach twenty. */
   const strip = twentyStrip(question);
+
+  /**
+   * The countdown's clock.
+   *
+   * Two effects rather than one, and that split is the point: an interval that called
+   * `next()` from inside itself would capture `correctCount`, `index` and `isLast` from
+   * the render that created it — the very values `next()` depends on. This one only
+   * decrements, functionally, capturing nothing; the effect below sees the zero on a
+   * fresh render and calls the current `next`.
+   *
+   * `speakingBox` is in the dependencies, so silence is reactive rather than polled: while
+   * anything is being read the condition fails, no interval exists, and the digit simply
+   * waits. When `speak` clears the box the effect runs and counting begins.
+   *
+   * StrictMode is safe here for a different reason than `autoSpoken` below: two intervals
+   * are created, but the cleanup between them clears the first, and `clearInterval` undoes
+   * an interval completely before it is ever heard from. `speak()` has no such symmetry,
+   * which is why it needs a guard and this does not. It is also why the timer lives in an
+   * effect rather than in the click handler — a timer started there would have no cleanup,
+   * and would go on to skip a question after the child had already left the screen.
+   */
+  useEffect(() => {
+    if (feedback !== "correct" || isLast || countdownStopped) return;
+    if (secondsLeft === null || secondsLeft <= 0) return;
+    if (speakingBox !== null) return;
+    const id = setInterval(() => setSecondsLeft((s) => (s === null ? null : s - 1)), 1000);
+    return () => clearInterval(id);
+  }, [feedback, isLast, countdownStopped, secondsLeft, speakingBox]);
+
+  useEffect(() => {
+    if (secondsLeft === 0) next();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [secondsLeft]);
 
   /**
    * What has already been read out on its own, so it is never read twice.
@@ -164,7 +205,15 @@ export function Practice({ lesson, onFinish, onExit, readAloud }: PracticeProps)
     if (input.trim() === "" || feedback !== null) return;
     const isCorrect = Number(input) === question.answer;
     setFeedback(isCorrect ? "correct" : "wrong");
-    if (isCorrect) setCorrectCount((c) => c + 1);
+    if (isCorrect) {
+      setCorrectCount((c) => c + 1);
+      // The whole of starting the countdown; the effect above waits for silence and ticks.
+      // Not on the last question: there is no next one to open, and finishing a practice
+      // is a moment to arrive at rather than be delivered to. Guarded here rather than
+      // only in the effect, because the effect governs the *ticking* and this governs
+      // whether the row exists at all — without it the row appears and sits at five.
+      if (!isLast) setSecondsLeft(COUNTDOWN_SECONDS);
+    }
     // The score is closed on this line, before the conversation can begin. Nothing that
     // happens in it moves the number.
     else setDiagnosis(diagnose(question, Number(input)));
@@ -192,6 +241,14 @@ export function Practice({ lesson, onFinish, onExit, readAloud }: PracticeProps)
     setFollowUpInput("");
     setFollowUpResult(null);
     setAskedToSee(false);
+    setSecondsLeft(null);
+    setCountdownStopped(false);
+  }
+
+  /** The child asked for a moment. It does not start again on this question. */
+  function stopCountdown() {
+    setCountdownStopped(true);
+    setSecondsLeft(null);
   }
 
   function toggleSpeech(box: Exclude<SpeakingBox, null>) {
@@ -348,6 +405,26 @@ export function Practice({ lesson, onFinish, onExit, readAloud }: PracticeProps)
         <p className={`feedback ${feedback}`}>
           {feedback === "correct" ? "נכון מאוד! 🎉" : `לא נכון. התשובה היא ${question.answer}`}
         </p>
+      )}
+      {secondsLeft !== null && (
+        /* A screen that changes on its own has to be seen coming, be stoppable, and be
+           announced — so it is a button, it is visible for five seconds first, and the row
+           is a live region. The digit itself is hidden from the reader: announcing
+           "5, 4, 3" would drown out everything else. */
+        <button
+          type="button"
+          className="countdown"
+          onClick={stopCountdown}
+          aria-live="polite"
+          aria-label="עוד רגע ואנחנו ממשיכים. לחצו כדי להישאר כאן"
+        >
+          <span className="countdown-digit" aria-hidden="true">
+            {secondsLeft}
+          </span>
+          <span className="countdown-text" aria-hidden="true">
+            עוד רגע ואנחנו ממשיכים
+          </span>
+        </button>
       )}
       {feedback === "wrong" && revealed && explanation !== null && (
         <div className="explanation">

@@ -990,3 +990,42 @@ button.secondary {
 .style-speak:hover {
   border-color: var(--accent-border);
 }
+
+
+/* ------------------------------------------------------------------ countdown */
+
+/* A button, not a caption: stopping it has to be one tap on the thing you can see, and
+   nothing looks tappable without a border. */
+.countdown {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 16px;
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  transition: border-color 0.15s;
+}
+
+.countdown:hover {
+  border-color: var(--accent-border);
+}
+
+/* The digit carries the meaning for a child who cannot read yet — 5, 4, 3 is a sequence
+   she knows from hide-and-seek long before she can read the words beside it. */
+.countdown-digit {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--accent);
+  min-width: 28px;
+  text-align: center;
+}
+
+.countdown-text {
+  font-size: 15px;
+  color: var(--text);
+}

@@ -6,10 +6,10 @@
 - [x] Product spec — product-manager — 2026-08-15
 - [x] Design — designer — 2026-08-15
 - [x] Architecture — tech-lead — 2026-08-15
-- [ ] Implementation — developer — not started
+- [x] Implementation — developer — 2026-08-15
 - [ ] Tests — qa — not started
 
-**Current phase:** developer
+**Current phase:** qa
 **Branch:** `feature/countdown-next` — **יושב על `feature/style-lessons`**, לא על `main`
 **PR:** not opened yet
 
