@@ -173,7 +173,8 @@ test("a grade with no fractions is untouched", async ({ page }) => {
   await page.goto("/learn-math/");
   await page.locator(".student-card").nth(0).click(); // Mika
   await page.locator(".topic-card").nth(0).click();
-  await page.locator(".level-card").nth(0).click();
+  // Grade 1 enters this topic by style, not by level.
+  await page.locator(".style-card").first().click();
   await answerWrong(page);
 
   await expect(page.locator(".explanation")).toBeVisible();

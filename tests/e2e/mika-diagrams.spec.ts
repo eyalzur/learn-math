@@ -17,13 +17,19 @@ const MIKA = 0;
 const NUMBERS = 0;
 const PLACE = 4;
 
-async function open(page: Page, topicIdx: number, levelIdx: number) {
+/**
+ * Both of Mika's topics here are entered by picking a style rather than a level, so a
+ * test names the kind of exercise it is about instead of a difficulty it never cared
+ * about. That is also more honest: every one of these tests then walks to a particular
+ * question, and the style is where that question lives.
+ */
+async function open(page: Page, topicIdx: number, style: string) {
   await page.goto("/learn-math/");
   await page.evaluate(() => localStorage.clear());
   await page.goto("/learn-math/");
   await page.locator(".student-card").nth(MIKA).click();
   await page.locator(".topic-card").nth(topicIdx).click();
-  await page.locator(".level-card").nth(levelIdx).click();
+  await page.locator(".style-card").filter({ hasText: style }).first().click();
 }
 
 const answer = async (page: Page, value: string) => {
@@ -49,20 +55,21 @@ const ticks = (page: Page) =>
 // -------------------------------------------------------- the picture never leaks early
 
 test("no number line before the question is answered", async ({ page }) => {
-  await open(page, NUMBERS, 1);
+  await open(page, NUMBERS, "מה בא אחרי");
   await expect(page.locator(".problem-text")).toBeVisible();
   await expect(page.locator(".number-line")).toHaveCount(0);
 });
 
 test("no ten-frame before the question is answered", async ({ page }) => {
-  await open(page, PLACE, 0);
+  await open(page, PLACE, "כמה עשרות");
   await expect(page.locator(".problem-text")).toBeVisible();
   await expect(page.locator(".ten-frame")).toHaveCount(0);
 });
 
 test("a correct answer shows no picture", async ({ page }) => {
-  await open(page, NUMBERS, 1); // opens on "איזה מספר בא אחרי 12?"
-  await answer(page, "13");
+  // A lesson climbs from the easy end, so this opens on "איזה מספר בא אחרי 3?".
+  await open(page, NUMBERS, "מה בא אחרי");
+  await answer(page, "4");
 
   await expect(page.locator(".feedback.correct")).toBeVisible();
   await expect(page.locator(".number-line")).toHaveCount(0);
@@ -71,7 +78,7 @@ test("a correct answer shows no picture", async ({ page }) => {
 // ------------------------------------------------------------- the line ascends, left to right
 
 test("the ticks run left to right and ascend", async ({ page }) => {
-  await open(page, NUMBERS, 1);
+  await open(page, NUMBERS, "מה בא אחרי");
   await failAt(page, "בא אחרי 12");
 
   const values = await ticks(page);
@@ -84,7 +91,7 @@ test("the ticks run left to right and ascend", async ({ page }) => {
 });
 
 test("the line is one isolated left-to-right island", async ({ page }) => {
-  await open(page, NUMBERS, 1);
+  await open(page, NUMBERS, "מה בא אחרי");
   await failAt(page, "בא אחרי 12");
 
   const style = await page.locator(".number-line").evaluate((el) => {
@@ -97,7 +104,7 @@ test("the line is one isolated left-to-right island", async ({ page }) => {
 test("even at the top of the range the window still holds five ticks", async ({ page }) => {
   // "בא אחרי 19" clips at 20, so a window that only grows rightwards would come out
   // with four ticks and nothing to add.
-  await open(page, NUMBERS, 1);
+  await open(page, NUMBERS, "מה בא אחרי");
   await failAt(page, "בא אחרי 19");
 
   const values = await ticks(page);
@@ -111,7 +118,7 @@ test("a comparison marks the number that was NOT the answer", async ({ page }) =
   // The criterion easiest to implement backwards. Both candidates sit on the line; the
   // answer is starred and the other is dotted, so the child sees which is further along
   // rather than being told which is bigger.
-  await open(page, NUMBERS, 0);
+  await open(page, NUMBERS, "מה גדול יותר");
   await failAt(page, "גדול יותר, 4 או 8");
 
   await expect(page.locator(".nl-from")).toHaveCount(1);
@@ -134,7 +141,7 @@ test("a between-question counts up and still marks the far end", async ({ page }
   // you count (`4`, `5`, `6`), and the upper bound has to stay marked, because the
   // question is about a place between two bounds and a picture that only counts upwards
   // loses half of it.
-  await open(page, NUMBERS, 2);
+  await open(page, NUMBERS, "מה נמצא באמצע");
   await failAt(page, "נמצא בין 6 ל-8");
 
   await expect(page.locator(".nl-from"), "the run plus the far end").toHaveCount(4);
@@ -149,7 +156,7 @@ test("a between-question counts up and still marks the far end", async ({ page }
 
 test("a counting question shows the run it counted, not two marks", async ({ page }) => {
   // The review's words: "אולי צריך לספור מעוד כמה, למשל: 16, 15, 14 ועכשיו מה בא?"
-  await open(page, NUMBERS, 1);
+  await open(page, NUMBERS, "מה בא לפני");
   await failAt(page, "בא לפני 14");
 
   await expect(page.locator(".nl-from"), "a run of three").toHaveCount(3);
@@ -167,7 +174,7 @@ test("a counting question shows the run it counted, not two marks", async ({ pag
 test("the run shortens rather than running off the end of the line", async ({ page }) => {
   // "איזה מספר בא לפני 20" would count 22, 21, 20 — two numbers outside everything Mika
   // has been taught. Less than we wanted beats showing her a number she does not know.
-  await open(page, NUMBERS, 2);
+  await open(page, NUMBERS, "מה בא לפני");
   await failAt(page, "בא לפני 20");
 
   await expect(page.locator(".nl-from")).toHaveCount(1);
@@ -182,12 +189,12 @@ test("the run shortens rather than running off the end of the line", async ({ pa
 test("the opening sentence matches whether zero is really on screen", async ({ page }) => {
   // The pair that separates a caption read off the final ticks from one guessed at: two
   // counting questions a single tick apart, one drawing 0 and one not.
-  await open(page, NUMBERS, 0);
+  await open(page, NUMBERS, "מה בא אחרי");
   await failAt(page, "בא אחרי 3");
   expect(await ticks(page), "0 should be drawn here").toContain(0);
   expect(await page.locator(".figure-caption").innerText()).toContain("כאן משמאל");
 
-  await open(page, NUMBERS, 0);
+  await open(page, NUMBERS, "מה בא לפני");
   await failAt(page, "בא לפני 4");
   expect(await ticks(page), "0 should be off the window here").not.toContain(0);
   expect(await page.locator(".figure-caption").innerText()).toContain("מחוץ לתמונה");
@@ -199,7 +206,7 @@ test("no picture or step tells a child something is far without saying from what
   // "רחוק יותר לא אומר כלום." The whole screen, not just the caption — the phrase lived
   // in the steps too, and fixing only the picture would have left two languages on one
   // screen for the same idea.
-  await open(page, NUMBERS, 1);
+  await open(page, NUMBERS, "מה גדול יותר");
   await failAt(page, "גדול יותר, 13 או 18");
 
   const explanation = await page.locator(".explanation").innerText();
@@ -211,7 +218,7 @@ test("the strip of twenty fills what the question starts from and leaves the ans
   page,
 }) => {
   // "צריך פה ציור של 20 כדורים, 13 צבועים ו-7 ריקים."
-  await open(page, PLACE, 2);
+  await open(page, PLACE, "כמה חסר עד עשרים");
   await failAt(page, "להוסיף ל-13");
 
   await expect(page.locator(".twenty-strip")).toBeVisible();
@@ -224,7 +231,7 @@ test("the strip of twenty fills what the question starts from and leaves the ans
 test("the place-value explanation calls the digits by their names", async ({ page }) => {
   // "מידי פעם צריך להזכיר שהיחידות היא הימנית והעשרות היא השמאלית" — the questions ask in
   // that vocabulary, so the explanation has to answer in it.
-  await open(page, PLACE, 2);
+  await open(page, PLACE, "איזו ספרה גדולה יותר");
   await failAt(page, "במספר 16, בכמה");
 
   const method = await page.locator(".explanation-method").innerText();
@@ -237,7 +244,7 @@ test("the place-value explanation calls the digits by their names", async ({ pag
 // ------------------------------------------------------------------------ the ten-frame
 
 test("asking about units fills the loose ones, not the box", async ({ page }) => {
-  await open(page, PLACE, 0);
+  await open(page, PLACE, "כמה יחידות");
   await failAt(page, "כמה יחידות יש במספר 13");
 
   await expect(page.locator(".ten-frame")).toBeVisible();
@@ -248,7 +255,7 @@ test("asking about units fills the loose ones, not the box", async ({ page }) =>
 });
 
 test("asking about tens fills the box, not the loose ones", async ({ page }) => {
-  await open(page, PLACE, 0);
+  await open(page, PLACE, "כמה עשרות");
   await failAt(page, "כמה עשרות יש במספר 13");
 
   await expect(page.locator(".tf-dot")).toHaveCount(13);
@@ -258,7 +265,7 @@ test("asking about tens fills the box, not the loose ones", async ({ page }) => 
 test("the ten-frame comes before the vertical sum on the one question that has both", async ({
   page,
 }) => {
-  await open(page, PLACE, 1);
+  await open(page, PLACE, "עשר ועוד");
   await failAt(page, "10 + 6");
 
   await expect(page.locator(".ten-frame")).toBeVisible();
@@ -274,9 +281,13 @@ test("the ten-frame comes before the vertical sum on the one question that has b
 test("the hard place-value questions get no frame, and still explain themselves", async ({
   page,
 }) => {
-  // All ten are about the gap between digits, or completing to twenty. One box describes
-  // neither, and the absence is deliberate.
-  await open(page, PLACE, 2);
+  // These five are about the gap between two digits. One box of ten describes a number,
+  // not a comparison between its digits, and the absence is deliberate.
+  //
+  // The five "completing to twenty" questions used to sit in the same hard level and had
+  // no picture either; they now have their own — a strip of twenty — so naming the style
+  // instead of the level is what keeps this test about the questions it was written for.
+  await open(page, PLACE, "איזו ספרה גדולה יותר");
 
   for (let i = 0; i < 3; i++) {
     await answer(page, "999999");
@@ -291,7 +302,7 @@ test("the hard place-value questions get no frame, and still explain themselves"
 // --------------------------------------------------------------------- accessibility
 
 test("each picture's caption is what a screen reader is told", async ({ page }) => {
-  await open(page, NUMBERS, 1);
+  await open(page, NUMBERS, "מה בא אחרי");
   await failAt(page, "בא אחרי 12");
   // The caption is two lines and the label is one string: it is one picture, so a screen
   // reader gets one description. Whitespace is normalised because that difference is the
@@ -300,7 +311,7 @@ test("each picture's caption is what a screen reader is told", async ({ page }) 
   const lineCaption = await page.locator(".figure-caption").innerText();
   expect(flat(await page.locator(".number-line").getAttribute("aria-label"))).toBe(flat(lineCaption));
 
-  await open(page, PLACE, 0);
+  await open(page, PLACE, "כמה יחידות");
   await failAt(page, "כמה יחידות יש במספר 13");
   const frameCaption = await page.locator(".figure-caption").innerText();
   expect(flat(await page.locator(".ten-frame").getAttribute("aria-label"))).toBe(flat(frameCaption));
@@ -309,7 +320,7 @@ test("each picture's caption is what a screen reader is told", async ({ page }) 
 test("the captions are sentences, not lists of numbers", async ({ page }) => {
   // Mika cannot read the screen, so the caption is her channel — it is what the
   // read-aloud says in place of the picture.
-  await open(page, NUMBERS, 1);
+  await open(page, NUMBERS, "מה בא אחרי");
   await failAt(page, "בא אחרי 12");
 
   const caption = await page.locator(".figure-caption").innerText();

@@ -22,4 +22,4 @@ architecture, implementation notes, and tests.
 | ציור לשברים | 🟢 done | [status](./fraction-diagram/status.md) |
 | הסבר בארבע שכבות — שיטה ומאונך | 🟢 done | [status](./clearer-explanations/status.md) |
 | ציורים לשאר הנושאים | 🟡 גל א׳ נפרס · חמש צורות נותרו | [status](./more-diagrams/status.md) |
-| שיעור על סגנון תרגיל | 🟡 בעיצוב | [status](./style-lessons/status.md) |
+| שיעור על סגנון תרגיל | 🟡 מוכן ל-PR — גל א׳ (מיקה) | [status](./style-lessons/status.md) |

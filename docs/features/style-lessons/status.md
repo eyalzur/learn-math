@@ -8,9 +8,9 @@
 - [x] Design — designer — 2026-08-15
 - [x] Architecture — tech-lead — 2026-08-15
 - [x] Implementation — developer — 2026-08-15
-- [ ] Tests — qa — not started
+- [x] Tests — qa — 2026-08-15
 
-**Current phase:** qa
+**Current phase:** done — ממתין ל-PR
 **Branch:** `feature/style-lessons`
 **PR:** not opened yet
 

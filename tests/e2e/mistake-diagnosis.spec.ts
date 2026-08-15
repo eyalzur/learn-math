@@ -21,7 +21,22 @@ async function startMedium(page: Page) {
   await page.goto("/learn-math/");
   await page.locator(".student-card").nth(0).click();
   await page.locator(".topic-card").nth(0).click();
-  await page.locator(".level-card").nth(1).click();
+  // Grade 1 enters this topic by style now. Every test below is about "איזה מספר בא
+  // אחרי 12?" — a two-digit answer is what makes a misread digit or an overshoot mean
+  // anything — so walk to it rather than take whatever comes first.
+  await page.locator(".style-card").filter({ hasText: "מה בא אחרי" }).first().click();
+  await walkTo(page, "בא אחרי 12");
+}
+
+/** Answers wrong until the wanted question is on screen, and leaves it unanswered. */
+async function walkTo(page: Page, wanted: string) {
+  for (let i = 0; i < 10; i++) {
+    if ((await page.locator(".problem-text").innerText()).includes(wanted)) return;
+    await page.locator(".answer-input").fill("999999");
+    await page.getByRole("button", { name: "בדיקה" }).first().click();
+    await page.getByRole("button", { name: /הבא|סיום/ }).click();
+  }
+  throw new Error(`never reached "${wanted}"`);
 }
 
 const answer = async (page: Page, value: string) => {
@@ -126,8 +141,11 @@ test("the next question is reachable mid-conversation, without answering", async
   await answer(page, "3");
   await expect(page.locator(".followup")).toBeVisible();
 
+  // Which question this is depends on where the lesson opened, so read the counter
+  // rather than name a number — what matters is that it advanced by exactly one.
+  const before = Number((await page.locator(".progress").innerText()).match(/\d+/)![0]);
   await page.getByRole("button", { name: "הבא" }).click();
-  await expect(page.locator(".progress")).toContainText("שאלה 2");
+  await expect(page.locator(".progress")).toContainText(`שאלה ${before + 1}`);
   // Nothing carried over from the abandoned conversation.
   await expect(page.locator(".followup")).toHaveCount(0);
   await expect(page.locator(".diagnosis")).toHaveCount(0);
@@ -136,18 +154,19 @@ test("the next question is reachable mid-conversation, without answering", async
 // ------------------------------------------------------------------- the score is untouched
 
 test("the conversation does not change the score", async ({ page }) => {
-  // Ten questions, first one failed then discussed and corrected.
+  // The lesson holds eight questions; getting here already failed four of them, and this
+  // one is failed, discussed and corrected.
   await answer(page, "3");
   await answerFollowUp(page, "12");
   await page.getByRole("button", { name: "הבא" }).click();
-  for (let i = 0; i < 9; i++) {
+  for (let i = 0; i < 3; i++) {
     await answer(page, "999999");
     await page.getByRole("button", { name: /הבא|סיום/ }).click();
   }
 
   // A corrected answer is still a wrong answer in the tally — the spec is explicit that
   // the conversation is for understanding, not for points.
-  await expect(page.locator(".score")).toContainText("0 מתוך 10");
+  await expect(page.locator(".score")).toContainText("0 מתוך 8");
 });
 
 // ------------------------------------------------------------------------------ direction

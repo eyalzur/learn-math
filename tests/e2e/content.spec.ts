@@ -7,6 +7,7 @@ import { verticalSum } from "../../src/data/verticalSum";
 import { numberLine } from "../../src/data/numberLine";
 import { tenFrame } from "../../src/data/tenFrame";
 import { twentyStrip } from "../../src/data/twentyStrip";
+import { STYLE_META, stylesOf, hasStyleLessons } from "../../src/data/style";
 
 /**
  * Content correctness, checked against the data rather than through the browser.
@@ -586,6 +587,79 @@ test("no line or box ever disagrees with its own question", () => {
     }
   }
   expect(wrong, `\n${wrong.join("\n")}\n`).toEqual([]);
+});
+
+test("every style id in the data has a name, and every name is used", () => {
+  // `grade1.ts` writes style ids as plain strings and never imports them: importing
+  // constants into a grade file is the circular edge that once took this app down with a
+  // white screen, and TypeScript did not catch it. This rule is what buys back the safety
+  // the compiler is not providing — and it has to run **both ways**, because a typo shows
+  // up as an id with no name, while a rename shows up as a name nobody uses.
+  const used = new Set<string>();
+  const orphans: string[] = [];
+  for (const { q } of everyQuestion()) {
+    if (!q.style) continue;
+    used.add(q.style);
+    if (!(q.style in STYLE_META)) orphans.push(`${q.id} — style "${q.style}" has no name`);
+  }
+  expect(orphans, `\n${orphans.join("\n")}\n`).toEqual([]);
+
+  const unused = Object.keys(STYLE_META).filter((id) => !used.has(id));
+  expect(unused, `named but never used: ${unused.join(", ")}`).toEqual([]);
+});
+
+test("grade one is fully classified, and every style is big enough to be a lesson", () => {
+  const grade1 = everyQuestion().filter(({ gradeId }) => gradeId === "1");
+  const unclassified = grade1.filter(({ q }) => !q.style).map(({ q }) => q.id);
+  expect(unclassified, `unclassified: ${unclassified.join(", ")}`).toEqual([]);
+  expect(grade1.length, "grade one changed size").toBe(150);
+
+  const styles = new Set(grade1.map(({ q }) => q.style));
+  expect(styles.size, "the number of styles in grade one changed").toBe(15);
+
+  // A style too small to repeat is not a lesson, and the spec puts the floor at three.
+  const topics = grades.flatMap((g) => (g.id === "1" ? g.topicSets : []));
+  const selectable = topics.flatMap((t) => (hasStyleLessons(t) ? stylesOf(t) : []));
+  expect(selectable.length, "the number of selectable styles changed").toBe(13);
+
+  const thin = selectable
+    .filter((s) => s.questions.length < 3)
+    .map((s) => `${s.id} has ${s.questions.length}`);
+  expect(thin, `\n${thin.join("\n")}\n`).toEqual([]);
+
+  // Two topics hold one style each, so they keep their level screen.
+  expect(topics.filter(hasStyleLessons).length, "how many topics offer styles changed").toBe(3);
+});
+
+test("a lesson's questions climb from easy to hard", () => {
+  // The criterion easiest to get backwards without noticing: most styles sit inside one
+  // level, so a reversed or absent sort still looks right everywhere except the few that
+  // span levels — which are exactly the ones a child would meet the hardest question in
+  // first.
+  const rank: Record<string, number> = { easy: 0, medium: 1, hard: 2 };
+  const wrong: string[] = [];
+  let spanning = 0;
+
+  for (const grade of grades) {
+    for (const topic of grade.topicSets) {
+      if (!hasStyleLessons(topic)) continue;
+      for (const style of stylesOf(topic)) {
+        const levels = style.questions.map(
+          (q) => topic.levels.find((l) => l.questions.includes(q))!.id,
+        );
+        const ranks = levels.map((id) => rank[id]);
+        if (new Set(ranks).size > 1) spanning++;
+        for (let i = 1; i < ranks.length; i++) {
+          if (ranks[i] < ranks[i - 1]) {
+            wrong.push(`${style.id}: ${levels[i - 1]} came before ${levels[i]}`);
+          }
+        }
+      }
+    }
+  }
+  expect(wrong, `\n${wrong.join("\n")}\n`).toEqual([]);
+  // Without a style that spans levels this test could not fail, whatever the order.
+  expect(spanning, "no style spans more than one level, so the ordering is untested").toBeGreaterThan(0);
 });
 
 test("review status is decided for every topic", () => {
