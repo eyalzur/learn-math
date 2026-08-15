@@ -5,13 +5,13 @@
 ## Progress
 - [x] Product spec — product-manager — 2026-08-14
 - [x] Design — designer — 2026-08-14
-- [ ] Architecture — tech-lead — not started
+- [x] Architecture — tech-lead — 2026-08-15 (גל א׳: שתי הצורות של מיקה)
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** tech-lead — **עוצר לדיון עם המשתמש לפני שממשיכים**
-**Branch:** `feature/more-diagrams` — יושב על `main`
-**PR:** not opened yet
+**Current phase:** developer — גל ראשון: ציר מספרים וקופסאות עשר
+**Branch:** `feature/mika-diagrams` (התכנון מוזג ב-#31)
+**PR:** תכנון — #31 · גל ראשון — טרם נפתח
 
 ## Open questions / blockers
 אין. **הדיון התקיים ב-2026-08-14 וכל חמש ההכרעות סגורות** — ראו "מה הוכרע בדיון"
