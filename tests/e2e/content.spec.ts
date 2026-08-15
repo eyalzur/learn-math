@@ -6,6 +6,7 @@ import { fractionDiagram } from "../../src/data/fractionDiagram";
 import { verticalSum } from "../../src/data/verticalSum";
 import { numberLine } from "../../src/data/numberLine";
 import { tenFrame } from "../../src/data/tenFrame";
+import { twentyStrip } from "../../src/data/twentyStrip";
 
 /**
  * Content correctness, checked against the data rather than through the browser.
@@ -90,6 +91,46 @@ const RULES: {
       if (!e) return "no explanation at all";
       if (e.steps.length === 0) return "an explanation with no steps";
       if (!e.analogy?.trim()) return "no analogy";
+      return null;
+    },
+  },
+  {
+    name: "never says how far without saying from what",
+    check: (q) => {
+      // "סופרים רחוק יותר ממה? כנראה התכוונת מ-0" — a comparative distance with no
+      // starting point is not a weak explanation, it is an unanswerable one, and a child
+      // who cannot follow it has no way to say so.
+      //
+      // What is banned is a **comparative** distance with nothing to compare against —
+      // "רחוק יותר", "פחות רחוק" — because that is the form that carries the explanation
+      // and leaves the child no way to check it. The word itself is innocent: "כמה רגלו
+      // רחוקה מהקיר" names its anchor, and "נסיעה בין שתי ערים רחוקות" is a description,
+      // not a claim about which number is bigger. A first draft of this rule banned the
+      // word and flagged both; narrow and right beats broad and needing exemptions.
+      //
+      // An adjacent מ-word makes it legal again, which is what allows the permitted
+      // "רחוק יותר מ-`0`". Catching the comparative rather than one fixed phrase is what
+      // makes it find "פחות רחוק" too — the string search this replaced knew only one
+      // word order and missed four real cases because of it.
+      const e = explainQuestion(q)!;
+      const texts = [
+        q.prompt,
+        e.analogy ?? "",
+        ...q.hints,
+        ...e.steps.map((s) => s.label ?? ""),
+      ];
+      for (const text of texts) {
+        const words = text.split(/\s+/);
+        for (let i = 0; i < words.length; i++) {
+          if (!/^רחוק/.test(words[i])) continue;
+          const near = words.slice(Math.max(0, i - 1), i + 3);
+          const comparative = near.some((w) => /^(יותר|פחות|הכי)/.test(w));
+          const anchored = near.some((w) => /^מ/.test(w));
+          if (comparative && !anchored) {
+            return `distance compared to nothing — "${text.trim()}"`;
+          }
+        }
+      }
       return null;
     },
   },
@@ -390,6 +431,124 @@ test("exactly twenty place-value questions draw their box", () => {
   expect(disagreements, `\n${disagreements.join("\n")}\n`).toEqual([]);
 });
 
+test("exactly five completion questions draw their strip of twenty", () => {
+  // The five that the box was right to refuse: "how many do you add to N to reach 20"
+  // is not a question about the structure of N. Eligibility recomputed from the shape in
+  // the spec, independently of the module.
+  const expected = (q: Question): number | null => {
+    const m = q.prompt.match(/כמה צריך להוסיף ל-(\d+) כדי להגיע ל-20/);
+    return m ? 20 - Number(m[1]) : null;
+  };
+
+  const all = everyQuestion();
+  const eligible = all.filter(({ q }) => expected(q) === q.answer);
+  expect(eligible.length, "the set of strip-drawable questions changed size").toBe(5);
+
+  const disagreements = all
+    .filter(({ q }) => (twentyStrip(q) !== null) !== (expected(q) === q.answer))
+    .map(({ q }) => `${q.id} — "${q.prompt}"`);
+  expect(disagreements, `\n${disagreements.join("\n")}\n`).toEqual([]);
+});
+
+test("no question draws both a box and a strip", () => {
+  // The two shapes serve the same thirty questions and must partition them. They are
+  // separate modules precisely so that this is checkable rather than assumed — one shape
+  // that decided internally which half to draw could not fail this test.
+  const both = everyQuestion()
+    .filter(({ q }) => tenFrame(q) !== null && twentyStrip(q) !== null)
+    .map(({ q }) => `${q.id} — "${q.prompt}"`);
+  expect(both, `\n${both.join("\n")}\n`).toEqual([]);
+
+  const covered = everyQuestion().filter(
+    ({ topic, q }) => topic === "עשרות ויחידות" && (tenFrame(q) || twentyStrip(q)),
+  );
+  expect(covered.length, "place-value coverage moved off the 25 the spec promises").toBe(25);
+});
+
+test("the line's opening sentence describes the ticks that are actually drawn", () => {
+  // The criterion easiest to implement by guessing. The wording turns on whether `0` is
+  // genuinely on screen, and the window moves with the question — so a caption chosen
+  // from the marked numbers instead of the final ticks is right most of the time and
+  // wrong exactly where it matters.
+  //
+  // Checked over all thirty at once rather than on a screen: `בא אחרי 3` draws `0`–`6`
+  // and `בא לפני 4` draws `1`–`8`, one tick apart, and they must not say the same thing.
+  const wrong: string[] = [];
+  let sawVisible = 0;
+  let sawHidden = 0;
+
+  for (const { q } of everyQuestion()) {
+    const line = numberLine(q);
+    if (!line) continue;
+
+    if (line.caption.length !== 2) {
+      wrong.push(`${q.id}: the caption is not a rule line plus a question line`);
+      continue;
+    }
+    const [rule] = line.caption;
+    if (!/`0`/.test(rule)) wrong.push(`${q.id}: the opening sentence never mentions 0`);
+    if (!/מוסיף `1`/.test(rule)) wrong.push(`${q.id}: the opening sentence never says a step is 1`);
+
+    const zeroDrawn = line.ticks.includes(0);
+    const claimsVisible = /כאן משמאל/.test(rule);
+    const claimsHidden = /מחוץ לתמונה/.test(rule);
+    if (zeroDrawn) sawVisible++;
+    else sawHidden++;
+
+    if (zeroDrawn && !claimsVisible) {
+      wrong.push(`${q.id}: 0 is drawn (${line.ticks[0]}…) but the caption does not point at it`);
+    }
+    if (!zeroDrawn && !claimsHidden) {
+      wrong.push(`${q.id}: 0 is off the window (${line.ticks[0]}…) but the caption claims it is here`);
+    }
+  }
+
+  expect(wrong, `\n${wrong.join("\n")}\n`).toEqual([]);
+  // Both wordings have to be exercised by the real data, or this test proves nothing.
+  expect(sawVisible, "no question draws 0, so the 'here on the left' wording is untested").toBeGreaterThan(0);
+  expect(sawHidden, "every question draws 0, so the 'off the picture' wording is untested").toBeGreaterThan(0);
+});
+
+test("a counting question shows a run into its answer, not a pair of marks", () => {
+  // "אולי צריך לספור מעוד כמה, למשל: 16, 15, 14 ועכשיו מה בא?" — the picture has to show
+  // that you count, not that the answer is sitting there.
+  const wrong: string[] = [];
+  for (const { q } of everyQuestion()) {
+    const line = numberLine(q);
+    if (!line) continue;
+    const counting = /בא אחרי|בא לפני|נמצא בין/.test(q.prompt);
+    if (!counting) {
+      // Comparisons mark the candidate that was not chosen — one dot, deliberately.
+      if (line.from.length !== 1) wrong.push(`${q.id}: a comparison marks ${line.from.length} numbers`);
+      continue;
+    }
+
+    // The run is consecutive and ends beside the answer, in the direction it was counted.
+    const run = /נמצא בין/.test(q.prompt) ? line.from.slice(0, -1) : line.from;
+    if (run.length < 1 || run.length > 3) wrong.push(`${q.id}: a run of ${run.length}`);
+    for (let i = 1; i < run.length; i++) {
+      if (Math.abs(run[i] - run[i - 1]) !== 1) wrong.push(`${q.id}: the run skips a number`);
+    }
+    if (run.some((n) => n < 0 || n > 20)) wrong.push(`${q.id}: the run leaves the range Mika knows`);
+    if (Math.abs(run[run.length - 1] - line.to) !== 1) {
+      wrong.push(`${q.id}: the run does not end next to the answer`);
+    }
+    // A "between" question keeps its far end marked as well as counting up to the answer.
+    if (/נמצא בין/.test(q.prompt)) {
+      const far = line.from[line.from.length - 1];
+      if (Math.abs(far - line.to) !== 1 || far <= line.to) {
+        wrong.push(`${q.id}: the upper bound is not marked`);
+      }
+    }
+    // And it says so in words, listing what was counted.
+    const sentence = line.caption[1] ?? "";
+    for (const n of run) {
+      if (!sentence.includes(`\`${n}\``)) wrong.push(`${q.id}: ${n} is counted but not spoken`);
+    }
+  }
+  expect(wrong, `\n${wrong.join("\n")}\n`).toEqual([]);
+});
+
 test("no line or box ever disagrees with its own question", () => {
   const wrong: string[] = [];
   for (const { q } of everyQuestion()) {
@@ -416,6 +575,14 @@ test("no line or box ever disagrees with its own question", () => {
       const shown =
         frame.highlight === "tens" ? frame.tens : frame.highlight === "units" ? frame.units : whole;
       if (shown !== q.answer) wrong.push(`${q.id}: the box does not answer what was asked`);
+    }
+
+    const strip = twentyStrip(q);
+    if (strip) {
+      // Twenty circles, and the empty ones are the answer. Same two independent sources.
+      if (strip.filled + strip.empty !== 20) wrong.push(`${q.id}: the strip is not twenty`);
+      if (strip.empty !== q.answer) wrong.push(`${q.id}: the empty circles are not the answer`);
+      if (strip.filled < 0 || strip.filled >= 20) wrong.push(`${q.id}: the strip starts nowhere`);
     }
   }
   expect(wrong, `\n${wrong.join("\n")}\n`).toEqual([]);

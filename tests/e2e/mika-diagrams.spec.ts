@@ -129,13 +129,109 @@ test("a comparison marks the number that was NOT the answer", async ({ page }) =
   );
 });
 
-test("a between-question marks both ends", async ({ page }) => {
+test("a between-question counts up and still marks the far end", async ({ page }) => {
+  // Two criteria at once, and they pull in different directions: the run has to show that
+  // you count (`4`, `5`, `6`), and the upper bound has to stay marked, because the
+  // question is about a place between two bounds and a picture that only counts upwards
+  // loses half of it.
   await open(page, NUMBERS, 2);
   await failAt(page, "נמצא בין 6 ל-8");
 
-  await expect(page.locator(".nl-from"), "both ends of the range must be marked").toHaveCount(2);
+  await expect(page.locator(".nl-from"), "the run plus the far end").toHaveCount(4);
   await expect(page.locator(".nl-to")).toHaveCount(1);
-  expect(await ticks(page)).toEqual(expect.arrayContaining([6, 7, 8]));
+  expect(await ticks(page)).toEqual(expect.arrayContaining([4, 5, 6, 7, 8]));
+
+  const caption = await page.locator(".figure-caption").innerText();
+  for (const n of [4, 5, 6, 7, 8]) {
+    expect(caption, `${n} is marked but not spoken`).toContain(String(n));
+  }
+});
+
+test("a counting question shows the run it counted, not two marks", async ({ page }) => {
+  // The review's words: "אולי צריך לספור מעוד כמה, למשל: 16, 15, 14 ועכשיו מה בא?"
+  await open(page, NUMBERS, 1);
+  await failAt(page, "בא לפני 14");
+
+  await expect(page.locator(".nl-from"), "a run of three").toHaveCount(3);
+  await expect(page.locator(".nl-to")).toHaveCount(1);
+
+  const values = await ticks(page);
+  for (const n of [13, 14, 15, 16]) expect(values).toContain(n);
+
+  // Counted backwards, and said so in that order.
+  const caption = await page.locator(".figure-caption").innerText();
+  expect(caption).toContain("סופרים אחורה");
+  expect(caption.indexOf("16")).toBeLessThan(caption.indexOf("14"));
+});
+
+test("the run shortens rather than running off the end of the line", async ({ page }) => {
+  // "איזה מספר בא לפני 20" would count 22, 21, 20 — two numbers outside everything Mika
+  // has been taught. Less than we wanted beats showing her a number she does not know.
+  await open(page, NUMBERS, 2);
+  await failAt(page, "בא לפני 20");
+
+  await expect(page.locator(".nl-from")).toHaveCount(1);
+  const values = await ticks(page);
+  expect(Math.max(...values), "the line went past twenty").toBe(20);
+
+  const caption = await page.locator(".figure-caption").innerText();
+  expect(caption).not.toContain("21");
+  expect(caption).not.toContain("22");
+});
+
+test("the opening sentence matches whether zero is really on screen", async ({ page }) => {
+  // The pair that separates a caption read off the final ticks from one guessed at: two
+  // counting questions a single tick apart, one drawing 0 and one not.
+  await open(page, NUMBERS, 0);
+  await failAt(page, "בא אחרי 3");
+  expect(await ticks(page), "0 should be drawn here").toContain(0);
+  expect(await page.locator(".figure-caption").innerText()).toContain("כאן משמאל");
+
+  await open(page, NUMBERS, 0);
+  await failAt(page, "בא לפני 4");
+  expect(await ticks(page), "0 should be off the window here").not.toContain(0);
+  expect(await page.locator(".figure-caption").innerText()).toContain("מחוץ לתמונה");
+});
+
+test("no picture or step tells a child something is far without saying from what", async ({
+  page,
+}) => {
+  // "רחוק יותר לא אומר כלום." The whole screen, not just the caption — the phrase lived
+  // in the steps too, and fixing only the picture would have left two languages on one
+  // screen for the same idea.
+  await open(page, NUMBERS, 1);
+  await failAt(page, "גדול יותר, 13 או 18");
+
+  const explanation = await page.locator(".explanation").innerText();
+  expect(explanation, "an unanchored distance survived").not.toMatch(/רחוק(?!\S*\s+\S*\s*מ)/);
+  expect(explanation).toContain("ימינה");
+});
+
+test("the strip of twenty fills what the question starts from and leaves the answer empty", async ({
+  page,
+}) => {
+  // "צריך פה ציור של 20 כדורים, 13 צבועים ו-7 ריקים."
+  await open(page, PLACE, 2);
+  await failAt(page, "להוסיף ל-13");
+
+  await expect(page.locator(".twenty-strip")).toBeVisible();
+  await expect(page.locator(".ts-dot")).toHaveCount(20);
+  await expect(page.locator(".ts-dot.filled")).toHaveCount(13);
+  // And no ten-frame: the two shapes partition this topic, they do not stack.
+  await expect(page.locator(".ten-frame")).toHaveCount(0);
+});
+
+test("the place-value explanation calls the digits by their names", async ({ page }) => {
+  // "מידי פעם צריך להזכיר שהיחידות היא הימנית והעשרות היא השמאלית" — the questions ask in
+  // that vocabulary, so the explanation has to answer in it.
+  await open(page, PLACE, 2);
+  await failAt(page, "במספר 16, בכמה");
+
+  const method = await page.locator(".explanation-method").innerText();
+  expect(method).toContain("השמאלית");
+  expect(method).toContain("העשרות");
+  expect(method).toContain("הימנית");
+  expect(method).toContain("היחידות");
 });
 
 // ------------------------------------------------------------------------ the ten-frame
@@ -197,13 +293,17 @@ test("the hard place-value questions get no frame, and still explain themselves"
 test("each picture's caption is what a screen reader is told", async ({ page }) => {
   await open(page, NUMBERS, 1);
   await failAt(page, "בא אחרי 12");
+  // The caption is two lines and the label is one string: it is one picture, so a screen
+  // reader gets one description. Whitespace is normalised because that difference is the
+  // rendering, not the content.
+  const flat = (s: string | null) => (s ?? "").replace(/\s+/g, " ").trim();
   const lineCaption = await page.locator(".figure-caption").innerText();
-  expect(await page.locator(".number-line").getAttribute("aria-label")).toBe(lineCaption);
+  expect(flat(await page.locator(".number-line").getAttribute("aria-label"))).toBe(flat(lineCaption));
 
   await open(page, PLACE, 0);
   await failAt(page, "כמה יחידות יש במספר 13");
   const frameCaption = await page.locator(".figure-caption").innerText();
-  expect(await page.locator(".ten-frame").getAttribute("aria-label")).toBe(frameCaption);
+  expect(flat(await page.locator(".ten-frame").getAttribute("aria-label"))).toBe(flat(frameCaption));
 });
 
 test("the captions are sentences, not lists of numbers", async ({ page }) => {
@@ -214,5 +314,8 @@ test("the captions are sentences, not lists of numbers", async ({ page }) => {
 
   const caption = await page.locator(".figure-caption").innerText();
   expect(caption.split(/\s+/).length, "the caption is too terse to be spoken").toBeGreaterThan(4);
-  expect(caption).toContain("על הציר");
+  // Two sentences now: what the line is, then what this question shows on it. The first
+  // is the same every time on purpose — repetition is how a rule is learned by a child
+  // who cannot read the screen.
+  expect(caption).toContain("זהו ציר המספרים");
 });
