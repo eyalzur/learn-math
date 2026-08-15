@@ -4,6 +4,8 @@ import type { Question } from "../../src/data/curriculum";
 import { explainQuestion } from "../../src/data/explain";
 import { fractionDiagram } from "../../src/data/fractionDiagram";
 import { verticalSum } from "../../src/data/verticalSum";
+import { numberLine } from "../../src/data/numberLine";
+import { tenFrame } from "../../src/data/tenFrame";
 
 /**
  * Content correctness, checked against the data rather than through the browser.
@@ -331,6 +333,89 @@ test("no vertical ever disagrees with its own question", () => {
     }
     if (v.carries !== null && v.carries.length !== v.top.length) {
       wrong.push(`${q.id}: the carry row is not aligned with the digits`);
+    }
+  }
+  expect(wrong, `\n${wrong.join("\n")}\n`).toEqual([]);
+});
+
+test("all thirty counting questions draw their line", () => {
+  // Eligibility is recomputed here from the spec's five question shapes, independently of
+  // the module that draws the line. If the two disagree, one of them is wrong about what
+  // the product promised — and a reworded prompt that silently drops its picture fails
+  // the same way the fraction count fails.
+  const expected = (q: Question): number | null => {
+    const nums = q.prompt.match(/\d+/g)?.map(Number) ?? [];
+    if (/בא אחרי/.test(q.prompt) && nums.length === 1) return nums[0] + 1;
+    if (/בא לפני/.test(q.prompt) && nums.length === 1) return nums[0] - 1;
+    if (/נמצא בין/.test(q.prompt) && nums.length === 2) return Math.min(...nums) + 1;
+    if (/גדול יותר/.test(q.prompt) && nums.length === 2) return Math.max(...nums);
+    if (/קטן יותר/.test(q.prompt) && nums.length === 2) return Math.min(...nums);
+    return null;
+  };
+
+  const all = everyQuestion();
+  const eligible = all.filter(({ q }) => expected(q) === q.answer);
+  expect(eligible.length, "the set of line-drawable questions changed size").toBe(30);
+
+  const disagreements = all
+    .filter(({ q }) => (numberLine(q) !== null) !== (expected(q) === q.answer))
+    .map(({ q }) => `${q.id} — "${q.prompt}"`);
+  expect(disagreements, `\n${disagreements.join("\n")}\n`).toEqual([]);
+});
+
+test("exactly twenty place-value questions draw their box", () => {
+  // Four shapes qualify; the ten hard ones — the gap between digits, and completing to
+  // twenty — describe something a single box cannot show.
+  const expected = (q: Question): number | null => {
+    const nums = q.prompt.match(/\d+/g)?.map(Number) ?? [];
+    if (/כמה עשרות/.test(q.prompt) && nums.length === 1 && nums[0] >= 10 && nums[0] <= 19) {
+      return Math.floor(nums[0] / 10);
+    }
+    if (/כמה יחידות/.test(q.prompt) && nums.length === 1 && nums[0] >= 10 && nums[0] <= 19) {
+      return nums[0] % 10;
+    }
+    if (/עשרת אחת ועוד/.test(q.prompt) && nums.length === 1) return 10 + nums[0];
+    const sum = q.prompt.trim().match(/^10\s*\+\s*(\d)$/);
+    if (sum) return 10 + Number(sum[1]);
+    return null;
+  };
+
+  const all = everyQuestion();
+  const eligible = all.filter(({ q }) => expected(q) === q.answer);
+  expect(eligible.length, "the set of box-drawable questions changed size").toBe(20);
+
+  const disagreements = all
+    .filter(({ q }) => (tenFrame(q) !== null) !== (expected(q) === q.answer))
+    .map(({ q }) => `${q.id} — "${q.prompt}"`);
+  expect(disagreements, `\n${disagreements.join("\n")}\n`).toEqual([]);
+});
+
+test("no line or box ever disagrees with its own question", () => {
+  const wrong: string[] = [];
+  for (const { q } of everyQuestion()) {
+    const line = numberLine(q);
+    if (line) {
+      // The star is the answer. That is the whole check with teeth: a picture built from
+      // the answer would agree with itself and never be tested.
+      if (line.to !== q.answer) wrong.push(`${q.id}: the star is not the answer`);
+      if (!line.ticks.includes(line.to)) wrong.push(`${q.id}: the star sits off the line`);
+      for (const from of line.from) {
+        if (!line.ticks.includes(from)) wrong.push(`${q.id}: a dot sits off the line`);
+      }
+      if (line.ticks.length < 5) wrong.push(`${q.id}: fewer than five ticks`);
+      const ascending = [...line.ticks].sort((a, b) => a - b);
+      if (line.ticks.join() !== ascending.join()) wrong.push(`${q.id}: ticks are not ascending`);
+    }
+
+    const frame = tenFrame(q);
+    if (frame) {
+      const whole = frame.tens * 10 + frame.units;
+      if (whole < 10 || whole > 19) wrong.push(`${q.id}: the box describes ${whole}`);
+      if (frame.units > 9) wrong.push(`${q.id}: more than nine loose ones`);
+      // Whatever the question asked for has to be what the box shows.
+      const shown =
+        frame.highlight === "tens" ? frame.tens : frame.highlight === "units" ? frame.units : whole;
+      if (shown !== q.answer) wrong.push(`${q.id}: the box does not answer what was asked`);
     }
   }
   expect(wrong, `\n${wrong.join("\n")}\n`).toEqual([]);

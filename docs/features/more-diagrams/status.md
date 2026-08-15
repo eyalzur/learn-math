@@ -7,9 +7,9 @@
 - [x] Design — designer — 2026-08-14
 - [x] Architecture — tech-lead — 2026-08-15 (גל א׳: שתי הצורות של מיקה)
 - [x] Implementation — developer — 2026-08-15 (גל א׳)
-- [ ] Tests — qa — not started
+- [x] Tests — qa — 2026-08-15 (גל א׳)
 
-**Current phase:** qa — גל ראשון: ציר מספרים וקופסאות עשר
+**Current phase:** גל א׳ הושלם — ממתין ל-PR. חמש הצורות הנותרות טרם התחילו
 **Branch:** `feature/mika-diagrams` (התכנון מוזג ב-#31)
 **PR:** תכנון — #31 · גל ראשון — טרם נפתח
 
