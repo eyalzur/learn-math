@@ -24,7 +24,11 @@ async function startLevel(page: Page, studentIndex: number, levelIndex: number) 
   await page.evaluate(() => localStorage.clear());
   await page.goto("/learn-math/");
   await openLevels(page, studentIndex);
-  await page.locator(".level-card").nth(levelIndex).click();
+  // Grade 1's multi-style topics are entered by style now; everything else by level.
+  // These tests are about the explanation, not about which chooser led to it.
+  const byStyle = page.locator(".style-card");
+  if (await byStyle.count()) await byStyle.nth(levelIndex).click();
+  else await page.locator(".level-card").nth(levelIndex).click();
 }
 
 async function answerWrong(page: Page) {
@@ -53,7 +57,7 @@ test("a correct answer still shows no explanation", async ({ page }) => {
   expect(answer).toBeTruthy();
 
   await page.getByRole("button", { name: "← חזרה" }).click();
-  await page.locator(".level-card").first().click();
+  await page.locator(".style-card, .level-card").first().click();
   await page.locator(".answer-input").fill(String(answer));
   await page.getByRole("button", { name: "בדיקה" }).click();
 

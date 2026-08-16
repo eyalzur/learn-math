@@ -27,7 +27,9 @@ async function startGrade1Easy(page: Page) {
   await page.evaluate(() => localStorage.clear());
   await page.goto("/learn-math/");
   await openLevels(page, 0);
-  await page.locator(".level-card").first().click();
+  // Grade 1's first topic is entered by style rather than by level. Any lesson serves —
+  // these tests are about what a wrong answer produces, not about which question.
+  await page.locator(".style-card").first().click();
 }
 
 async function answerWrong(page: Page) {
@@ -84,8 +86,9 @@ test("a correct answer shows no explanation", async ({ page }) => {
   })())!;
   expect(answer).toBeTruthy();
 
+  // Back lands on the styles, because that is where this lesson was entered from.
   await page.getByRole("button", { name: "← חזרה" }).click();
-  await page.locator(".level-card").first().click();
+  await page.locator(".style-card").first().click();
 
   await page.locator(".answer-input").fill(String(answer));
   await page.getByRole("button", { name: "בדיקה" }).click();

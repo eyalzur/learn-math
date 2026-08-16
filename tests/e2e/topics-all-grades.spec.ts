@@ -74,8 +74,11 @@ for (const [name, index, topics] of [
 }
 
 test("grade 1 still practises ten questions per level", async ({ page }) => {
+  // "חיבור עד 10" holds one kind of question, so it is still entered by level — which is
+  // what this test is about. The topics that hold several kinds are entered by style and
+  // run however many questions that style has; style-lessons.spec.ts covers those.
   await pickStudent(page, MIKA);
-  await page.locator(".topic-card").first().click();
+  await page.locator(".topic-card", { hasText: "חיבור עד 10" }).click();
   await page.locator(".level-card").first().click();
 
   await expect(page.locator(".progress")).toContainText("מתוך 10");

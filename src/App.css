@@ -900,3 +900,132 @@ button.secondary {
 .caption-line + .caption-line {
   margin-top: 4px;
 }
+
+
+/* ---------------------------------------------------------------- style picker */
+
+.style-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+/* The card and its speaker sit side by side. A button inside a button is invalid HTML,
+   and nesting them would also make tapping the speaker ambiguous with choosing. */
+.style-row {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.style-card {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: right;
+  gap: 8px;
+  padding: 16px 20px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.style-card:hover {
+  border-color: var(--accent-border);
+}
+
+.style-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+/* The example is the label for a child who cannot read the title yet, so it is rendered
+   the way the practice screen renders a prompt — never as one mixed string. */
+.style-example {
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--code-bg);
+  font-size: 16px;
+  color: var(--text-h);
+}
+
+.style-example-text {
+  unicode-bidi: isolate;
+}
+
+.style-example-math {
+  display: inline-block;
+  direction: ltr;
+  unicode-bidi: isolate;
+  font-weight: 600;
+}
+
+.style-count {
+  font-size: 13px;
+  color: var(--text);
+  opacity: 0.8;
+}
+
+.style-speak {
+  flex: 0 0 auto;
+  width: 48px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  font-size: 20px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.style-speak:hover {
+  border-color: var(--accent-border);
+}
+
+
+/* ------------------------------------------------------------------ countdown */
+
+/* A button, not a caption: stopping it has to be one tap on the thing you can see, and
+   nothing looks tappable without a border. */
+.countdown {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 16px;
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  transition: border-color 0.15s;
+}
+
+.countdown:hover {
+  border-color: var(--accent-border);
+}
+
+/* The digit carries the meaning for a child who cannot read yet — 5, 4, 3 is a sequence
+   she knows from hide-and-seek long before she can read the words beside it. */
+.countdown-digit {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--accent);
+  min-width: 28px;
+  text-align: center;
+}
+
+.countdown-text {
+  font-size: 15px;
+  color: var(--text);
+}

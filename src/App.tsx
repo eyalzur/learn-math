@@ -2,11 +2,15 @@ import { useState } from "react";
 import { StudentPicker } from "./components/StudentPicker";
 import { TopicPicker } from "./components/TopicPicker";
 import { LevelPicker } from "./components/LevelPicker";
+import { StylePicker } from "./components/StylePicker";
 import { History } from "./components/History";
 import { Practice } from "./components/Practice";
 import { Result } from "./components/Result";
 import { students, gradeOf } from "./data/curriculum";
-import type { Level, Student, Topic } from "./data/curriculum";
+import type { Student, Topic } from "./data/curriculum";
+import type { Lesson } from "./data/style";
+import { hasStyleLessons, stylesOf } from "./data/style";
+import { speak, speechParts } from "./data/speech";
 import { recordPractice } from "./data/progress";
 import { readAloud as readAloudFor, setReadAloud } from "./data/preferences";
 import "./App.css";
@@ -36,9 +40,23 @@ function rememberStudent(id: string | null) {
 type Screen =
   | { name: "home" }
   | { name: "levels"; topic: Topic | null }
+  | { name: "styles"; topic: Topic }
   | { name: "history" }
-  | { name: "practice"; topic: Topic | null; level: Level }
-  | { name: "result"; topic: Topic | null; level: Level; correctCount: number };
+  | { name: "practice"; topic: Topic | null; lesson: Lesson }
+  | { name: "result"; topic: Topic | null; lesson: Lesson; correctCount: number };
+
+/**
+ * Where a topic is entered, and where leaving it returns to — computed, never remembered.
+ *
+ * A topic with more than one style is entered by picking a style, so that is also where
+ * "back" goes. Storing the origin in state instead would let it drift out of step with
+ * the data and drop a seven-year-old on a screen she was never on; a function of the
+ * topic cannot.
+ */
+function insideTopic(topic: Topic | null): Screen {
+  if (topic === null) return { name: "home" };
+  return hasStyleLessons(topic) ? { name: "styles", topic } : { name: "levels", topic };
+}
 
 function App() {
   const [student, setStudent] = useState<Student | null>(loadStudent);
@@ -65,17 +83,21 @@ function App() {
   const grade = gradeOf(student);
   const readAloud = readAloudFor(student.id);
 
-  function finish(topic: Topic | null, level: Level, correctCount: number) {
+  function finish(topic: Topic | null, lesson: Lesson, correctCount: number) {
     recordPractice({
       at: new Date().toISOString(),
       studentId: student!.id,
       gradeLabel: grade.label,
       topicTitle: topic?.title ?? "",
-      levelTitle: level.title,
+      // A level title or a style title — whichever was practised. History renders
+      // "topic · this", so a style lesson reads "מספרים עד 20 · מה בא אחרי" with no
+      // change to the stored shape and no migration of the records already sitting on
+      // the children's devices.
+      levelTitle: lesson.title,
       correct: correctCount,
-      total: level.questions.length,
+      total: lesson.questions.length,
     });
-    setScreen({ name: "result", topic, level, correctCount });
+    setScreen({ name: "result", topic, lesson, correctCount });
   }
 
   if (screen.name === "home") {
@@ -83,7 +105,7 @@ function App() {
       <TopicPicker
         gradeLabel={`שלום ${student.name}! · ${grade.label}`}
         topics={grade.topicSets}
-        onSelect={(topic) => setScreen({ name: "levels", topic })}
+        onSelect={(topic) => setScreen(insideTopic(topic))}
         onBack={switchStudent}
         onHistory={() => setScreen({ name: "history" })}
         readAloud={readAloud}
@@ -107,36 +129,52 @@ function App() {
         heading={topic.title}
         subheading={grade.label}
         levels={topic.levels}
-        onSelect={(level) => setScreen({ name: "practice", topic, level })}
+        onSelect={(level) => setScreen({ name: "practice", topic, lesson: level })}
         onBack={() => setScreen({ name: "home" })}
       />
     );
   }
 
+  if (screen.name === "styles") {
+    const topic = screen.topic;
+    return (
+      <StylePicker
+        heading={topic.title}
+        subheading={grade.label}
+        styles={stylesOf(topic)}
+        onSelect={(style) =>
+          setScreen({
+            name: "practice",
+            topic,
+            lesson: { title: style.title, questions: style.questions },
+          })
+        }
+        onBack={() => setScreen({ name: "home" })}
+        onSpeak={readAloud ? (text) => speak(speechParts([text])) : undefined}
+      />
+    );
+  }
+
   if (screen.name === "practice") {
-    const { topic, level } = screen;
+    const { topic, lesson } = screen;
     return (
       <Practice
-        level={level}
-        onFinish={(correctCount) => finish(topic, level, correctCount)}
-        onExit={() =>
-          setScreen(topic === null ? { name: "home" } : { name: "levels", topic })
-        }
+        lesson={lesson}
+        onFinish={(correctCount) => finish(topic, lesson, correctCount)}
+        onExit={() => setScreen(insideTopic(topic))}
         readAloud={readAloud}
       />
     );
   }
 
   if (screen.name === "result") {
-    const { topic, level, correctCount } = screen;
+    const { topic, lesson, correctCount } = screen;
     return (
       <Result
-        level={level}
+        lesson={lesson}
         correctCount={correctCount}
-        onRetry={() => setScreen({ name: "practice", topic, level })}
-        onHome={() =>
-          setScreen(topic === null ? { name: "home" } : { name: "levels", topic })
-        }
+        onRetry={() => setScreen({ name: "practice", topic, lesson })}
+        onHome={() => setScreen(insideTopic(topic))}
       />
     );
   }
@@ -144,7 +182,7 @@ function App() {
   return <TopicPicker
     gradeLabel={grade.label}
     topics={grade.topicSets}
-    onSelect={(topic) => setScreen({ name: "levels", topic })}
+    onSelect={(topic) => setScreen(insideTopic(topic))}
     onBack={switchStudent}
     onHistory={() => setScreen({ name: "history" })}
   />;

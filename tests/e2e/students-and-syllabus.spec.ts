@@ -108,7 +108,8 @@ test("every question in every level belongs to its own grade's syllabus", async 
 test("picking a level runs its ten questions and ends on a score summary", async ({
   page,
 }) => {
-  await openLevels(page, 0);
+  // A level holds ten; topic 1 still offers levels because it holds one kind of question.
+  await openLevels(page, 0, 1);
   await page.locator(".level-card").first().click();
 
   for (let i = 1; i <= 10; i++) {
@@ -163,7 +164,7 @@ test("a Hebrew sentence keeps its own direction while the maths inside stays LTR
   // sentence — and exercise the identical rendering path.
   await pickStudent(page, 0);
   await page.locator(".topic-card", { hasText: "חיבור וחיסור עד 20" }).click();
-  await page.locator(".level-card").nth(1).click();
+  await page.locator(".style-card").first().click();
 
   await page.getByRole("button", { name: "רמז 💡" }).click();
   await page.getByRole("button", { name: "עוד רמז 💡" }).click();

@@ -38,7 +38,31 @@ export interface Question {
    * so every question carries one.
    */
   analogy: string;
+  /**
+   * Which kind of exercise this is — the unit a teacher teaches in. See `style.ts` for
+   * the names and the grouping.
+   *
+   * Optional *here* and required at every declaration site that has been classified, via
+   * `StyledQuestion` below. Required on this shared type would break the 360 questions in
+   * grades 6 and 8 that no person has classified yet, and classifying them means writing
+   * new questions, not guessing labels.
+   *
+   * The failure mode that matters — a new grade-1 question slipping in with no style — is
+   * still impossible, because that file declares through `StyledQuestion`. When grades 6
+   * and 8 are classified this moves onto `Question` and `StyledQuestion` goes away.
+   */
+  style?: string;
 }
+
+/**
+ * A question whose style a person has decided.
+ *
+ * Grade 1 declares its content through this, so the compiler refuses a question with no
+ * style and names it — the same reason `analogy` and `hints` are required. Optional would
+ * make forgetting count as approval, and the content most likely to be forgotten is the
+ * content nobody has looked at yet.
+ */
+export type StyledQuestion = Question & { style: string };
 
 export interface Level {
   id: "easy" | "medium" | "hard";
