@@ -10,9 +10,9 @@
 - [x] Implementation — developer — 2026-08-15
 - [x] Tests — qa — 2026-08-15
 
-**Current phase:** done — ממתין ל-PR
+**Current phase:** מוזג ונפרס לאתר החי
 **Branch:** `feature/style-lessons`
-**PR:** not opened yet
+**PR:** https://github.com/eyalzur/learn-math/pull/33 — **מוזג 2026-08-15**
 
 ## Open questions / blockers
 None.
