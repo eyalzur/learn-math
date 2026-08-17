@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { StudentPicker } from "./components/StudentPicker";
+import { GradePicker } from "./components/GradePicker";
 import { TopicPicker } from "./components/TopicPicker";
 import { LevelPicker } from "./components/LevelPicker";
 import { StylePicker } from "./components/StylePicker";
 import { History } from "./components/History";
 import { Practice } from "./components/Practice";
 import { Result } from "./components/Result";
-import { students, gradeOf } from "./data/curriculum";
+import { students, availableGrades } from "./data/curriculum";
 import type { Student, Topic } from "./data/curriculum";
 import type { Lesson } from "./data/style";
 import { hasStyleLessons, stylesOf } from "./data/style";
@@ -61,18 +62,24 @@ function insideTopic(topic: Topic | null): Screen {
 function App() {
   const [student, setStudent] = useState<Student | null>(loadStudent);
   const [screen, setScreen] = useState<Screen>({ name: "home" });
+  /** Which of the student's available grades is active. Not part of `Screen` — like
+   *  `student`, it is decided before any screen renders, and every place that resets it
+   *  also resets `screen` to "home" in the same breath, so the two never drift apart. */
+  const [gradeId, setGradeId] = useState<string | null>(null);
   /** The read-aloud setting is stored, not held in state; this forces a re-read of it. */
   const [, setReadAloudTick] = useState(0);
 
   function selectStudent(next: Student) {
     rememberStudent(next.id);
     setStudent(next);
+    setGradeId(null);
     setScreen({ name: "home" });
   }
 
   function switchStudent() {
     rememberStudent(null);
     setStudent(null);
+    setGradeId(null);
     setScreen({ name: "home" });
   }
 
@@ -80,7 +87,25 @@ function App() {
     return <StudentPicker onSelect={selectStudent} />;
   }
 
-  const grade = gradeOf(student);
+  const grades = availableGrades(student);
+
+  // A student with more than one grade (today, only Mika) picks between them before
+  // anything else — this is deliberately not folded into `Screen`, see the `gradeId`
+  // declaration above. A student with exactly one grade never sees this: `grades.length
+  // > 1` is false, so this returns nothing and behaviour is unchanged from before this
+  // existed.
+  if (grades.length > 1 && gradeId === null) {
+    return (
+      <GradePicker
+        grades={grades}
+        onSelect={(g) => setGradeId(g.id)}
+        onBack={switchStudent}
+        onHistory={() => setScreen({ name: "history" })}
+      />
+    );
+  }
+
+  const grade = grades.length > 1 ? grades.find((g) => g.id === gradeId)! : grades[0];
   const readAloud = readAloudFor(student.id);
 
   function finish(topic: Topic | null, lesson: Lesson, correctCount: number) {
@@ -106,8 +131,8 @@ function App() {
         gradeLabel={`שלום ${student.name}! · ${grade.label}`}
         topics={grade.topicSets}
         onSelect={(topic) => setScreen(insideTopic(topic))}
-        onBack={switchStudent}
-        onHistory={() => setScreen({ name: "history" })}
+        onBack={grades.length > 1 ? () => setGradeId(null) : switchStudent}
+        onHistory={grades.length > 1 ? undefined : () => setScreen({ name: "history" })}
         readAloud={readAloud}
         onReadAloudChange={(value) => {
           setReadAloud(student.id, value);
@@ -183,8 +208,8 @@ function App() {
     gradeLabel={grade.label}
     topics={grade.topicSets}
     onSelect={(topic) => setScreen(insideTopic(topic))}
-    onBack={switchStudent}
-    onHistory={() => setScreen({ name: "history" })}
+    onBack={grades.length > 1 ? () => setGradeId(null) : switchStudent}
+    onHistory={grades.length > 1 ? undefined : () => setScreen({ name: "history" })}
   />;
 }
 

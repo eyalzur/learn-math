@@ -144,3 +144,29 @@ Topic } from "./curriculum"`, `import { level } from "./level"` (בדיוק או
 
 ## Open Questions
 None.
+
+## Implementation Notes
+
+נבנה בדיוק לפי התכנון, בלי סטיות:
+
+- `src/data/curriculum.ts`: `shortLabel` נוסף לכל ארבע הכיתות, `gradeIds?: string[]`
+  נוסף ל-`Student`, `gradeById`/`availableGrades` נוספו, `gradeOf` לא שונה מבחינת
+  ההתנהגות שלו (רק מוצא דרך `gradeById` פנימית עכשיו). `mika` מקבלת
+  `gradeIds: ["1", "2"]`, `gradeId: "1"` נשאר כמו שהיה.
+- `src/data/grade2.ts`: שני נושאים, `60` שאלות (`30` לכל נושא, `10` לכל רמה) — בדיוק
+  המספר שתוכנן. רמת `easy` בלי מעבר עשרה, `medium` שני-ספרות-ועוד-שני-ספרות בלי מעבר,
+  `hard` עם מעבר עשרה/שאילה בכל שאלה ושאלה — אומת ידנית על כל אחת מה-`20` שאלות ברמת
+  `hard` (10 חיבור + 10 חיסור) שהיא באמת דורשת מעבר, לא רק "מספר גדול יותר".
+  כל שאלה בלי `steps` — `explain.ts` מחשב אוטומטית, בדיוק כפי שתוכנן.
+- `src/components/GradePicker.tsx` ו-`src/App.tsx`: הניתוב נבנה בדיוק לפי "Technical
+  Approach" — `gradeId` כ-state נפרד מ-`Screen`, `onBack`/`onHistory` מותנים ב-
+  `grades.length > 1` בשני מקומות שבהם `TopicPicker` מוצג (מסך הבית והנתיב הבררת-מחדל
+  בסוף הפונקציה — שניהם עודכנו, לא רק הראשון).
+- `src/App.css`: `.grade-card-1` (כחול) / `.grade-card-2` (סגול) — לא ירוק/אדום של
+  רמות הקושי, כפי שנדרש.
+- `src/data/style.ts`: `add100`/`sub100` נוספו ל-`STYLE_META`, אותה מוסכמת שם כמו
+  `add10`/`add20`/`sub10`/`sub20`.
+
+**בדיקות:** `npm run build` ו-`npm run lint` נקיים. `npm run test:e2e` הופעל לריצה
+נקייה בודדת; אם משהו נכשל, מתועד ומטופל בקומיט המשך על אותו בראנץ' — לא נפתח PR על
+בדיקות אדומות.

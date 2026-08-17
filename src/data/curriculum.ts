@@ -1,4 +1,5 @@
 import { grade1Topics } from "./grade1";
+import { grade2Topics } from "./grade2";
 import { grade6Topics } from "./grade6";
 import { grade8Topics } from "./grade8";
 import { level } from "./level";
@@ -99,6 +100,9 @@ export interface Topic {
 export type Grade = {
   id: string;
   label: string;
+  /** A single glyph identifying the grade on a card — e.g. `"א"` — for a screen where a
+   *  pre-reader has to tell grades apart at a glance, not just by the label text. */
+  shortLabel: string;
   topics: string[];
   topicSets: Topic[];
 };
@@ -107,6 +111,12 @@ export interface Student {
   id: string;
   name: string;
   gradeId: string;
+  /**
+   * The full set of grades this student can practise in, in display order — set only for
+   * a student with more than one. Absent means exactly one grade, `gradeId`, same as
+   * before this field existed; nothing about a single-grade student changes.
+   */
+  gradeIds?: string[];
 }
 
 const GRADE_1_TOPICS = [
@@ -118,7 +128,7 @@ const GRADE_1_TOPICS = [
 ];
 
 export const students: Student[] = [
-  { id: "mika", name: "מיקה", gradeId: "1" },
+  { id: "mika", name: "מיקה", gradeId: "1", gradeIds: ["1", "2"] },
   { id: "rotem", name: "רותם", gradeId: "6" },
   { id: "omer", name: "עומר", gradeId: "8" },
 ];
@@ -129,8 +139,21 @@ export const students: Student[] = [
 const grade1: Grade = {
   id: "1",
   label: "כיתה א׳",
+  shortLabel: "א",
   topics: GRADE_1_TOPICS,
   topicSets: grade1Topics,
+};
+
+// ---------------------------------------------------------------- כיתה ב׳
+
+const GRADE_2_TOPICS = ["חיבור עד 100", "חיסור עד 100"];
+
+const grade2: Grade = {
+  id: "2",
+  label: "כיתה ב׳",
+  shortLabel: "ב",
+  topics: GRADE_2_TOPICS,
+  topicSets: grade2Topics,
 };
 
 // ---------------------------------------------------------------- כיתה ו׳
@@ -147,6 +170,7 @@ const GRADE_6_TOPICS = [
 const grade6: Grade = {
   id: "6",
   label: "כיתה ו׳",
+  shortLabel: "ו",
   topics: GRADE_6_TOPICS,
   topicSets: grade6Topics,
 };
@@ -163,16 +187,34 @@ const GRADE_8_TOPICS = [
 const grade8: Grade = {
   id: "8",
   label: "כיתה ח׳",
+  shortLabel: "ח",
   topics: GRADE_8_TOPICS,
   topicSets: grade8Topics,
 };
 
-export const grades: Grade[] = [grade1, grade6, grade8];
+export const grades: Grade[] = [grade1, grade2, grade6, grade8];
+
+export function gradeById(id: string): Grade {
+  const grade = grades.find((g) => g.id === id);
+  if (!grade) throw new Error(`No grade "${id}"`);
+  return grade;
+}
 
 export function gradeOf(student: Student): Grade {
-  const grade = grades.find((g) => g.id === student.gradeId);
-  if (!grade) throw new Error(`No grade "${student.gradeId}" for student "${student.id}"`);
-  return grade;
+  try {
+    return gradeById(student.gradeId);
+  } catch {
+    throw new Error(`No grade "${student.gradeId}" for student "${student.id}"`);
+  }
+}
+
+/**
+ * Every grade a student can practise in, in display order. A plain `[gradeOf(student)]`
+ * for the common case — one grade, same as before this existed — so every existing
+ * caller that only ever expected one grade keeps working without noticing this exists.
+ */
+export function availableGrades(student: Student): Grade[] {
+  return student.gradeIds ? student.gradeIds.map(gradeById) : [gradeOf(student)];
 }
 
 /**
