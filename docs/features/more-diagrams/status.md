@@ -11,7 +11,7 @@
 
 **Current phase:** done — `206/206` עוברות בריצה בודדת ונקייה, ממתין ל-PR
 **Branch:** `feature/more-diagrams-wave2` (חדש, מ-`main`)
-**PR:** תכנון — #31 · גל ראשון — #32 (מוזג) · גל ב׳ — טרם נפתח
+**PR:** תכנון — #31 · גל ראשון — #32 (מוזג) · גל ב׳ — [#36](https://github.com/eyalzur/learn-math/pull/36)
 
 ## Open questions / blockers
 אין.
