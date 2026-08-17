@@ -5,8 +5,9 @@ const BAR_HEIGHT = 34;
 const PAD = 16;
 const EXTRA_ROOM = 60;
 const WIDTH = BAR_WIDTH + PAD * 2 + EXTRA_ROOM;
-const HEIGHT = 60;
-const Y = 14;
+const HEIGHT = 78;
+const LABEL_Y = 30;
+const Y = 40;
 
 interface PercentStripProps {
   strip: PercentStripData;
@@ -18,6 +19,21 @@ export function PercentStrip({ strip, label }: PercentStripProps) {
   const { base, filled, extra } = strip;
   const filledWidth = (filled / base) * BAR_WIDTH;
   const extraWidth = extra ? (extra / base) * BAR_WIDTH : 0;
+
+  // The real quantities behind the strip, marked where they sit — not left to the
+  // caption alone. A price increase marks the 100% boundary and the new total; every
+  // other strip marks where the colour stops and what the whole is worth.
+  const marks = extra
+    ? [
+        { x: PAD, value: 0 },
+        { x: PAD + BAR_WIDTH, value: base },
+        { x: PAD + BAR_WIDTH + extraWidth, value: base + extra },
+      ]
+    : [
+        { x: PAD, value: 0 },
+        { x: PAD + filledWidth, value: filled },
+        { x: PAD + BAR_WIDTH, value: base },
+      ];
 
   return (
     <svg
@@ -40,6 +56,11 @@ export function PercentStrip({ strip, label }: PercentStripProps) {
       {extraWidth > 0 && (
         <rect className="ps-extra" x={PAD + BAR_WIDTH} y={Y} width={extraWidth} height={BAR_HEIGHT} />
       )}
+      {marks.map((m, i) => (
+        <text key={i} className="ps-label" x={m.x} y={LABEL_Y} textAnchor="middle">
+          {m.value}
+        </text>
+      ))}
     </svg>
   );
 }

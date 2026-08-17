@@ -998,6 +998,14 @@ button.secondary {
   opacity: 0.5;
 }
 
+.ps-label {
+  font-size: 13px;
+  font-weight: 600;
+  fill: var(--text);
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
 .rs-block {
   fill: none;
   stroke: var(--text-h);
@@ -1006,6 +1014,14 @@ button.secondary {
 
 .rs-block.rs-filled {
   fill: #c4b5fd;
+}
+
+.rs-value {
+  font-size: 14px;
+  font-weight: 600;
+  fill: var(--text-h);
+  direction: ltr;
+  unicode-bidi: isolate;
 }
 
 .lg-axis {
@@ -1017,6 +1033,21 @@ button.secondary {
   stroke: #c4b5fd;
   stroke-width: 2.5;
   fill: none;
+}
+
+.lg-guide {
+  stroke: var(--text);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  opacity: 0.6;
+}
+
+.lg-tick {
+  font-size: 13px;
+  font-weight: 600;
+  fill: var(--text-h);
+  direction: ltr;
+  unicode-bidi: isolate;
 }
 
 .lg-point {

@@ -2,7 +2,7 @@ import type { LinearGraph as LinearGraphData } from "../data/linearGraph";
 
 const WIDTH = 280;
 const HEIGHT = 170;
-const PAD = 30;
+const PAD = 34;
 
 interface LinearGraphProps {
   graph: LinearGraphData;
@@ -27,6 +27,11 @@ export function LinearGraph({ graph, label }: LinearGraphProps) {
   const xOf = (x: number) => PAD + ((x - xMin) / (xMax - xMin)) * plotW;
   const yOf = (y: number) => HEIGHT - PAD - ((y - yMin) / (yMax - yMin)) * plotH;
 
+  const xAxisY = yOf(0);
+  const yAxisX = xOf(0);
+  const pointX = xOf(point.x);
+  const pointY = yOf(point.y);
+
   return (
     <svg
       className="linear-graph"
@@ -36,8 +41,8 @@ export function LinearGraph({ graph, label }: LinearGraphProps) {
       role="img"
       aria-label={label}
     >
-      <path className="lg-axis" d={`M ${xOf(xMin)} ${yOf(0)} H ${xOf(xMax)}`} />
-      <path className="lg-axis" d={`M ${xOf(0)} ${yOf(yMin)} V ${yOf(yMax)}`} />
+      <path className="lg-axis" d={`M ${xOf(xMin)} ${xAxisY} H ${xOf(xMax)}`} />
+      <path className="lg-axis" d={`M ${yAxisX} ${yOf(yMin)} V ${yOf(yMax)}`} />
       {lines.map((l, i) => (
         <path
           key={i}
@@ -45,7 +50,18 @@ export function LinearGraph({ graph, label }: LinearGraphProps) {
           d={`M ${xOf(xMin)} ${yOf(l.slope * xMin + l.intercept)} L ${xOf(xMax)} ${yOf(l.slope * xMax + l.intercept)}`}
         />
       ))}
-      <circle className="lg-point" cx={xOf(point.x)} cy={yOf(point.y)} r={5} />
+      {/* Dashed guides from the point down to each axis, with the real coordinate
+          written where it lands — design.md's rule that the axes carry only the values
+          this question is about, not a full scale. */}
+      {point.x !== 0 && <path className="lg-guide" d={`M ${pointX} ${xAxisY} V ${pointY}`} />}
+      {point.y !== 0 && <path className="lg-guide" d={`M ${yAxisX} ${pointY} H ${pointX}`} />}
+      <text className="lg-tick" x={pointX} y={xAxisY + 16} textAnchor="middle">
+        {point.x}
+      </text>
+      <text className="lg-tick" x={yAxisX - 8} y={pointY} textAnchor="end" dominantBaseline="central">
+        {point.y}
+      </text>
+      <circle className="lg-point" cx={pointX} cy={pointY} r={5} />
     </svg>
   );
 }
