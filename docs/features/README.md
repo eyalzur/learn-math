@@ -6,6 +6,7 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
+| ניסוח ברור לשאלות הנחה באחוזים | 🟡 `183/183` עוברות, ממתין ל-PR | [status](./percent-discount-wording/status.md) |
 | הודעת עידוד לציון מושלם | 🟢 done | [status](./perfect-score-message/status.md) |
 | הסבר דרך פתרון אחרי טעות | 🔵 הוחלף על ידי "מורה שמסבירה" | [status](./mistake-explanation/status.md) |
 | משתמשים, סילבוס ורמות | 🟢 done | [status](./students-and-syllabus/status.md) |
