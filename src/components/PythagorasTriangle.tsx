@@ -30,7 +30,7 @@ export function PythagorasTriangle({ triangle, label }: PythagorasTriangleProps)
   const yBase = HEIGHT - PAD_Y;
   const yTop = yBase - h;
 
-  const legALabel = unknown === "legA" ? "?" : legA;
+  const legALabel = unknown === "legA" || unknown === "bothLegs" ? "?" : legA;
   const legBLabel = unknown === "legB" || unknown === "bothLegs" ? "?" : legB;
   // The hypotenuse only carries a label when it is given or asked. A triangle known only
   // by its equal legs and their area has nothing honest to write on its third side.

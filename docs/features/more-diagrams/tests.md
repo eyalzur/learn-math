@@ -82,3 +82,64 @@
 ## Status
 עוברות — **157 / 157** בסוויטה המלאה, 2026-08-15. הגידול מ-`147`: שבע בדיקות מסך
 חדשות, שלושה כללי תוכן חדשים, וכלל אחד ב-`RULES`.
+
+---
+
+## גל ב׳ — חמש הצורות הנותרות (2026-08-17)
+
+בדיקות חדשות בקובץ נפרד, `tests/e2e/more-diagrams-wave2.spec.ts`, וארבעה כללים
+חדשים ב-`content.spec.ts` — לפי `product-spec.md` ו-`design.md` בלבד, בלי לקרוא
+את מודולי הנתונים או הרכיבים.
+
+### Coverage
+
+| קריטריון מהספק | בדיקה |
+|---|---|
+| אין ציור לפני התשובה — לכל אחת מחמש הצורות | `more-diagrams-wave2.spec.ts` › חמש בדיקות `no … before the question is answered` |
+| תשובה נכונה אינה מציגה ציור | `…a correct answer shows no geometry shape` |
+| **שטח מסומן במילוי, היקף בהדגשת הקו** | `…area is shown filled, perimeter is shown outlined` |
+| **שאלה הפוכה מסמנת את הצלע החסרה ב-`?`** | `…a reverse geometry question marks the missing side with a question mark` |
+| כיווניות — מספרים בציור הגיאומטרי קוראים משמאל לימין | `…numbers inside the geometry shape read left to right` |
+| **הזווית הישרה מסומנת, והצלע המבוקשת מסומנת `?`** | `…the right angle is marked, and the asked side carries a question mark` |
+| **שני ניצבים שווים ולא ידועים — שני `?`, לא אחד** | `…two equal, unknown legs both carry a question mark` |
+| **קווי עזר כל `25%`** | `…the strip carries guide lines at every quarter` |
+| **עליית מחיר מרחיבה את הרצועה מעבר לשלם שלה** | `…a price increase extends the strip past its own whole` |
+| **שתי הרצועות נבדלות במילוי, והכיתוב הוא שתי שורות** | `…the two strips are distinguished by fill, and the caption is two lines` |
+| הנקודה שעונה על השאלה יושבת על הישר | `…the answering point sits on the line` |
+| **מפגש שני ישרים מציג את שניהם, ואת נקודת המפגש** | `…two lines meeting shows both of them, and the point where they meet` |
+| הכיתוב = מה שקורא מסך מקבל | `…each of the five new pictures' caption is what a screen reader is told` |
+| **בדיוק `30` שאלות שטח והיקף מפיקות צורה** | `content.spec.ts` › `thirty area/perimeter questions draw their shape` |
+| **בדיוק `27` שאלות פיתגורס מפיקות משולש** | `content.spec.ts` › `twenty-seven Pythagoras questions draw their triangle` |
+| **בדיוק `30` שאלות אחוזים מפיקות רצועה** | `content.spec.ts` › `thirty percent questions draw their strip` |
+| **בדיוק `27` שאלות יחס מפיקות שתי רצועות** | `content.spec.ts` › `twenty-seven ratio questions draw their two strips` |
+| **בדיוק `30` שאלות פונקציה קווית מפיקות גרף** | `content.spec.ts` › `thirty linear-function questions draw their graph` |
+| ציור לעולם אינו סותר את שאלתו — כל חמש הצורות | `content.spec.ts` › `none of the five new shapes ever disagrees with its own question` |
+
+הכללים הסופרים מחשבים זכאות **באופן בלתי תלוי** מהמודולים — לפי הנוסחאות
+והחריגים הכתובים ב-`product-spec.md` (איזו שאלה נכנסת, ואיזו לא ולמה), לא לפי
+קריאה של הביטויים הרגולריים במימוש.
+
+### באגים אמיתיים שנתפסו לפני שהמימוש נחשב גמור
+
+1. **`ratioStrips.ts` — הכלל הראשון שכתבתי לזיהוי "יחס משולש" היה רחב מדי.**
+   הוא ספר כל שאלה עם שני מופעים של `ל-N` בניסוח, ותפס גם את שתי שאלות המתכון
+   ("מתכון ל-4 אנשים דורש 2 כוסות... כמה כוסות ל-10 אנשים?") שיש בהן `ל-4`
+   ו-`ל-10` — שני מופעים, אבל לא יחס משולש. **הכלל היה שגוי, לא המימוש**: תוקן
+   לחפש שני מופעי `ל-N` **צמודים לאחר "היחס הוא"**, שזה בדיוק מה שמבדיל את
+   היחס המשולש (`1 ל-2 ל-3`) ממשפט מתכון שבו שני המספרים מפוזרים במשפט.
+2. **`PythagorasTriangle.tsx` — הרכיב עצמו, לא הבדיקה.** בשאלת "שני ניצבים
+   שווים משטח", רק הניצב השני קיבל `?`; הראשון הציג את המספר האמיתי במקום
+   סימן שאלה. הבדיקה `two equal, unknown legs both carry a question mark`
+   תפסה את זה — היא בדיוק המקרה שהספק מציין כיוצא דופן ("שני ה-`?`, לא אחד").
+3. **`more-diagrams-wave2.spec.ts` — שתי בדיקות פונקציה קווית חיפשו טקסט עם
+   גרשיים אחוריים** (`` `y = x + 5` ``) בתוך `.problem-text`, אבל
+   `promptSegments` (ב-`curriculum.ts`) מפצל ומסיר את הגרשיים לפני התצוגה —
+   הם סימון לבידוד כיווניות, לא חלק מהטקסט המוצג. תוקן להשוואה בלי גרשיים.
+
+## How to run
+`npm run test:e2e`
+
+## Status
+עוברות — **206 / 206** בסוויטה המלאה, ריצה בודדת ונקייה, 2026-08-17. הגידול
+מ-`157`: `18` בדיקות מסך חדשות ב-`more-diagrams-wave2.spec.ts` וחמישה כללי
+תוכן חדשים ב-`content.spec.ts`.
