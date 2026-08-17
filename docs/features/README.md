@@ -6,6 +6,7 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
+| פיתגורס — מסבירים לפני שפותרים | 🟡 `183/183` עוברות, ממתין ל-PR | [status](./pythagoras-explain-first/status.md) |
 | הודעת עידוד לציון מושלם | 🟢 done | [status](./perfect-score-message/status.md) |
 | הסבר דרך פתרון אחרי טעות | 🔵 הוחלף על ידי "מורה שמסבירה" | [status](./mistake-explanation/status.md) |
 | משתמשים, סילבוס ורמות | 🟢 done | [status](./students-and-syllabus/status.md) |
