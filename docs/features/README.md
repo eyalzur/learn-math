@@ -24,3 +24,4 @@ architecture, implementation notes, and tests.
 | ציורים לשאר הנושאים | 🟡 גל א׳ נפרס · חמש צורות נותרו | [status](./more-diagrams/status.md) |
 | שיעור על סגנון תרגיל | 🟢 done — גל א׳ (מיקה) מוזג | [status](./style-lessons/status.md) |
 | ספירה לאחור למעבר לשאלה הבאה | 🟢 done — ממתין למיזוג | [status](./countdown-next/status.md) |
+| תוכן כיתה ב׳ למיקה | 🟡 in design | [status](./mika-grade2-content/status.md) |
