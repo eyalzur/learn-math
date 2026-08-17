@@ -5,11 +5,11 @@
 ## Progress
 - [x] Product spec — product-manager — 2026-08-17
 - [x] Design — designer — 2026-08-17
-- [ ] Architecture — tech-lead — not started
+- [x] Architecture — tech-lead — 2026-08-17
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** tech-lead
+**Current phase:** developer
 **Branch:** `feature/mika-grade2-content`
 **PR:** not opened yet
 
