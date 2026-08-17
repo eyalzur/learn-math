@@ -27,6 +27,9 @@ async function start(page: Page, student: number, topicIdx: number, pick: number
   await page.evaluate(() => localStorage.clear());
   await page.goto("/learn-math/");
   await page.locator(".student-card").nth(student).click();
+  // Mika (student 0) now has two grades available; every route this file uses for her is
+  // grade 1 (א׳). Rotem (student 1) has just the one grade and never sees this screen.
+  if (student === 0) await page.locator(".grade-card").first().click();
   await page.locator(".topic-card").nth(topicIdx).click();
   if (typeof pick === "string") {
     await page.locator(".style-card").filter({ hasText: pick }).first().click();

@@ -27,7 +27,7 @@ import { STYLE_META, stylesOf, hasStyleLessons } from "../../src/data/style";
  */
 
 /** How many questions a level of this grade should hold. */
-const LEVEL_SIZE: Record<string, number> = { "1": 10, "6": 10, "8": 10 };
+const LEVEL_SIZE: Record<string, number> = { "1": 10, "2": 10, "6": 10, "8": 10 };
 
 const everyQuestion = (): { gradeId: string; topic: string; q: Question }[] =>
   grades.flatMap((g) =>
@@ -348,7 +348,10 @@ test("exactly thirty questions write themselves in columns", () => {
 
   const all = everyQuestion();
   const expected = all.filter(({ q }) => eligible(q));
-  expect(expected.length, "the set of column-writable questions changed size").toBe(30);
+  // Grew from 30 to 80 when grade 2 landed: every add100 question (carrying included —
+  // this rule only excludes borrowing, not carrying) plus every no-borrow sub100
+  // question is itself column-writable arithmetic, independently of the diagram module.
+  expect(expected.length, "the set of column-writable questions changed size").toBe(80);
 
   const disagreements = all
     .filter(({ q }) => (verticalSum(q) !== null) !== eligible(q))

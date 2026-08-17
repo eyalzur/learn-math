@@ -20,6 +20,8 @@ async function startMedium(page: Page) {
   await page.evaluate(() => localStorage.clear());
   await page.goto("/learn-math/");
   await page.locator(".student-card").nth(0).click();
+  // Mika now has two grades available; the reported case lives in grade 1 (א׳).
+  await page.locator(".grade-card").first().click();
   await page.locator(".topic-card").nth(0).click();
   // Grade 1 enters this topic by style now. Every test below is about "איזה מספר בא
   // אחרי 12?" — a two-digit answer is what makes a misread digit or an overshoot mean
