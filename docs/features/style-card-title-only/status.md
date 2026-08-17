@@ -8,9 +8,9 @@
 - [x] Design — designer — 2026-08-17
 - [x] Architecture — tech-lead — 2026-08-17
 - [x] Implementation — developer — 2026-08-17
-- [ ] Tests — qa — not started
+- [x] Tests — qa — 2026-08-17
 
-**Current phase:** qa
+**Current phase:** done — `182/182` עוברות בריצה בודדת ונקייה, ממתין ל-PR
 **Branch:** `fix/style-card-title-only`
 **PR:** not opened yet
 
