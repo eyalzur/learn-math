@@ -134,8 +134,10 @@ test("the version appears on the first screen only", async ({ page }) => {
   const version = page.locator(".app-version");
   await expect(version).toBeVisible();
 
-  // Topic picker
+  // Grade picker, then topic picker — Mika now has two grades available.
   await page.locator(".student-card").first().click();
+  await expect(version).toHaveCount(0);
+  await page.locator(".grade-card").first().click();
   await expect(page.locator(".topic-card").first()).toBeVisible();
   await expect(version).toHaveCount(0);
 

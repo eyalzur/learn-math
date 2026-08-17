@@ -3,6 +3,8 @@ import { test, expect, type Page } from "@playwright/test";
 /** Every grade now practises topic by topic, so levels always sit one screen deeper. */
 async function openLevels(page: Page, studentIndex: number, topicIndex = 0) {
   await page.locator(".student-card").nth(studentIndex).click();
+  // Mika (index 0) now has two grades available; every route here is grade 1 (א׳).
+  if (studentIndex === 0) await page.locator(".grade-card").first().click();
   await page.locator(".topic-card").nth(topicIndex).click();
 }
 
@@ -38,6 +40,8 @@ async function open(page: Page) {
 
 async function pickStudent(page: Page, index: number) {
   await page.locator(".student-card").nth(index).click();
+  // Mika (index 0) now has two grades available; every route here is grade 1 (א׳).
+  if (index === 0) await page.locator(".grade-card").first().click();
 }
 
 test.beforeEach(async ({ page }) => {
@@ -91,7 +95,7 @@ test("every question in every level belongs to its own grade's syllabus", async 
     }));
   });
 
-  expect(data).toHaveLength(3);
+  expect(data).toHaveLength(4);
   const offenders: string[] = [];
   for (const grade of data) {
     for (const questions of grade.levels) {

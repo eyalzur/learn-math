@@ -23,6 +23,8 @@ async function openTopic(page: Page, student: number, topic: number) {
   await page.evaluate(() => localStorage.clear());
   await page.goto("/learn-math/");
   await page.locator(".student-card").nth(student).click();
+  // Mika now has two grades available; every route here is grade 1 (א׳).
+  if (student === MIKA) await page.locator(".grade-card").first().click();
   await page.locator(".topic-card").nth(topic).click();
 }
 

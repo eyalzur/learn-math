@@ -25,6 +25,8 @@ async function openTopic(page: Page, topicTitle: string) {
   await page.evaluate(() => localStorage.clear());
   await page.goto("/learn-math/");
   await page.locator(".student-card").first().click();
+  // Mika now has two grades available; every topic this file tests is grade 1 (א׳).
+  await page.locator(".grade-card").first().click();
   await page.locator(".topic-card", { hasText: topicTitle }).click();
   // Grade 1's multi-style topics are entered by style; the rest still ask for a level.
   const byStyle = page.locator(".style-card");

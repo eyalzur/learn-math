@@ -17,6 +17,7 @@ import { readAloud as readAloudFor, setReadAloud } from "./data/preferences";
 import "./App.css";
 
 const STORAGE_KEY = "learn-math:student";
+const GRADE_STORAGE_KEY = "learn-math:grade";
 
 /** localStorage throws in private mode in some browsers — remembering a preference is
  *  never worth taking the app down with it. */
@@ -33,6 +34,32 @@ function rememberStudent(id: string | null) {
   try {
     if (id === null) localStorage.removeItem(STORAGE_KEY);
     else localStorage.setItem(STORAGE_KEY, id);
+  } catch {
+    // ignore
+  }
+}
+
+/** Which grade each multi-grade student last chose, keyed by student id — same
+ *  reload-survives-but-switching-resets rule the student picker already follows, so
+ *  choosing a grade behaves exactly as familiar as choosing a student does. */
+function loadGradeId(studentId: string): string | null {
+  try {
+    const raw = localStorage.getItem(GRADE_STORAGE_KEY);
+    if (!raw) return null;
+    const saved = JSON.parse(raw) as Record<string, string>;
+    return saved[studentId] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function rememberGradeId(studentId: string, gradeId: string | null) {
+  try {
+    const raw = localStorage.getItem(GRADE_STORAGE_KEY);
+    const saved = raw ? (JSON.parse(raw) as Record<string, string>) : {};
+    if (gradeId === null) delete saved[studentId];
+    else saved[studentId] = gradeId;
+    localStorage.setItem(GRADE_STORAGE_KEY, JSON.stringify(saved));
   } catch {
     // ignore
   }
@@ -64,15 +91,20 @@ function App() {
   const [screen, setScreen] = useState<Screen>({ name: "home" });
   /** Which of the student's available grades is active. Not part of `Screen` — like
    *  `student`, it is decided before any screen renders, and every place that resets it
-   *  also resets `screen` to "home" in the same breath, so the two never drift apart. */
-  const [gradeId, setGradeId] = useState<string | null>(null);
+   *  also resets `screen` to "home" in the same breath, so the two never drift apart.
+   *  Survives a reload the same way `student` does; only switching away from the grade
+   *  screen (or the student) clears it, never a refresh mid-session. */
+  const [gradeId, setGradeId] = useState<string | null>(() => {
+    const initial = loadStudent();
+    return initial ? loadGradeId(initial.id) : null;
+  });
   /** The read-aloud setting is stored, not held in state; this forces a re-read of it. */
   const [, setReadAloudTick] = useState(0);
 
   function selectStudent(next: Student) {
     rememberStudent(next.id);
     setStudent(next);
-    setGradeId(null);
+    setGradeId(loadGradeId(next.id));
     setScreen({ name: "home" });
   }
 
@@ -83,8 +115,23 @@ function App() {
     setScreen({ name: "home" });
   }
 
+  /** Choosing a grade, or explicitly stepping back to reconsider — either way this is
+   *  the one place that keeps `gradeId` and its stored copy in sync. */
+  function chooseGrade(id: string | null) {
+    if (student) rememberGradeId(student.id, id);
+    setGradeId(id);
+  }
+
   if (student === null) {
     return <StudentPicker onSelect={selectStudent} />;
+  }
+
+  // Checked before the grade gate below, not after: history needs a student but never a
+  // grade, and the grade-choice screen's own history link would otherwise be unreachable
+  // — clicking it sets `screen` to "history", but `gradeId` is still null, so the gate
+  // below would just render the grade picker again and swallow the click.
+  if (screen.name === "history") {
+    return <History student={student} onBack={() => setScreen({ name: "home" })} />;
   }
 
   const grades = availableGrades(student);
@@ -98,7 +145,7 @@ function App() {
     return (
       <GradePicker
         grades={grades}
-        onSelect={(g) => setGradeId(g.id)}
+        onSelect={(g) => chooseGrade(g.id)}
         onBack={switchStudent}
         onHistory={() => setScreen({ name: "history" })}
       />
@@ -131,8 +178,9 @@ function App() {
         gradeLabel={`שלום ${student.name}! · ${grade.label}`}
         topics={grade.topicSets}
         onSelect={(topic) => setScreen(insideTopic(topic))}
-        onBack={grades.length > 1 ? () => setGradeId(null) : switchStudent}
-        onHistory={grades.length > 1 ? undefined : () => setScreen({ name: "history" })}
+        onBack={grades.length > 1 ? () => chooseGrade(null) : switchStudent}
+        backLabel={grades.length > 1 ? "← חזרה" : "← החלף תלמיד"}
+        onHistory={() => setScreen({ name: "history" })}
         readAloud={readAloud}
         onReadAloudChange={(value) => {
           setReadAloud(student.id, value);
@@ -141,10 +189,6 @@ function App() {
         }}
       />
     );
-  }
-
-  if (screen.name === "history") {
-    return <History student={student} onBack={() => setScreen({ name: "home" })} />;
   }
 
   if (screen.name === "levels" && screen.topic !== null) {
@@ -208,8 +252,9 @@ function App() {
     gradeLabel={grade.label}
     topics={grade.topicSets}
     onSelect={(topic) => setScreen(insideTopic(topic))}
-    onBack={grades.length > 1 ? () => setGradeId(null) : switchStudent}
-    onHistory={grades.length > 1 ? undefined : () => setScreen({ name: "history" })}
+    onBack={grades.length > 1 ? () => chooseGrade(null) : switchStudent}
+    backLabel={grades.length > 1 ? "← חזרה" : "← החלף תלמיד"}
+    onHistory={() => setScreen({ name: "history" })}
   />;
 }
 
