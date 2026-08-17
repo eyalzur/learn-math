@@ -41,33 +41,84 @@ describes — a listing page can't show a layout or an interaction.
 A single PR can need both — e.g. a diagram PR is UI (click-through), but if it also
 reworded a hint, that hint gets a content-mode entry too.
 
-## Content mode: build a listing page
+## Content mode: build a listing page, one card per pattern
 
-For every question the PR touches, render — as plain text on one page, not the running
-app —:
+Show **one example per distinct pattern, not every touched question.** The user has said
+this explicitly: new questions in the same style arrive later with different numbers, and
+matching the pattern is the whole difficulty — seeing the same rendering rule five times
+with different digits confirms nothing a single instance doesn't.
+
+**Find the patterns programmatically, don't eyeball them.** Every shape/wording rule in
+this codebase already exposes its own branches as data, because each one is "the check
+with teeth" — read off the prompt, verified against `question.answer`. Write a small
+script that runs the real extractor (`geometryShape`, `percentStrip`, `explainQuestion`,
+...) over every touched question and buckets the results by whatever field(s) the
+extractor itself returns as the discriminant — `kind`+`measure`+`unknown` for a geometry
+shape, `unknown` for a Pythagoras triangle, which named branch matched for a shape with no
+discriminant field (percent, ratio: give each `readShape` branch a name and bucket by
+which one fired). Take the **first real question in each bucket** as that pattern's
+example. This is exactly the same technique `content.spec.ts` uses to re-derive coverage
+independently of the implementation — reuse the instinct, not the file.
+
+Content wording (no diagram) buckets the same way: group by which explanation is actually
+produced (e.g. the opening sentence of `explainQuestion(question).steps`), not by question
+id or by skimming the data file. Two questions that read differently in the source but
+produce the identical rendered explanation are one pattern; two that look similar in the
+source but branch into different rendered text are two.
+
+For every pattern's representative, render — using the app's own components, not a
+hand-rolled re-implementation (see "Use real components" below):
 
 - **השאלה** — the prompt.
 - **רמז ראשון** / **רמז שני** — both hints, in order.
-- **פתרון על טעות** — the explanation shown after a wrong answer. Call the real
-  `explainQuestion()` (or equivalent) rather than copying the `steps` field verbatim: some
-  questions compute their explanation from the operands rather than writing it literally,
-  so the source array is not always what the child actually sees.
-- **ניואנסים** — if a question's explanation isn't a single fixed string (it branches on
-  something about the specific numbers — odd/even, which operand is larger, a diagram
-  condition, a reversed/"?" case), render **every variant that actually occurs** among the
-  touched questions, not one representative pick. This is the part most likely to be
-  skipped because it takes an extra step to find — check for it deliberately, the same way
-  you'd check for an edge case in code.
+- **הציור, אם יש** — if a diagram module returns non-null for this question, render the
+  real diagram component. A changed or new diagram is exactly as reviewable as changed
+  wording, and belongs in the same page — don't make graphics a separate click-through
+  when a static render shows it just as well.
+- **פתרון על טעות** — the explanation shown after a wrong answer, from the real
+  `explainQuestion()` — not the source `steps` array copied by hand, since some questions
+  compute their explanation from the operands rather than writing it literally.
 
-Build this the same way as an app preview — a small script using Vite's `ssrLoadModule` (or
-importing the data/explain modules directly) to pull real rendered text, not hand-typed
-strings — then publish it as one page with the Artifact tool. This page **is** the איפה
-field for a content-mode PR.
+## Use real components, not a re-implementation
+
+Don't hand-roll HTML/CSS that approximates what the app renders — import the actual
+components and data modules and let them render for real, the same way `Practice.tsx`
+does. A drawing built from scratch to look like the diagram can silently drift from what
+the child actually sees; the real component cannot.
+
+1. Create a small standalone entry (e.g. under a scratch/build directory) that imports
+   directly from `src/data/*` and `src/components/*` — the real `explainQuestion`, the
+   real shape extractors, the real `<GeometryShape>`/`<PercentStrip>`/etc., and
+   `src/index.css` **and** `src/App.css` (the design tokens like `--text-h` live in
+   `index.css`; importing only `App.css` renders shapes with invisible strokes — check for
+   this before publishing, it fails silently, not with an error).
+2. Copy the handful of JSX lines `Practice.tsx` actually uses for the prompt box, the
+   hints list, and the explanation block (classNames included) rather than reinventing
+   the markup — grep `Practice.tsx` for `problem-box`, `hints`, `explanation-step` to find
+   them. This is the one thing worth copying instead of importing, since `Practice.tsx`
+   itself isn't a reusable component.
+3. Give this entry its own tiny `vite.config.ts` (separate `root`, own `outDir`) so it
+   builds standalone without touching the app's real `vite.config.ts` — it must never ship.
+4. `npx vite build --config <that config>`, inline the built CSS/JS into one HTML file
+   exactly like an app preview, and publish with the Artifact tool.
+5. **Verify before publishing**, don't trust that it compiled: open the built HTML with a
+   headless browser, check for zero console/page errors, and screenshot at least one card
+   of each kind (a diagram, a text-only card, light and dark) — a missing CSS import (like
+   #2 above) produces no error and no warning, only a blank shape.
+
+If the PR being reviewed is still on an unmerged branch, check out that branch before
+building. If **multiple** unmerged PRs together are what the reviewer needs to see (e.g. a
+diagram PR plus a separate wording PR that touches the same questions), create a local
+throwaway branch, merge all of them into it (never push it), resolve any trivial conflicts
+arbitrarily since nothing here ships, and build the harness from that combined tree. Delete
+the branch after publishing.
+
+This page **is** the איפה field for a content/graphics-mode PR.
 
 ## Filling each field
 
 **איפה — a link that opens to the thing, not near it.**
-- Content-only change: the listing page above.
+- Content and/or graphics change: the listing page above, one card per pattern.
 - Already merged/on `main`, and it's a UI change: the live site,
   `https://eyalzur.github.io/learn-math/`.
 - Still on an unmerged branch/PR, and it's a UI change: the site can't show it yet. Build a
@@ -119,10 +170,13 @@ this message, filled with specifics (not placeholders, not "see above")? If any 
 missing or vague, you're not done — go get the missing piece (run the app, build the
 preview, read the actual rendered text) rather than sending it anyway.
 
-For a content-mode PR specifically: does the listing page cover every touched question, and
-did you actually look for branching explanations rather than assuming each question has
-exactly one? A listing page that silently drops the ניואנס case is the content-mode version
-of "see above" — technically a link, not actually reviewable.
+For a content/graphics-mode PR specifically: does every distinct pattern among the touched
+questions have a card — found by actually bucketing the extractor's output, not by
+skimming the data file? A page that shows five near-identical cards from the same bucket
+while a genuinely different branch goes unrepresented is the content-mode version of "see
+above" — it looks thorough and isn't. And did you verify the built page in a headless
+browser rather than trusting a clean `vite build` — a missing CSS import renders with zero
+errors and an invisible diagram.
 
 ## When this doesn't apply
 
