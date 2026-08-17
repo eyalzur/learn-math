@@ -37,7 +37,15 @@ function readShape(prompt: string): PercentStrip | null {
     };
   }
 
-  if ((m = prompt.match(/^מחיר (\d+) שקלים בהנחה של (\d+)%\. כמה שקלים ההנחה\?$/))) {
+  // Two wordings for the same "how much was the discount" question — old and new, both
+  // accepted so this module works whichever order #36 and #38 land in. New: "מחיר מעיל
+  // הוא 200 שקלים, וקיבלת עליו הנחה של 15%." Old: "מחיר 200 שקלים בהנחה של 15%."
+  if (
+    (m =
+      prompt.match(
+        /^מחיר .+ הוא (\d+) שקלים, וקיבלת עלי(?:ו|ה|הן) הנחה של (\d+)%\. כמה שקלים הייתה ההנחה\?$/,
+      ) ?? prompt.match(/^מחיר (\d+) שקלים בהנחה של (\d+)%\. כמה שקלים ההנחה\?$/))
+  ) {
     const [base, rate] = [Number(m[1]), Number(m[2])];
     const discount = (base * rate) / 100;
     return {
@@ -47,7 +55,12 @@ function readShape(prompt: string): PercentStrip | null {
     };
   }
 
-  if ((m = prompt.match(/^מחיר (\d+) שקלים בהנחה של (\d+)%\. כמה משלמים\?$/))) {
+  if (
+    (m =
+      prompt.match(
+        /^מחיר .+ הוא (\d+) שקלים, וקיבלת עלי(?:ו|ה|הן) הנחה של (\d+)%\. כמה שקלים שילמת\?$/,
+      ) ?? prompt.match(/^מחיר (\d+) שקלים בהנחה של (\d+)%\. כמה משלמים\?$/))
+  ) {
     const [base, rate] = [Number(m[1]), Number(m[2])];
     const discount = (base * rate) / 100;
     return {
@@ -98,7 +111,7 @@ export function percentStrip(question: Question): PercentStrip | null {
       ? base + extra
       : /כמה אחוזים/.test(question.prompt)
         ? (filled * 100) / base
-        : /כמה משלמים/.test(question.prompt)
+        : /כמה משלמים|כמה שקלים שילמת/.test(question.prompt)
           ? base - filled
           : filled;
 
