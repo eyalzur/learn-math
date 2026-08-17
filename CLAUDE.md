@@ -131,6 +131,7 @@ docs/features/    מסמך לכל פיצ'ר. README.md הוא האינדקס
 | PR | מה | תלוי ב |
 |---|---|---|
 | [#35](https://github.com/eyalzur/learn-math/pull/35) | **פקודת `/status`** — סטטוס קצר בתחילת סשן | `main`. אינו נוגע ב-`src/`, ולכן לא נפרס לאתר |
+| [#37](https://github.com/eyalzur/learn-math/pull/37) | **כרטיס סגנון — רק כותרת** — הוסרו הדוגמה והמונה | `main`. `182/182` בדיקות עוברות. ראו "המתח" בגוף ה-PR |
 
 **מוזג היום (2026-08-15):** [#32](https://github.com/eyalzur/learn-math/pull/32) ציורים
 גל א׳ · [#33](https://github.com/eyalzur/learn-math/pull/33) שיעור על סגנון תרגיל ·
