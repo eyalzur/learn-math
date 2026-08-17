@@ -9,9 +9,9 @@
 - [x] Implementation — developer — 2026-08-15
 - [x] Tests — qa — 2026-08-15
 
-**Current phase:** done — `183/183` עוברות, ממתין ל-PR
-**Branch:** `feature/countdown-next` — **יושב על `feature/style-lessons`**, לא על `main`
-**PR:** not opened yet
+**Current phase:** done — מוזג ונפרס לאתר החי
+**Branch:** `feature/countdown-next` (מוזג)
+**PR:** [#34](https://github.com/eyalzur/learn-math/pull/34) — מוזג 2026-08-16
 
 ## Open questions / blockers
 None.

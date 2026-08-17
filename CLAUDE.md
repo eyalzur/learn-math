@@ -127,15 +127,12 @@ docs/features/    מסמך לכל פיצ'ר. README.md הוא האינדקס
 
 ## מה פתוח
 
-### ממתין לריוויו ולמיזוג
-| PR | מה | תלוי ב |
-|---|---|---|
-| [#35](https://github.com/eyalzur/learn-math/pull/35) | **פקודת `/status`** — סטטוס קצר בתחילת סשן | `main`. אינו נוגע ב-`src/`, ולכן לא נפרס לאתר |
+אין כרגע PR פתוח שממתין לריוויו.
 
-**מוזג היום (2026-08-15):** [#32](https://github.com/eyalzur/learn-math/pull/32) ציורים
+**מוזג (2026-08-15–16):** [#32](https://github.com/eyalzur/learn-math/pull/32) ציורים
 גל א׳ · [#33](https://github.com/eyalzur/learn-math/pull/33) שיעור על סגנון תרגיל ·
-[#34](https://github.com/eyalzur/learn-math/pull/34) ספירה של חמש שניות. שלושתם
-**באתר החי**.
+[#34](https://github.com/eyalzur/learn-math/pull/34) ספירה של חמש שניות · [#35](https://github.com/eyalzur/learn-math/pull/35)
+פקודת `/status`. הראשונים שלושה **באתר החי**; #35 אינו נוגע ב-`src/` ולכן לא נפרס.
 
 ### הערות מהריוויו שטרם טופלו (2026-08-15)
 - **הרמז ב-`במספר 18, בכמה גדולה ספרת היחידות…`** — המשתמש: "רמז לא מובן". הרמז
