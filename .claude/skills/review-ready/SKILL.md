@@ -120,12 +120,25 @@ back, or every finding has to be re-typed by hand afterward. Give each card a `<
 for notes (React state is enough; persist to `localStorage` in a `try`/`catch` since a
 sandboxed viewer may block storage, but the note still survives for the session either
 way). Compile all non-empty notes into one sticky summary panel — sticky so it stays
-reachable on a long page — with a "copy all" button (`navigator.clipboard.writeText`,
-wrapped in `try`/`catch`) **and** a visible read-only textarea holding the same compiled
-text as a fallback, since clipboard permissions aren't guaranteed inside a sandboxed
-artifact. Label each compiled entry with the card's id and pattern (`[PR #38]
-g6-percent-h1 — discount-amount wording`), not just the note text — a note that only makes
-sense next to the card it came from is useless once it's copied out of context.
+reachable on a long page — with a "copy all" button and a visible read-only textarea
+holding the same compiled text. Label each compiled entry with the card's id and pattern
+(`[PR #38] g6-percent-h1 — discount-amount wording`), not just the note text — a note that
+only makes sense next to the card it came from is useless once it's copied out of context.
+
+**The copy button needs two paths, not one — `navigator.clipboard.writeText` alone is not
+enough.** It needs a Permissions Policy grant this page may not have inside a sandboxed
+artifact viewer, and it silently rejects rather than erroring loudly, so testing it once
+outside that sandbox proves nothing about whether it'll work for real. In the same click
+handler, always also run the classic path: `ref.current.select()` +
+`ref.current.setSelectionRange(0, value.length)` + `document.execCommand("copy")` — this
+rides an actual text selection rather than a permissions-gated API, so it works in far more
+restricted contexts. Treat `execCommand`'s own return value as the source of truth for
+whether the copy succeeded, not the Clipboard API's promise. Either path succeeding is
+enough, and because the `select()` call always runs, the text is left visibly selected even
+in the worst case — Ctrl/Cmd+C still works by hand. Verify this by actually blocking
+`navigator.clipboard` in a test page (`Object.defineProperty(navigator, "clipboard", ...)`
+to make it reject) before trusting the button, not just by clicking it once in an
+unrestricted browser tab.
 
 This page **is** the איפה field for a content/graphics-mode PR.
 
