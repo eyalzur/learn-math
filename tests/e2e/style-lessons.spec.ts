@@ -35,7 +35,7 @@ test("a topic with several styles asks which style, not which level", async ({ p
   await expect(page.locator(".level-card"), "the level screen must not also appear").toHaveCount(
     0,
   );
-  await expect(page.locator(".subtitle")).toHaveText("על מה המורה לימד/ה היום?");
+  await expect(page.locator(".subtitle")).toHaveText("מה לומדים?");
 });
 
 test("a topic with one style is untouched and never shows the new screen", async ({ page }) => {

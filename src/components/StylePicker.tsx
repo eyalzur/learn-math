@@ -40,7 +40,7 @@ export function StylePicker({
 
       <h1>{heading}</h1>
 
-      <p className="subtitle">על מה המורה לימד/ה היום?</p>
+      <p className="subtitle">מה לומדים?</p>
       <div className="style-grid">
         {styles.map((style) => (
           <div key={style.id} className="style-row">
