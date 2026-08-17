@@ -113,6 +113,20 @@ throwaway branch, merge all of them into it (never push it), resolve any trivial
 arbitrarily since nothing here ships, and build the harness from that combined tree. Delete
 the branch after publishing.
 
+## Give every card a place for notes
+
+The reviewer reads on the page, not in the chat — so the page needs somewhere to write
+back, or every finding has to be re-typed by hand afterward. Give each card a `<textarea>`
+for notes (React state is enough; persist to `localStorage` in a `try`/`catch` since a
+sandboxed viewer may block storage, but the note still survives for the session either
+way). Compile all non-empty notes into one sticky summary panel — sticky so it stays
+reachable on a long page — with a "copy all" button (`navigator.clipboard.writeText`,
+wrapped in `try`/`catch`) **and** a visible read-only textarea holding the same compiled
+text as a fallback, since clipboard permissions aren't guaranteed inside a sandboxed
+artifact. Label each compiled entry with the card's id and pattern (`[PR #38]
+g6-percent-h1 — discount-amount wording`), not just the note text — a note that only makes
+sense next to the card it came from is useless once it's copied out of context.
+
 This page **is** the איפה field for a content/graphics-mode PR.
 
 ## Filling each field
