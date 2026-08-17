@@ -11,6 +11,23 @@ const MIN_PX = 34;
 
 const px = (world: number, maxWorld: number) => Math.max(MIN_PX, (world / maxWorld) * MAX_PX);
 
+/**
+ * The internal lines of a unit-square grid over a `cols`×`rows` rectangle — so a child
+ * can count the squares that make up an area, rather than trust a filled block.
+ */
+function gridLines(x: number, y: number, w: number, h: number, cols: number, rows: number): string {
+  const parts: string[] = [];
+  for (let i = 1; i < cols; i++) {
+    const lx = x + (i * w) / cols;
+    parts.push(`M ${lx} ${y} V ${y + h}`);
+  }
+  for (let j = 1; j < rows; j++) {
+    const ly = y + (j * h) / rows;
+    parts.push(`M ${x} ${ly} H ${x + w}`);
+  }
+  return parts.join(" ");
+}
+
 interface GeometryShapeProps {
   shape: GeometryShapeData;
   /** Read out by a screen reader in place of the picture. */
@@ -30,15 +47,33 @@ export function GeometryShape({ shape, label }: GeometryShapeProps) {
     const h = px(shape.width, maxWorld);
     const x = CENTER_X - w / 2;
     const y = CENTER_Y - h / 2;
+    const lengthLabel = shape.unknown === "length" ? "?" : shape.length;
+    const widthLabel = shape.unknown === "width" ? "?" : shape.width;
     body = (
       <>
         <rect className={shapeClass} x={x} y={y} width={w} height={h} />
+        {/* Area: a grid of unit squares to count, not a solid block to trust. */}
+        {shape.measure === "area" && (
+          <path className="gs-grid" d={gridLines(x, y, w, h, shape.length, shape.width)} />
+        )}
         <text className="gs-label" x={CENTER_X} y={y - 10} textAnchor="middle">
-          {shape.unknown === "length" ? "?" : shape.length}
+          {lengthLabel}
         </text>
+        {/* Perimeter: every side gets its own number, not just the two distinct values —
+            the point is a length a child can add up, all four in view at once. */}
+        {shape.measure === "perimeter" && (
+          <text className="gs-label" x={CENTER_X} y={y + h + 22} textAnchor="middle">
+            {lengthLabel}
+          </text>
+        )}
         <text className="gs-label" x={x - 12} y={CENTER_Y} textAnchor="end" dominantBaseline="central">
-          {shape.unknown === "width" ? "?" : shape.width}
+          {widthLabel}
         </text>
+        {shape.measure === "perimeter" && (
+          <text className="gs-label" x={x + w + 12} y={CENTER_Y} textAnchor="start" dominantBaseline="central">
+            {widthLabel}
+          </text>
+        )}
       </>
     );
   } else if (shape.kind === "square") {
@@ -48,23 +83,49 @@ export function GeometryShape({ shape, label }: GeometryShapeProps) {
     body = (
       <>
         <rect className={shapeClass} x={x} y={y} width={s} height={s} />
+        {shape.measure === "area" && (
+          <path className="gs-grid" d={gridLines(x, y, s, s, shape.side, shape.side)} />
+        )}
         <text className="gs-label" x={CENTER_X} y={y - 10} textAnchor="middle">
           {shape.side}
         </text>
+        {shape.measure === "perimeter" && (
+          <>
+            <text className="gs-label" x={CENTER_X} y={y + s + 22} textAnchor="middle">
+              {shape.side}
+            </text>
+            <text className="gs-label" x={x - 12} y={CENTER_Y} textAnchor="end" dominantBaseline="central">
+              {shape.side}
+            </text>
+            <text className="gs-label" x={x + s + 12} y={CENTER_Y} textAnchor="start" dominantBaseline="central">
+              {shape.side}
+            </text>
+          </>
+        )}
       </>
     );
   } else if (shape.kind === "triangle" && shape.measure === "perimeter") {
-    // Equilateral: three equal sides, drawn as such, one label — no dashed height, this
-    // question is not about area.
+    // Equilateral: three equal sides, drawn as such — a label on every side, not just
+    // the base, so the three numbers a child would add up are all on the picture.
     const s = px(shape.base, shape.base);
     const x0 = CENTER_X - s / 2;
     const x1 = CENTER_X + s / 2;
     const yBase = CENTER_Y + s * 0.43;
     const yTop = CENTER_Y - s * 0.43;
+    const leftMidX = (x0 + CENTER_X) / 2 - 14;
+    const leftMidY = (yBase + yTop) / 2 + 6;
+    const rightMidX = (CENTER_X + x1) / 2 + 14;
+    const rightMidY = (yBase + yTop) / 2 + 6;
     body = (
       <>
         <path className={shapeClass} d={`M ${x0} ${yBase} L ${x1} ${yBase} L ${CENTER_X} ${yTop} Z`} />
         <text className="gs-label" x={CENTER_X} y={yBase + 22} textAnchor="middle">
+          {shape.base}
+        </text>
+        <text className="gs-label" x={leftMidX} y={leftMidY} textAnchor="middle">
+          {shape.base}
+        </text>
+        <text className="gs-label" x={rightMidX} y={rightMidY} textAnchor="middle">
           {shape.base}
         </text>
       </>
