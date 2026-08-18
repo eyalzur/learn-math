@@ -127,8 +127,9 @@ why, a link to `docs/features/<slug>/status.md` for the full trail, and the test
 
 Then **stop**. Don't merge it yourself, and don't enable auto-merge. A human reads the PR
 and merges when they're happy — that review point is the reason the PR exists, and
-merging on their behalf quietly removes it. Tell the user the PR is open and hand them the
-link.
+merging on their behalf quietly removes it. Telling the user the PR is open is a review
+ask — run the `review-ready` skill before writing that message rather than just pasting
+the link; a bare link is exactly the failure mode `review-ready` exists to stop.
 
 ## If the PR needs another pass
 
