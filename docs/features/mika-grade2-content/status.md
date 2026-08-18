@@ -7,9 +7,10 @@
 - [x] Design — designer — 2026-08-17
 - [x] Architecture — tech-lead — 2026-08-17
 - [x] Implementation — developer — 2026-08-17
-- [ ] Tests — qa — not started
+- [x] Tests — qa — 2026-08-18
 
-**Current phase:** qa
+**Current phase:** done — `191/191` עוברות בריצה בודדת ונקייה, `build` ו-`lint` נקיים,
+ממתין ל-PR
 **Branch:** `feature/mika-grade2-content`
 **PR:** not opened yet
 
