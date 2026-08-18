@@ -354,11 +354,11 @@ test("no diagram ever disagrees with its own question", () => {
   expect(wrong, `\n${wrong.join("\n")}\n`).toEqual([]);
 });
 
-test("exactly thirty questions write themselves in columns", () => {
+test("exactly a hundred and five questions write themselves in columns", () => {
   // Eligibility is recomputed here from the spec's own words — a bare `a + b` / `a − b`,
-  // columns worth aligning, no borrowing, and column arithmetic that lands on the
-  // recorded answer — independently of the module that draws the block. If the two ever
-  // disagree, one of them is wrong about what the product promised, and this is what
+  // columns worth aligning, at most one borrowed column, and column arithmetic that lands
+  // on the recorded answer — independently of the module that draws the block. If the two
+  // ever disagree, one of them is wrong about what the product promised, and this is what
   // says so out loud. A reworded prompt that silently drops its vertical fails the same
   // way the fraction count fails.
   const decimals = (n: number) => {
@@ -378,7 +378,18 @@ test("exactly thirty questions write themselves in columns", () => {
     const width = Math.max(String(A).length, String(B).length);
     const digit = (n: number, i: number) => Math.floor(n / 10 ** i) % 10;
     if (m[2] !== "+") {
-      for (let i = 0; i < width; i++) if (digit(A, i) < digit(B, i)) return false; // borrow
+      // Walk the columns right to left the way a child would, tracking how many times a
+      // column comes up short and has to ask its neighbour for a ten. One borrow draws —
+      // a column asked twice (borrowing through a zero) has no honest single digit to show
+      // for the column that both gave one away and needed one itself.
+      let borrow = 0;
+      let borrowCount = 0;
+      for (let i = 0; i < width; i++) {
+        const short = digit(A, i) - borrow < digit(B, i);
+        if (short) borrowCount++;
+        borrow = short ? 1 : 0;
+      }
+      if (borrow > 0 || borrowCount > 1) return false;
     }
     const result = m[2] === "+" ? A + B : A - B;
     return result === Math.round(q.answer * 10 ** scale);
@@ -386,10 +397,11 @@ test("exactly thirty questions write themselves in columns", () => {
 
   const all = everyQuestion();
   const expected = all.filter(({ q }) => eligible(q));
-  // Grew from 30 to 80 when grade 2 landed: every add100 question (carrying included —
-  // this rule only excludes borrowing, not carrying) plus every no-borrow sub100
-  // question is itself column-writable arithmetic, independently of the diagram module.
-  expect(expected.length, "the set of column-writable questions changed size").toBe(80);
+  // Grew from 80 to 105 when the vertical diagram learned to draw a single borrow: every
+  // add100 question was already eligible (carrying included), and now sub100's ten
+  // borrow-needing hard questions join them, plus grade 1's own borrow-needing questions
+  // that were sitting on the sidelines for the same reason (10 − 4, 15 − 8, ...).
+  expect(expected.length, "the set of column-writable questions changed size").toBe(105);
 
   const disagreements = all
     .filter(({ q }) => (verticalSum(q) !== null) !== eligible(q))

@@ -126,9 +126,9 @@ test("a subtraction question gets a subtraction sentence, never an addition one"
   await expect(page.locator(".vertical-sum")).toBeVisible();
 });
 
-// ------------------------------------------------------- where the vertical must not be
+// ------------------------------------------------------- a single borrow draws too
 
-test("borrowing questions show no vertical, and the explanation still stands", async ({
+test("a borrowing question shows the vertical with a borrow mark, and the explanation still stands", async ({
   page,
 }) => {
   // A lesson now climbs from the easy end, so the borrowing questions are no longer
@@ -136,8 +136,11 @@ test("borrowing questions show no vertical, and the explanation still stands", a
   await start(page, 0, 3, "חיסור");
   await failAt(page, "15 − 8");
 
-  await expect(page.locator(".vertical-sum")).toHaveCount(0);
-  // The method sentence still teaches the borrow-free strategy the steps use.
+  // One borrow is drawable — the neighbouring column shows its reduced digit, the
+  // borrowing column shows the ten it received, same visual language as a carry.
+  await expect(page.locator(".vs-carries")).toBeVisible();
+  const caption = await page.locator(".vertical-caption").innerText();
+  expect(caption, "the caption does not explain the borrow").toContain("שואלים");
   await expect(page.locator(".explanation-method")).toBeVisible();
   await expect(page.locator(".explanation-step").first()).toBeVisible();
 });
