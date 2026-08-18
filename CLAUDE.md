@@ -131,15 +131,17 @@ docs/features/    מסמך לכל פיצ'ר. README.md הוא האינדקס
 | PR | מה | תלוי ב |
 |---|---|---|
 | [#35](https://github.com/eyalzur/learn-math/pull/35) | **פקודת `/status`** — סטטוס קצר בתחילת סשן | `main`. אינו נוגע ב-`src/`, ולכן לא נפרס לאתר |
-| [#37](https://github.com/eyalzur/learn-math/pull/37) | **כרטיס סגנון — רק כותרת** — הוסרו הדוגמה והמונה | `main`. `182/182` בדיקות עוברות. ראו "המתח" בגוף ה-PR |
+| [#41](https://github.com/eyalzur/learn-math/pull/41) | **סקיל `review-ready`** — מכריח את פורמט ארבעת השדות | `main`. אינו נוגע ב-`src/`, ולכן לא נפרס לאתר |
 
 **מוזג היום (2026-08-18):** [#36](https://github.com/eyalzur/learn-math/pull/36) ציורים
-גל ב׳ — שטח והיקף, פיתגורס, אחוזים, יחס, פונקציה קווית. **באתר החי**.
+גל ב׳ — שטח והיקף, פיתגורס, אחוזים, יחס, פונקציה קווית · [#37](https://github.com/eyalzur/learn-math/pull/37)
+כרטיס סגנון — רק כותרת · [#38](https://github.com/eyalzur/learn-math/pull/38) ניסוח ברור
+לשאלות הנחה באחוזים · [#39](https://github.com/eyalzur/learn-math/pull/39) פיתגורס — מסבירים
+לפני שפותרים. כולם **באתר החי**.
 
 **מוזג קודם (2026-08-15):** [#32](https://github.com/eyalzur/learn-math/pull/32) ציורים
 גל א׳ · [#33](https://github.com/eyalzur/learn-math/pull/33) שיעור על סגנון תרגיל ·
-[#34](https://github.com/eyalzur/learn-math/pull/34) ספירה של חמש שניות. שלושתם
-**באתר החי**.
+[#34](https://github.com/eyalzur/learn-math/pull/34) ספירה של חמש שניות. שלושתם **באתר החי**.
 
 ### הערות מהריוויו שטרם טופלו (2026-08-15)
 - **הרמז ב-`במספר 18, בכמה גדולה ספרת היחידות…`** — המשתמש: "רמז לא מובן". הרמז
