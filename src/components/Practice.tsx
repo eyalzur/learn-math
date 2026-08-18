@@ -10,10 +10,20 @@ import { verticalSum } from "../data/verticalSum";
 import { numberLine } from "../data/numberLine";
 import { tenFrame } from "../data/tenFrame";
 import { twentyStrip } from "../data/twentyStrip";
+import { geometryShape } from "../data/geometryShape";
+import { pythagorasTriangle } from "../data/pythagorasTriangle";
+import { percentStrip } from "../data/percentStrip";
+import { ratioStrips } from "../data/ratioStrips";
+import { linearGraph } from "../data/linearGraph";
 import { NumberLine } from "./NumberLine";
 import { TenFrame } from "./TenFrame";
 import { TwentyStrip } from "./TwentyStrip";
 import { FractionCircle } from "./FractionCircle";
+import { GeometryShape } from "./GeometryShape";
+import { PythagorasTriangle } from "./PythagorasTriangle";
+import { PercentStrip } from "./PercentStrip";
+import { RatioStrips } from "./RatioStrips";
+import { LinearGraph } from "./LinearGraph";
 import {
   explanationToSpeechParts,
   primeVoices,
@@ -100,6 +110,16 @@ export function Practice({ lesson, onFinish, onExit, readAloud }: PracticeProps)
   const frame = tenFrame(question);
   /** Twenty circles, some filled — how many are missing to reach twenty. */
   const strip = twentyStrip(question);
+  /** A rectangle, square, triangle or circle — area and perimeter. */
+  const geometry = geometryShape(question);
+  /** A right triangle, in true proportion — Pythagoras. */
+  const pythagoras = pythagorasTriangle(question);
+  /** A strip out of a hundred — percentages. */
+  const percent = percentStrip(question);
+  /** Two strips at the same unit size — ratio and proportion. */
+  const ratio = ratioStrips(question);
+  /** A line on axes, with the point that answers the question marked. */
+  const linear = linearGraph(question);
 
   /**
    * The countdown's clock.
@@ -273,6 +293,13 @@ export function Practice({ lesson, onFinish, onExit, readAloud }: PracticeProps)
             // Already an array of lines: the rule, then this question. Separate parts so
             // a listener gets a pause between them rather than twenty words in one breath.
             ...(line ? speechParts(line.caption) : []),
+            ...(geometry ? speechParts([geometry.caption]) : []),
+            ...(pythagoras ? speechParts([pythagoras.caption]) : []),
+            ...(percent ? speechParts([percent.caption]) : []),
+            // Two strips, two things to say — a pause between them, same reason as the
+            // number line above.
+            ...(ratio ? speechParts(ratio.caption) : []),
+            ...(linear ? speechParts([linear.caption]) : []),
             ...explanationToSpeechParts(explanation),
           ];
     if (!parts?.length) return;
@@ -498,6 +525,44 @@ export function Practice({ lesson, onFinish, onExit, readAloud }: PracticeProps)
                   </span>
                 ))}
               </figcaption>
+            </figure>
+          )}
+          {geometry && (
+            <figure className="geometry-figure">
+              <GeometryShape shape={geometry} label={geometry.caption.replace(/`/g, "")} />
+              <figcaption className="figure-caption">{segmented(geometry.caption)}</figcaption>
+            </figure>
+          )}
+          {pythagoras && (
+            <figure className="pythagoras-figure">
+              <PythagorasTriangle triangle={pythagoras} label={pythagoras.caption.replace(/`/g, "")} />
+              <figcaption className="figure-caption">{segmented(pythagoras.caption)}</figcaption>
+            </figure>
+          )}
+          {percent && (
+            <figure className="percent-figure">
+              <PercentStrip strip={percent} label={percent.caption.replace(/`/g, "")} />
+              <figcaption className="figure-caption">{segmented(percent.caption)}</figcaption>
+            </figure>
+          )}
+          {ratio && (
+            <figure className="ratio-figure">
+              {/* One aria-label because it is one picture, even though the caption is two
+                  lines and is spoken as two parts — same reasoning as the number line. */}
+              <RatioStrips strips={ratio} label={ratio.caption.join(" ").replace(/`/g, "")} />
+              <figcaption className="figure-caption">
+                {ratio.caption.map((part, i) => (
+                  <span key={i} className="caption-line">
+                    {segmented(part)}
+                  </span>
+                ))}
+              </figcaption>
+            </figure>
+          )}
+          {linear && (
+            <figure className="linear-figure">
+              <LinearGraph graph={linear} label={linear.caption.replace(/`/g, "")} />
+              <figcaption className="figure-caption">{segmented(linear.caption)}</figcaption>
             </figure>
           )}
           {explanation.steps.map((step, i) => (

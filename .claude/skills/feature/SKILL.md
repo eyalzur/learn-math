@@ -54,12 +54,12 @@ branch and open a pull request against `main` per
 `../_shared/references/git-workflow.md`. You're the only one who does this — the role
 skills commit but never push or open PRs, so there's exactly one PR per feature.
 
-Then tell the user, in plain language, in one short paragraph:
+Then tell the user, in plain language:
 - What was built (one or two sentences, plain language — not a changelog).
-- The PR link, and that it's waiting for them to review and merge.
 - Where the docs live (`docs/features/<slug>/`).
-- How to see it running (`npm run dev`) and how to run the tests QA wrote
-  (`npm run test:e2e`).
+- The review request itself — invoke the `review-ready` skill before writing this part.
+  It's not optional and a plain PR link is not a substitute: the user needs the
+  איפה/איך/מה אמור לקרות/מה לשפוט fields, not just "here's the PR."
 
 Stop there — don't merge the PR yourself. The feature reaches the live site when the user
 merges, and that review step is the point.
