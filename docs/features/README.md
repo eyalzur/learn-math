@@ -23,4 +23,5 @@ architecture, implementation notes, and tests.
 | הסבר בארבע שכבות — שיטה ומאונך | 🟢 done | [status](./clearer-explanations/status.md) |
 | ציורים לשאר הנושאים | 🟡 גל א׳ נפרס · גל ב׳ (5 צורות נותרות) `206/206` עוברות, ממתין ל-PR | [status](./more-diagrams/status.md) |
 | שיעור על סגנון תרגיל | 🟢 done — גל א׳ (מיקה) מוזג | [status](./style-lessons/status.md) |
+| כרטיס סגנון — רק כותרת | 🟡 `182/182` עוברות, ממתין ל-PR | [status](./style-card-title-only/status.md) |
 | ספירה לאחור למעבר לשאלה הבאה | 🟢 done — ממתין למיזוג | [status](./countdown-next/status.md) |

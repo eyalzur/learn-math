@@ -131,9 +131,12 @@ docs/features/    מסמך לכל פיצ'ר. README.md הוא האינדקס
 | PR | מה | תלוי ב |
 |---|---|---|
 | [#35](https://github.com/eyalzur/learn-math/pull/35) | **פקודת `/status`** — סטטוס קצר בתחילת סשן | `main`. אינו נוגע ב-`src/`, ולכן לא נפרס לאתר |
-| [#36](https://github.com/eyalzur/learn-math/pull/36) | **ציורים גל ב׳** — שטח והיקף, פיתגורס, אחוזים, יחס, פונקציה קווית | `main`. `206/206` בדיקות עוברות |
+| [#37](https://github.com/eyalzur/learn-math/pull/37) | **כרטיס סגנון — רק כותרת** — הוסרו הדוגמה והמונה | `main`. `182/182` בדיקות עוברות. ראו "המתח" בגוף ה-PR |
 
-**מוזג היום (2026-08-15):** [#32](https://github.com/eyalzur/learn-math/pull/32) ציורים
+**מוזג היום (2026-08-18):** [#36](https://github.com/eyalzur/learn-math/pull/36) ציורים
+גל ב׳ — שטח והיקף, פיתגורס, אחוזים, יחס, פונקציה קווית. **באתר החי**.
+
+**מוזג קודם (2026-08-15):** [#32](https://github.com/eyalzur/learn-math/pull/32) ציורים
 גל א׳ · [#33](https://github.com/eyalzur/learn-math/pull/33) שיעור על סגנון תרגיל ·
 [#34](https://github.com/eyalzur/learn-math/pull/34) ספירה של חמש שניות. שלושתם
 **באתר החי**.

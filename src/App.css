@@ -1100,35 +1100,6 @@ button.secondary {
   color: var(--text-h);
 }
 
-/* The example is the label for a child who cannot read the title yet, so it is rendered
-   the way the practice screen renders a prompt — never as one mixed string. */
-.style-example {
-  display: block;
-  width: 100%;
-  padding: 8px 10px;
-  border-radius: 8px;
-  background: var(--code-bg);
-  font-size: 16px;
-  color: var(--text-h);
-}
-
-.style-example-text {
-  unicode-bidi: isolate;
-}
-
-.style-example-math {
-  display: inline-block;
-  direction: ltr;
-  unicode-bidi: isolate;
-  font-weight: 600;
-}
-
-.style-count {
-  font-size: 13px;
-  color: var(--text);
-  opacity: 0.8;
-}
-
 .style-speak {
   flex: 0 0 auto;
   width: 48px;
