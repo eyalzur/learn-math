@@ -6,7 +6,7 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
-| אבחון "סטייה של אחד" — מתחבר לשיטה | 🟡 מיושם, ממתין לעדכון בדיקות | [status](./offbyone-diagnosis-method/status.md) |
+| אבחון "סטייה של אחד" — מתחבר לשיטה | 🟢 `214/214` עוברות, ממתין ל-PR | [status](./offbyone-diagnosis-method/status.md) |
 | פיתגורס — מסבירים לפני שפותרים | 🟡 `183/183` עוברות, ממתין ל-PR | [status](./pythagoras-explain-first/status.md) |
 | ניסוח ברור לשאלות הנחה באחוזים | 🟢 done | [status](./percent-discount-wording/status.md) |
 | הודעת עידוד לציון מושלם | 🟢 done | [status](./perfect-score-message/status.md) |

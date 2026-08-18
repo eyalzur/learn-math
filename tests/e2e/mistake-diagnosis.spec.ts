@@ -220,25 +220,53 @@ test("a correct answer behaves exactly as before — no diagnosis, no conversati
  * "רק אחד היה חסר" about an answer that had one too many.
  */
 
-test("answering one too many is not treated as answering one too few", async ({ page }) => {
+// No follow-up conversation for off-by-one any more (see
+// docs/features/offbyone-diagnosis-method): a question built from the wrong answer
+// ("כמה זה `89 − 1`?") was reported as unrelated and unteaching. The screen now goes
+// straight from the headline to the standard "how to solve" explanation, which already
+// opens with the general rule and then the original question's own numbers.
+
+test("answering one too many is not treated as answering one too few, and explains immediately", async ({
+  page,
+}) => {
   // "איזה מספר בא אחרי 12?" — the answer is 13, and 14 overshoots it.
   await answer(page, "14");
 
   const said = await page.locator(".diagnosis").innerText();
   expect(said, "an answer that overshot is called short").not.toContain("חסר");
+  expect(said, "an answer that overshot says so").toContain("יותר מדי");
 
-  // The small question has to walk toward the answer, so `13` — the number wanted all
-  // along — is the right answer to it. The shipped version asked for `15`.
-  await answerFollowUp(page, "13");
-  await expect(page.locator(".followup-reply")).toContainText("יפה");
+  // No conversation box at all — straight to the reveal.
+  await expect(page.locator(".followup")).toHaveCount(0);
+  await expect(page.locator(".feedback.wrong")).toContainText("13");
+  await expect(page.locator(".explanation")).toBeVisible();
 });
 
-test("answering one too few still reads as one too few", async ({ page }) => {
+test("answering one too few still reads as one too few, and explains immediately", async ({
+  page,
+}) => {
   await answer(page, "12");
 
   await expect(page.locator(".diagnosis")).toContainText("חסר");
-  await answerFollowUp(page, "13");
-  await expect(page.locator(".followup-reply")).toContainText("חסר");
+  await expect(page.locator(".followup")).toHaveCount(0);
+  await expect(page.locator(".feedback.wrong")).toContainText("13");
+  await expect(page.locator(".explanation")).toBeVisible();
+});
+
+test("the explanation after an off-by-one mistake comes from the original question, not the wrong answer", async ({
+  page,
+}) => {
+  // The reported bug exactly: a follow-up built from the wrong answer as if it were a
+  // fresh, unrelated fact. What must hold instead: the question's own numbers (12, and
+  // the correct answer 13) are right there in what gets shown, and the rule that explains
+  // them is stated first — the same "general rule, then this question's numbers" shape
+  // every other explanation in the app already has.
+  await answer(page, "14");
+
+  const explanation = await page.locator(".explanation").innerText();
+  expect(explanation).toContain("12");
+  expect(explanation).toContain("13");
+  expect(explanation).toContain("אחרי כל מספר בא המספר שגדול ממנו באחד");
 });
 
 // -------------------------------------------------- the digits are right, the point is not
@@ -417,9 +445,12 @@ test.describe("without the browser", () => {
     expect(diagnose(reported, reported.answer - 1)).toBeNull();
 
     // And it is a rule, not a patch on one question: wherever off-by-one still speaks, the
-    // way to the answer has to be counting or a bare sum.
+    // way to the answer has to be counting or a bare sum. Two ids now (see
+    // docs/features/offbyone-diagnosis-method) — a sequence question and a bare sum are
+    // taught by different methods, so they are two patterns, not one generic guess.
+    const isOffByOne = (id?: string) => id === "offByOneSequence" || id === "offByOneSum";
     const speaks = all.filter(
-      (q) => diagnose(q, q.answer + 1)?.id === "offByOne" || diagnose(q, q.answer - 1)?.id === "offByOne",
+      (q) => isOffByOne(diagnose(q, q.answer + 1)?.id) || isOffByOne(diagnose(q, q.answer - 1)?.id),
     );
     expect(speaks.length, "off-by-one went silent everywhere").toBeGreaterThan(0);
     for (const q of speaks) {
@@ -430,22 +461,30 @@ test.describe("without the browser", () => {
     }
   });
 
-  test("the small question walks toward the answer, never away from it", async () => {
+  test("off-by-one never carries a follow-up — the explanation is shown directly instead", async () => {
+    // This used to check that the follow-up question walked toward the answer, never away
+    // from it (overshooting used to be told to add one more). There is no follow-up left
+    // to walk anywhere now — off-by-one reuses the standard explanation instead of asking
+    // a question built from the wrong answer (see
+    // docs/features/offbyone-diagnosis-method/product-spec.md). What still needs to hold,
+    // for both new patterns, is that neither one ever sets `followUp` at all.
     const all = grades.flatMap((g) =>
       g.topicSets.flatMap((t) => t.levels.flatMap((l) => l.questions)),
     );
 
-    // Whichever side the student landed on, the number the follow-up asks for is the one
-    // the original question wanted. Overshooting used to be told to add one more.
+    let checked = 0;
     for (const q of all) {
       for (const given of [q.answer - 1, q.answer + 1]) {
         const found = diagnose(q, given);
-        if (found?.id !== "offByOne") continue;
-        expect(found.answer, `"${q.prompt}" answered ${given} leads to ${found.answer}`).toBe(
-          q.answer,
-        );
+        if (found?.id !== "offByOneSequence" && found?.id !== "offByOneSum") continue;
+        checked++;
+        expect(
+          found.followUp,
+          `"${q.prompt}" answered ${given} still carries a follow-up`,
+        ).toBeUndefined();
       }
     }
+    expect(checked, "off-by-one never fired, so this checked nothing").toBeGreaterThan(0);
   });
 
   test("an answer nothing describes is left alone", async () => {
