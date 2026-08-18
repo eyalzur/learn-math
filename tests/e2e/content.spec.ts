@@ -13,6 +13,7 @@ import { percentStrip } from "../../src/data/percentStrip";
 import { ratioStrips } from "../../src/data/ratioStrips";
 import { linearGraph } from "../../src/data/linearGraph";
 import { STYLE_META, stylesOf, hasStyleLessons } from "../../src/data/style";
+import { generateAdd100Question } from "../../src/data/adaptiveAdd100";
 
 /**
  * Content correctness, checked against the data rather than through the browser.
@@ -870,4 +871,90 @@ test("review status is decided for every topic", () => {
       ).toBe("boolean");
     }
   }
+});
+
+// ---------------------------------------------- runtime-generated questions (adaptive)
+
+/**
+ * `RULES` above only ever sees the static `grades` tree, so a question built at runtime
+ * by `generateAdd100Question` (see docs/features/adaptive-difficulty) is invisible to
+ * every check above no matter how wrong it is — the same hint/explanation/analogy rules
+ * just never run on it. This is the check that closes that gap: the same `RULES`, run
+ * against a large, deterministic sample of generated questions instead of the written
+ * ones. A seeded RNG keeps the sample and any failure reproducible.
+ */
+function seededRng(seed: number): () => number {
+  let state = seed >>> 0;
+  return () => {
+    state |= 0;
+    state = (state + 0x6d2b79f5) | 0;
+    let t = Math.imul(state ^ (state >>> 15), 1 | state);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+test("every generated חיבור עד 100 question passes every content rule, across the whole difficulty range", () => {
+  const rng = seededRng(42);
+  const samplesPerDifficulty = 200;
+  const violations: string[] = [];
+  const outOfRange: string[] = [];
+  const wrongAnswer: string[] = [];
+  const badPrompt: string[] = [];
+
+  for (let difficulty = 1; difficulty <= 5; difficulty++) {
+    for (let i = 0; i < samplesPerDifficulty; i++) {
+      const q = generateAdd100Question(difficulty, rng);
+
+      for (const rule of RULES) {
+        const problem = rule.check(q, "2");
+        if (problem) violations.push(`${q.id} (difficulty ${difficulty}) — ${rule.name}: ${problem}`);
+      }
+
+      const m = q.prompt.trim().match(/^(\d+)\s*\+\s*(\d+)$/);
+      if (!m) {
+        badPrompt.push(`${q.id} — "${q.prompt}" is not a bare addition`);
+        continue;
+      }
+      const [a, b] = [Number(m[1]), Number(m[2])];
+      if (a + b !== q.answer) wrongAnswer.push(`${q.id} — "${q.prompt}" answer is ${q.answer}, not ${a + b}`);
+      if (q.answer > 100 || q.answer < 0) outOfRange.push(`${q.id} — "${q.prompt}" = ${q.answer} is outside 0-100`);
+    }
+  }
+
+  expect(badPrompt, `\n${badPrompt.join("\n")}\n`).toEqual([]);
+  expect(wrongAnswer, `\n${wrongAnswer.join("\n")}\n`).toEqual([]);
+  expect(outOfRange, `\n${outOfRange.join("\n")}\n`).toEqual([]);
+  expect(violations, `\n${violations.join("\n")}\n`).toEqual([]);
+});
+
+test("a generated question's 'X זה Y עשרות ו-Z יחידה/יחידות' hint stays singular/plural-correct", () => {
+  // The exact mistake the hand-written questions had to get right first (see
+  // docs/features/mika-grade2-content/tests.md, "סבב שני"): "יחידה" only when the count
+  // named right next to it is really 1, never "1 יחידות".
+  //
+  // Scoped to this one sentence shape on purpose. A hint like "`4`+`3` עשרות, ו-`7`+`1`
+  // יחידות" also contains a literal `1`, but it is naming the units *place* for a sum of
+  // two numbers, not counting a single item — "יחידות" is correct there regardless of
+  // either addend's value, and is not the pattern this check is about.
+  const rng = seededRng(7);
+  const wrong: string[] = [];
+  for (let difficulty = 1; difficulty <= 5; difficulty++) {
+    for (let i = 0; i < 200; i++) {
+      const q = generateAdd100Question(difficulty, rng);
+      for (const hint of q.hints) {
+        const m = hint.match(/זה\s*`\d+`\s*עשרות ו-`(\d+)`\s*(יחידה|יחידות)\b/);
+        if (!m) continue;
+        const [, count, word] = m;
+        const shouldBeSingular = count === "1";
+        if (shouldBeSingular && word !== "יחידה") {
+          wrong.push(`${q.id} — "1" paired with plural "${word}": "${hint}"`);
+        }
+        if (!shouldBeSingular && word !== "יחידות") {
+          wrong.push(`${q.id} — "${count}" paired with singular "${word}": "${hint}"`);
+        }
+      }
+    }
+  }
+  expect(wrong, `\n${wrong.join("\n")}\n`).toEqual([]);
 });
