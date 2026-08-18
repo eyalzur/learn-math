@@ -1,5 +1,13 @@
 import type { StyledQuestion, Topic } from "./curriculum";
 import { level } from "./level";
+import {
+  generateAdd100Question,
+  nextAdd100Difficulty,
+  ADD100_MIN_DIFFICULTY,
+  ADD100_MAX_DIFFICULTY,
+  ADD100_INITIAL_DIFFICULTY,
+  ADD100_QUESTION_COUNT,
+} from "./adaptiveAdd100";
 
 /**
  * Grade 2 — Mika's step up from grade 1, which topped out at 20 with no number above it
@@ -25,6 +33,17 @@ export const grade2Topics: Topic[] = [
     id: "add100",
     title: "חיבור עד 100",
     reviewed: true,
+    // Pilot: questions below are the ones a child would meet if this topic still worked
+    // by picking a level — they are not deleted, only no longer the entry point. See
+    // docs/features/adaptive-difficulty/architecture.md for why they stay.
+    adaptive: {
+      generate: generateAdd100Question,
+      minDifficulty: ADD100_MIN_DIFFICULTY,
+      maxDifficulty: ADD100_MAX_DIFFICULTY,
+      initialDifficulty: ADD100_INITIAL_DIFFICULTY,
+      nextDifficulty: nextAdd100Difficulty,
+      questionCount: ADD100_QUESTION_COUNT,
+    },
     levels: [
       level("easy", [
         { id: "g2-add100-e1", topic: "חיבור עד 100", style: "add100", prompt: "23 + 4", answer: 27, hints: ["מחברים עשרות עם עשרות, ויחידות עם יחידות", "`23` זה `2` עשרות ו-`3` יחידות. מוסיפים `4` ליחידות"] as const, steps: [{ label: "מחברים את היחידות:", math: "3 + 4 = 7" }, { label: "העשרות נשארות כמו שהן:", math: "20 + 7 = 27" }], analogy: "היו לך 23 מדבקות וקיבלת עוד 4" },

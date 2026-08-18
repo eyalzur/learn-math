@@ -28,4 +28,5 @@ architecture, implementation notes, and tests.
 | שיעור על סגנון תרגיל | 🟢 done — גל א׳ (מיקה) מוזג | [status](./style-lessons/status.md) |
 | כרטיס סגנון — רק כותרת | 🟢 done | [status](./style-card-title-only/status.md) |
 | ספירה לאחור למעבר לשאלה הבאה | 🟢 done — ממתין למיזוג | [status](./countdown-next/status.md) |
-| תוכן כיתה ב׳ למיקה | 🟡 `213/213` עוברות, PR נפתח | [status](./mika-grade2-content/status.md) |
+| תוכן כיתה ב׳ למיקה | 🟢 done | [status](./mika-grade2-content/status.md) |
+| קושי מסתגל — תרגילים מטמפלייט | 🟢 מוכן, ממתין ל-PR | [status](./adaptive-difficulty/status.md) |

@@ -8,7 +8,7 @@ import { History } from "./components/History";
 import { Practice } from "./components/Practice";
 import { Result } from "./components/Result";
 import { students, availableGrades } from "./data/curriculum";
-import type { Student, Topic } from "./data/curriculum";
+import type { Student, Topic, Question } from "./data/curriculum";
 import type { Lesson } from "./data/style";
 import { hasStyleLessons, stylesOf } from "./data/style";
 import { speak, speechParts } from "./data/speech";
@@ -83,7 +83,20 @@ type Screen =
  */
 function insideTopic(topic: Topic | null): Screen {
   if (topic === null) return { name: "home" };
+  // No level screen was ever shown on the way in for an adaptive topic, so there is none
+  // to land back on — leaving practice goes straight to the topics list, same as design.md
+  // describes for the entry direction too.
+  if (topic.adaptive) return { name: "home" };
   return hasStyleLessons(topic) ? { name: "styles", topic } : { name: "levels", topic };
+}
+
+/** A fresh set of questions at the topic's starting difficulty, one per question count. */
+function freshAdaptiveSession(topic: Topic & { adaptive: NonNullable<Topic["adaptive"]> }) {
+  const { adaptive } = topic;
+  const questions = Array.from({ length: adaptive.questionCount }, () =>
+    adaptive.generate(adaptive.initialDifficulty),
+  );
+  return { difficulty: adaptive.initialDifficulty, streak: 0, answeredCount: 0, questions };
 }
 
 function App() {
@@ -100,6 +113,19 @@ function App() {
   });
   /** The read-aloud setting is stored, not held in state; this forces a re-read of it. */
   const [, setReadAloudTick] = useState(0);
+
+  /** Live state for a topic's runtime-generated questions — `null` outside one. Not part
+   *  of `Screen`, for the same reason `gradeId` isn't: the questions for an adaptive
+   *  lesson change after every answer, which `screen.practice.lesson` (a snapshot) cannot
+   *  do without becoming stale the moment the array is replaced elsewhere. `screen` still
+   *  carries a `lesson` for an adaptive topic so its shape doesn't have to fork — the
+   *  practice screen below just prefers this over it when both exist. */
+  const [adaptiveSession, setAdaptiveSession] = useState<{
+    difficulty: number;
+    streak: number;
+    answeredCount: number;
+    questions: Question[];
+  } | null>(null);
 
   function selectStudent(next: Student) {
     rememberStudent(next.id);
@@ -120,6 +146,38 @@ function App() {
   function chooseGrade(id: string | null) {
     if (student) rememberGradeId(student.id, id);
     setGradeId(id);
+  }
+
+  /** Entering a topic from its card. An adaptive topic skips the level screen entirely —
+   *  there is nothing to pick, so a fresh set of questions is generated immediately and
+   *  practice starts on it. Every other topic is unaffected: `insideTopic` alone decides
+   *  where it lands, exactly as before this existed. */
+  function enterTopic(topic: Topic) {
+    if (topic.adaptive) {
+      const session = freshAdaptiveSession(topic as Topic & { adaptive: NonNullable<Topic["adaptive"]> });
+      setAdaptiveSession(session);
+      setScreen({ name: "practice", topic, lesson: { title: topic.title, questions: session.questions } });
+      return;
+    }
+    setScreen(insideTopic(topic));
+  }
+
+  /** The one thing an adaptive lesson adds to answering a question: the next not-yet-seen
+   *  question is regenerated at the updated difficulty. Questions already shown are left
+   *  alone — only what the child hasn't reached yet ever changes under them. */
+  function handleAdaptiveAnswered(topic: Topic, correct: boolean) {
+    const adaptive = topic.adaptive;
+    if (!adaptive) return;
+    setAdaptiveSession((prev) => {
+      if (!prev) return prev;
+      const streak = correct ? prev.streak + 1 : 0;
+      const difficulty = adaptive.nextDifficulty(prev.difficulty, correct, streak);
+      const answeredCount = prev.answeredCount + 1;
+      const questions = prev.questions.map((q, i) =>
+        i >= answeredCount ? adaptive.generate(difficulty) : q,
+      );
+      return { difficulty, streak, answeredCount, questions };
+    });
   }
 
   if (student === null) {
@@ -164,11 +222,15 @@ function App() {
       // A level title or a style title — whichever was practised. History renders
       // "topic · this", so a style lesson reads "מספרים עד 20 · מה בא אחרי" with no
       // change to the stored shape and no migration of the records already sitting on
-      // the children's devices.
-      levelTitle: lesson.title,
+      // the children's devices. An adaptive topic has no "this" — there was never a level
+      // or style to name — so it stays empty and History omits the separator for it.
+      levelTitle: topic?.adaptive ? "" : lesson.title,
       correct: correctCount,
       total: lesson.questions.length,
     });
+    // No difficulty carries between visits — Out of Scope in product-spec.md — so the
+    // session ends the moment a practice does, win or leave.
+    setAdaptiveSession(null);
     setScreen({ name: "result", topic, lesson, correctCount });
   }
 
@@ -177,7 +239,7 @@ function App() {
       <TopicPicker
         gradeLabel={`שלום ${student.name}! · ${grade.label}`}
         topics={grade.topicSets}
-        onSelect={(topic) => setScreen(insideTopic(topic))}
+        onSelect={enterTopic}
         onBack={grades.length > 1 ? () => chooseGrade(null) : switchStudent}
         backLabel={grades.length > 1 ? "← חזרה" : "← החלף תלמיד"}
         onHistory={() => setScreen({ name: "history" })}
@@ -225,13 +287,23 @@ function App() {
   }
 
   if (screen.name === "practice") {
-    const { topic, lesson } = screen;
+    const { topic } = screen;
+    // The live, regenerating array takes over from the snapshot the screen was entered
+    // with — see `adaptiveSession`'s own comment for why the two exist side by side.
+    const lesson =
+      topic?.adaptive && adaptiveSession
+        ? { title: topic.title, questions: adaptiveSession.questions }
+        : screen.lesson;
     return (
       <Practice
         lesson={lesson}
         onFinish={(correctCount) => finish(topic, lesson, correctCount)}
-        onExit={() => setScreen(insideTopic(topic))}
+        onExit={() => {
+          setAdaptiveSession(null);
+          setScreen(insideTopic(topic));
+        }}
         readAloud={readAloud}
+        onAnswered={topic?.adaptive ? (correct) => handleAdaptiveAnswered(topic, correct) : undefined}
       />
     );
   }
@@ -242,7 +314,7 @@ function App() {
       <Result
         lesson={lesson}
         correctCount={correctCount}
-        onRetry={() => setScreen({ name: "practice", topic, lesson })}
+        onRetry={() => (topic?.adaptive ? enterTopic(topic) : setScreen({ name: "practice", topic, lesson }))}
         onHome={() => setScreen(insideTopic(topic))}
       />
     );
@@ -251,7 +323,7 @@ function App() {
   return <TopicPicker
     gradeLabel={grade.label}
     topics={grade.topicSets}
-    onSelect={(topic) => setScreen(insideTopic(topic))}
+    onSelect={enterTopic}
     onBack={grades.length > 1 ? () => chooseGrade(null) : switchStudent}
     backLabel={grades.length > 1 ? "← חזרה" : "← החלף תלמיד"}
     onHistory={() => setScreen({ name: "history" })}
