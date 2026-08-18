@@ -131,6 +131,15 @@ merging on their behalf quietly removes it. Telling the user the PR is open is a
 ask — run the `review-ready` skill before writing that message rather than just pasting
 the link; a bare link is exactly the failure mode `review-ready` exists to stop.
 
+## Merging the PR
+
+Only once the user has **explicitly** approved merging this specific PR — see
+`principles.md`. When that happens, run the `merge-pr` skill rather than calling the
+GitHub merge tool directly: it updates the feature's `status.md`, its
+`docs/features/README.md` row, and (when relevant) `CLAUDE.md`'s "מה פתוח" table to say
+"done — מוזג" in the same commit that merges, instead of leaving that for someone to
+notice is wrong weeks later.
+
 ## If the PR needs another pass
 
 Review comments or a failing check mean more commits on the same branch — never a new
