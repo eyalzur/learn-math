@@ -9,10 +9,12 @@
 - [x] Product spec — product-manager — 2026-08-18
 - [x] Design — designer — 2026-08-18
 - [x] Architecture — tech-lead — 2026-08-18
-- [ ] Implementation — developer — not started
+- [x] Implementation — developer — 2026-08-18
 - [ ] Tests — qa — not started
 
-**Current phase:** developer
+**Current phase:** qa — `tests/e2e/mistake-diagnosis.spec.ts` צריך עדכון (שלוש
+בדיקות מתייחסות ל-`offByOne`/`.followup-input` שכבר לא קיימים לדפוס הזה — צפוי,
+ראו architecture.md Implementation Notes)
 **Branch:** `fix/offbyone-diagnosis-method`
 **PR:** not opened yet
 

@@ -183,3 +183,31 @@ property שמוודאת את זה במפורש על פני כל 330+ השאלו�
 
 ## Open Questions
 None.
+
+## Implementation Notes
+
+נבנה בדיוק לפי המסמך הזה, בלי סטייה. `Diagnosis.followUp` הוחלף כמתוכנן; חמשת
+הדפוסים הקיימים עברו ל-`followUp: {...}` בלי שינוי ניסוח או התנהגות. `isCounted()`
+התפצלה ל-`isSequenceQuestion`/`isSumQuestion`, ושני הדפוסים החדשים (`offByOneSequence`,
+`offByOneSum`) מחזירים `{ id, headline }` בלבד — ה-`headline` נשאר בדיוק שתי המחרוזות
+הקיימות ("כמעט! חסר בדיוק אחד" / "כמעט! זה אחד יותר מדי"), כפי ש-design.md קבע.
+
+ב-`Practice.tsx`: `revealed`, בלוק ה-`.followup`, ו-`checkFollowUp()` קיבלו את הבדיקה
+הנוספת על `followUp` בדיוק כפי שתואר. תוספת ההקראה של `diagnosis.headline` לכפתור
+ה-"🔊 הקריאו לי את ההסבר" (סעיף Edge Cases) יושמה כמתוכנן — כפתור אחד קורא הכל ברצף
+עבור שני הדפוסים החדשים.
+
+`npx tsc -b` נקי (אין אף `any`/type assertion חדש), `npm run build`/`npm run lint`
+נקיים בגרסה `1.16.1` (`bump:fix`, כי זה `fix/<slug>`).
+
+**כצפוי לפי Risks/Tradeoffs**, `tests/e2e/mistake-diagnosis.spec.ts` נכשל בשלוש
+בדיקות (לא נגעתי בו, כמתוכנן — עבודת QA):
+- שתיים ("answering one too many/few...") מחפשות `.followup-input` שכבר לא מתרנדר
+  לדפוס הזה — טיים-אאוט של 30 שניות, לא כישלון לוגי.
+- אחת ("nearness alone is not a diagnosis...") בודקת `id === "offByOne"` — שם שכבר
+  לא קיים.
+שאר `20` הבדיקות בקובץ עברו בלי נגיעה, כולל כל מה שנוגע בחמשת הדפוסים האחרים —
+מאשר שהעטיפה ב-`followUp` לא שינתה שום התנהגות קיימת.
+
+ריצה מלאה של `npm run test:e2e` לא בוצעה בשלב הזה במכוון — הכישלון בקובץ הזה צפוי
+ומתועד, ו-QA היא זו שתריץ את הסוויטה המלאה אחרי שהיא מעדכנת את הבדיקות.
