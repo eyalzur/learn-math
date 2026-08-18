@@ -7,6 +7,11 @@ import { verticalSum } from "../../src/data/verticalSum";
 import { numberLine } from "../../src/data/numberLine";
 import { tenFrame } from "../../src/data/tenFrame";
 import { twentyStrip } from "../../src/data/twentyStrip";
+import { geometryShape } from "../../src/data/geometryShape";
+import { pythagorasTriangle } from "../../src/data/pythagorasTriangle";
+import { percentStrip } from "../../src/data/percentStrip";
+import { ratioStrips } from "../../src/data/ratioStrips";
+import { linearGraph } from "../../src/data/linearGraph";
 import { STYLE_META, stylesOf, hasStyleLessons } from "../../src/data/style";
 
 /**
@@ -584,6 +589,147 @@ test("no line or box ever disagrees with its own question", () => {
       if (strip.filled + strip.empty !== 20) wrong.push(`${q.id}: the strip is not twenty`);
       if (strip.empty !== q.answer) wrong.push(`${q.id}: the empty circles are not the answer`);
       if (strip.filled < 0 || strip.filled >= 20) wrong.push(`${q.id}: the strip starts nowhere`);
+    }
+  }
+  expect(wrong, `\n${wrong.join("\n")}\n`).toEqual([]);
+});
+
+test("thirty area/perimeter questions draw their shape", () => {
+  // The spec promises full coverage for this topic — every question gets a rectangle,
+  // square, triangle or circle.
+  const all = everyQuestion().filter(({ topic }) => topic === "שטח והיקף");
+  expect(all.length, "the topic itself changed size").toBe(30);
+  const missing = all.filter(({ q }) => geometryShape(q) === null).map(({ q }) => q.id);
+  expect(missing, `\n${missing.join("\n")}\n`).toEqual([]);
+});
+
+test("twenty-seven Pythagoras questions draw their triangle", () => {
+  // Eligibility recomputed from the two things the spec excludes, independently of the
+  // module: a square root given as an approximation right in the prompt, and a "shortcut
+  // across the diagonal" question whose answer is a difference between two paths rather
+  // than a side of the triangle.
+  const excluded = (prompt: string) => /בערך/.test(prompt) || /קצר יותר/.test(prompt);
+  const all = everyQuestion().filter(({ topic }) => topic === "משפט פיתגורס");
+  expect(all.length, "the topic itself changed size").toBe(30);
+
+  const disagreements = all
+    .filter(({ q }) => (pythagorasTriangle(q) !== null) === excluded(q.prompt))
+    .map(({ q }) => `${q.id} — "${q.prompt}"`);
+  expect(disagreements, `\n${disagreements.join("\n")}\n`).toEqual([]);
+
+  const covered = all.filter(({ q }) => pythagorasTriangle(q) !== null);
+  expect(covered.length, "Pythagoras coverage moved off the 27 the spec promises").toBe(27);
+});
+
+test("thirty percent questions draw their strip", () => {
+  const all = everyQuestion().filter(({ topic }) => topic === "אחוזים");
+  expect(all.length, "the topic itself changed size").toBe(30);
+  const missing = all.filter(({ q }) => percentStrip(q) === null).map(({ q }) => q.id);
+  expect(missing, `\n${missing.join("\n")}\n`).toEqual([]);
+});
+
+test("twenty-seven ratio questions draw their two strips", () => {
+  // Excluded: an inverse relationship (more workers finish sooner — two strips would say
+  // "more is more" and lie about it), and a three-part ratio, which is not two strips.
+  // "בונים גדר" is the phrase unique to the two inverse-work questions. The three-part
+  // ratio is the only prompt with two "ל-N" terms right after "היחס הוא" — a recipe
+  // question also has two "ל-N" occurrences, but scattered through the sentence rather
+  // than back to back in the ratio statement itself.
+  const excluded = (prompt: string) =>
+    /בונים גדר/.test(prompt) || /היחס הוא \d+ ל-\d+ ל-\d+/.test(prompt);
+  const all = everyQuestion().filter(({ topic }) => topic === "יחס ופרופורציה");
+  expect(all.length, "the topic itself changed size").toBe(30);
+
+  const disagreements = all
+    .filter(({ q }) => (ratioStrips(q) !== null) === excluded(q.prompt))
+    .map(({ q }) => `${q.id} — "${q.prompt}"`);
+  expect(disagreements, `\n${disagreements.join("\n")}\n`).toEqual([]);
+
+  const covered = all.filter(({ q }) => ratioStrips(q) !== null);
+  expect(covered.length, "ratio coverage moved off the 27 the spec promises").toBe(27);
+});
+
+test("thirty linear-function questions draw their graph", () => {
+  const all = everyQuestion().filter(({ topic }) => topic === "פונקציה קווית");
+  expect(all.length, "the topic itself changed size").toBe(30);
+  const missing = all.filter(({ q }) => linearGraph(q) === null).map(({ q }) => q.id);
+  expect(missing, `\n${missing.join("\n")}\n`).toEqual([]);
+});
+
+test("none of the five new shapes ever disagrees with its own question", () => {
+  const wrong: string[] = [];
+  for (const { q } of everyQuestion()) {
+    const geo = geometryShape(q);
+    if (geo) {
+      const side =
+        geo.kind === "rectangle"
+          ? geo.unknown === "length"
+            ? geo.length
+            : geo.unknown === "width"
+              ? geo.width
+              : null
+          : geo.kind === "triangle" && geo.unknown === "height"
+            ? geo.height
+            : null;
+      const wholeShape =
+        geo.kind === "rectangle"
+          ? geo.measure === "area"
+            ? geo.length * geo.width
+            : 2 * (geo.length + geo.width)
+          : geo.kind === "square"
+            ? geo.measure === "area"
+              ? geo.side * geo.side
+              : geo.side * 4
+            : geo.kind === "triangle"
+              ? geo.measure === "area"
+                ? (geo.base * geo.height) / 2
+                : geo.base * 3
+              : geo.measure === "area"
+                ? geo.pi * geo.radius * geo.radius
+                : 2 * geo.pi * geo.radius;
+      const expected = side ?? wholeShape;
+      if (expected !== q.answer) wrong.push(`${q.id}: the geometry shape does not answer what was asked`);
+    }
+
+    const py = pythagorasTriangle(q);
+    if (py) {
+      const hyp = py.hyp ?? Math.sqrt(py.legA ** 2 + py.legB ** 2);
+      if (Math.abs(py.legA ** 2 + py.legB ** 2 - hyp ** 2) > 0.01) {
+        wrong.push(`${q.id}: the triangle does not satisfy a² + b² = c²`);
+      }
+      const expected =
+        py.unknown === "hyp" ? py.hyp : py.unknown === "legB" ? py.legB : py.legA;
+      if (expected !== q.answer) wrong.push(`${q.id}: the triangle does not answer what was asked`);
+    }
+
+    const pc = percentStrip(q);
+    if (pc) {
+      const expected =
+        pc.extra !== undefined
+          ? pc.base + pc.extra
+          : /כמה אחוזים/.test(q.prompt)
+            ? (pc.filled * 100) / pc.base
+            : /כמה משלמים|כמה שקלים שילמת/.test(q.prompt)
+              ? pc.base - pc.filled
+              : pc.filled;
+      if (expected !== q.answer) wrong.push(`${q.id}: the strip does not answer what was asked`);
+    }
+
+    const rs = ratioStrips(q);
+    if (rs) {
+      if (rs.valueA !== rs.ratioA * rs.unit || rs.valueB !== rs.ratioB * rs.unit) {
+        wrong.push(`${q.id}: the two strips are not at the same unit size`);
+      }
+      const candidates = [rs.valueA, rs.valueB, Math.max(rs.valueA, rs.valueB), Math.min(rs.valueA, rs.valueB)];
+      if (!candidates.includes(q.answer)) wrong.push(`${q.id}: neither strip's value is the answer`);
+    }
+
+    const lg = linearGraph(q);
+    if (lg) {
+      const onEveryLine = lg.lines.every(
+        (l) => Math.abs(l.slope * lg.point.x + l.intercept - lg.point.y) < 0.001,
+      );
+      if (!onEveryLine) wrong.push(`${q.id}: the marked point is not on the line`);
     }
   }
   expect(wrong, `\n${wrong.join("\n")}\n`).toEqual([]);
