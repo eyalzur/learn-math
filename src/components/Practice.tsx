@@ -202,9 +202,12 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
    * Derived rather than stored: it is already fully determined by how the conversation
    * ended, and a second copy of the same fact is how a screen starts contradicting
    * itself. With no diagnosis there is no conversation to wait for, so it is true at once
-   * — that branch is the untouched, pre-existing screen.
+   * — that branch is the untouched, pre-existing screen. Same for a diagnosis with no
+   * `followUp` (the off-by-one patterns): there is no conversation to wait for either, so
+   * this reveals immediately instead of gating on an interaction that never happens.
    */
-  const revealed = diagnosis === null || followUpResult !== null || askedToSee;
+  const revealed =
+    diagnosis === null || diagnosis.followUp === undefined || followUpResult !== null || askedToSee;
 
   /**
    * The question, plus any hints already opened, as spoken units.
@@ -245,8 +248,8 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
   }
 
   function checkFollowUp() {
-    if (followUpInput.trim() === "" || diagnosis === null || followUpResult !== null) return;
-    setFollowUpResult(Number(followUpInput) === diagnosis.answer ? "right" : "wrong");
+    if (followUpInput.trim() === "" || diagnosis?.followUp === undefined || followUpResult !== null) return;
+    setFollowUpResult(Number(followUpInput) === diagnosis.followUp.answer ? "right" : "wrong");
   }
 
   function next() {
@@ -288,8 +291,12 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
       box === "question"
         ? questionParts()
         : box === "diagnosis"
-          ? diagnosis && speechParts([diagnosis.headline, diagnosis.question])
+          ? diagnosis?.followUp && speechParts([diagnosis.headline, diagnosis.followUp.question])
           : explanation && [
+            // No conversation box exists to read the headline for an off-by-one
+            // diagnosis, so this button says it instead — an unreadable diagnosis is
+            // exactly as good as one that was never said (see design.md, Accessibility).
+            ...(diagnosis && diagnosis.followUp === undefined ? speechParts([diagnosis.headline]) : []),
             ...(method ? speechParts([method]) : []),
             ...(diagram ? speechParts([diagram.caption]) : []),
             ...(frame ? speechParts([frame.caption]) : []),
@@ -382,7 +389,7 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
           {segmented(diagnosis.headline)}
         </p>
       )}
-      {feedback === "wrong" && diagnosis !== null && (
+      {feedback === "wrong" && diagnosis !== null && diagnosis.followUp !== undefined && (
         <div className="followup">
           <div className="followup-header">
             <h3>בואי נבדוק משהו</h3>
@@ -399,7 +406,7 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
               </button>
             )}
           </div>
-          <p className="followup-question">{segmented(diagnosis.question)}</p>
+          <p className="followup-question">{segmented(diagnosis.followUp.question)}</p>
           <div className="followup-row">
             <input
               type="number"
@@ -413,7 +420,7 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
               disabled={followUpResult !== null}
               autoFocus
               className="followup-input"
-              aria-label={diagnosis.question}
+              aria-label={diagnosis.followUp.question}
             />
             {followUpResult === null && (
               <button type="button" onClick={checkFollowUp} disabled={followUpInput.trim() === ""}>
@@ -423,7 +430,7 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
           </div>
           {followUpResult !== null && (
             <p className={`followup-reply ${followUpResult}`} aria-live="polite">
-              {segmented(followUpResult === "right" ? diagnosis.onRight : diagnosis.onWrong)}
+              {segmented(followUpResult === "right" ? diagnosis.followUp.onRight : diagnosis.followUp.onWrong)}
             </p>
           )}
           {!revealed && (
