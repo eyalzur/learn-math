@@ -27,7 +27,8 @@ export function History({ student, onBack }: HistoryProps) {
           {records.map((record, i) => (
             <li key={i} className="history-row">
               <span className="history-what">
-                {record.topicTitle ? `${record.topicTitle} · ` : ""}
+                {record.topicTitle}
+                {record.topicTitle && record.levelTitle ? " · " : ""}
                 {record.levelTitle}
               </span>
               <span className="history-score">
