@@ -16,14 +16,29 @@ import { bareExpression } from "./expression";
  */
 export interface Diagnosis {
   /** Which pattern matched. Not shown — it is what tests and bug reports can name. */
-  id: "sign" | "operation" | "decimalPoint" | "reversed" | "tens" | "offByOne";
+  id:
+    | "sign"
+    | "operation"
+    | "decimalPoint"
+    | "reversed"
+    | "tens"
+    | "offByOneSequence"
+    | "offByOneSum";
   /** Replaces the "wrong, the answer is X" line. */
   headline: string;
-  /** One small question isolating the misunderstanding. Never the original question. */
-  question: string;
-  answer: number;
-  onRight: string;
-  onWrong: string;
+  /**
+   * The interactive follow-up — one small question isolating the misunderstanding, never
+   * the original question. Present for every pattern except the two off-by-one ones,
+   * which reuse the standard "how to solve" explanation instead of asking anything (see
+   * docs/features/offbyone-diagnosis-method): a nested object rather than four separate
+   * optional fields, so "a question with no answer" cannot be represented at all.
+   */
+  followUp?: {
+    question: string;
+    answer: number;
+    onRight: string;
+    onWrong: string;
+  };
 }
 
 const isInteger = (n: number) => Number.isInteger(n);
@@ -35,21 +50,28 @@ function twoDigitInPrompt(prompt: string): number | null {
 }
 
 /**
- * Whether counting is how you get to this answer at all — stepping along the numbers, or a
- * sum small enough to reach on fingers.
+ * Whether counting along a sequence is how you get to this answer — "מה בא אחרי/לפני X".
  *
- * This is the guard on off-by-one, and it exists because distance of one is not by itself
- * evidence of anything. "כמה זה רבע מ-20" answered `6` is one away from `5` and is not a
- * counting slip in any sense: a child who cannot yet divide by four has not miscounted, and
- * being told "כמעט!" confirms a method she does not have.
+ * One half of the old `isCounted` guard, split so each counting method can be named on
+ * its own (see docs/features/offbyone-diagnosis-method). Distance of one is not by itself
+ * evidence of anything — "כמה זה רבע מ-20" answered `6` is one away from `5` and is not a
+ * counting slip in any sense: a child who cannot yet divide by four has not miscounted,
+ * and being told "כמעט!" confirms a method she does not have. Nothing about a decimal is
+ * counted either: "7.5 − 2.5" answered `6` is one away from `5`, but nobody counts back
+ * two and a half on their fingers.
  */
-function isCounted(question: Question): boolean {
-  // Nothing about a decimal is counted. "7.5 − 2.5" answered `6` is one away from `5`,
-  // and the app called it "כמעט! זה אחד יותר מדי" — but nobody counts back two and a
-  // half on their fingers, and the miss has nothing to do with counting. Reported from
-  // the live app, and the same failure the fraction case had: nearness is not evidence.
+function isSequenceQuestion(question: Question): boolean {
+  return Number.isInteger(question.answer) && /בא אחרי|בא לפני/.test(question.prompt);
+}
+
+/**
+ * Whether a small enough sum or difference is how you get to this answer — reachable on
+ * fingers, the other half of the old `isCounted` guard. Mutually exclusive with
+ * `isSequenceQuestion` in practice: every question in the app is either a Hebrew sentence
+ * asking what comes next, or a bare arithmetic expression, never both at once.
+ */
+function isSumQuestion(question: Question): boolean {
   if (!Number.isInteger(question.answer)) return false;
-  if (/בא אחרי|בא לפני/.test(question.prompt)) return true;
   const expr = bareExpression(question.prompt);
   return (
     expr !== null &&
@@ -100,10 +122,12 @@ const PATTERNS: Pattern[] = [
       // Written in logical order, never pre-flipped to "look right" in an RTL line.
       // Isolation puts it on screen correctly; hand-reversing it is how this bug returns.
       headline: "רגע — הסימן התהפך",
-      question: "כמה זה `-3 × 2`?",
-      answer: -6,
-      onRight: "נכון",
-      onWrong: "מינוס כפול פלוס נותן מינוס",
+      followUp: {
+        question: "כמה זה `-3 × 2`?",
+        answer: -6,
+        onRight: "נכון",
+        onWrong: "מינוס כפול פלוס נותן מינוס",
+      },
     };
   },
 
@@ -129,10 +153,12 @@ const PATTERNS: Pattern[] = [
     return {
       id: "operation",
       headline: added ? "רגע — נראה שחיסרת במקום לחבר" : "רגע — נראה שחיברת במקום לחסר",
-      question: added ? "כמה זה `2 + 3`?" : "כמה זה `5 − 3`?",
-      answer: added ? 5 : 2,
-      onRight: added ? "נכון, כאן מחברים" : "נכון, כאן מחסרים",
-      onWrong: added ? "זה `5`. כאן מחברים" : "זה `2`. כאן מחסרים",
+      followUp: {
+        question: added ? "כמה זה `2 + 3`?" : "כמה זה `5 − 3`?",
+        answer: added ? 5 : 2,
+        onRight: added ? "נכון, כאן מחברים" : "נכון, כאן מחסרים",
+        onWrong: added ? "זה `5`. כאן מחברים" : "זה `2`. כאן מחסרים",
+      },
     };
   },
 
@@ -182,14 +208,16 @@ const PATTERNS: Pattern[] = [
       headline: bothUnderOne
         ? `רגע — הספרות נכונות. אבל \`${expr.a}\` ו-\`${expr.b}\` שניהם קטנים מ-\`1\`, ולכן לא יכולים לתת \`${given}\``
         : `רגע — הספרות נכונות, אבל \`${given}\` ${tooBig ? "גדול" : "קטן"} פי \`${factor}\` מהתשובה`,
-      // Answerable by the child who just got it wrong — that is the whole bar. Asking
-      // her to estimate without computing demanded the very skill she was missing.
-      // Converting one shekel amount to agora is something she can simply do, and it
-      // is the place-value insight itself: forty agora are not forty shekels.
-      question: `\`${expr.a}\` שקל — כמה אגורות זה?`,
-      answer: firstInAgorot,
-      onRight: `נכון. והתשובה יוצאת \`${answerInAgorot}\` אגורות — כלומר \`${correct}\` שקל, לא \`${given}\``,
-      onWrong: `\`${firstInAgorot}\` אגורות. והתשובה יוצאת \`${answerInAgorot}\` אגורות — כלומר \`${correct}\` שקל`,
+      followUp: {
+        // Answerable by the child who just got it wrong — that is the whole bar. Asking
+        // her to estimate without computing demanded the very skill she was missing.
+        // Converting one shekel amount to agora is something she can simply do, and it
+        // is the place-value insight itself: forty agora are not forty shekels.
+        question: `\`${expr.a}\` שקל — כמה אגורות זה?`,
+        answer: firstInAgorot,
+        onRight: `נכון. והתשובה יוצאת \`${answerInAgorot}\` אגורות — כלומר \`${correct}\` שקל, לא \`${given}\``,
+        onWrong: `\`${firstInAgorot}\` אגורות. והתשובה יוצאת \`${answerInAgorot}\` אגורות — כלומר \`${correct}\` שקל`,
+      },
     };
   },
 
@@ -204,10 +232,12 @@ const PATTERNS: Pattern[] = [
     return {
       id: "reversed",
       headline: `רגע — כתבת \`${given}\`, אלו אותן ספרות בסדר הפוך`,
-      question: `מה גדול יותר, \`${correct}\` או \`${given}\`?`,
-      answer: Math.max(correct, given),
-      onRight: "נכון. הסדר של הספרות משנה",
-      onWrong: `\`${Math.max(correct, given)}\` גדול יותר. הסדר משנה`,
+      followUp: {
+        question: `מה גדול יותר, \`${correct}\` או \`${given}\`?`,
+        answer: Math.max(correct, given),
+        onRight: "נכון. הסדר של הספרות משנה",
+        onWrong: `\`${Math.max(correct, given)}\` גדול יותר. הסדר משנה`,
+      },
     };
   },
 
@@ -233,44 +263,62 @@ const PATTERNS: Pattern[] = [
     return {
       id: "tens",
       headline: `רגע — נראה שקראת \`${units}\` במקום \`${written}\``,
-      question: `כמה זה \`${written - units} + ${units}\`?`,
-      answer: written,
-      onRight: `בדיוק! זה \`${written}\`, לא \`${units}\``,
-      onWrong: `זה \`${written}\`. בואי נראה יחד`,
+      followUp: {
+        question: `כמה זה \`${written - units} + ${units}\`?`,
+        answer: written,
+        onRight: `בדיוק! זה \`${written}\`, לא \`${units}\``,
+        onWrong: `זה \`${written}\`. בואי נראה יחד`,
+      },
     };
   },
 
-  // 6. Off by one. Last, always. It is the only pattern that can land on a guess that
-  //    happened to fall nearby, so it may only speak once every structural pattern has
-  //    declined — never as the explanation for an answer that has a better one.
+  // 6/7. Off by one. Last, always. It is the only pair of patterns that can land on a
+  //    guess that happened to fall nearby, so they may only speak once every structural
+  //    pattern above has declined — never as the explanation for an answer that has a
+  //    better one.
   //
-  //    Two things narrow it, and both were learned from one screenshot of "כמה זה רבע
-  //    מ-20?" answered `6`:
+  //    Narrowed the same way the original single pattern was, learned from one screenshot
+  //    of "כמה זה רבע מ-20?" answered `6`: `isSequenceQuestion`/`isSumQuestion` keep this
+  //    to questions a counting slip can actually explain. Nearness is not evidence on its
+  //    own, and on a fraction question this pattern was speaking about a mistake that was
+  //    not there.
   //
-  //    `isCounted` keeps it to questions a counting slip can actually explain. Nearness is
-  //    not evidence on its own, and on a fraction question this pattern was speaking about
-  //    a mistake that was not there.
+  //    No `followUp` on either — see docs/features/offbyone-diagnosis-method. A follow-up
+  //    built from the wrong answer ("כמה זה `89 − 1`?") was reported as unrelated and
+  //    unteaching; the standard "how to solve" explanation already opens with the general
+  //    rule and then applies it to the real numbers of the missed question ("אחרי כל מספר
+  //    בא המספר שגדול ממנו באחד" → "`12 + 1 = 13`"), which is exactly what was asked for,
+  //    with nothing new to write. `Practice.tsx` reveals it immediately when `followUp` is
+  //    absent instead of waiting on a conversation that no longer exists.
   //
-  //    And direction is part of the mistake, not a detail of it. One too many and one too
-  //    few are different errors; the version that shipped assumed the answer was always
-  //    short, so a student who overshot was told to add another one — walked away from the
-  //    answer, and then told the one she had been missing was found.
+  //    Split in two because the method each teaches is different: counting one step along
+  //    a sequence is not the same method as redoing a whole addition or subtraction, so a
+  //    single generic pattern could not have named the right one — the split is what lets
+  //    each side of `isCounted`'s old guard keep its own identity in a bug report.
+  //
+  //    Direction is still part of the mistake, not a detail of it. One too many and one
+  //    too few are different errors, but neither needs stating in a follow-up question
+  //    anymore — the headline already names which one happened.
   (question, given) => {
     const correct = question.answer;
     if (!isInteger(correct) || !isInteger(given)) return null;
     if (Math.abs(given - correct) !== 1) return null;
-    if (!isCounted(question)) return null;
-
+    if (!isSequenceQuestion(question)) return null;
     const short = given < correct;
-    const wasMissing = short ? "רק אחד היה חסר" : "היה אחד יותר מדי";
     return {
-      id: "offByOne",
+      id: "offByOneSequence",
       headline: short ? "כמעט! חסר בדיוק אחד" : "כמעט! זה אחד יותר מדי",
-      // Written in logical order inside its own run, never hand-reversed for an RTL line.
-      question: `כמה זה \`${given} ${short ? "+" : "−"} 1\`?`,
-      answer: correct,
-      onRight: `יפה. ${wasMissing}`,
-      onWrong: `זה \`${correct}\`. ${wasMissing}`,
+    };
+  },
+  (question, given) => {
+    const correct = question.answer;
+    if (!isInteger(correct) || !isInteger(given)) return null;
+    if (Math.abs(given - correct) !== 1) return null;
+    if (!isSumQuestion(question)) return null;
+    const short = given < correct;
+    return {
+      id: "offByOneSum",
+      headline: short ? "כמעט! חסר בדיוק אחד" : "כמעט! זה אחד יותר מדי",
     };
   },
 ];
