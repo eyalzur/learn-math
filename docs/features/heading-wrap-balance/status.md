@@ -8,9 +8,10 @@
 - [x] Design — designer — 2026-08-18
 - [x] Architecture — tech-lead — 2026-08-18
 - [x] Implementation — developer — 2026-08-18
-- [ ] Tests — qa — not started
+- [x] Tests — qa — 2026-08-18
 
-**Current phase:** qa
+**Current phase:** done — `220/220` עוברות בריצה בודדת ונקייה, `build` ו-`lint`
+נקיים בגרסה `1.16.1`
 **Branch:** `fix/heading-wrap-balance`
 **PR:** not opened yet
 
