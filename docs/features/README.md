@@ -7,6 +7,7 @@ architecture, implementation notes, and tests.
 | Feature | Status | Details |
 |---|---|---|
 | פיתגורס — מסבירים לפני שפותרים | 🟡 `183/183` עוברות, ממתין ל-PR | [status](./pythagoras-explain-first/status.md) |
+| ניסוח ברור לשאלות הנחה באחוזים | 🟢 done | [status](./percent-discount-wording/status.md) |
 | הודעת עידוד לציון מושלם | 🟢 done | [status](./perfect-score-message/status.md) |
 | הסבר דרך פתרון אחרי טעות | 🔵 הוחלף על ידי "מורה שמסבירה" | [status](./mistake-explanation/status.md) |
 | משתמשים, סילבוס ורמות | 🟢 done | [status](./students-and-syllabus/status.md) |
@@ -22,6 +23,7 @@ architecture, implementation notes, and tests.
 | הקראת השאלה | 🟢 done | [status](./read-aloud-questions/status.md) |
 | ציור לשברים | 🟢 done | [status](./fraction-diagram/status.md) |
 | הסבר בארבע שכבות — שיטה ומאונך | 🟢 done | [status](./clearer-explanations/status.md) |
-| ציורים לשאר הנושאים | 🟡 גל א׳ נפרס · חמש צורות נותרו | [status](./more-diagrams/status.md) |
+| ציורים לשאר הנושאים | 🟢 done — גל א׳ וגל ב׳ שניהם באתר החי | [status](./more-diagrams/status.md) |
 | שיעור על סגנון תרגיל | 🟢 done — גל א׳ (מיקה) מוזג | [status](./style-lessons/status.md) |
+| כרטיס סגנון — רק כותרת | 🟢 done | [status](./style-card-title-only/status.md) |
 | ספירה לאחור למעבר לשאלה הבאה | 🟢 done — ממתין למיזוג | [status](./countdown-next/status.md) |

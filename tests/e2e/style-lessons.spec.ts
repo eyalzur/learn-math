@@ -35,7 +35,7 @@ test("a topic with several styles asks which style, not which level", async ({ p
   await expect(page.locator(".level-card"), "the level screen must not also appear").toHaveCount(
     0,
   );
-  await expect(page.locator(".subtitle")).toHaveText("על מה המורה לימד/ה היום?");
+  await expect(page.locator(".subtitle")).toHaveText("מה לומדים?");
 });
 
 test("a topic with one style is untouched and never shows the new screen", async ({ page }) => {
@@ -66,63 +66,32 @@ test("every one of Mika's topics lands somewhere, and never on both", async ({ p
 
 // ------------------------------------------------------------- what a card says
 
-test("each card shows how many questions the lesson holds, before entering it", async ({
-  page,
-}) => {
+test("each card shows only its title — no example, no question count", async ({ page }) => {
   await openTopic(page, MIKA, NUMBERS);
 
-  const counts = await page.locator(".style-count").allInnerTexts();
-  expect(counts).toEqual(["8 שאלות", "7 שאלות", "7 שאלות", "4 שאלות", "4 שאלות"]);
+  const titles = await page.locator(".style-title").allInnerTexts();
+  expect(titles).toEqual(["מה בא אחרי", "מה בא לפני", "מה גדול יותר", "מה נמצא באמצע", "מה קטן יותר"]);
+  await expect(page.locator(".style-example")).toHaveCount(0);
+  await expect(page.locator(".style-count")).toHaveCount(0);
 });
 
 test("a short lesson is shown as a lesson, not flagged as a short one", async ({ page }) => {
   // Four questions is a lesson. Marking it as an exception would teach that something is
-  // wrong with it.
+  // wrong with it. "מה קטן יותר" (4 questions) and "מה בא אחרי" (8) are the same kind of
+  // card in every way but how many questions sit behind them.
   await openTopic(page, MIKA, NUMBERS);
 
-  const short = page.locator(".style-card").filter({ hasText: "4 שאלות" }).first();
-  const long = page.locator(".style-card").filter({ hasText: "8 שאלות" }).first();
+  const short = page.locator(".style-card").filter({ hasText: "מה קטן יותר" }).first();
+  const long = page.locator(".style-card").filter({ hasText: "מה בא אחרי" }).first();
   expect(await short.getAttribute("class")).toBe(await long.getAttribute("class"));
 });
 
-test("the example on a card is a real question from that very style", async ({ page }) => {
+test("entering a style produces questions of that same kind", async ({ page }) => {
   await openTopic(page, MIKA, NUMBERS);
 
-  const card = page.locator(".style-card").first();
-  await expect(card.locator(".style-title")).toHaveText("מה בא אחרי");
-  await expect(card.locator(".style-example")).toContainText("בא אחרי");
-
-  // …and entering it must produce questions of that same kind, or the example lied.
+  const card = page.locator(".style-card").filter({ hasText: "מה בא אחרי" }).first();
   await card.click();
   await expect(page.locator(".problem-text")).toContainText("בא אחרי");
-});
-
-test("an arithmetic example reads left to right inside the right-to-left page", async ({
-  page,
-}) => {
-  // `10 + 6` is the dangerous one: a bare expression sitting in a Hebrew screen. This bug
-  // has shipped three times in this project, so the check reads where each character
-  // actually lands rather than trusting that it looks right.
-  await openTopic(page, MIKA, PLACE);
-  const math = page.locator(".style-example-math").first();
-  await expect(math).toHaveText("10 + 6");
-
-  const xs = await math.evaluate((el) => {
-    const text = el.firstChild as Text;
-    const out: number[] = [];
-    for (let i = 0; i < text.textContent!.length; i++) {
-      if (text.textContent![i].trim() === "") continue;
-      const range = document.createRange();
-      range.setStart(text, i);
-      range.setEnd(text, i + 1);
-      out.push(range.getBoundingClientRect().x);
-    }
-    return out;
-  });
-  expect(xs.length).toBeGreaterThan(3);
-  for (let i = 1; i < xs.length; i++) {
-    expect(xs[i], "the expression is rendering backwards").toBeGreaterThan(xs[i - 1]);
-  }
 });
 
 // ------------------------------------------------------------------ the lesson
