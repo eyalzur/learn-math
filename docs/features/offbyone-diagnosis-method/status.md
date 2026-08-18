@@ -12,10 +12,10 @@
 - [x] Implementation — developer — 2026-08-18
 - [x] Tests — qa — 2026-08-18
 
-**Current phase:** done — `214/214` עוברות בריצה בודדת ונקייה, `build` ו-`lint`
-נקיים בגרסה `1.16.1`
+**Current phase:** done — מוזג ל-`main`. `214/214` עוברות בריצה בודדת ונקייה, `build`
+ו-`lint` נקיים
 **Branch:** `fix/offbyone-diagnosis-method`
-**PR:** not opened yet
+**PR:** https://github.com/eyalzur/learn-math/pull/44 — מוזג 2026-08-18
 
 ## Open questions / blockers
 None. שלוש ההכרעות החוסמות (עיגון בשאלה המקורית, פיצול לשני דפוסים, ביטול שאלת

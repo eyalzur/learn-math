@@ -72,6 +72,27 @@ export interface Level {
   questions: Question[];
 }
 
+/**
+ * A topic whose questions are built at runtime instead of written ahead of time — see
+ * `adaptiveAdd100.ts` for the one topic that uses this today.
+ *
+ * `generate`/`nextDifficulty` take an explicit `difficulty` rather than owning it, so the
+ * state lives where the rest of a practice session's state already lives (`App.tsx`), not
+ * duplicated here. `rng` is threaded through `generate` so a test can seed it — without
+ * that, "this pattern's numbers stay in range" could only ever be sampled, never proven.
+ */
+export interface AdaptiveConfig {
+  generate: (difficulty: number, rng?: () => number) => Question;
+  minDifficulty: number;
+  maxDifficulty: number;
+  initialDifficulty: number;
+  /** `streak` is the run of same-direction answers just closed — positive for consecutive
+   *  correct, reset on a wrong one. A single wrong answer still drops difficulty on its
+   *  own; climbing back up asks for more than one lucky guess. */
+  nextDifficulty: (current: number, wasCorrect: boolean, streak: number) => number;
+  questionCount: number;
+}
+
 export interface Topic {
   id: string;
   title: string;
@@ -86,6 +107,14 @@ export interface Topic {
    */
   reviewed: boolean;
   levels: Level[];
+  /**
+   * Present only for a topic piloting runtime-generated questions instead of the three
+   * written levels above — absent (every topic but one, today) means "levels", exactly as
+   * before this field existed. `levels` is left in place even for the one topic that has
+   * this set, deliberately: reverting the pilot is deleting one field, not restoring 30
+   * deleted questions. See docs/features/adaptive-difficulty/architecture.md.
+   */
+  adaptive?: AdaptiveConfig;
 }
 
 /**

@@ -6,7 +6,8 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
-| אבחון "סטייה של אחד" — מתחבר לשיטה | 🟢 `214/214` עוברות, ממתין ל-PR | [status](./offbyone-diagnosis-method/status.md) |
+| אבחון "סטייה של אחד" — מתחבר לשיטה | 🟢 done — מוזג ל-main | [status](./offbyone-diagnosis-method/status.md) |
+| כותרות שנשברות בצורה מאוזנת | 🟢 `220/220` עוברות, ממתין ל-PR | [status](./heading-wrap-balance/status.md) |
 | פיתגורס — מסבירים לפני שפותרים | 🟡 `183/183` עוברות, ממתין ל-PR | [status](./pythagoras-explain-first/status.md) |
 | ניסוח ברור לשאלות הנחה באחוזים | 🟢 done | [status](./percent-discount-wording/status.md) |
 | הודעת עידוד לציון מושלם | 🟢 done | [status](./perfect-score-message/status.md) |
@@ -28,4 +29,5 @@ architecture, implementation notes, and tests.
 | שיעור על סגנון תרגיל | 🟢 done — גל א׳ (מיקה) מוזג | [status](./style-lessons/status.md) |
 | כרטיס סגנון — רק כותרת | 🟢 done | [status](./style-card-title-only/status.md) |
 | ספירה לאחור למעבר לשאלה הבאה | 🟢 done — ממתין למיזוג | [status](./countdown-next/status.md) |
-| תוכן כיתה ב׳ למיקה | 🟡 `213/213` עוברות, PR נפתח | [status](./mika-grade2-content/status.md) |
+| תוכן כיתה ב׳ למיקה | 🟢 done | [status](./mika-grade2-content/status.md) |
+| קושי מסתגל — תרגילים מטמפלייט | 🟢 מוכן, ממתין ל-PR | [status](./adaptive-difficulty/status.md) |

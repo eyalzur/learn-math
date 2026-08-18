@@ -65,9 +65,13 @@ interface PracticeProps {
   onExit: () => void;
   /** This student has every new question read to them without asking. */
   readAloud: boolean;
+  /** Fires once per question, right after right/wrong is decided — before the child even
+   *  sees the countdown or explanation. Only an adaptive lesson supplies this; every other
+   *  lesson leaves it unset and nothing here changes for it. */
+  onAnswered?: (correct: boolean) => void;
 }
 
-export function Practice({ lesson, onFinish, onExit, readAloud }: PracticeProps) {
+export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: PracticeProps) {
   const [index, setIndex] = useState(0);
   const [input, setInput] = useState("");
   const [feedback, setFeedback] = useState<"correct" | "wrong" | null>(null);
@@ -228,6 +232,7 @@ export function Practice({ lesson, onFinish, onExit, readAloud }: PracticeProps)
     if (input.trim() === "" || feedback !== null) return;
     const isCorrect = Number(input) === question.answer;
     setFeedback(isCorrect ? "correct" : "wrong");
+    onAnswered?.(isCorrect);
     if (isCorrect) {
       setCorrectCount((c) => c + 1);
       // The whole of starting the countdown; the effect above waits for silence and ticks.
