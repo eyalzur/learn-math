@@ -10,10 +10,10 @@
 - [x] Implementation — developer — 2026-08-18
 - [x] Tests — qa — 2026-08-18
 
-**Current phase:** done — `220/220` עוברות בריצה בודדת ונקייה, `build` ו-`lint`
-נקיים בגרסה `1.16.1`
+**Current phase:** done — מוזג ל-`main`. `220/220` עוברות בריצה בודדת ונקייה,
+`build` ו-`lint` נקיים בגרסה `1.16.1`
 **Branch:** `fix/heading-wrap-balance`
-**PR:** not opened yet
+**PR:** https://github.com/eyalzur/learn-math/pull/45 — מוזג 2026-08-18
 
 ## Open questions / blockers
 None.

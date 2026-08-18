@@ -10,9 +10,9 @@
 - [x] Implementation — developer — 2026-08-14
 - [x] Tests — qa — 2026-08-14
 
-**Current phase:** done
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `feature/fraction-diagram`
-**PR:** not opened yet
+**PR:** https://github.com/eyalzur/learn-math/pull/22 — מוזג 2026-08-14
 
 ## Open questions / blockers
 None.

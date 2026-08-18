@@ -9,10 +9,10 @@
 - [x] Implementation — developer — 2026-08-17
 - [x] Tests — qa — 2026-08-18
 
-**Current phase:** done — `213/213` עוברות בריצה בודדת ונקייה (אחרי מיזוג `main`),
-`build` ו-`lint` נקיים
+**Current phase:** done — מוזג ל-`main`. `213/213` עוברות בריצה בודדת ונקייה (אחרי
+מיזוג `main`), `build` ו-`lint` נקיים
 **Branch:** `feature/mika-grade2-content`
-**PR:** נפתח
+**PR:** https://github.com/eyalzur/learn-math/pull/42 — מוזג 2026-08-18
 
 ## Open questions / blockers
 None.

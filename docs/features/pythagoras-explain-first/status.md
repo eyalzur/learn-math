@@ -10,9 +10,9 @@
 - [x] Implementation — developer — 2026-08-17
 - [x] Tests — qa — 2026-08-17
 
-**Current phase:** done — `183/183` עוברות, ממתין ל-PR
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `fix/pythagoras-explain-first`
-**PR:** not opened yet
+**PR:** https://github.com/eyalzur/learn-math/pull/39 — מוזג 2026-08-18
 
 ## Open questions / blockers
 None.

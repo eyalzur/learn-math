@@ -9,9 +9,9 @@
 - [x] Implementation — developer — 2026-08-15 (גל תיקונים) · 2026-08-17 (גל ב׳)
 - [x] Tests — qa — 2026-08-15 (גל תיקונים) · 2026-08-17 (גל ב׳)
 
-**Current phase:** done — `206/206` עוברות בריצה בודדת ונקייה, ממתין ל-PR
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `feature/more-diagrams-wave2` (חדש, מ-`main`)
-**PR:** תכנון — #31 · גל ראשון — #32 (מוזג) · גל ב׳ — [#36](https://github.com/eyalzur/learn-math/pull/36)
+**PR:** תכנון — #31 (מוזג) · גל ראשון — #32 (מוזג) · גל ב׳ — [#36](https://github.com/eyalzur/learn-math/pull/36) (מוזג 2026-08-18)
 
 ## Open questions / blockers
 אין.
