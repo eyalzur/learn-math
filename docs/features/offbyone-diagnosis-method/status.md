@@ -1,24 +1,24 @@
 # אבחון "סטייה של אחד" — מתחבר לשיטה
 
 תיקון לדפוס האבחון `offByOne`: שאלת ההמשך שלו מנותקת מהשאלה המקורית ("כמה זה
-`89 − 1`?" בלי שום `89`/`1` בשאלה עצמה) — מתוקן כך שהיא מעוגנת בשאלה המקורית ובשיטה
-שפותרת אותה, ומתפצלת לשני דפוסים (המשכיות מול חיבור/חיסור שלמים) שכל אחד מהם מתאים
-לשיטה שלו.
+`89 − 1`?" בלי שום `89`/`1` בשאלה עצמה). מתוקן ע"י ביטול שאלת הביניים לגמרי —
+המסך מדלג ישר לקופסת "איך פותרים?" הקיימת, שכבר בנויה מכלל כללי ואז יישום על
+המספרים האמיתיים של השאלה. מתפצל לשני דפוסים (המשכיות מול חיבור/חיסור שלמים).
 
 ## Progress
 - [x] Product spec — product-manager — 2026-08-18
-- [ ] Design — designer — not started
+- [x] Design — designer — 2026-08-18
 - [ ] Architecture — tech-lead — not started
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** designer
+**Current phase:** tech-lead
 **Branch:** `fix/offbyone-diagnosis-method`
 **PR:** not opened yet
 
 ## Open questions / blockers
-None. שתי ההכרעות החוסמות (עיגון בשאלה המקורית, פיצול לשני דפוסים) הוכרעו עם המשתמש
-לפני כתיבת product-spec.md.
+None. שלוש ההכרעות החוסמות (עיגון בשאלה המקורית, פיצול לשני דפוסים, ביטול שאלת
+הביניים) הוכרעו עם המשתמש לפני כתיבת product-spec.md/design.md.
 
 ## Docs
 - [Product spec](./product-spec.md)
