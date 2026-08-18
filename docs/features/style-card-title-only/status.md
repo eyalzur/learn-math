@@ -10,9 +10,9 @@
 - [x] Implementation — developer — 2026-08-17
 - [x] Tests — qa — 2026-08-17
 
-**Current phase:** done — `182/182` עוברות בריצה בודדת ונקייה, ממתין ל-PR
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `fix/style-card-title-only`
-**PR:** not opened yet
+**PR:** https://github.com/eyalzur/learn-math/pull/37 — מוזג 2026-08-18
 
 ## Open questions / blockers
 None.

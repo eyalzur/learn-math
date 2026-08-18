@@ -10,9 +10,9 @@
 - [x] Implementation — developer — 2026-08-14
 - [x] Tests — qa — 2026-08-14
 
-**Current phase:** done — ממתין ל-PR
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `feature/clearer-explanations`
-**PR:** https://github.com/eyalzur/learn-math/pull/27
+**PR:** https://github.com/eyalzur/learn-math/pull/27 — מוזג 2026-08-14
 
 ## Open questions / blockers
 None. שלוש הכרעות שהתקבלו בספק ורשומות בו: סף המאונך הוא "יש עמודות ליישר";

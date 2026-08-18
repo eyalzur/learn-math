@@ -6,8 +6,8 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
-| כותרות שנשברות בצורה מאוזנת | 🟢 `220/220` עוברות, ממתין ל-PR | [status](./heading-wrap-balance/status.md) |
-| פיתגורס — מסבירים לפני שפותרים | 🟡 `183/183` עוברות, ממתין ל-PR | [status](./pythagoras-explain-first/status.md) |
+| כותרות שנשברות בצורה מאוזנת | 🟢 done — מוזג ל-main | [status](./heading-wrap-balance/status.md) |
+| פיתגורס — מסבירים לפני שפותרים | 🟢 done — מוזג ל-main | [status](./pythagoras-explain-first/status.md) |
 | ניסוח ברור לשאלות הנחה באחוזים | 🟢 done | [status](./percent-discount-wording/status.md) |
 | הודעת עידוד לציון מושלם | 🟢 done | [status](./perfect-score-message/status.md) |
 | הסבר דרך פתרון אחרי טעות | 🔵 הוחלף על ידי "מורה שמסבירה" | [status](./mistake-explanation/status.md) |
@@ -27,6 +27,6 @@ architecture, implementation notes, and tests.
 | ציורים לשאר הנושאים | 🟢 done — גל א׳ וגל ב׳ שניהם באתר החי | [status](./more-diagrams/status.md) |
 | שיעור על סגנון תרגיל | 🟢 done — גל א׳ (מיקה) מוזג | [status](./style-lessons/status.md) |
 | כרטיס סגנון — רק כותרת | 🟢 done | [status](./style-card-title-only/status.md) |
-| ספירה לאחור למעבר לשאלה הבאה | 🟢 done — ממתין למיזוג | [status](./countdown-next/status.md) |
+| ספירה לאחור למעבר לשאלה הבאה | 🟢 done — מוזג ל-main | [status](./countdown-next/status.md) |
 | תוכן כיתה ב׳ למיקה | 🟢 done | [status](./mika-grade2-content/status.md) |
 | קושי מסתגל — תרגילים מטמפלייט | 🟢 done — מוזג ל-main | [status](./adaptive-difficulty/status.md) |
