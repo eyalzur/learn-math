@@ -6,6 +6,7 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
+| כותרות שנשברות בצורה מאוזנת | 🟢 `220/220` עוברות, ממתין ל-PR | [status](./heading-wrap-balance/status.md) |
 | פיתגורס — מסבירים לפני שפותרים | 🟡 `183/183` עוברות, ממתין ל-PR | [status](./pythagoras-explain-first/status.md) |
 | ניסוח ברור לשאלות הנחה באחוזים | 🟢 done | [status](./percent-discount-wording/status.md) |
 | הודעת עידוד לציון מושלם | 🟢 done | [status](./perfect-score-message/status.md) |
