@@ -28,4 +28,4 @@ architecture, implementation notes, and tests.
 | כרטיס סגנון — רק כותרת | 🟢 done | [status](./style-card-title-only/status.md) |
 | ספירה לאחור למעבר לשאלה הבאה | 🟢 done — ממתין למיזוג | [status](./countdown-next/status.md) |
 | תוכן כיתה ב׳ למיקה | 🟢 done | [status](./mika-grade2-content/status.md) |
-| קושי מסתגל — תרגילים מטמפלייט | 🟡 בארכיטקטורה | [status](./adaptive-difficulty/status.md) |
+| קושי מסתגל — תרגילים מטמפלייט | 🟡 בפיתוח | [status](./adaptive-difficulty/status.md) |
