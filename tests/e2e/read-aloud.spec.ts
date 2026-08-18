@@ -141,6 +141,8 @@ async function failFirstQuestion(page: Page, topicIndex = 1) {
   await page.evaluate(() => localStorage.clear());
   await page.goto("/learn-math/");
   await page.locator(".student-card").first().click();
+  // Mika now has two grades available; every route here is grade 1 (א׳).
+  await page.locator(".grade-card").first().click();
   await page.locator(".topic-card").nth(topicIndex).click();
   // Grade 1's multi-style topics are entered by style, the rest by level. These tests are
   // about what gets spoken, not about which screen led there.

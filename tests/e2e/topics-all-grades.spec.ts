@@ -51,6 +51,8 @@ async function open(page: Page) {
 
 async function pickStudent(page: Page, index: number) {
   await page.locator(".student-card").nth(index).click();
+  // Mika (index 0) now has two grades available; every route here is grade 1 (א׳).
+  if (index === 0) await page.locator(".grade-card").first().click();
 }
 
 test.beforeEach(async ({ page }) => {

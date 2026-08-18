@@ -32,7 +32,7 @@ import { STYLE_META, stylesOf, hasStyleLessons } from "../../src/data/style";
  */
 
 /** How many questions a level of this grade should hold. */
-const LEVEL_SIZE: Record<string, number> = { "1": 10, "6": 10, "8": 10 };
+const LEVEL_SIZE: Record<string, number> = { "1": 10, "2": 10, "6": 10, "8": 10 };
 
 const everyQuestion = (): { gradeId: string; topic: string; q: Question }[] =>
   grades.flatMap((g) =>
@@ -149,6 +149,44 @@ const RULES: {
       for (const step of explainQuestion(q)!.steps) {
         if (MATH_RUN.test(step.label ?? "")) {
           return `arithmetic left in the prose field — "${step.label}"`;
+        }
+      }
+      return null;
+    },
+  },
+  {
+    name: "a written step's own arithmetic checks out",
+    check: (q) => {
+      // A step written by hand can say anything — nothing computes it back from the
+      // operands the way `explainAddition`/`explainSubtraction` do for a step derived from
+      // them. This is that missing check, run independently of how the step was produced.
+      //
+      // Scoped to plain four-operation arithmetic on purpose. `x`, `²`/`³`, `√`, and a
+      // second `=` in one line (a chained equation) are all real, legitimate step shapes
+      // elsewhere in the app that this simple a parser has no business judging — asserting
+      // on them would be guessing, not checking. Absence over a false positive: skip that
+      // one step rather than partially validate it.
+      //
+      // Deliberately does not require the *last* step to equal the question's answer —
+      // several existing, reviewed questions end on a verification line ("if both legs are
+      // equal: 6 × 6 = 36") rather than a fresh derivation, and that is a legitimate way to
+      // close an explanation, not a bug this rule gets to invent.
+      const plain = (s: string) => s.replace(/−/g, "-").replace(/÷/g, "/").replace(/×/g, "*");
+      const SAFE = /^[-\d.\s+*/()]+=[-\d.\s+*/()]+$/;
+      for (const step of explainQuestion(q)!.steps) {
+        if (!step.math || !SAFE.test(plain(step.math))) continue;
+        const [lhs, rhsText] = plain(step.math).split("=");
+        let computed: number;
+        try {
+          // eslint-disable-next-line no-new-func
+          computed = Function(`"use strict"; return (${lhs});`)() as number;
+        } catch {
+          return `a step's math does not parse — "${step.math}"`;
+        }
+        // Floating-point tolerance: real decimal content (0.4 + 0.2) hits binary rounding
+        // that has nothing to do with whether the step is correct.
+        if (Math.abs(computed - Number(rhsText)) > 1e-9) {
+          return `a step's arithmetic is wrong — "${step.math}" computes to ${computed}`;
         }
       }
       return null;
@@ -321,11 +359,11 @@ test("no diagram ever disagrees with its own question", () => {
   expect(wrong, `\n${wrong.join("\n")}\n`).toEqual([]);
 });
 
-test("exactly thirty questions write themselves in columns", () => {
+test("exactly a hundred and five questions write themselves in columns", () => {
   // Eligibility is recomputed here from the spec's own words — a bare `a + b` / `a − b`,
-  // columns worth aligning, no borrowing, and column arithmetic that lands on the
-  // recorded answer — independently of the module that draws the block. If the two ever
-  // disagree, one of them is wrong about what the product promised, and this is what
+  // columns worth aligning, at most one borrowed column, and column arithmetic that lands
+  // on the recorded answer — independently of the module that draws the block. If the two
+  // ever disagree, one of them is wrong about what the product promised, and this is what
   // says so out loud. A reworded prompt that silently drops its vertical fails the same
   // way the fraction count fails.
   const decimals = (n: number) => {
@@ -345,7 +383,18 @@ test("exactly thirty questions write themselves in columns", () => {
     const width = Math.max(String(A).length, String(B).length);
     const digit = (n: number, i: number) => Math.floor(n / 10 ** i) % 10;
     if (m[2] !== "+") {
-      for (let i = 0; i < width; i++) if (digit(A, i) < digit(B, i)) return false; // borrow
+      // Walk the columns right to left the way a child would, tracking how many times a
+      // column comes up short and has to ask its neighbour for a ten. One borrow draws —
+      // a column asked twice (borrowing through a zero) has no honest single digit to show
+      // for the column that both gave one away and needed one itself.
+      let borrow = 0;
+      let borrowCount = 0;
+      for (let i = 0; i < width; i++) {
+        const short = digit(A, i) - borrow < digit(B, i);
+        if (short) borrowCount++;
+        borrow = short ? 1 : 0;
+      }
+      if (borrow > 0 || borrowCount > 1) return false;
     }
     const result = m[2] === "+" ? A + B : A - B;
     return result === Math.round(q.answer * 10 ** scale);
@@ -353,7 +402,11 @@ test("exactly thirty questions write themselves in columns", () => {
 
   const all = everyQuestion();
   const expected = all.filter(({ q }) => eligible(q));
-  expect(expected.length, "the set of column-writable questions changed size").toBe(30);
+  // Grew from 80 to 105 when the vertical diagram learned to draw a single borrow: every
+  // add100 question was already eligible (carrying included), and now sub100's ten
+  // borrow-needing hard questions join them, plus grade 1's own borrow-needing questions
+  // that were sitting on the sidelines for the same reason (10 − 4, 15 − 8, ...).
+  expect(expected.length, "the set of column-writable questions changed size").toBe(105);
 
   const disagreements = all
     .filter(({ q }) => (verticalSum(q) !== null) !== eligible(q))

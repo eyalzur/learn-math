@@ -21,6 +21,8 @@ async function openLevel(page: Page) {
   await page.evaluate(() => localStorage.clear());
   await page.goto("/learn-math/");
   await page.locator(".student-card").first().click();
+  // Mika now has two grades available; this suite is about her grade 1 (א׳) content.
+  await page.locator(".grade-card").first().click();
   await page.locator(".topic-card").nth(1).click();
   await page.locator(".level-card").first().click();
 }

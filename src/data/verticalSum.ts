@@ -20,7 +20,8 @@ export interface VerticalSum {
   top: string;
   bottom: string;
   result: string;
-  /** Carry digits above their columns, same width as the rows; null when none. */
+  /** Adjustment digits above their columns — a carried ten for addition, a borrowed one
+   *  for subtraction — same width as the rows; null when none are needed. */
   carries: string | null;
   /** One line that captions the figure, names it for a screen reader, and is spoken. */
   caption: string;
@@ -57,6 +58,8 @@ export function verticalSum(question: Question): VerticalSum | null {
 
   let resultInt: number;
   const carryInto: number[] = [];
+  /** Column that gave up a ten (shows its reduced digit) → the column it lent to. */
+  const borrowedFrom = new Map<number, number>();
   if (op === "+") {
     resultInt = A + B;
     let carry = 0;
@@ -66,11 +69,23 @@ export function verticalSum(question: Question): VerticalSum | null {
       if (carry) carryInto.push(i + 1);
     }
   } else {
-    // Borrowing is a feature of its own, deliberately deferred: a column showing 5 − 8
-    // with no borrow marks would be teaching half a method. Absence over a lie.
+    // One borrow per column, the way it is taught on the board: a column short in its own
+    // digit takes a ten from its neighbour, which then shows one less. A borrow that would
+    // have to chain past that neighbour (it has nothing to lend either) has nowhere honest
+    // to draw a reduced digit — the same "absence over a lie" this module already lives by
+    // for a carry that can't be verified, so it falls back to no diagram rather than a
+    // picture that quietly lies about which column lent what.
+    let borrow = 0;
     for (let i = 0; i < width; i++) {
-      if (digit(A, i) < digit(B, i)) return null;
+      const short = digit(A, i) - borrow < digit(B, i);
+      if (short) borrowedFrom.set(i + 1, i);
+      borrow = short ? 1 : 0;
     }
+    if (borrow > 0) return null; // ran out of digits to borrow from — A < B
+    // A lender that is itself short (borrowing through a zero, "103 − 8") would need to
+    // show two adjustments on one column — not what a single digit-per-cell can draw
+    // honestly. One borrow only; anything that would chain sits this diagram out.
+    if (borrowedFrom.size > 1) return null;
     resultInt = A - B;
   }
 
@@ -86,13 +101,19 @@ export function verticalSum(question: Question): VerticalSum | null {
   const pad = (s: string) => "  " + s.padStart(w);
   const opChar = op === "+" ? "+" : "−";
 
+  // Integer column -> character position from the right, skipping the point.
+  const cellFor = (col: number) => 2 + w - 1 - (scale > 0 && col >= scale ? col + 1 : col);
+
   let carries: string | null = null;
   if (carryInto.length > 0) {
     const cells = Array<string>(2 + w).fill(" ");
-    for (const col of carryInto) {
-      // Integer column -> character position from the right, skipping the point.
-      const fromRight = scale > 0 && col >= scale ? col + 1 : col;
-      cells[2 + w - 1 - fromRight] = "1";
+    for (const col of carryInto) cells[cellFor(col)] = "1";
+    carries = cells.join("");
+  } else if (borrowedFrom.size > 0) {
+    const cells = Array<string>(2 + w).fill(" ");
+    for (const [lender, receiver] of borrowedFrom) {
+      cells[cellFor(lender)] = String(digit(A, lender) - 1);
+      cells[cellFor(receiver)] = "1";
     }
     carries = cells.join("");
   }
@@ -109,6 +130,13 @@ export function verticalSum(question: Question): VerticalSum | null {
     caption =
       `במאונך: \`${digit(A, i)}\` ${spoken} \`${digit(B, i)}\` הן \`${colSum}\` — ` +
       `כותבים \`${colSum % 10}\` ומעבירים \`1\` לעמודה הבאה. יצא \`${answerText}\`${exactly}`;
+  } else if (borrowedFrom.size > 0) {
+    const [, receiver] = [...borrowedFrom.entries()][0];
+    const borrowed = digit(A, receiver) + 10;
+    caption =
+      `במאונך: ל-\`${digit(A, receiver)}\` אין מספיק כדי להוריד \`${digit(B, receiver)}\`, ` +
+      `אז שואלים עשר מהעמודה הבאה. \`${borrowed}\` פחות \`${digit(B, receiver)}\` הן ` +
+      `\`${borrowed - digit(B, receiver)}\`. יצא \`${answerText}\`${exactly}`;
   } else if (scale > 0) {
     caption =
       `במאונך: מימין לנקודה \`${digit(A, 0)}\` ${spoken} \`${digit(B, 0)}\` הן ` +

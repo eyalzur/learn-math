@@ -56,6 +56,18 @@ export function methodSentence(question: Question): string | null {
     }
   }
 
+  if (topic === "חיבור עד 100" && Number.isInteger(a) && Number.isInteger(b) && op === "+") {
+    return (a % 10) + (b % 10) < 10
+      ? "מספר דו-ספרתי הוא עשרות ויחידות. מחברים יחידות עם יחידות, ועשרות עם עשרות"
+      : "כשסכום היחידות עובר עשר, כותבים את מה שנשאר ומעבירים עשרה שלמה לעמודת העשרות";
+  }
+
+  if (topic === "חיסור עד 100" && Number.isInteger(a) && Number.isInteger(b) && op === "-") {
+    return a % 10 < b % 10
+      ? "כשאין מספיק ביחידות כדי לחסר, שואלים עשרה שלמה מהעשרות"
+      : "מספר דו-ספרתי הוא עשרות ויחידות. מחסרים יחידות מיחידות, ועשרות מעשרות";
+  }
+
   if (topic === "שברים עשרוניים") {
     // The user gave this sentence, then corrected his own ending: "רק צריך לשים לב
     // לנקודה" says to be careful without saying *what to do*, and what to do is the

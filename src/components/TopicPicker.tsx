@@ -6,7 +6,15 @@ interface TopicPickerProps {
   topics: Topic[];
   onSelect: (topic: Topic) => void;
   onBack: () => void;
-  /** Only offered from the first screen, where "back" means switching student. */
+  /** What `onBack` actually does, in the caller's own words — a mid-flow "back" and a
+   *  first-screen "switch student" read differently, and only the caller (who wires
+   *  `onBack` itself) reliably knows which one this is. Guessing it from whether
+   *  `onHistory` was also passed broke the moment a screen could have both a history
+   *  link and a "back" that doesn't switch student — a student with more than one grade
+   *  does exactly that. */
+  backLabel: string;
+  /** The history link's reachability is independent of what "back" does — a student with
+   *  more than one grade still wants it here, not only on the grade-choice screen. */
   onHistory?: () => void;
   /** Read every question aloud for this student. Absent when there is no student yet. */
   readAloud?: boolean;
@@ -18,6 +26,7 @@ export function TopicPicker({
   topics,
   onSelect,
   onBack,
+  backLabel,
   onHistory,
   readAloud,
   onReadAloudChange,
@@ -30,7 +39,7 @@ export function TopicPicker({
     <div className="topic-picker">
       <div className="grade-header">
         <button className="link-button" onClick={onBack}>
-          {onHistory ? "← החלף תלמיד" : "← חזרה"}
+          {backLabel}
         </button>
         <span className="greeting">{gradeLabel}</span>
       </div>

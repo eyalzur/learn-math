@@ -75,6 +75,9 @@ const spokenText = (page: Page) =>
 async function openStudent(page: Page, index: number) {
   await page.goto("/learn-math/");
   await page.locator(".student-card").nth(index).click();
+  // Mika (the only student this file ever passes) now has two grades available; every
+  // route here is grade 1 (א׳).
+  if (index === 0) await page.locator(".grade-card").first().click();
 }
 
 async function fresh(page: Page) {
@@ -191,14 +194,19 @@ test("the setting belongs to the student, not the device", async ({ page }) => {
   await page.getByRole("switch").click();
   await expect(page.getByRole("switch")).toHaveAttribute("aria-checked", "true");
 
-  // A different child on the same device is unaffected.
+  // A different child on the same device is unaffected. Mika's topics screen leads to
+  // the grade picker first ("← חזרה") — switching student happens from there.
+  await page.getByRole("button", { name: "← חזרה" }).click();
   await page.getByRole("button", { name: "← החלף תלמיד" }).click();
   await page.locator(".student-card").nth(1).click();
   await expect(page.getByRole("switch")).toHaveAttribute("aria-checked", "false");
 
-  // And the first child's choice is still there.
+  // And the first child's choice is still there — the read-aloud setting, that is; her
+  // grade choice was explicitly forgotten by stepping back to reconsider it earlier in
+  // this test (a plain reload would have kept it, going back to pick again does not).
   await page.getByRole("button", { name: "← החלף תלמיד" }).click();
   await page.locator(".student-card").nth(0).click();
+  await page.locator(".grade-card").first().click();
   await expect(page.getByRole("switch")).toHaveAttribute("aria-checked", "true");
 });
 
