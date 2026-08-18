@@ -117,12 +117,16 @@ function wholeTens(rng: Rng): Question {
   const a = aTens * 10;
   const b = bTens * 10;
   const answer = a + b;
+  // "עשרות" (plural) only fits a count above 1 — a tens digit of exactly 1 needs the
+  // singular "עשרה", same distinction the written e6/e7 never had to make because
+  // neither of their tens digits happened to be 1.
+  const tensWord = (n: number) => (n === 1 ? "עשרה" : "עשרות");
   return makeQuestion(
     `${a} + ${b}`,
     answer,
     [
       "כששני המספרים הן עשרות שלמות, פשוט מחברים את מספר העשרות",
-      `\`${aTens}\` עשרות ועוד \`${bTens}\` עשרות`,
+      `\`${aTens}\` ${tensWord(aTens)} ועוד \`${bTens}\` ${tensWord(bTens)}`,
     ],
     [
       { label: "מחברים את מספרי העשרות:", math: `${aTens} + ${bTens} = ${aTens + bTens}` },

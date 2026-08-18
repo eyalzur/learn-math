@@ -958,3 +958,31 @@ test("a generated question's 'X זה Y עשרות ו-Z יחידה/יחידות' 
   }
   expect(wrong, `\n${wrong.join("\n")}\n`).toEqual([]);
 });
+
+test("a generated question's 'X עשרה/עשרות ועוד Y עשרה/עשרות' hint stays singular/plural-correct", () => {
+  // Same distinction, different sentence: the whole-tens pattern (`30 + 40`) names each
+  // operand's own ten count directly. The two hand-written examples (e6: 3+4, e7: 5+3)
+  // never happened to land on a tens digit of exactly 1, so this shape of the mistake
+  // had nothing to be caught against until the generator started sampling the full 1-8
+  // range — this is the check that closes that gap.
+  const rng = seededRng(13);
+  const wrong: string[] = [];
+  for (let difficulty = 1; difficulty <= 5; difficulty++) {
+    for (let i = 0; i < 200; i++) {
+      const q = generateAdd100Question(difficulty, rng);
+      for (const hint of q.hints) {
+        for (const m of hint.matchAll(/`(\d+)`\s*(עשרה|עשרות)\b/g)) {
+          const [, count, word] = m;
+          const shouldBeSingular = count === "1";
+          if (shouldBeSingular && word !== "עשרה") {
+            wrong.push(`${q.id} — "1" paired with plural "${word}": "${hint}"`);
+          }
+          if (!shouldBeSingular && word !== "עשרות") {
+            wrong.push(`${q.id} — "${count}" paired with singular "${word}": "${hint}"`);
+          }
+        }
+      }
+    }
+  }
+  expect(wrong, `\n${wrong.join("\n")}\n`).toEqual([]);
+});
