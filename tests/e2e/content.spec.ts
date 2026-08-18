@@ -150,6 +150,44 @@ const RULES: {
     },
   },
   {
+    name: "a written step's own arithmetic checks out",
+    check: (q) => {
+      // A step written by hand can say anything — nothing computes it back from the
+      // operands the way `explainAddition`/`explainSubtraction` do for a step derived from
+      // them. This is that missing check, run independently of how the step was produced.
+      //
+      // Scoped to plain four-operation arithmetic on purpose. `x`, `²`/`³`, `√`, and a
+      // second `=` in one line (a chained equation) are all real, legitimate step shapes
+      // elsewhere in the app that this simple a parser has no business judging — asserting
+      // on them would be guessing, not checking. Absence over a false positive: skip that
+      // one step rather than partially validate it.
+      //
+      // Deliberately does not require the *last* step to equal the question's answer —
+      // several existing, reviewed questions end on a verification line ("if both legs are
+      // equal: 6 × 6 = 36") rather than a fresh derivation, and that is a legitimate way to
+      // close an explanation, not a bug this rule gets to invent.
+      const plain = (s: string) => s.replace(/−/g, "-").replace(/÷/g, "/").replace(/×/g, "*");
+      const SAFE = /^[-\d.\s+*/()]+=[-\d.\s+*/()]+$/;
+      for (const step of explainQuestion(q)!.steps) {
+        if (!step.math || !SAFE.test(plain(step.math))) continue;
+        const [lhs, rhsText] = plain(step.math).split("=");
+        let computed: number;
+        try {
+          // eslint-disable-next-line no-new-func
+          computed = Function(`"use strict"; return (${lhs});`)() as number;
+        } catch {
+          return `a step's math does not parse — "${step.math}"`;
+        }
+        // Floating-point tolerance: real decimal content (0.4 + 0.2) hits binary rounding
+        // that has nothing to do with whether the step is correct.
+        if (Math.abs(computed - Number(rhsText)) > 1e-9) {
+          return `a step's arithmetic is wrong — "${step.math}" computes to ${computed}`;
+        }
+      }
+      return null;
+    },
+  },
+  {
     name: "does not have anyone eating something inedible",
     check: (q) => {
       // Seven of these shipped: "16 בולים בצלחת, אכלתם 3" — stamps, on a plate, eaten.
