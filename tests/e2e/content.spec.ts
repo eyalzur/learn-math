@@ -709,7 +709,7 @@ test("none of the five new shapes ever disagrees with its own question", () => {
           ? pc.base + pc.extra
           : /כמה אחוזים/.test(q.prompt)
             ? (pc.filled * 100) / pc.base
-            : /כמה משלמים/.test(q.prompt)
+            : /כמה משלמים|כמה שקלים שילמת/.test(q.prompt)
               ? pc.base - pc.filled
               : pc.filled;
       if (expected !== q.answer) wrong.push(`${q.id}: the strip does not answer what was asked`);
