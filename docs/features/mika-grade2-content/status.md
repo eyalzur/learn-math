@@ -9,10 +9,10 @@
 - [x] Implementation — developer — 2026-08-17
 - [x] Tests — qa — 2026-08-18
 
-**Current phase:** done — `191/191` עוברות בריצה בודדת ונקייה, `build` ו-`lint` נקיים,
-ממתין ל-PR
+**Current phase:** done — `213/213` עוברות בריצה בודדת ונקייה (אחרי מיזוג `main`),
+`build` ו-`lint` נקיים
 **Branch:** `feature/mika-grade2-content`
-**PR:** not opened yet
+**PR:** נפתח
 
 ## Open questions / blockers
 None.
