@@ -901,6 +901,159 @@ button.secondary {
   margin-top: 4px;
 }
 
+/* ---- the five remaining shapes: geometry, Pythagoras, percent, ratio, linear ---- */
+
+.geometry-figure,
+.pythagoras-figure,
+.percent-figure,
+.ratio-figure,
+.linear-figure {
+  margin: 0 0 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+/* An SVG does not inherit the page's direction habits — the same trap every shape in
+   this feature has to guard against. */
+.geometry-shape,
+.pythagoras-triangle,
+.percent-strip,
+.ratio-strips,
+.linear-graph {
+  direction: ltr;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Filled versus outlined, never one hue against another: which one is which is the
+   answer to "is this question about area or about perimeter", and it has to survive
+   greyscale and colour blindness. */
+.gs-shape,
+.pt-triangle {
+  stroke: var(--text-h);
+  stroke-width: 1.5;
+  fill: none;
+}
+
+.gs-filled {
+  fill: #c4b5fd;
+}
+
+.gs-outlined {
+  stroke-width: 3;
+}
+
+.gs-height,
+.gs-radius {
+  stroke: var(--text-h);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+}
+
+/* The unit-square grid inside an area shape — subtle against the fill, but enough for a
+   child to count individual squares rather than trust one solid block. */
+.gs-grid {
+  stroke: var(--text-h);
+  stroke-width: 1;
+  opacity: 0.35;
+}
+
+.gs-label,
+.pt-label {
+  font-size: 15px;
+  font-weight: 600;
+  fill: var(--text);
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+.pt-right-angle {
+  stroke: var(--text-h);
+  stroke-width: 1.5;
+  fill: none;
+}
+
+.ps-track {
+  fill: none;
+  stroke: var(--text-h);
+  stroke-width: 1.5;
+}
+
+.ps-tick {
+  stroke: var(--text);
+  stroke-width: 1;
+  opacity: 0.4;
+}
+
+.ps-filled {
+  fill: #c4b5fd;
+}
+
+/* Past the strip's own 100% mark — a price increase. Lighter than the ordinary fill so
+   "beyond the whole" reads differently from "part of the whole". */
+.ps-extra {
+  fill: #c4b5fd;
+  opacity: 0.5;
+}
+
+.ps-label {
+  font-size: 13px;
+  font-weight: 600;
+  fill: var(--text);
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+.rs-block {
+  fill: none;
+  stroke: var(--text-h);
+  stroke-width: 1.5;
+}
+
+.rs-block.rs-filled {
+  fill: #c4b5fd;
+}
+
+.rs-value {
+  font-size: 14px;
+  font-weight: 600;
+  fill: var(--text-h);
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+.lg-axis {
+  stroke: var(--text-h);
+  stroke-width: 1.5;
+}
+
+.lg-line {
+  stroke: #c4b5fd;
+  stroke-width: 2.5;
+  fill: none;
+}
+
+.lg-guide {
+  stroke: var(--text);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  opacity: 0.6;
+}
+
+.lg-tick {
+  font-size: 13px;
+  font-weight: 600;
+  fill: var(--text-h);
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+.lg-point {
+  fill: var(--text-h);
+}
+
 
 /* ---------------------------------------------------------------- style picker */
 
