@@ -8,9 +8,9 @@
 - [x] Design — designer — 2026-08-19
 - [x] Architecture — tech-lead — 2026-08-19
 - [x] Implementation — developer — 2026-08-19
-- [ ] Tests — qa — not started
+- [x] Tests — qa — 2026-08-19
 
-**Current phase:** qa
+**Current phase:** done — ממתין ל-PR ולריוויו
 **Branch:** `fix/percent-tenths-teaching`
 **PR:** not opened yet
 

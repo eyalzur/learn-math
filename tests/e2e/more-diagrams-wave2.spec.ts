@@ -122,9 +122,34 @@ test("no percent strip before the question is answered", async ({ page }) => {
   await expect(page.locator(".percent-strip")).toHaveCount(0);
 });
 
-test("the strip carries guide lines at every quarter", async ({ page }) => {
+test("the strip divides into the parts the question's own percent reduces to", async ({ page }) => {
+  // docs/features/percent-tenths-teaching — the strip no longer carries fixed quarter
+  // ticks; it divides by the reduced fraction of the specific rate asked (X/100 in
+  // lowest terms), so the ticks seen must match `denominator - 1` for that rate.
   await open(page, "רותם", "אחוזים", "קל");
-  await failAt(page, "כמה זה 10% מ-200?");
+  await failAt(page, "כמה זה 10% מ-200?"); // 10% = 1/10 → 10 parts
+  await expect(page.locator(".ps-tick")).toHaveCount(9);
+
+  await open(page, "רותם", "אחוזים", "קל");
+  await failAt(page, "כמה זה 50% מ-60?"); // 50% = 1/2 → 2 parts
+  await expect(page.locator(".ps-tick")).toHaveCount(1);
+
+  await open(page, "רותם", "אחוזים", "בינוני");
+  await failAt(page, "כמה זה 25% מ-80?"); // 25% = 1/4 → 4 parts
+  await expect(page.locator(".ps-tick")).toHaveCount(3);
+
+  await open(page, "רותם", "אחוזים", "בינוני");
+  await failAt(page, "כמה זה 20% מ-150?"); // 20% = 1/5 → 5 parts
+  await expect(page.locator(".ps-tick")).toHaveCount(4);
+
+  // 30% and 75% reduce by their gcd with 100 (10 and 25), not by the rate itself — the
+  // easiest place to get the part count wrong, so both are checked explicitly.
+  await open(page, "רותם", "אחוזים", "בינוני");
+  await failAt(page, "כמה זה 30% מ-200?"); // 30% = 3/10 → 10 parts
+  await expect(page.locator(".ps-tick")).toHaveCount(9);
+
+  await open(page, "רותם", "אחוזים", "בינוני");
+  await failAt(page, "כמה זה 75% מ-40?"); // 75% = 3/4 → 4 parts
   await expect(page.locator(".ps-tick")).toHaveCount(3);
 });
 
