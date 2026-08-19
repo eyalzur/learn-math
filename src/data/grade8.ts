@@ -1,5 +1,53 @@
 import type { Topic } from "./curriculum";
 import { level } from "./level";
+import {
+  generateExpressionsQuestion,
+  nextExpressionsDifficulty,
+  EXPRESSIONS_MIN_DIFFICULTY,
+  EXPRESSIONS_MAX_DIFFICULTY,
+  EXPRESSIONS_INITIAL_DIFFICULTY,
+  EXPRESSIONS_QUESTION_COUNT,
+} from "./adaptiveExpressions";
+import {
+  generateEquationsQuestion,
+  nextEquationsDifficulty,
+  EQUATIONS_MIN_DIFFICULTY,
+  EQUATIONS_MAX_DIFFICULTY,
+  EQUATIONS_INITIAL_DIFFICULTY,
+  EQUATIONS_QUESTION_COUNT,
+} from "./adaptiveEquations";
+import {
+  generatePowersQuestion,
+  nextPowersDifficulty,
+  POWERS_MIN_DIFFICULTY,
+  POWERS_MAX_DIFFICULTY,
+  POWERS_INITIAL_DIFFICULTY,
+  POWERS_QUESTION_COUNT,
+} from "./adaptivePowers";
+import {
+  generatePythagorasQuestion,
+  nextPythagorasDifficulty,
+  PYTHAGORAS_MIN_DIFFICULTY,
+  PYTHAGORAS_MAX_DIFFICULTY,
+  PYTHAGORAS_INITIAL_DIFFICULTY,
+  PYTHAGORAS_QUESTION_COUNT,
+} from "./adaptivePythagoras";
+import {
+  generateLinearFunctionQuestion,
+  nextLinearFunctionDifficulty,
+  LINEAR_FUNCTION_MIN_DIFFICULTY,
+  LINEAR_FUNCTION_MAX_DIFFICULTY,
+  LINEAR_FUNCTION_INITIAL_DIFFICULTY,
+  LINEAR_FUNCTION_QUESTION_COUNT,
+} from "./adaptiveLinearFunction";
+import {
+  generateWordProblemsQuestion,
+  nextWordProblemsDifficulty,
+  WORD_PROBLEMS_MIN_DIFFICULTY,
+  WORD_PROBLEMS_MAX_DIFFICULTY,
+  WORD_PROBLEMS_INITIAL_DIFFICULTY,
+  WORD_PROBLEMS_QUESTION_COUNT,
+} from "./adaptiveWordProblems";
 
 /**
  * Grade 8, organised topic by topic.
@@ -16,6 +64,14 @@ export const grade8Topics: Topic[] = [
     id: "expressions",
     title: "ביטויים אלגבריים",
     reviewed: true,
+    adaptive: {
+      generate: generateExpressionsQuestion,
+      minDifficulty: EXPRESSIONS_MIN_DIFFICULTY,
+      maxDifficulty: EXPRESSIONS_MAX_DIFFICULTY,
+      initialDifficulty: EXPRESSIONS_INITIAL_DIFFICULTY,
+      nextDifficulty: nextExpressionsDifficulty,
+      questionCount: EXPRESSIONS_QUESTION_COUNT,
+    },
     levels: [
       level("easy", [
         { id: "g8-expressions-e1", topic: "ביטויים אלגבריים", prompt: "כמה זה `2x + 3` כאשר `x` שווה 4?", answer: 11, hints: ["מציבים את המספר במקום `x` ואז מחשבים", "`2` כפול `4`, ואז מוסיפים `3`"] as const, steps: [{ label: "מציבים 4 במקום x" }, { label: "2 × 4 = 8" }, { label: "8 + 3 = 11" }], analogy: "כרטיס עולה 2 שקל ליחידה ועוד 3 שקל דמי טיפול, עבור 4 יחידות" },
@@ -59,6 +115,14 @@ export const grade8Topics: Topic[] = [
     id: "equations",
     title: "משוואות",
     reviewed: true,
+    adaptive: {
+      generate: generateEquationsQuestion,
+      minDifficulty: EQUATIONS_MIN_DIFFICULTY,
+      maxDifficulty: EQUATIONS_MAX_DIFFICULTY,
+      initialDifficulty: EQUATIONS_INITIAL_DIFFICULTY,
+      nextDifficulty: nextEquationsDifficulty,
+      questionCount: EQUATIONS_QUESTION_COUNT,
+    },
     levels: [
       level("easy", [
         { id: "g8-equations-e1", topic: "משוואות", prompt: "x + 7 = 12", answer: 5, hints: ["מה שעושים לאגף אחד עושים גם לשני", "מורידים `7` משני האגפים"] as const, steps: [{ label: "מעבירים את ה-7 לצד השני ומשנים סימן" }, { label: "x = 12 − 7" }, { label: "x = 5" }], analogy: "חסכת סכום כלשהו, קיבלת עוד 7 שקל ועכשיו יש לך 12" },
@@ -102,6 +166,14 @@ export const grade8Topics: Topic[] = [
     id: "powers",
     title: "חזקות ושורשים",
     reviewed: true,
+    adaptive: {
+      generate: generatePowersQuestion,
+      minDifficulty: POWERS_MIN_DIFFICULTY,
+      maxDifficulty: POWERS_MAX_DIFFICULTY,
+      initialDifficulty: POWERS_INITIAL_DIFFICULTY,
+      nextDifficulty: nextPowersDifficulty,
+      questionCount: POWERS_QUESTION_COUNT,
+    },
     levels: [
       level("easy", [
         { id: "g8-powers-e1", topic: "חזקות ושורשים", prompt: "2³", answer: 8, hints: ["חזקה היא כפל חוזר של הבסיס בעצמו", "`2` כפול `2` כפול `2`"] as const, steps: [{ label: "חזקה זה כמה פעמים מכפילים את המספר בעצמו" }, { label: "2 × 2 × 2 = 8" }], analogy: "קופסה שכל צלע שלה 2 - כמה קוביות נכנסות בה" },
@@ -145,6 +217,14 @@ export const grade8Topics: Topic[] = [
     id: "pythagoras",
     title: "משפט פיתגורס",
     reviewed: true,
+    adaptive: {
+      generate: generatePythagorasQuestion,
+      minDifficulty: PYTHAGORAS_MIN_DIFFICULTY,
+      maxDifficulty: PYTHAGORAS_MAX_DIFFICULTY,
+      initialDifficulty: PYTHAGORAS_INITIAL_DIFFICULTY,
+      nextDifficulty: nextPythagorasDifficulty,
+      questionCount: PYTHAGORAS_QUESTION_COUNT,
+    },
     levels: [
       level("easy", [
         { id: "g8-pythagoras-e1", topic: "משפט פיתגורס", prompt: "במשולש ישר זווית הניצבים הם 3 ו-4. מה אורך היתר?", answer: 5, hints: ["היתר בריבוע שווה לסכום ריבועי שני הניצבים", "`3` בריבוע ועוד `4` בריבוע, ואז שורש"] as const, steps: [{ label: "במשולש ישר זווית: היתר בריבוע שווה לסכום ריבועי הניצבים" }, { label: "3² + 4² = 9 + 16 = 25" }, { label: "√25 = 5" }], analogy: "מדרגות שגובהן 3 ורוחבן 4 - כמה ארוך המעקה מעליהן" },
@@ -188,6 +268,14 @@ export const grade8Topics: Topic[] = [
     id: "linear",
     title: "פונקציה קווית",
     reviewed: true,
+    adaptive: {
+      generate: generateLinearFunctionQuestion,
+      minDifficulty: LINEAR_FUNCTION_MIN_DIFFICULTY,
+      maxDifficulty: LINEAR_FUNCTION_MAX_DIFFICULTY,
+      initialDifficulty: LINEAR_FUNCTION_INITIAL_DIFFICULTY,
+      nextDifficulty: nextLinearFunctionDifficulty,
+      questionCount: LINEAR_FUNCTION_QUESTION_COUNT,
+    },
     levels: [
       level("easy", [
         { id: "g8-linear-e1", topic: "פונקציה קווית", prompt: "בפונקציה `y = x + 5`, מה הערך של `y`, כאשר `x` שווה ל-`3`?", answer: 8, hints: ["מציבים את הערך של `x` ומחשבים", "`3` ועוד `5`"] as const, steps: [{ label: "מציבים 3 במקום x" }, { label: "3 + 5 = 8" }], analogy: "חיסכון שמתחיל ב-5 שקל ומוסיפים לו שקל לכל יום" },
@@ -231,6 +319,14 @@ export const grade8Topics: Topic[] = [
     id: "word",
     title: "בעיות מילוליות",
     reviewed: true,
+    adaptive: {
+      generate: generateWordProblemsQuestion,
+      minDifficulty: WORD_PROBLEMS_MIN_DIFFICULTY,
+      maxDifficulty: WORD_PROBLEMS_MAX_DIFFICULTY,
+      initialDifficulty: WORD_PROBLEMS_INITIAL_DIFFICULTY,
+      nextDifficulty: nextWordProblemsDifficulty,
+      questionCount: WORD_PROBLEMS_QUESTION_COUNT,
+    },
     levels: [
       level("easy", [
         { id: "g8-word-e1", topic: "בעיות מילוליות", prompt: "מכונית נסעה 120 קילומטר ב-2 שעות. מה המהירות הממוצעת?", answer: 60, hints: ["מהירות היא מרחק חלקי זמן", "`120` חלקי `2`"] as const, steps: [{ label: "מהירות זה מרחק חלקי זמן" }, { label: "120 ÷ 2 = 60" }], analogy: "נסיעה קצרה בכביש מהיר - כמה קילומטר בשעה" },
