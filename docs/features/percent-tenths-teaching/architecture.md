@@ -110,3 +110,26 @@ const ticks = strip.denominator
 
 ## Open Questions
 None.
+
+## Implementation Notes
+נבנה בדיוק לפי התכנון, ללא סטיות.
+
+- `src/data/percentStrip.ts`: נוספה `gcd()`, והענף הראשון של `readShape()` (`^כמה זה
+  (\d+)% מ-(\d+)\?$`) מחשב ומחזיר `numerator`/`denominator` נוספים. שני השדות נוספו
+  כאופציונליים לטיפוס `PercentStrip`. שאר הענפים (הנחה/העלאה/"כמה אחוזים")
+  לא נגעתי בהם — כפי שתוכנן.
+- `src/components/PercentStrip.tsx`: `[0.25, 0.5, 0.75]` הוחלף בחישוב `ticks` מ-
+  `strip.denominator` כשהוא קיים, עם נפילה חזרה למערך הקבוע כשלא (שאר סוגי השאלות).
+  שאר הרכיב (צביעה, תוויות, `extra`) לא השתנה.
+- `src/data/grade6.ts`: כל `20` השאלות (`e1`–`e10`, `m1`–`m10`) בנושא אחוזים עודכנו —
+  `hints[0]` הוחלף ושני שלבים חדשים נוספו בתחילת `steps`, בדיוק לפי טבלת ה-Copy
+  ב-design.md. וידאתי ידנית שהמחלק הנאמר בשלב הצמצום הוא תמיד ה-gcd האמיתי (`10` ל-
+  `30%`, `25` ל-`75%`, לא `X` עצמו). `hints[1]`, `analogy`, ורמת `hard` לא נגעתי בהם.
+- `npm run build` ו-`npm run lint` נקיים. `npm run bump:fix` הועלה (`1.17.1` →
+  `1.17.2` — הבראנץ' יצא מ-`main` לפני מיזוג `PR #48`, אז המספר הזה עצמאי מה-
+  `1.18.0` שם).
+- לא הרצתי את סוויטת ה-e2e המלאה — זו עבודת `qa`, כולל עדכון הבדיקה שכבר תועדה
+  בארכיטקטורה (`more-diagrams-wave2.spec.ts`, "the strip carries guide lines at every
+  quarter", `3`→`9` קווים לשאלת `10%`).
+- כפי שתועד ב-Risks: `src/data/adaptivePercent.ts` (מ-`PR #48`, טרם מוזג) לא קיים
+  על הבראנץ' הזה ולא נגעתי בו — משימת המשך מתועדת, לא חוסמת.

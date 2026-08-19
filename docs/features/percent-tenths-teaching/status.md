@@ -7,10 +7,10 @@
 - [x] Product spec — product-manager — 2026-08-19
 - [x] Design — designer — 2026-08-19
 - [x] Architecture — tech-lead — 2026-08-19
-- [ ] Implementation — developer — not started
+- [x] Implementation — developer — 2026-08-19
 - [ ] Tests — qa — not started
 
-**Current phase:** developer
+**Current phase:** qa
 **Branch:** `fix/percent-tenths-teaching`
 **PR:** not opened yet
 
