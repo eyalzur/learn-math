@@ -579,7 +579,11 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
           )}
           {explanation.steps.map((step, i) => (
             <p key={i} className="explanation-step">
-              <span>{step.label}</span>
+              {/* Same isolation every other text field gets — a step label can carry a
+                  backtick-marked number (e.g. "`10%` זה `10/100`") exactly like a hint
+                  can, and without this it renders the backticks themselves instead of
+                  isolating the number they mark. */}
+              <span>{segmented(step.label)}</span>
               {step.math && <span className="explanation-math">{step.math}</span>}
             </p>
           ))}
