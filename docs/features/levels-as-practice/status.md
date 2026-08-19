@@ -8,16 +8,18 @@
 - [x] Design — designer — 2026-08-19
 - [x] Architecture — tech-lead — 2026-08-19
 - [x] Implementation — developer — 2026-08-19
-- [ ] Tests — qa — not started
+- [x] Tests — qa — 2026-08-19
 
-**Current phase:** qa
+**Current phase:** done — ממתין ל-PR ולריוויו
 **Branch:** `feature/levels-as-practice`
 **PR:** not opened yet
 
 ## Open questions / blockers
-None. ההיקף אושר במפורש על ידי המשתמש (2026-08-19): כל `12` נושאי רותם ועומר, לא
-תת-קבוצה. הערה לא חוסמת ל-tech-lead: זו הרחבה גדולה מהפיילוט (נושא בודד ← `12` נושאים,
-חלקם קונספטואליים בהרבה מחשבון — ראו product-spec.md).
+None. `231/231` בדיקות e2e עוברות בריצה אחת ונקייה, `npm run build`/`npm run lint`
+נקיים בגרסה `1.18.0`. ראו tests.md לפירוט מלא — כולל שינויי רגרסיה בקבצי בדיקה של
+פיצ'רים אחרים ששימשו את רותם/עומר כאמצעי (לא כמטרה), ושלושה באגי תוכן אמיתיים שנתפסו
+ותוקנו תוך כדי (דקדוק עברי בשברים, ניסוח שאלת הנחה באחוזים, רמזים שיכלו לבגוד בתשובה
+במקרה).
 
 ## Docs
 - [Product spec](./product-spec.md)
