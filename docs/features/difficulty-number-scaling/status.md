@@ -7,11 +7,11 @@
 ## Progress
 - [x] Product spec — product-manager — 2026-08-19
 - [x] Design — designer — 2026-08-19
-- [ ] Architecture — tech-lead — not started
+- [x] Architecture — tech-lead — 2026-08-19
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** tech-lead
+**Current phase:** developer
 **Branch:** `feature/levels-as-practice` (המשך ל-`PR #48` הפתוח — לא בראנץ' חדש,
 כי המשוב נוגע ישירות ב-12 המחוללים שאותו `PR` בנה)
 **PR:** [#48](https://github.com/eyalzur/learn-math/pull/48) (יתעדכן, לא ייפתח מחדש)
