@@ -59,7 +59,10 @@ test("every student can now open every topic", async ({ page }) => {
     await expect(page.locator(".topics-notice")).toHaveCount(0);
 
     await page.locator(".topic-card").first().click();
-    await expect(page.locator(".style-card, .level-card").first()).toBeVisible();
+    // A topic can now open onto a style choice, a level choice, or — for a topic that
+    // moved to adaptive difficulty (docs/features/levels-as-practice) — straight into
+    // practice with no choice screen at all. All three count as "opened".
+    await expect(page.locator(".style-card, .level-card, .problem-text").first()).toBeVisible();
   }
 });
 
