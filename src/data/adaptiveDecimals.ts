@@ -41,13 +41,17 @@ function makeQuestion(
   return { id: freshId(rng), topic: "שברים עשרוניים", prompt, answer, hints, steps, analogy };
 }
 
-/** Pattern 1 — adding two one-decimal numbers, no carry past the tenths (their tenths
- *  digits are capped so the sum never reaches 10). */
+/** Pattern 1 — adding two one-decimal numbers. Most of the time the tenths stay under
+ *  10 (no carry); about a third of the time they're built to land on exactly 10,
+ *  carrying into a whole number — the one case the written data exercises ("1.5 + 1.5"
+ *  = 3), and the one `verticalSum` needs in order to draw its carry mark and explain a
+ *  column-honest "3.0" as the plain "3" it actually is. */
 function addDecimals(rng: Rng): Question {
+  const carries = rng() < 0.35;
   const aWhole = randInt(0, 4, rng);
-  const aTenths = randInt(1, 8, rng);
   const bWhole = randInt(0, 4, rng);
-  const bTenths = randInt(1, 9 - aTenths, rng);
+  const aTenths = carries ? randInt(1, 9, rng) : randInt(1, 8, rng);
+  const bTenths = carries ? 10 - aTenths : randInt(1, 9 - aTenths, rng);
   const a = fmt(aWhole, aTenths);
   const b = fmt(bWhole, bTenths);
   const answer = Number((Number(a) + Number(b)).toFixed(1));

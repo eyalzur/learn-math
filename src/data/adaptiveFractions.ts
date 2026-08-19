@@ -21,14 +21,20 @@ const UNIT_FRACTIONS: [string, number][] = [
   ["חמישית", 5],
 ];
 
-/** [מונה, שם המונה ברבים, מכנה, שם השבר] עבור שברים שאינם יחידה. */
-const NON_UNIT_FRACTIONS: [number, string, number][] = [
-  [3, "רבעים", 4],
-  [2, "חמישיות", 5],
-  [2, "שלישים", 3],
-  [3, "שמיניות", 8],
-  [4, "חמישיות", 5],
-  [5, "שישיות", 6],
+/**
+ * [הביטוי המלא, מונה, מכנה] — בדיוק שש הצורות שכבר מופיעות בשאלות הכתובות, כולל ניקוד
+ * המספר (זכר/נקבה) כפי שהוא שם. עברית הופכת את התאמת המין למספרים 3–10 (שם עצם ברבים
+ * זכר לוקח צורת מספר נקבה ולהפך), וזה לא כלל אחיד על פני "רבעים"/"חמישיות"/"שלישים"/
+ * "שמיניות"/"שישיות" — קל לטעות אם בונים את זה ממונה+שם בנפרד (`"שני חמישיות"` השגוי
+ * במקום `"שתי חמישיות"`), אז הביטוי המלא כתוב פעם אחת, בדיוק כמו שכבר נכתב ונבדק.
+ */
+const NON_UNIT_FRACTIONS: [string, number, number][] = [
+  ["שלושה רבעים", 3, 4],
+  ["שתי חמישיות", 2, 5],
+  ["שני שלישים", 2, 3],
+  ["שלוש שמיניות", 3, 8],
+  ["ארבע חמישיות", 4, 5],
+  ["חמש שישיות", 5, 6],
 ];
 
 const UNIT_ANALOGIES = [
@@ -65,11 +71,10 @@ function unitFraction(rng: Rng): Question {
 
 /** Pattern 2 — a non-unit fraction of a number. */
 function nonUnitFraction(rng: Rng): Question {
-  const [num, plural, denom] = pick(NON_UNIT_FRACTIONS, rng);
+  const [name, num, denom] = pick(NON_UNIT_FRACTIONS, rng);
   const unitValue = randInt(2, 15, rng);
   const whole = unitValue * denom;
   const answer = unitValue * num;
-  const name = `${num === 2 ? "שני" : num === 3 ? "שלושה" : num === 4 ? "ארבע" : "חמש"} ${plural}`;
   return makeQuestion(
     `כמה זה ${name} מ-${whole}?`,
     answer,
