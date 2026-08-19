@@ -8,8 +8,10 @@ import { test, expect, type Page } from "@playwright/test";
  * exercise"), the exercise written in columns, then the existing steps and analogy.
  *
  * Routes used, from the design's Screens/States:
- *  - Rotem → "שברים עשרוניים" (topic 2) easy: opens on `0.5 + 0.3`, later `1.5 + 1.5`
- *    — the only carry in the data.
+ *  - Rotem → "שברים עשרוניים" is now adaptive (no level picker — see
+ *    docs/features/levels-as-practice), so these tests read whatever decimal-addition
+ *    question the session actually generates (`enterDecimals`/`retryDecimalAddition`
+ *    below) instead of assuming a fixed one.
  *  - Mika → "חיבור וחיסור עד 20" (topic 4) easy: `12 + 5` … `18 − 4`; hard: all
  *    borrowing (`15 − 8`), which the spec keeps vertical-free on purpose.
  *  - Mika → "חיבור עד 10" (topic 2): single digits — sentence, no columns.
@@ -38,21 +40,52 @@ async function start(page: Page, student: number, topicIdx: number, pick: number
   }
 }
 
+/** Rotem's "שברים עשרוניים" — adaptive, so entering it lands straight on practice with a
+ *  generated question rather than a chosen level. */
+async function enterDecimals(page: Page) {
+  await page.goto("/learn-math/");
+  await page.evaluate(() => localStorage.clear());
+  await page.goto("/learn-math/");
+  await page.locator(".student-card").nth(1).click(); // Rotem
+  await page.locator(".topic-card").nth(1).click(); // שברים עשרוניים
+}
+
 const answerWrong = async (page: Page) => {
   await page.locator(".answer-input").fill("999999");
   await page.getByRole("button", { name: "בדיקה" }).first().click();
 };
 
-/** Fails questions until the prompt contains `wanted`, then fails that one too. */
-async function failAt(page: Page, wanted: string) {
-  for (let i = 0; i < 12; i++) {
-    const prompt = await page.locator(".problem-text").innerText();
-    if (prompt.includes(wanted)) break;
+async function currentPrompt(page: Page): Promise<string> {
+  return (await page.locator(".problem-text").innerText()).trim();
+}
+
+/** Reads the two decimal operands off a `"A + B"` prompt, and whether their tenths carry
+ *  (sum to 10 or more) — the same distinction `verticalSum.ts` draws when it decides
+ *  whether to show a carry mark and an "X.0 is exactly X" caption. */
+function parseDecimalAddition(prompt: string): { a: string; b: string; carries: boolean } | null {
+  const m = prompt.match(/^(\d+\.\d)\s*\+\s*(\d+\.\d)\s*=?$/);
+  if (!m) return null;
+  const tenths = (s: string) => Number(s.split(".")[1]);
+  return { a: m[1], b: m[2], carries: tenths(m[1]) + tenths(m[2]) >= 10 };
+}
+
+/** Skips forward (answering wrong each time) until the current decimal-addition question
+ *  matches `wantCarry`, then answers that one wrong too so its explanation is on screen.
+ *  Every fresh question at this topic's starting difficulty is an addition (see
+ *  `adaptiveDecimals.ts`), so this only ever needs to wait out the carry/no-carry coin
+ *  flip, never a different shape entirely. */
+async function failAtDecimalAddition(page: Page, wantCarry: boolean) {
+  for (let i = 0; i < 20; i++) {
+    const parsed = parseDecimalAddition(await currentPrompt(page));
+    expect(parsed, "the opening tier of שברים עשרוניים is always an addition").not.toBeNull();
+    if (parsed!.carries === wantCarry) {
+      await answerWrong(page);
+      return parsed!;
+    }
     await answerWrong(page);
     await page.getByRole("button", { name: /הבא|סיום/ }).click();
   }
-  await expect(page.locator(".problem-text")).toContainText(wanted);
-  await answerWrong(page);
+  throw new Error(`never saw a ${wantCarry ? "carrying" : "non-carrying"} decimal addition in 20 tries`);
 }
 
 // ------------------------------------------------------ nothing leaks before the answer
@@ -60,7 +93,7 @@ async function failAt(page: Page, wanted: string) {
 test("no method sentence and no vertical anywhere before the question is answered", async ({
   page,
 }) => {
-  await start(page, 1, 1, 0); // 0.5 + 0.3 — a question that will have both
+  await enterDecimals(page); // a decimal addition — a question that will have both
   await expect(page.locator(".problem-text")).toBeVisible();
   await expect(page.locator(".explanation-method")).toHaveCount(0);
   await expect(page.locator(".vertical-sum")).toHaveCount(0);
@@ -71,8 +104,8 @@ test("no method sentence and no vertical anywhere before the question is answere
 test("the decimal addition opens with the user's method sentence and a point-aligned vertical", async ({
   page,
 }) => {
-  await start(page, 1, 1, 0);
-  await failAt(page, "0.5 + 0.3");
+  await enterDecimals(page);
+  await failAtDecimalAddition(page, false);
 
   // The sentence the user gave, then sharpened himself: "רק צריך לשים לב לנקודה" told
   // the child to be careful without telling her what to do, and what to do is the whole
@@ -97,18 +130,22 @@ test("the decimal addition opens with the user's method sentence and a point-ali
 
 // ----------------------------------------------------------------------------- the carry
 
-test("the one carrying question shows the carry mark, and 3.0 is explained as 3", async ({
+test("a carrying question shows the carry mark, and a whole-number result is explained as itself", async ({
   page,
 }) => {
-  await start(page, 1, 1, 0);
-  await failAt(page, "1.5 + 1.5");
+  await enterDecimals(page);
+  const { a, b } = await failAtDecimalAddition(page, true);
+  const wholeResult = Math.round((Number(a) + Number(b)) * 10) % 10 === 0;
 
   await expect(page.locator(".vs-carries")).toBeVisible();
-  await expect(page.locator(".vs-result")).toContainText("3.0");
-
   const caption = await page.locator(".vertical-caption").innerText();
   expect(caption, "the caption does not explain the carried 1").toContain("1");
-  expect(caption, "3.0 is left unexplained").toContain("בדיוק");
+  if (wholeResult) {
+    // Column-honest ("3.0") but the answer is the plain whole number ("3") — the caption
+    // has to say so, the same way it does for the written "1.5 + 1.5" = 3.
+    await expect(page.locator(".vs-result")).toContainText(".0");
+    expect(caption, "a column-honest .0 result is left unexplained").toContain("בדיוק");
+  }
 });
 
 // ------------------------------------------------- the sentence matches the operation
@@ -117,7 +154,17 @@ test("a subtraction question gets a subtraction sentence, never an addition one"
   page,
 }) => {
   await start(page, 0, 3, "חיסור");
-  await failAt(page, "18 − 4");
+  const failAt = async (wanted: string) => {
+    for (let i = 0; i < 12; i++) {
+      const prompt = await currentPrompt(page);
+      if (prompt.includes(wanted)) break;
+      await answerWrong(page);
+      await page.getByRole("button", { name: /הבא|סיום/ }).click();
+    }
+    await expect(page.locator(".problem-text")).toContainText(wanted);
+    await answerWrong(page);
+  };
+  await failAt("18 − 4");
 
   const method = await page.locator(".explanation-method").innerText();
   expect(method).toContain("מחסרים");
@@ -134,7 +181,14 @@ test("a borrowing question shows the vertical with a borrow mark, and the explan
   // A lesson now climbs from the easy end, so the borrowing questions are no longer
   // whatever comes first — walk to one by name.
   await start(page, 0, 3, "חיסור");
-  await failAt(page, "15 − 8");
+  for (let i = 0; i < 12; i++) {
+    const prompt = await currentPrompt(page);
+    if (prompt.includes("15 − 8")) break;
+    await answerWrong(page);
+    await page.getByRole("button", { name: /הבא|סיום/ }).click();
+  }
+  await expect(page.locator(".problem-text")).toContainText("15 − 8");
+  await answerWrong(page);
 
   // One borrow is drawable — the neighbouring column shows its reduced digit, the
   // borrowing column shows the ten it received, same visual language as a carry.
@@ -156,8 +210,8 @@ test("single-digit sums get a sentence but no column layout", async ({ page }) =
 // --------------------------------------------------------------- accessibility and RTL
 
 test("the caption and the screen reader description say the same thing", async ({ page }) => {
-  await start(page, 1, 1, 0);
-  await failAt(page, "0.5 + 0.3");
+  await enterDecimals(page);
+  await failAtDecimalAddition(page, false);
 
   const caption = await page.locator(".vertical-caption").innerText();
   const described = await page.locator(".vertical-sum").getAttribute("aria-label");
@@ -166,8 +220,8 @@ test("the caption and the screen reader description say the same thing", async (
 });
 
 test("the vertical block is one isolated left-to-right island", async ({ page }) => {
-  await start(page, 1, 1, 0);
-  await failAt(page, "0.5 + 0.3");
+  await enterDecimals(page);
+  await failAtDecimalAddition(page, false);
 
   const style = await page.locator(".vertical-sum").evaluate((el) => {
     const c = getComputedStyle(el);
@@ -217,8 +271,10 @@ test("the explanation is spoken in layer order: method first, the caption before
     });
   });
 
-  await start(page, 1, 1, 0);
-  await failAt(page, "0.5 + 0.3");
+  await enterDecimals(page);
+  // A non-carrying addition is the case whose caption says "מתחת לנקודה" — a carrying one
+  // is phrased differently ("מעבירים 1 לעמודה הבאה"), so this needs that specific shape.
+  await failAtDecimalAddition(page, false);
   await page.getByRole("button", { name: "הקריאו לי את ההסבר" }).click();
   // The reader paces itself — roughly half a second between parts — so counting parts
   // samples too early. Wait for the caption's own phrase to be spoken, then look at
@@ -247,7 +303,7 @@ test("the explanation is spoken in layer order: method first, the caption before
 // ------------------------------------------------------------------- the phone keyboard
 
 test("numeric answer fields ask for a decimal keyboard", async ({ page }) => {
-  await start(page, 1, 1, 0);
+  await enterDecimals(page);
   await expect(page.locator(".answer-input")).toHaveAttribute("inputmode", "decimal");
 
   // The follow-up field appears only inside a diagnosed conversation: 12 + 5 answered 7
