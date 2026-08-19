@@ -115,8 +115,13 @@ function reverseDiscount(rng: Rng): Question {
     [`אחרי הנחה של \`${percent}%\` המחיר ששולם הוא \`${remaining}%\` מהמקורי`, `\`${paid}\` הם \`${remaining}%\`. כמה זה \`100%\`?`],
     [
       { label: `אחרי הנחה של ${percent}% משלמים ${remaining}% מהמחיר` },
-      { label: `אחוז אחד:`, math: `${paid} ÷ ${remaining} = ${round2(paid / remaining)}` },
-      { label: "ומאה אחוז:", math: `${round2(paid / remaining)} × 100 = ${original}` },
+      // `paid ÷ remaining` is always exactly `original / 100` by construction (paid was
+      // built as `original × remaining / 100`) — computed that way instead of rounding
+      // the quotient for display, which would state an equation that isn't actually true
+      // when `paid` needs its own two decimal digits (e.g. "13.15 ÷ 50 = 0.26" is false;
+      // the exact quotient is 0.263).
+      { label: `אחוז אחד:`, math: `${paid} ÷ ${remaining} = ${original / 100}` },
+      { label: "ומאה אחוז:", math: `${original / 100} × 100 = ${original}` },
     ],
     `לחשב מחיר מקורי כשרואים רק את המחיר אחרי ההנחה`,
     rng,

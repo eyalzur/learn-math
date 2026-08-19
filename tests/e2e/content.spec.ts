@@ -990,6 +990,106 @@ test("every generated question, across all twelve levels-as-practice topics, pas
   expect(violations, `\n${violations.join("\n")}\n`).toEqual([]);
 });
 
+/**
+ * docs/features/difficulty-number-scaling/product-spec.md's Acceptance Criteria, checked
+ * directly against generated output rather than relying on `RULES` (which never looked at
+ * digit counts or decimal precision — a 3-digit number or a 3-decimal answer passes every
+ * existing rule just fine).
+ */
+function numbersIn(text: string): number[] {
+  return (text.match(/\d+(?:\.\d+)?/g) ?? []).map(Number);
+}
+
+function integerDigits(n: number): number {
+  return String(Math.trunc(Math.abs(n))).length;
+}
+
+function decimalDigits(n: number): number {
+  const s = String(n);
+  const dot = s.indexOf(".");
+  return dot === -1 ? 0 : s.length - dot - 1;
+}
+
+test("every difficulty-1 question, across all twelve topics, uses only single/double-digit numbers", () => {
+  const violations: string[] = [];
+  const samples = 200;
+
+  for (const [topic, , generate] of ADAPTIVE_GENERATORS) {
+    const rng = seededRng(topic.length * 7919 + 1);
+    for (let i = 0; i < samples; i++) {
+      const q = generate(1, rng);
+      for (const n of [...numbersIn(q.prompt), q.answer]) {
+        if (integerDigits(n) > 2) {
+          violations.push(`${q.id} (${topic}, difficulty 1) — "${q.prompt}" = ${q.answer} has a ${integerDigits(n)}-digit number (${n})`);
+        }
+      }
+    }
+  }
+
+  expect(violations, `\n${violations.join("\n")}\n`).toEqual([]);
+});
+
+test("the reported bug does not come back: אחוזים difficulty 1-2 never produces a 3-digit base", () => {
+  // The exact complaint: "כמה זה 10% מ-960?" as a difficulty-1 question, and "50% מ-78"
+  // being reachable almost immediately (difficulty 2 — a two-correct-streak away).
+  const rng = seededRng(99);
+  const violations: string[] = [];
+  for (let difficulty = 1; difficulty <= 2; difficulty++) {
+    for (let i = 0; i < 300; i++) {
+      const q = generatePercentQuestion(difficulty, rng);
+      const m = q.prompt.match(/^כמה זה (\d+)% מ-(\d+)\?$/);
+      if (!m) continue; // difficulty 2 can occasionally land elsewhere via retry; skip
+      const base = Number(m[2]);
+      if (base >= 100) violations.push(`${q.id} (difficulty ${difficulty}) — "${q.prompt}" has a 3-digit base`);
+    }
+  }
+  expect(violations, `\n${violations.join("\n")}\n`).toEqual([]);
+});
+
+test("the nine decimal-eligible generators sometimes produce a non-integer answer, always at most two decimal digits", () => {
+  // Per design.md's table: which topic, which difficulty tier(s) actually carry the ~30%
+  // decimal draw. שברים פשוטים/חזקות ושורשים/משפט פיתגורס are deliberately absent — see
+  // architecture.md's Risks for why those three stay integer-only in this pass.
+  const DECIMAL_TIERS: Record<string, number[]> = {
+    "אחוזים": [4, 5],
+    "שטח והיקף": [4, 5],
+    "ממוצע": [4, 5],
+    "משוואות": [5],
+    "ביטויים אלגבריים": [4],
+    "פונקציה קווית": [5],
+    "יחס ופרופורציה": [3],
+    "בעיות מילוליות": [5],
+  };
+  const samplesPerTier = 300;
+  const tooManyDecimals: string[] = [];
+  const neverWentDecimal: string[] = [];
+
+  for (const [topic, , generate] of ADAPTIVE_GENERATORS) {
+    const tiers = DECIMAL_TIERS[topic];
+    if (!tiers) continue;
+    for (const difficulty of tiers) {
+      const rng = seededRng(topic.length * 104729 + difficulty);
+      let sawDecimal = false;
+      for (let i = 0; i < samplesPerTier; i++) {
+        const q = generate(difficulty, rng);
+        for (const n of [...numbersIn(q.prompt), q.answer]) {
+          const dd = decimalDigits(n);
+          if (dd > 0) sawDecimal = true;
+          if (dd > 2) {
+            tooManyDecimals.push(`${q.id} (${topic}, difficulty ${difficulty}) — "${q.prompt}" = ${q.answer} has a number with ${dd} decimal digits (${n})`);
+          }
+        }
+      }
+      if (!sawDecimal) {
+        neverWentDecimal.push(`${topic} (difficulty ${difficulty}) never produced a decimal in ${samplesPerTier} samples`);
+      }
+    }
+  }
+
+  expect(tooManyDecimals, `\n${tooManyDecimals.join("\n")}\n`).toEqual([]);
+  expect(neverWentDecimal, `\n${neverWentDecimal.join("\n")}\n`).toEqual([]);
+});
+
 test("a generated question's 'X זה Y עשרות ו-Z יחידה/יחידות' hint stays singular/plural-correct", () => {
   // The exact mistake the hand-written questions had to get right first (see
   // docs/features/mika-grade2-content/tests.md, "סבב שני"): "יחידה" only when the count
