@@ -1,5 +1,5 @@
 import type { Question } from "./curriculum";
-import { type Rng, randInt, pick, makeFreshId } from "./adaptiveHelpers";
+import { type Rng, randInt, pick, makeFreshId, withoutLeakingHints } from "./adaptiveHelpers";
 
 /**
  * "אחוזים" (רותם, כיתה ו׳), built at runtime — see
@@ -125,7 +125,7 @@ function wordProblem(rng: Rng): Question {
     return makeQuestion(
       `מחיר ${item} הוא ${price} שקלים, וקיבלת ${pronoun} הנחה של ${rate}%. כמה שקלים הייתה ההנחה?`,
       answer,
-      ["הנחה היא אחוז מהמחיר המקורי", `\`${rate}%\` מ-\`${price}\` הם ${answer}`],
+      ["הנחה היא אחוז מהמחיר המקורי", `\`${rate}%\` מ-\`${price}\``],
       [{ label: "מחשבים את האחוז מהמחיר", math: `${price} × ${rate} ÷ 100 = ${answer}` }],
       `מחיר ${item} הוא ${price} שקלים`,
       rng,
@@ -168,18 +168,20 @@ function wordProblem(rng: Rng): Question {
 }
 
 export function generatePercentQuestion(difficulty: number, rng: Rng = Math.random): Question {
-  switch (Math.min(5, Math.max(1, Math.round(difficulty)))) {
-    case 1:
-      return tenPercent(rng);
-    case 2:
-      return fiftyPercent(rng);
-    case 3:
-      return quarterOrThreeQuarters(rng);
-    case 4:
-      return tensViaTenPercent(rng);
-    default:
-      return wordProblem(rng);
-  }
+  return withoutLeakingHints(() => {
+    switch (Math.min(5, Math.max(1, Math.round(difficulty)))) {
+      case 1:
+        return tenPercent(rng);
+      case 2:
+        return fiftyPercent(rng);
+      case 3:
+        return quarterOrThreeQuarters(rng);
+      case 4:
+        return tensViaTenPercent(rng);
+      default:
+        return wordProblem(rng);
+    }
+  });
 }
 
 export const PERCENT_MIN_DIFFICULTY = 1;

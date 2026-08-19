@@ -1,5 +1,5 @@
 import type { Question } from "./curriculum";
-import { type Rng, randInt, pick, makeFreshId, sup } from "./adaptiveHelpers";
+import { type Rng, randInt, pick, makeFreshId, sup, withoutLeakingHints } from "./adaptiveHelpers";
 
 /**
  * "חזקות ושורשים" (עומר, כיתה ח׳), built at runtime — see
@@ -130,18 +130,20 @@ function powerOfPowerOrDivide(rng: Rng): Question {
 }
 
 export function generatePowersQuestion(difficulty: number, rng: Rng = Math.random): Question {
-  switch (Math.min(5, Math.max(1, Math.round(difficulty)))) {
-    case 1:
-      return square(rng);
-    case 2:
-      return cube(rng);
-    case 3:
-      return squareRoot(rng);
-    case 4:
-      return multiplySamePowers(rng);
-    default:
-      return powerOfPowerOrDivide(rng);
-  }
+  return withoutLeakingHints(() => {
+    switch (Math.min(5, Math.max(1, Math.round(difficulty)))) {
+      case 1:
+        return square(rng);
+      case 2:
+        return cube(rng);
+      case 3:
+        return squareRoot(rng);
+      case 4:
+        return multiplySamePowers(rng);
+      default:
+        return powerOfPowerOrDivide(rng);
+    }
+  });
 }
 
 export const POWERS_MIN_DIFFICULTY = 1;

@@ -1,5 +1,5 @@
 import type { Question } from "./curriculum";
-import { type Rng, randInt, makeFreshId } from "./adaptiveHelpers";
+import { type Rng, randInt, makeFreshId, withoutLeakingHints } from "./adaptiveHelpers";
 
 /**
  * "ממוצע" (רותם, כיתה ו׳), built at runtime — see
@@ -115,18 +115,20 @@ function missingValue(rng: Rng): Question {
 }
 
 export function generateAverageQuestion(difficulty: number, rng: Rng = Math.random): Question {
-  switch (Math.min(5, Math.max(1, Math.round(difficulty)))) {
-    case 1:
-      return averageOfTwo(rng);
-    case 2:
-      return averageOfThree(rng);
-    case 3:
-      return averageOfFour(rng);
-    case 4:
-      return sumFromAverage(rng);
-    default:
-      return missingValue(rng);
-  }
+  return withoutLeakingHints(() => {
+    switch (Math.min(5, Math.max(1, Math.round(difficulty)))) {
+      case 1:
+        return averageOfTwo(rng);
+      case 2:
+        return averageOfThree(rng);
+      case 3:
+        return averageOfFour(rng);
+      case 4:
+        return sumFromAverage(rng);
+      default:
+        return missingValue(rng);
+    }
+  });
 }
 
 export const AVERAGE_MIN_DIFFICULTY = 1;

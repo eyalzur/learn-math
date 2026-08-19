@@ -14,6 +14,18 @@ import { ratioStrips } from "../../src/data/ratioStrips";
 import { linearGraph } from "../../src/data/linearGraph";
 import { STYLE_META, stylesOf, hasStyleLessons } from "../../src/data/style";
 import { generateAdd100Question } from "../../src/data/adaptiveAdd100";
+import { generateFractionsQuestion } from "../../src/data/adaptiveFractions";
+import { generateDecimalsQuestion } from "../../src/data/adaptiveDecimals";
+import { generatePercentQuestion } from "../../src/data/adaptivePercent";
+import { generateRatioQuestion } from "../../src/data/adaptiveRatio";
+import { generateAreaPerimeterQuestion } from "../../src/data/adaptiveAreaPerimeter";
+import { generateAverageQuestion } from "../../src/data/adaptiveAverage";
+import { generateExpressionsQuestion } from "../../src/data/adaptiveExpressions";
+import { generateEquationsQuestion } from "../../src/data/adaptiveEquations";
+import { generatePowersQuestion } from "../../src/data/adaptivePowers";
+import { generatePythagorasQuestion } from "../../src/data/adaptivePythagoras";
+import { generateLinearFunctionQuestion } from "../../src/data/adaptiveLinearFunction";
+import { generateWordProblemsQuestion } from "../../src/data/adaptiveWordProblems";
 
 /**
  * Content correctness, checked against the data rather than through the browser.
@@ -925,6 +937,56 @@ test("every generated חיבור עד 100 question passes every content rule, ac
   expect(badPrompt, `\n${badPrompt.join("\n")}\n`).toEqual([]);
   expect(wrongAnswer, `\n${wrongAnswer.join("\n")}\n`).toEqual([]);
   expect(outOfRange, `\n${outOfRange.join("\n")}\n`).toEqual([]);
+  expect(violations, `\n${violations.join("\n")}\n`).toEqual([]);
+});
+
+/**
+ * `RULES` above only ever sees the static `grades` tree, so a question built at runtime
+ * by any of the twelve generators under `src/data/adaptive*.ts` (see
+ * docs/features/levels-as-practice) is invisible to every check above no matter how
+ * wrong it is — the same gap `generateAdd100Question`'s own test closes, extended to
+ * every topic that moved to adaptive difficulty after it. A seeded RNG keeps the sample
+ * and any failure reproducible.
+ */
+const ADAPTIVE_GENERATORS: [string, string, (difficulty: number, rng: () => number) => Question][] = [
+  ["שברים פשוטים", "6", generateFractionsQuestion],
+  ["שברים עשרוניים", "6", generateDecimalsQuestion],
+  ["אחוזים", "6", generatePercentQuestion],
+  ["יחס ופרופורציה", "6", generateRatioQuestion],
+  ["שטח והיקף", "6", generateAreaPerimeterQuestion],
+  ["ממוצע", "6", generateAverageQuestion],
+  ["ביטויים אלגבריים", "8", generateExpressionsQuestion],
+  ["משוואות", "8", generateEquationsQuestion],
+  ["חזקות ושורשים", "8", generatePowersQuestion],
+  ["משפט פיתגורס", "8", generatePythagorasQuestion],
+  ["פונקציה קווית", "8", generateLinearFunctionQuestion],
+  ["בעיות מילוליות", "8", generateWordProblemsQuestion],
+];
+
+test("every generated question, across all twelve levels-as-practice topics, passes every content rule", () => {
+  const violations: string[] = [];
+  const badAnswer: string[] = [];
+  const samplesPerDifficulty = 100;
+
+  for (const [topic, gradeId, generate] of ADAPTIVE_GENERATORS) {
+    const rng = seededRng(topic.length * 1000003);
+    for (let difficulty = 1; difficulty <= 5; difficulty++) {
+      for (let i = 0; i < samplesPerDifficulty; i++) {
+        const q = generate(difficulty, rng);
+
+        for (const rule of RULES) {
+          const problem = rule.check(q, gradeId);
+          if (problem) violations.push(`${q.id} (${topic}, difficulty ${difficulty}) — ${rule.name}: ${problem}`);
+        }
+
+        if (!Number.isFinite(q.answer)) {
+          badAnswer.push(`${q.id} (${topic}, difficulty ${difficulty}) — "${q.prompt}" answer is ${q.answer}`);
+        }
+      }
+    }
+  }
+
+  expect(badAnswer, `\n${badAnswer.join("\n")}\n`).toEqual([]);
   expect(violations, `\n${violations.join("\n")}\n`).toEqual([]);
 });
 

@@ -1,5 +1,5 @@
 import type { Question } from "./curriculum";
-import { type Rng, randInt, pick, makeFreshId } from "./adaptiveHelpers";
+import { type Rng, randInt, pick, makeFreshId, withoutLeakingHints } from "./adaptiveHelpers";
 
 /**
  * "יחס ופרופורציה" (רותם, כיתה ו׳), built at runtime — see
@@ -137,18 +137,20 @@ function splitByDifference(rng: Rng): Question {
 }
 
 export function generateRatioQuestion(difficulty: number, rng: Rng = Math.random): Question {
-  switch (Math.min(5, Math.max(1, Math.round(difficulty)))) {
-    case 1:
-      return scaleFirstTerm(rng);
-    case 2:
-      return forEvery(rng);
-    case 3:
-      return scaledRecipe(rng);
-    case 4:
-      return splitTotal(rng);
-    default:
-      return splitByDifference(rng);
-  }
+  return withoutLeakingHints(() => {
+    switch (Math.min(5, Math.max(1, Math.round(difficulty)))) {
+      case 1:
+        return scaleFirstTerm(rng);
+      case 2:
+        return forEvery(rng);
+      case 3:
+        return scaledRecipe(rng);
+      case 4:
+        return splitTotal(rng);
+      default:
+        return splitByDifference(rng);
+    }
+  });
 }
 
 export const RATIO_MIN_DIFFICULTY = 1;

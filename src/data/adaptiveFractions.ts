@@ -1,5 +1,5 @@
 import type { Question } from "./curriculum";
-import { type Rng, randInt, pick, makeFreshId } from "./adaptiveHelpers";
+import { type Rng, randInt, pick, makeFreshId, withoutLeakingHints } from "./adaptiveHelpers";
 
 /**
  * "שברים פשוטים" (רותם, כיתה ו׳), built at runtime — see
@@ -158,18 +158,20 @@ function partsInWholeAndHalf(rng: Rng): Question {
 }
 
 export function generateFractionsQuestion(difficulty: number, rng: Rng = Math.random): Question {
-  switch (Math.min(5, Math.max(1, Math.round(difficulty)))) {
-    case 1:
-      return unitFraction(rng);
-    case 2:
-      return nonUnitFraction(rng);
-    case 3:
-      return partsInWholes(rng);
-    case 4:
-      return sumOfTwoFractions(rng);
-    default:
-      return partsInWholeAndHalf(rng);
-  }
+  return withoutLeakingHints(() => {
+    switch (Math.min(5, Math.max(1, Math.round(difficulty)))) {
+      case 1:
+        return unitFraction(rng);
+      case 2:
+        return nonUnitFraction(rng);
+      case 3:
+        return partsInWholes(rng);
+      case 4:
+        return sumOfTwoFractions(rng);
+      default:
+        return partsInWholeAndHalf(rng);
+    }
+  });
 }
 
 export const FRACTIONS_MIN_DIFFICULTY = 1;

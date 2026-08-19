@@ -1,5 +1,5 @@
 import type { Question } from "./curriculum";
-import { type Rng, randInt, pick, makeFreshId } from "./adaptiveHelpers";
+import { type Rng, randInt, pick, makeFreshId, withoutLeakingHints } from "./adaptiveHelpers";
 
 /**
  * "בעיות מילוליות" (עומר, כיתה ח׳), built at runtime — see
@@ -120,18 +120,20 @@ function reverseDiscount(rng: Rng): Question {
 }
 
 export function generateWordProblemsQuestion(difficulty: number, rng: Rng = Math.random): Question {
-  switch (Math.min(5, Math.max(1, Math.round(difficulty)))) {
-    case 1:
-      return averageSpeed(rng);
-    case 2:
-      return priceTimesQuantity(rng);
-    case 3:
-      return sumMinusOne(rng);
-    case 4:
-      return percentChange(rng);
-    default:
-      return reverseDiscount(rng);
-  }
+  return withoutLeakingHints(() => {
+    switch (Math.min(5, Math.max(1, Math.round(difficulty)))) {
+      case 1:
+        return averageSpeed(rng);
+      case 2:
+        return priceTimesQuantity(rng);
+      case 3:
+        return sumMinusOne(rng);
+      case 4:
+        return percentChange(rng);
+      default:
+        return reverseDiscount(rng);
+    }
+  });
 }
 
 export const WORD_PROBLEMS_MIN_DIFFICULTY = 1;
