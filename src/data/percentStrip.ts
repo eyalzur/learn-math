@@ -48,7 +48,12 @@ function readShape(prompt: string): PercentStrip | null {
       filled,
       numerator,
       denominator,
-      caption: `\`${rate}%\` מתוך \`${base}\` הם \`${filled}\` — הצבוע ברצועה`,
+      // Describes the picture, not the result — "X% of Y" and where the colour sits, the
+      // same way geometryShape.ts's captions say "the area is everything inside" rather
+      // than stating a number. The strip already appears after a wrong answer, so this
+      // caption sitting above the step-by-step explanation must not hand over the answer
+      // before the reasoning that leads to it.
+      caption: `\`${rate}%\` מ-\`${base}\` — הצבוע ברצועה`,
     };
   }
 
