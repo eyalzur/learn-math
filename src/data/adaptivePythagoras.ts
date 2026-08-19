@@ -32,6 +32,11 @@ function scaledTriple(rng: Rng, maxScale: number): [number, number, number] {
   return [a * scale, b * scale, c * scale];
 }
 
+/** The four smallest triples, for the opening difficulty tier — a first encounter with
+ *  the theorem is always the most familiar numbers, not a random pick from the full pool
+ *  (which reaches as high as `20, 21, 29`). */
+const SMALL_TRIPLES = TRIPLES.slice(0, 4);
+
 function makeQuestion(
   prompt: string,
   answer: number,
@@ -43,9 +48,10 @@ function makeQuestion(
   return { id: freshId(rng), topic: "משפט פיתגורס", prompt, answer, hints, steps, analogy };
 }
 
-/** Pattern 1 — given both legs, find the hypotenuse. */
+/** Pattern 1 — given both legs, find the hypotenuse. The opening tier only, so it draws
+ *  from the four smallest triples with no scaling, instead of `scaledTriple`'s full pool. */
 function findHypotenuse(rng: Rng): Question {
-  const [legA, legB, hyp] = scaledTriple(rng, 2);
+  const [legA, legB, hyp] = pick(SMALL_TRIPLES, rng);
   return makeQuestion(
     `במשולש ישר זווית הניצבים הם ${legA} ו-${legB}. מה אורך היתר?`,
     hyp,

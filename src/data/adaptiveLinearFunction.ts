@@ -1,5 +1,5 @@
 import type { Question } from "./curriculum";
-import { type Rng, randInt, pick, makeFreshId } from "./adaptiveHelpers";
+import { type Rng, randInt, pick, makeFreshId, wantsDecimal, round2 } from "./adaptiveHelpers";
 
 /**
  * "פונקציה קווית" (עומר, כיתה ח׳), built at runtime — see
@@ -95,13 +95,16 @@ function readIntercept(rng: Rng): Question {
   );
 }
 
-/** Pattern 5 — solve for `x` given `y`, built from a chosen integer solution outward. */
+/** Pattern 5 — solve for `x` given `y`, built from a chosen solution outward (`x` first,
+ *  `y` derived from it — never the other way around, so the arithmetic is exact). A ~30%
+ *  share give `x` a `.5`; `a × x` then keeps at most one decimal digit, for `a` up to `6`. */
 function solveForX(rng: Rng): Question {
   const a = randInt(2, 6, rng);
   const b = randInt(1, 15, rng);
-  const x = randInt(2, 10, rng);
+  const decimal = wantsDecimal(rng);
+  const x = randInt(2, 10, rng) + (decimal ? 0.5 : 0);
   const isPlus = rng() < 0.5;
-  const y = isPlus ? a * x + b : a * x - b;
+  const y = round2(isPlus ? a * x + b : a * x - b);
   const op = isPlus ? "+" : "−";
   return makeQuestion(
     `הישר \`y = ${a}x ${op} ${b}\` עובר בנקודה שבה \`y\` שווה \`${y}\`. מה הערך של \`x\`?`,

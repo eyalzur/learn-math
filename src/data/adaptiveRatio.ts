@@ -1,5 +1,5 @@
 import type { Question } from "./curriculum";
-import { type Rng, randInt, pick, makeFreshId, withoutLeakingHints } from "./adaptiveHelpers";
+import { type Rng, randInt, pick, makeFreshId, withoutLeakingHints, wantsDecimal, round2 } from "./adaptiveHelpers";
 
 /**
  * "יחס ופרופורציה" (רותם, כיתה ו׳), built at runtime — see
@@ -70,14 +70,18 @@ function forEvery(rng: Rng): Question {
   );
 }
 
-/** Pattern 3 — scaled recipe: "מתכון ל-A אנשים דורש B כוסות X. כמה כוסות ל-C אנשים?" */
+/** Pattern 3 — scaled recipe: "מתכון ל-A אנשים דורש B כוסות X. כמה כוסות ל-C אנשים?" A
+ *  ~30% share give `amount` a `.5` — cups/spoons are a continuous quantity, unlike the
+ *  discrete counts (dogs, teachers) the other ratio patterns use, so a fractional cup
+ *  amount reads naturally. `amount × k` keeps at most one decimal digit. */
 function scaledRecipe(rng: Rng): Question {
   const base = randInt(2, 6, rng);
   const item = pick(RECIPE_ITEMS, rng);
-  const amount = randInt(1, 4, rng);
+  const decimal = wantsDecimal(rng);
+  const amount = randInt(1, 4, rng) + (decimal ? 0.5 : 0);
   const k = randInt(2, 4, rng);
   const people = base * k;
-  const answer = amount * k;
+  const answer = round2(amount * k);
   return makeQuestion(
     `מתכון ל-${base} אנשים דורש ${amount} ${item}. כמה ${item} ל-${people} אנשים?`,
     answer,

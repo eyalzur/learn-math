@@ -57,7 +57,7 @@ function makeQuestion(
 /** Pattern 1 — a unit fraction of a number that divides evenly. */
 function unitFraction(rng: Rng): Question {
   const [name, denom] = pick(UNIT_FRACTIONS, rng);
-  const answer = randInt(2, 20, rng);
+  const answer = randInt(2, 15, rng);
   const whole = answer * denom;
   return makeQuestion(
     `כמה זה ${name} מ-${whole}?`,

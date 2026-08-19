@@ -1,5 +1,5 @@
 import type { Question } from "./curriculum";
-import { type Rng, randInt, pick, makeFreshId } from "./adaptiveHelpers";
+import { type Rng, randInt, pick, makeFreshId, wantsDecimal, round2 } from "./adaptiveHelpers";
 
 /**
  * "שטח והיקף" (רותם, כיתה ו׳), built at runtime — see
@@ -25,8 +25,8 @@ function makeQuestion(
 
 /** Pattern 1 — rectangle area. */
 function rectangleArea(rng: Rng): Question {
-  const length = randInt(3, 12, rng);
-  const width = randInt(2, 9, rng);
+  const length = randInt(3, 9, rng);
+  const width = randInt(2, 7, rng);
   const answer = length * width;
   return makeQuestion(
     `שטח מלבן שאורכו ${length} ורוחבו ${width}`,
@@ -77,18 +77,22 @@ function rectanglePerimeter(rng: Rng): Question {
   );
 }
 
-/** Pattern 4 — triangle area (height chosen even so the division stays whole). */
+/** Pattern 4 — triangle area (height chosen even so the division stays whole). A ~30%
+ *  share give `base` a `.5` — `height` stays even, so `base × (height / 2)` keeps at
+ *  most one decimal digit either way. */
 function triangleArea(rng: Rng): Question {
-  const base = randInt(4, 14, rng);
+  const decimal = wantsDecimal(rng);
+  const base = randInt(4, 14, rng) + (decimal ? 0.5 : 0);
   const height = randInt(2, 9, rng) * 2;
-  const answer = (base * height) / 2;
+  const product = round2(base * height);
+  const answer = round2(product / 2);
   return makeQuestion(
     `שטח משולש שבסיסו ${base} וגובהו ${height}`,
     answer,
     ["שטח משולש הוא בסיס כפול גובה, חלקי `2`", `הבסיס הוא \`${base}\` והגובה \`${height}\``],
     [
-      { label: "בסיס כפול גובה:", math: `${base} × ${height} = ${base * height}` },
-      { label: "חלקי שתיים:", math: `${base * height} ÷ 2 = ${answer}` },
+      { label: "בסיס כפול גובה:", math: `${base} × ${height} = ${product}` },
+      { label: "חלקי שתיים:", math: `${product} ÷ 2 = ${answer}` },
     ],
     `מפרש משולש של סירה, בסיס ${base} וגובה ${height}`,
     rng,
@@ -130,10 +134,13 @@ function hardShape(rng: Rng): Question {
     );
   }
 
-  const radius = randInt(2, 12, rng);
+  // A ~30% share of the two circle shapes give the radius a `.5` — pi = 3 keeps every
+  // downstream product at most two decimal digits (radius² lands exactly on a quarter).
+  const decimal = wantsDecimal(rng);
+  const radius = randInt(2, 12, rng) + (decimal ? 0.5 : 0);
   const pi = 3;
   if (kind === "circlePerimeter") {
-    const answer = 2 * pi * radius;
+    const answer = round2(2 * pi * radius);
     return makeQuestion(
       `היקף מעגל שרדיוסו ${radius}, כאשר פאי שווה 3`,
       answer,
@@ -147,7 +154,7 @@ function hardShape(rng: Rng): Question {
     );
   }
 
-  const answer = pi * radius * radius;
+  const answer = round2(pi * radius * radius);
   return makeQuestion(
     `שטח מעגל שרדיוסו ${radius}, כאשר פאי שווה 3`,
     answer,

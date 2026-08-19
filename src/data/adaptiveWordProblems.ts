@@ -1,5 +1,5 @@
 import type { Question } from "./curriculum";
-import { type Rng, randInt, pick, makeFreshId, withoutLeakingHints } from "./adaptiveHelpers";
+import { type Rng, randInt, pick, makeFreshId, withoutLeakingHints, wantsDecimal, round2 } from "./adaptiveHelpers";
 
 /**
  * "בעיות מילוליות" (עומר, כיתה ח׳), built at runtime — see
@@ -31,8 +31,8 @@ function makeQuestion(
 
 /** Pattern 1 — average speed: distance ÷ time, distance a multiple of time. */
 function averageSpeed(rng: Rng): Question {
-  const hours = randInt(2, 6, rng);
-  const speed = randInt(20, 90, rng);
+  const hours = randInt(2, 4, rng);
+  const speed = randInt(5, 20, rng);
   const distance = speed * hours;
   return makeQuestion(
     `מכונית נסעה ${distance} קילומטר ב-${hours} שעות. מה המהירות הממוצעת?`,
@@ -98,21 +98,25 @@ function percentChange(rng: Rng): Question {
   );
 }
 
-/** Pattern 5 — reverse a discount to find the original price. */
+/** Pattern 5 — reverse a discount to find the original price. `25%` is excluded from the
+ *  decimal draw on purpose: dividing a one-decimal original by `4` produces three decimal
+ *  digits, past the two-digit cap — the same reason `adaptivePercent.ts`'s `wordProblem`
+ *  excludes it. */
 function reverseDiscount(rng: Rng): Question {
-  const percent = pick([20, 25, 50] as const, rng);
+  const decimal = wantsDecimal(rng);
+  const percent = decimal ? pick([20, 50] as const, rng) : pick([20, 25, 50] as const, rng);
   const remaining = 100 - percent;
   const divisor = percent === 25 ? 4 : percent === 50 ? 2 : 5;
-  const original = randInt(2, 30, rng) * divisor;
-  const paid = (original * remaining) / 100;
+  const original = round2(randInt(2, 30, rng) * divisor + (decimal ? randInt(1, 9, rng) / 10 : 0));
+  const paid = round2((original * remaining) / 100);
   return makeQuestion(
     `מוצר עולה ${paid} שקל אחרי הנחה של ${percent}%. כמה עלה לפני ההנחה?`,
     original,
     [`אחרי הנחה של \`${percent}%\` המחיר ששולם הוא \`${remaining}%\` מהמקורי`, `\`${paid}\` הם \`${remaining}%\`. כמה זה \`100%\`?`],
     [
       { label: `אחרי הנחה של ${percent}% משלמים ${remaining}% מהמחיר` },
-      { label: `אחוז אחד:`, math: `${paid} ÷ ${remaining} = ${paid / remaining}` },
-      { label: "ומאה אחוז:", math: `${paid / remaining} × 100 = ${original}` },
+      { label: `אחוז אחד:`, math: `${paid} ÷ ${remaining} = ${round2(paid / remaining)}` },
+      { label: "ומאה אחוז:", math: `${round2(paid / remaining)} × 100 = ${original}` },
     ],
     `לחשב מחיר מקורי כשרואים רק את המחיר אחרי ההנחה`,
     rng,

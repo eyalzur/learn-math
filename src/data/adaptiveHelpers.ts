@@ -32,6 +32,20 @@ export function sup(n: number): string {
   return s;
 }
 
+/** ~30% of questions at the higher difficulty tiers (per
+ *  docs/features/difficulty-number-scaling/design.md) get a non-integer answer instead of
+ *  the pattern's usual clean multiple — real math is not always tidy. */
+export function wantsDecimal(rng: Rng, probability = 0.3): boolean {
+  return rng() < probability;
+}
+
+/** Rounds to at most two decimal digits and strips binary floating-point noise (0.1 + 0.2
+ *  territory) — the same normalization `addDecimals`/`divideByWhole` in
+ *  adaptiveDecimals.ts already do by hand via `toFixed`. */
+export function round2(n: number): number {
+  return Number(n.toFixed(2));
+}
+
 function numbersIn(text: string): number[] {
   return (text.match(/\d+(?:\.\d+)?/g) ?? []).map(Number);
 }

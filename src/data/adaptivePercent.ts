@@ -1,5 +1,5 @@
 import type { Question } from "./curriculum";
-import { type Rng, randInt, pick, makeFreshId, withoutLeakingHints } from "./adaptiveHelpers";
+import { type Rng, randInt, pick, makeFreshId, withoutLeakingHints, wantsDecimal, round2 } from "./adaptiveHelpers";
 
 /**
  * "אחוזים" (רותם, כיתה ו׳), built at runtime — see
@@ -46,7 +46,7 @@ function makeQuestion(
 
 /** Pattern 1 — 10% of a multiple of 10. */
 function tenPercent(rng: Rng): Question {
-  const base = randInt(2, 100, rng) * 10;
+  const base = randInt(2, 9, rng) * 10;
   const answer = base / 10;
   return makeQuestion(
     `כמה זה 10% מ-${base}?`,
@@ -60,7 +60,7 @@ function tenPercent(rng: Rng): Question {
 
 /** Pattern 2 — 50% of an even number. */
 function fiftyPercent(rng: Rng): Question {
-  const base = randInt(2, 100, rng) * 2;
+  const base = randInt(2, 45, rng) * 2;
   const answer = base / 2;
   return makeQuestion(
     `כמה זה 50% מ-${base}?`,
@@ -92,13 +92,16 @@ function quarterOrThreeQuarters(rng: Rng): Question {
   return makeQuestion(`כמה זה ${rate}% מ-${base}?`, answer, [hint1, hint2], steps, `רבע מקבוצה של ${base} משתתפים`, rng);
 }
 
-/** Pattern 4 — 20%/30% of a multiple of 10, via "find 10% first". */
+/** Pattern 4 — 20%/30% of a multiple of 10, via "find 10% first". A ~30% share of these
+ *  questions add a tenths digit to `base`, so `10%` comes out as a one-decimal number
+ *  instead of always landing clean — real percentages don't always divide evenly. */
 function tensViaTenPercent(rng: Rng): Question {
-  const base = randInt(2, 50, rng) * 10;
-  const tenPct = base / 10;
+  const decimal = wantsDecimal(rng);
+  const base = randInt(2, 50, rng) * 10 + (decimal ? randInt(1, 9, rng) : 0);
+  const tenPct = round2(base / 10);
   const factor = pick([2, 3] as const, rng);
   const rate = factor * 10;
-  const answer = tenPct * factor;
+  const answer = round2(tenPct * factor);
   return makeQuestion(
     `כמה זה ${rate}% מ-${base}?`,
     answer,
@@ -117,10 +120,13 @@ function wordProblem(rng: Rng): Question {
   const kind = pick(["discount", "increase", "partOfWhole"] as const, rng);
 
   if (kind === "discount") {
-    const rate = pick([10, 20, 25, 50] as const, rng);
+    // 25% is excluded from the decimal draw on purpose: dividing a one-decimal price by
+    // 4 produces three decimal digits (23.7 ÷ 4 = 5.925), past the two-digit cap.
+    const decimal = wantsDecimal(rng);
+    const rate = decimal ? pick([10, 20, 50] as const, rng) : pick([10, 20, 25, 50] as const, rng);
     const divisor = rate === 25 ? 4 : rate === 50 ? 2 : 10 / (rate / 10);
-    const price = randInt(2, 40, rng) * divisor;
-    const answer = (price * rate) / 100;
+    const price = round2(randInt(2, 40, rng) * divisor + (decimal ? randInt(1, 9, rng) / 10 : 0));
+    const answer = round2((price * rate) / 100);
     const [item, pronoun] = pick(DISCOUNT_ITEMS, rng);
     return makeQuestion(
       `מחיר ${item} הוא ${price} שקלים, וקיבלת ${pronoun} הנחה של ${rate}%. כמה שקלים הייתה ההנחה?`,
@@ -133,11 +139,13 @@ function wordProblem(rng: Rng): Question {
   }
 
   if (kind === "increase") {
-    const rate = pick([10, 20, 25, 50] as const, rng);
+    // Same 25% exclusion as the discount case above, and for the same reason.
+    const decimal = wantsDecimal(rng);
+    const rate = decimal ? pick([10, 20, 50] as const, rng) : pick([10, 20, 25, 50] as const, rng);
     const divisor = rate === 25 ? 4 : rate === 50 ? 2 : 10 / (rate / 10);
-    const price = randInt(2, 40, rng) * divisor;
-    const addition = (price * rate) / 100;
-    const answer = price + addition;
+    const price = round2(randInt(2, 40, rng) * divisor + (decimal ? randInt(1, 9, rng) / 10 : 0));
+    const addition = round2((price * rate) / 100);
+    const answer = round2(price + addition);
     return makeQuestion(
       `מחיר ${price} שקלים עלה ב-${rate}%. מה המחיר החדש?`,
       answer,

@@ -1,5 +1,5 @@
 import type { Question } from "./curriculum";
-import { type Rng, randInt, makeFreshId, withoutLeakingHints } from "./adaptiveHelpers";
+import { type Rng, randInt, makeFreshId, withoutLeakingHints, wantsDecimal, round2 } from "./adaptiveHelpers";
 
 /**
  * "ממוצע" (רותם, כיתה ו׳), built at runtime — see
@@ -81,11 +81,14 @@ function averageOfFour(rng: Rng): Question {
   );
 }
 
-/** Pattern 4 — "the average of N numbers is M — what's their sum?" */
+/** Pattern 4 — "the average of N numbers is M — what's their sum?" A ~30% share give
+ *  `avg` a `.5` — multiplied by the integer `count`, the sum keeps at most one decimal
+ *  digit. */
 function sumFromAverage(rng: Rng): Question {
   const count = randInt(2, 10, rng);
-  const avg = randInt(3, 30, rng);
-  const answer = count * avg;
+  const decimal = wantsDecimal(rng);
+  const avg = randInt(3, 30, rng) + (decimal ? 0.5 : 0);
+  const answer = round2(count * avg);
   return makeQuestion(
     `הממוצע של ${count} מספרים הוא ${avg}. מה הסכום שלהם?`,
     answer,
@@ -96,11 +99,14 @@ function sumFromAverage(rng: Rng): Question {
   );
 }
 
-/** Pattern 5 — "the average of two numbers is M and one of them is A — what's the other?" */
+/** Pattern 5 — "the average of two numbers is M and one of them is A — what's the other?"
+ *  A ~30% share give `a` a `.5` instead of `avg` — that keeps `avg × 2` a clean integer,
+ *  so only the final subtraction carries the decimal digit. */
 function missingValue(rng: Rng): Question {
   const avg = randInt(4, 30, rng);
-  const a = randInt(1, avg * 2 - 1, rng);
-  const answer = avg * 2 - a;
+  const decimal = wantsDecimal(rng);
+  const a = randInt(1, avg * 2 - 1, rng) + (decimal ? 0.5 : 0);
+  const answer = round2(avg * 2 - a);
   return makeQuestion(
     `הממוצע של 2 מספרים הוא ${avg} ואחד מהם ${a}. מה השני?`,
     answer,

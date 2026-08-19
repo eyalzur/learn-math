@@ -1,5 +1,5 @@
 import type { Question } from "./curriculum";
-import { type Rng, randInt, makeFreshId } from "./adaptiveHelpers";
+import { type Rng, randInt, makeFreshId, wantsDecimal, round2 } from "./adaptiveHelpers";
 
 /**
  * "משוואות" (עומר, כיתה ח׳), built at runtime — see
@@ -103,12 +103,14 @@ function bothSidesEquation(rng: Rng): Question {
   );
 }
 
-/** Pattern 5 — brackets: `A(x + B) = C`, where the two sides share a common factor. */
+/** Pattern 5 — brackets: `A(x + B) = C`, where the two sides share a common factor. A
+ *  ~30% share give `x` a `.5` — `a × (x + b)` then keeps at most one decimal digit. */
 function bracketsEquation(rng: Rng): Question {
-  const x = randInt(2, 12, rng);
+  const decimal = wantsDecimal(rng);
+  const x = randInt(2, 12, rng) + (decimal ? 0.5 : 0);
   const a = randInt(2, 6, rng);
   const b = randInt(1, 10, rng);
-  const c = a * (x + b);
+  const c = round2(a * (x + b));
   return makeQuestion(
     `${a}(x + ${b}) = ${c}`,
     x,

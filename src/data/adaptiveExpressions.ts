@@ -1,5 +1,5 @@
 import type { Question } from "./curriculum";
-import { type Rng, randInt, pick, makeFreshId } from "./adaptiveHelpers";
+import { type Rng, randInt, pick, makeFreshId, wantsDecimal, round2 } from "./adaptiveHelpers";
 
 /**
  * "ביטויים אלגבריים" (עומר, כיתה ח׳), built at runtime — see
@@ -77,23 +77,27 @@ function openBrackets(rng: Rng): Question {
   );
 }
 
-/** Pattern 4 — substitution into `x² + B` or `Ax² + B`. */
+/** Pattern 4 — substitution into `x² + B` or `Ax² + B`. A ~30% share give `x` a `.5` —
+ *  `x²` then lands exactly on a quarter (`.25`), and `a × .25` for `a` up to `4` still
+ *  keeps at most two decimal digits. */
 function squareSubstitution(rng: Rng): Question {
   const v = pick(VARS, rng);
   const withCoefficient = rng() < 0.5;
   const a = withCoefficient ? randInt(2, 4, rng) : 1;
   const b = randInt(1, 10, rng);
-  const x = randInt(2, 8, rng);
-  const answer = a * x * x + b;
+  const decimal = wantsDecimal(rng);
+  const x = randInt(2, 8, rng) + (decimal ? 0.5 : 0);
+  const xSquared = round2(x * x);
+  const answer = round2(a * xSquared + b);
   const exprText = withCoefficient ? `${a}${v}² + ${b}` : `${v}² + ${b}`;
   return makeQuestion(
     `כמה זה \`${exprText}\` כאשר \`${v}\` שווה ${x}?`,
     answer,
-    ["קודם החזקה, ורק אחריה שאר הפעולות", `\`${x}\` בריבוע הוא \`${x * x}\`${withCoefficient ? `, כפול \`${a}\`` : ""}, ואז ועוד \`${b}\``],
+    ["קודם החזקה, ורק אחריה שאר הפעולות", `\`${x}\` בריבוע הוא \`${xSquared}\`${withCoefficient ? `, כפול \`${a}\`` : ""}, ואז ועוד \`${b}\``],
     [
       { label: `מציבים ${x} במקום ${v}` },
-      { label: "החזקה:", math: `${x}² = ${x * x}` },
-      { label: "", math: `${a} × ${x * x} + ${b} = ${answer}` },
+      { label: "החזקה:", math: `${x}² = ${xSquared}` },
+      { label: "", math: `${a} × ${xSquared} + ${b} = ${answer}` },
     ],
     `שטח ריבוע בצלע ${x}, ${withCoefficient ? `כפול ${a}, ` : ""}ועוד ${b}`,
     rng,

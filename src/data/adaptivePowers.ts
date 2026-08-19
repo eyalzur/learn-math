@@ -25,7 +25,7 @@ function makeQuestion(
 
 /** Pattern 1 — squaring a small base. */
 function square(rng: Rng): Question {
-  const base = randInt(2, 12, rng);
+  const base = randInt(2, 9, rng);
   const answer = base * base;
   return makeQuestion(
     `${base}²`,

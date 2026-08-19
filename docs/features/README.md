@@ -32,4 +32,4 @@ architecture, implementation notes, and tests.
 | תוכן כיתה ב׳ למיקה | 🟢 done | [status](./mika-grade2-content/status.md) |
 | קושי מסתגל — תרגילים מטמפלייט | 🟢 done — מוזג ל-main | [status](./adaptive-difficulty/status.md) |
 | רמות הופכות לתרגול מסתגל — כל נושאי רותם ועומר | 🟢 done — ממתין ל-PR ולריוויו | [status](./levels-as-practice/status.md) |
-| חוקי בחירת מספרים לפי קושי — 12 המחוללים האדפטיביים | 🟡 in development | [status](./difficulty-number-scaling/status.md) |
+| חוקי בחירת מספרים לפי קושי — 12 המחוללים האדפטיביים | 🟡 in QA | [status](./difficulty-number-scaling/status.md) |
