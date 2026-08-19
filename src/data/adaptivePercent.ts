@@ -12,11 +12,13 @@ import { type Rng, randInt, pick, makeFreshId } from "./adaptiveHelpers";
 
 const freshId = makeFreshId("g6-percent-adaptive");
 
-const DISCOUNT_ANALOGIES = [
-  (price: number) => `מחיר מעיל הוא ${price} שקלים`,
-  (price: number) => `מחיר נעליים הוא ${price} שקלים`,
-  (price: number) => `מחיר תיק הוא ${price} שקלים`,
-  (price: number) => `מחיר מכשיר הוא ${price} שקלים`,
+/** [שם הפריט, כינוי החזרה עליו] — "נעליים" הוא רבים/נקבה ("עליהן"), שאר הפריטים יחיד
+ *  זכר ("עליו"). נשמר יחד כדי שהפריט והכינוי בפרומפט תמיד יתאימו זה לזה בדקדוק. */
+const DISCOUNT_ITEMS: [string, string][] = [
+  ["מעיל", "עליו"],
+  ["נעליים", "עליהן"],
+  ["תיק", "עליו"],
+  ["מכשיר", "עליו"],
 ];
 
 const INCREASE_ANALOGIES = [
@@ -119,12 +121,13 @@ function wordProblem(rng: Rng): Question {
     const divisor = rate === 25 ? 4 : rate === 50 ? 2 : 10 / (rate / 10);
     const price = randInt(2, 40, rng) * divisor;
     const answer = (price * rate) / 100;
+    const [item, pronoun] = pick(DISCOUNT_ITEMS, rng);
     return makeQuestion(
-      `מחיר ${price} שקלים, וקיבלת עליו הנחה של ${rate}%. כמה שקלים הייתה ההנחה?`,
+      `מחיר ${item} הוא ${price} שקלים, וקיבלת ${pronoun} הנחה של ${rate}%. כמה שקלים הייתה ההנחה?`,
       answer,
       ["הנחה היא אחוז מהמחיר המקורי", `\`${rate}%\` מ-\`${price}\` הם ${answer}`],
       [{ label: "מחשבים את האחוז מהמחיר", math: `${price} × ${rate} ÷ 100 = ${answer}` }],
-      pick(DISCOUNT_ANALOGIES, rng)(price),
+      `מחיר ${item} הוא ${price} שקלים`,
       rng,
     );
   }
