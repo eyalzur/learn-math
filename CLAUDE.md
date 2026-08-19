@@ -136,26 +136,16 @@ docs/features/    מסמך לכל פיצ'ר. README.md הוא האינדקס
 ## מה פתוח
 
 ### ממתין לריוויו ולמיזוג
-| PR | מה | תלוי ב |
+| PR | מה | הערה |
 |---|---|---|
-| [#44](https://github.com/eyalzur/learn-math/pull/44) | **אבחון "סטייה של אחד" — מתחבר לשיטה** | `main`. **באתר החי** אחרי מיזוג |
+| [#48](https://github.com/eyalzur/learn-math/pull/48) | **רמות הופכות לתרגול מסתגל — כל 12 נושאי רותם ועומר** | כולל תוספת: `docs/features/difficulty-number-scaling` — חוקי בחירת מספרים לפי קושי |
+| [#49](https://github.com/eyalzur/learn-math/pull/49) | **רצועת האחוזים מתחלקת לפי האחוז שבשאלה, וההסבר אומר למה** | כולל שני תיקוני המשך אחרי ריוויו (שבר כמספר, כיתוב הרצועה) |
 
-**מוזג היום (2026-08-18):** [#43](https://github.com/eyalzur/learn-math/pull/43) קושי
-מסתגל — חיבור עד 100 בנוי מטמפלייט · [#45](https://github.com/eyalzur/learn-math/pull/45)
-כותרות נשברות בצורה מאוזנת · [#42](https://github.com/eyalzur/learn-math/pull/42) תוכן
-כיתה ב׳ למיקה · [#36](https://github.com/eyalzur/learn-math/pull/36) ציורים
-גל ב׳ — שטח והיקף, פיתגורס, אחוזים, יחס, פונקציה קווית · [#37](https://github.com/eyalzur/learn-math/pull/37)
-כרטיס סגנון — רק כותרת · [#38](https://github.com/eyalzur/learn-math/pull/38) ניסוח ברור
-לשאלות הנחה באחוזים · [#39](https://github.com/eyalzur/learn-math/pull/39) פיתגורס — מסבירים
-לפני שפותרים. כולם **באתר החי**.
-
-**מוזג קודם (2026-08-16–17):** [#35](https://github.com/eyalzur/learn-math/pull/35) פקודת
-`/status` · [#41](https://github.com/eyalzur/learn-math/pull/41) סקיל `review-ready`.
-שניהם קבצי תהליך בלבד — לא נפרסים לאתר.
-
-**מוזג קודם (2026-08-15):** [#32](https://github.com/eyalzur/learn-math/pull/32) ציורים
-גל א׳ · [#33](https://github.com/eyalzur/learn-math/pull/33) שיעור על סגנון תרגיל ·
-[#34](https://github.com/eyalzur/learn-math/pull/34) ספירה של חמש שניות. שלושתם **באתר החי**.
+**הכל השאר מוזג ל-`main` ובאתר החי** — כולל #43–#47 (קושי מסתגל, אבחון סטייה-של-אחד,
+כותרות נשברות, תוכן כיתה ב׳, ניקוי תיעוד). הרשימה המפורטת לפי תאריך מיזוג היא
+`docs/features/README.md`, לא כאן — הטבלה הזו כבר התיישנה פעם אחת (החזיקה PR
+שכבר מוזג) בגלל שני בראנצ'ים שערכו את הקטע הזה במקביל; **הכלל: כשמוזגים PR, מריצים
+את סקיל `merge-pr`, לא עורכים את הטבלה הזו ביד.**
 
 ### הערות מהריוויו שטרם טופלו (2026-08-15)
 - **הרמז ב-`במספר 18, בכמה גדולה ספרת היחידות…`** — המשתמש: "רמז לא מובן". הרמז
