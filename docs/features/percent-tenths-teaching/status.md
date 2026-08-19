@@ -12,7 +12,7 @@
 
 **Current phase:** done — ממתין ל-PR ולריוויו
 **Branch:** `fix/percent-tenths-teaching`
-**PR:** not opened yet
+**PR:** [#49](https://github.com/eyalzur/learn-math/pull/49)
 
 ## Open questions / blockers
 None. ההיקף אושר במפורש על ידי המשתמש: כללי — לכל אחוז, לא רק `10%`. הערה לא חוסמת
