@@ -10,9 +10,9 @@
 - [x] Implementation — developer — 2026-08-19
 - [x] Tests — qa — 2026-08-19
 
-**Current phase:** done — ממתין ל-PR ולריוויו
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `fix/percent-tenths-teaching`
-**PR:** [#49](https://github.com/eyalzur/learn-math/pull/49)
+**PR:** [#49](https://github.com/eyalzur/learn-math/pull/49) — מוזג 2026-08-20
 
 ## Open questions / blockers
 None. ההיקף אושר במפורש על ידי המשתמש: כללי — לכל אחוז, לא רק `10%`. הערה לא חוסמת
