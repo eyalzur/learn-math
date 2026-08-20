@@ -34,4 +34,4 @@ architecture, implementation notes, and tests.
 | קושי מסתגל — תרגילים מטמפלייט | 🟢 done — מוזג ל-main | [status](./adaptive-difficulty/status.md) |
 | רמות הופכות לתרגול מסתגל — כל נושאי רותם ועומר | 🟢 done — מוזג ל-main | [status](./levels-as-practice/status.md) |
 | חוקי בחירת מספרים לפי קושי — 12 המחוללים האדפטיביים | 🟢 done — ממתין ל-PR | [status](./difficulty-number-scaling/status.md) |
-| פתיחת סוגריים בביטויים אלגבריים — מסבירה תהליך ומושגים | 🟡 tests written, full suite running | [status](./algebraic-brackets-teaching/status.md) |
+| פתיחת סוגריים בביטויים אלגבריים — מסבירה תהליך ומושגים | 🟢 done — ממתין ל-PR | [status](./algebraic-brackets-teaching/status.md) |

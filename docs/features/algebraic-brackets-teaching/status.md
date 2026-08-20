@@ -8,9 +8,9 @@
 - [x] Design — designer — 2026-08-20
 - [x] Architecture — tech-lead — 2026-08-20
 - [x] Implementation — developer — 2026-08-20
-- [x] Tests — qa — 2026-08-20 (content.spec.ts: 35/35, כולל 2 בדיקות חדשות; סוויטת ה-e2e המלאה רצה כרגע, ריצה בודדת ונקייה, לפני פתיחת ה-PR)
+- [x] Tests — qa — 2026-08-20 (סוויטת e2e מלאה: 237/237, ריצה בודדת ונקייה — כולל 35/35 ב-content.spec.ts עם 2 בדיקות חדשות)
 
-**Current phase:** feature orchestrator — running the full e2e suite once before opening the PR
+**Current phase:** done — ממתין ל-PR
 **Branch:** `fix/algebraic-brackets-teaching`
 **PR:** not opened yet
 
