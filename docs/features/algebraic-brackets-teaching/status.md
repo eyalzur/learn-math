@@ -5,12 +5,12 @@
 
 ## Progress
 - [x] Product spec — product-manager — 2026-08-20
-- [ ] Design — designer — not started
+- [x] Design — designer — 2026-08-20
 - [ ] Architecture — tech-lead — not started
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** designer
+**Current phase:** tech-lead
 **Branch:** `fix/algebraic-brackets-teaching`
 **PR:** not opened yet
 
