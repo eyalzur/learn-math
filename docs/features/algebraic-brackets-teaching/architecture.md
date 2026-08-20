@@ -60,3 +60,22 @@ Criteria).
 
 ## Open Questions
 None.
+
+## Implementation Notes
+בוצע בדיוק לפי התוכנית — שישה מקומות, שני קבצים, רק שדות `hints`/`steps`:
+
+- `src/data/adaptiveExpressions.ts`:
+  - `openBrackets` — `hints` ו-`steps` הוחלפו למה שב-design.md, כולל שלב רביעי
+    חדש שמציג את הביטוי הפתוח המלא (`${a}${v} + ${answer}`). `prompt`,
+    `answer`, `analogy` לא נגעו בהם.
+  - `combineLikeTerms` — רק `hints[0]` הוחלף (נוספה הגדרת "מקדם" למשפט הקיים);
+    `hints[1]`, `steps`, `prompt`, `analogy` נשארו בדיוק כפי שהיו.
+- `src/data/grade8.ts` — `g8-expressions-m1`, `m2`, `m6`, `m7`: `hints`/`steps`
+  של כל אחת הוחלפו למחרוזות הליטרליות מ-design.md. `id`, `topic`, `prompt`,
+  `answer`, `analogy` ללא שינוי.
+
+גרסה הועלתה ב-`npm run bump:fix` (1.18.0 → 1.18.1, תואם לבראנץ' `fix/`).
+`npm run build` ו-`npm run lint` נקיים. לא הורצה כאן סוויטת ה-e2e המלאה — זה
+תפקיד שלב `qa` הבא, כדי לא לרוץ שתי ריצות מקבילות של הסוויטה בשוגג.
+
+שום סטייה מהתוכנית.
