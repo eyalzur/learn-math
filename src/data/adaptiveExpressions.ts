@@ -1,5 +1,5 @@
 import type { Question } from "./curriculum";
-import { type Rng, randInt, pick, makeFreshId, wantsDecimal, round2 } from "./adaptiveHelpers";
+import { type Rng, randInt, pick, makeFreshId } from "./adaptiveHelpers";
 
 /**
  * "ביטויים אלגבריים" (עומר, כיתה ח׳), built at runtime — see
@@ -38,7 +38,7 @@ function linearSubstitution(rng: Rng): Question {
     answer,
     ["מציבים את המספר במקום המשתנה ואז מחשבים", `\`${a}\` כפול \`${x}\`, ואז מוסיפים \`${b}\``],
     [{ label: `מציבים ${x} במקום ${v}` }, { label: "", math: `${a} × ${x} + ${b} = ${answer}` }],
-    `כרטיס עולה ${a} שקל ליחידה ועוד ${b} שקל דמי טיפול, עבור ${x} יחידות`,
+    `כרטיס עולה ${a} שקל ליחידה ועוד ${b} שקל דמי טיפול, עבור ${x} יחידות — כמה זה עולה בסך הכל?`,
     rng,
   );
 }
@@ -56,7 +56,9 @@ function combineLikeTerms(rng: Rng): Question {
     answer,
     ["אוספים יחד רק איברים עם אותו משתנה", `\`${a}\` ${isAdd ? "ועוד" : "פחות"} \`${b}\` מאותו סוג`],
     [{ label: "איברים מאותו סוג" }, { label: "", math: `${a} ${op} ${b} = ${answer}` }],
-    isAdd ? `${a} שקיות ועוד ${b} שקיות מאותו סוג` : `${a} חבילות שמהן הוצאת ${b} - נשארו מאותו סוג`,
+    isAdd
+      ? `${a} שקיות ועוד ${b} שקיות מאותו סוג — כמה שקיות יש בסך הכל?`
+      : `${a} חבילות שמהן הוצאת ${b} מאותו סוג — כמה נשארו?`,
     rng,
   );
 }
@@ -72,23 +74,24 @@ function openBrackets(rng: Rng): Question {
     answer,
     ["כופלים את מה שמחוץ לסוגריים בכל אחד מהאיברים שבפנים", `המספר החופשי הוא \`${a}\` כפול \`${b}\``],
     [{ label: "כופלים בכל איבר בסוגריים" }, { label: "המספר:", math: `${a} × ${b} = ${answer}` }],
-    `${a} חבילות שבכל אחת אותו פריט ועוד ${b} מדבקות`,
+    `${a} חבילות שבכל אחת אותו פריט ועוד ${b} מדבקות — מה המספר החופשי בביטוי הפתוח?`,
     rng,
   );
 }
 
-/** Pattern 4 — substitution into `x² + B` or `Ax² + B`. A ~30% share give `x` a `.5` —
- *  `x²` then lands exactly on a quarter (`.25`), and `a × .25` for `a` up to `4` still
- *  keeps at most two decimal digits. */
+/** Pattern 4 — substitution into `x² + B` or `Ax² + B`. `x` is always whole — it is
+ *  a given number shown directly in the prompt ("כאשר x שווה..."), and a question never
+ *  shows a decimal among its own givens, only the answer may land on one. Substituting a
+ *  whole `x` into whole `a`/`b` with only `×`/`+` always stays whole too, so this pattern
+ *  structurally cannot produce a decimal answer without decimal-izing a given instead. */
 function squareSubstitution(rng: Rng): Question {
   const v = pick(VARS, rng);
   const withCoefficient = rng() < 0.5;
   const a = withCoefficient ? randInt(2, 4, rng) : 1;
   const b = randInt(1, 10, rng);
-  const decimal = wantsDecimal(rng);
-  const x = randInt(2, 8, rng) + (decimal ? 0.5 : 0);
-  const xSquared = round2(x * x);
-  const answer = round2(a * xSquared + b);
+  const x = randInt(2, 8, rng);
+  const xSquared = x * x;
+  const answer = a * xSquared + b;
   const exprText = withCoefficient ? `${a}${v}² + ${b}` : `${v}² + ${b}`;
   return makeQuestion(
     `כמה זה \`${exprText}\` כאשר \`${v}\` שווה ${x}?`,
@@ -99,7 +102,7 @@ function squareSubstitution(rng: Rng): Question {
       { label: "החזקה:", math: `${x}² = ${xSquared}` },
       { label: "", math: `${a} × ${xSquared} + ${b} = ${answer}` },
     ],
-    `שטח ריבוע בצלע ${x}, ${withCoefficient ? `כפול ${a}, ` : ""}ועוד ${b}`,
+    `שטח ריבוע בצלע ${x}, ${withCoefficient ? `כפול ${a}, ` : ""}ועוד ${b} — כמה זה בסך הכל?`,
     rng,
   );
 }
@@ -121,7 +124,7 @@ function openAndCombine(rng: Rng): Question {
       { label: "מוסיפים את מה שבחוץ:", math: `${a}${v} + ${constant} + ${c}${v}` },
       { label: `מכנסים את האיברים עם ${v}:`, math: `${a} + ${c} = ${answer}` },
     ],
-    `${a} חבילות זהות ועוד ${c} פריטים בודדים מאותו סוג`,
+    `${a} חבילות זהות ועוד ${c} פריטים בודדים מאותו סוג — מה המקדם אחרי שמכנסים?`,
     rng,
   );
 }

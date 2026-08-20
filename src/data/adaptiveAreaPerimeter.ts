@@ -1,5 +1,5 @@
 import type { Question } from "./curriculum";
-import { type Rng, randInt, pick, makeFreshId, wantsDecimal, round2 } from "./adaptiveHelpers";
+import { type Rng, randInt, pick, makeFreshId, wantsDecimal } from "./adaptiveHelpers";
 
 /**
  * "שטח והיקף" (רותם, כיתה ו׳), built at runtime — see
@@ -33,7 +33,7 @@ function rectangleArea(rng: Rng): Question {
     answer,
     ["שטח מלבן הוא אורך כפול רוחב", `האורך הוא \`${length}\` והרוחב \`${width}\``],
     [{ label: "שטח מלבן זה אורך כפול רוחב" }, { label: "", math: `${length} × ${width} = ${answer}` }],
-    `שטיח באורך ${length} מטרים וברוחב ${width}`,
+    `שטיח באורך ${length} מטרים וברוחב ${width} מטרים — כמה שטח הוא תופס?`,
     rng,
   );
 }
@@ -53,7 +53,9 @@ function square(rng: Rng): Question {
     isArea
       ? [{ label: "שטח ריבוע הוא הצלע כפול עצמה" }, { label: "", math: `${side} × ${side} = ${answer}` }]
       : [{ label: "בריבוע כל ארבע הצלעות שוות" }, { label: "", math: `${side} × 4 = ${answer}` }],
-    isArea ? `מרפסת מרובעת של ${side} על ${side} מטר` : `גדר סביב חצר מרובעת שכל צלע שלה ${side} מטר`,
+    isArea
+      ? `מרפסת מרובעת של ${side} על ${side} מטר — מה השטח שלה?`
+      : `גדר סביב חצר מרובעת שכל צלע שלה ${side} מטר — כמה גדר צריך?`,
     rng,
   );
 }
@@ -72,20 +74,22 @@ function rectanglePerimeter(rng: Rng): Question {
       { label: "פעמיים הרוחב:", math: `${width} + ${width} = ${width * 2}` },
       { label: "ביחד:", math: `${length * 2} + ${width * 2} = ${answer}` },
     ],
-    `גדר סביב ערוגת פרחים מלבנית שאורכה ${length} מטר ורוחבה ${width} מטר`,
+    `גדר סביב ערוגת פרחים מלבנית שאורכה ${length} מטר ורוחבה ${width} מטר — כמה גדר צריך?`,
     rng,
   );
 }
 
-/** Pattern 4 — triangle area (height chosen even so the division stays whole). A ~30%
- *  share give `base` a `.5` — `height` stays even, so `base × (height / 2)` keeps at
- *  most one decimal digit either way. */
+/** Pattern 4 — triangle area. `base` and `height` are always whole numbers — a question
+ *  never shows a decimal among its own given numbers, only the answer may land on one.
+ *  Normally `height` is even, which keeps the area whole regardless of `base`'s parity. A
+ *  ~30% share instead make *both* `base` and `height` odd, so their product is odd and the
+ *  area lands exactly on a half (`odd ÷ 2`) — decimal, but never more than one digit. */
 function triangleArea(rng: Rng): Question {
   const decimal = wantsDecimal(rng);
-  const base = randInt(4, 14, rng) + (decimal ? 0.5 : 0);
-  const height = randInt(2, 9, rng) * 2;
-  const product = round2(base * height);
-  const answer = round2(product / 2);
+  const base = decimal ? randInt(2, 7, rng) * 2 + 1 : randInt(4, 14, rng);
+  const height = decimal ? randInt(1, 4, rng) * 2 + 1 : randInt(2, 9, rng) * 2;
+  const product = base * height;
+  const answer = product / 2;
   return makeQuestion(
     `שטח משולש שבסיסו ${base} וגובהו ${height}`,
     answer,
@@ -94,7 +98,7 @@ function triangleArea(rng: Rng): Question {
       { label: "בסיס כפול גובה:", math: `${base} × ${height} = ${product}` },
       { label: "חלקי שתיים:", math: `${product} ÷ 2 = ${answer}` },
     ],
-    `מפרש משולש של סירה, בסיס ${base} וגובה ${height}`,
+    `מפרש משולש של סירה, בסיס ${base} וגובה ${height} — מה השטח שלו?`,
     rng,
   );
 }
@@ -112,7 +116,7 @@ function hardShape(rng: Rng): Question {
       length,
       ["שטח הוא אורך כפול רוחב, אז מחלקים בשטח הידוע", `השטח הוא \`${area}\` והרוחב \`${width}\``],
       [{ label: "שטח הוא אורך כפול רוחב, מחלקים בחזרה" }, { label: "", math: `${area} ÷ ${width} = ${length}` }],
-      `שטיח בשטח ${area} שרוחבו ${width} - כמה הוא ארוך`,
+      `שטיח בשטח ${area} שרוחבו ${width} — כמה הוא ארוך?`,
       rng,
     );
   }
@@ -129,18 +133,20 @@ function hardShape(rng: Rng): Question {
         { label: "הצלע:", math: `${perimeter} ÷ 4 = ${side}` },
         { label: "", math: `${side} × ${side} = ${area}` },
       ],
-      `חצר שיש סביבה ${perimeter} מטר גדר - כמה מקום יש בפנים`,
+      `חצר שיש סביבה ${perimeter} מטר גדר — כמה מקום יש בפנים?`,
       rng,
     );
   }
 
-  // A ~30% share of the two circle shapes give the radius a `.5` — pi = 3 keeps every
-  // downstream product at most two decimal digits (radius² lands exactly on a quarter).
-  const decimal = wantsDecimal(rng);
-  const radius = randInt(2, 12, rng) + (decimal ? 0.5 : 0);
+  // `radius` always stays whole here — with `pi` fixed at the integer `3`, both
+  // `2 × pi × radius` and `pi × radius²` are structurally always whole numbers too when
+  // `radius` is (an integer times an integer stays an integer), so there is no way to
+  // seed a decimal into either circle shape without putting one in a given number
+  // instead — which the review ruled out. No decimal draw here; see architecture.md.
+  const radius = randInt(2, 12, rng);
   const pi = 3;
   if (kind === "circlePerimeter") {
-    const answer = round2(2 * pi * radius);
+    const answer = 2 * pi * radius;
     return makeQuestion(
       `היקף מעגל שרדיוסו ${radius}, כאשר פאי שווה 3`,
       answer,
@@ -149,12 +155,12 @@ function hardShape(rng: Rng): Question {
         { label: "היקף מעגל הוא פעמיים פאי כפול רדיוס" },
         { label: "", math: `2 × ${pi} × ${radius} = ${answer}` },
       ],
-      `גדר סביב בריכה עגולה שרדיוסה ${radius} מטר`,
+      `גדר סביב בריכה עגולה שרדיוסה ${radius} מטר — כמה גדר צריך?`,
       rng,
     );
   }
 
-  const answer = round2(pi * radius * radius);
+  const answer = pi * radius * radius;
   return makeQuestion(
     `שטח מעגל שרדיוסו ${radius}, כאשר פאי שווה 3`,
     answer,
@@ -163,7 +169,7 @@ function hardShape(rng: Rng): Question {
       { label: "שטח מעגל הוא פאי כפול רדיוס בריבוע" },
       { label: "", math: `${pi} × ${radius} × ${radius} = ${answer}` },
     ],
-    `שטח של פיצה עגולה שרדיוסה ${radius}`,
+    `פיצה עגולה שרדיוסה ${radius} — מה השטח שלה?`,
     rng,
   );
 }

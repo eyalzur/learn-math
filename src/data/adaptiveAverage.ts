@@ -1,5 +1,5 @@
 import type { Question } from "./curriculum";
-import { type Rng, randInt, makeFreshId, withoutLeakingHints, wantsDecimal, round2 } from "./adaptiveHelpers";
+import { type Rng, randInt, makeFreshId, withoutLeakingHints } from "./adaptiveHelpers";
 
 /**
  * "ממוצע" (רותם, כיתה ו׳), built at runtime — see
@@ -34,7 +34,7 @@ function averageOfTwo(rng: Rng): Question {
     answer,
     ["ממוצע הוא הסכום, חלקי כמה מספרים יש", `מחברים את שני המספרים, ואז מחלקים ב-\`2\``],
     [{ label: "מחברים:", math: `${a} + ${b} = ${a + b}` }, { label: "מחלקים:", math: `${a + b} ÷ 2 = ${answer}` }],
-    `שני מבחנים, ${a} ו-${b}`,
+    `שני מבחנים, ${a} ו-${b} — מה הציון הממוצע?`,
     rng,
   );
 }
@@ -55,7 +55,7 @@ function averageOfThree(rng: Rng): Question {
       { label: "מחברים:", math: `${a} + ${b} + ${c} = ${a + b + c}` },
       { label: "מחלקים:", math: `${a + b + c} ÷ 3 = ${answer}` },
     ],
-    `שלושה מבחנים: ${a}, ${b} ו-${c}`,
+    `שלושה מבחנים: ${a}, ${b} ו-${c} — מה הציון הממוצע?`,
     rng,
   );
 }
@@ -76,37 +76,37 @@ function averageOfFour(rng: Rng): Question {
       { label: "מחברים:", math: `${a} + ${b} + ${c} + ${d} = ${a + b + c + d}` },
       { label: "מחלקים בארבע:", math: `${a + b + c + d} ÷ 4 = ${answer}` },
     ],
-    `ארבעה ימים של אימון: ${a}, ${b}, ${c} ו-${d} סיבובים`,
+    `ארבעה ימים של אימון: ${a}, ${b}, ${c} ו-${d} סיבובים — מה הממוצע היומי?`,
     rng,
   );
 }
 
-/** Pattern 4 — "the average of N numbers is M — what's their sum?" A ~30% share give
- *  `avg` a `.5` — multiplied by the integer `count`, the sum keeps at most one decimal
- *  digit. */
+/** Pattern 4 — "the average of N numbers is M — what's their sum?" No decimal draw here:
+ *  `avg` and `count` are both given numbers (shown in the prompt), and a question never
+ *  shows a decimal among its own givens — only the answer may land on one. Multiplying two
+ *  whole numbers always stays whole, so this pattern structurally cannot produce a
+ *  decimal answer without putting a decimal in a given instead. See architecture.md. */
 function sumFromAverage(rng: Rng): Question {
   const count = randInt(2, 10, rng);
-  const decimal = wantsDecimal(rng);
-  const avg = randInt(3, 30, rng) + (decimal ? 0.5 : 0);
-  const answer = round2(count * avg);
+  const avg = randInt(3, 30, rng);
+  const answer = count * avg;
   return makeQuestion(
     `הממוצע של ${count} מספרים הוא ${avg}. מה הסכום שלהם?`,
     answer,
     ["אם הממוצע הוא הסכום חלקי הכמות, אז הסכום הוא הממוצע כפול הכמות", `\`${avg}\` כפול \`${count}\``],
     [{ label: "הסכום הוא ממוצע כפול כמות" }, { label: "", math: `${avg} × ${count} = ${answer}` }],
-    `${count} מבחנים בממוצע ${avg} נקודות - כמה נקודות בסך הכל`,
+    `${count} מבחנים בממוצע ${avg} נקודות — כמה נקודות בסך הכל?`,
     rng,
   );
 }
 
 /** Pattern 5 — "the average of two numbers is M and one of them is A — what's the other?"
- *  A ~30% share give `a` a `.5` instead of `avg` — that keeps `avg × 2` a clean integer,
- *  so only the final subtraction carries the decimal digit. */
+ *  No decimal draw, for the same structural reason as `sumFromAverage`: `avg` and `a` are
+ *  both givens, and `avg × 2 − a` of two whole numbers always stays whole. */
 function missingValue(rng: Rng): Question {
   const avg = randInt(4, 30, rng);
-  const decimal = wantsDecimal(rng);
-  const a = randInt(1, avg * 2 - 1, rng) + (decimal ? 0.5 : 0);
-  const answer = round2(avg * 2 - a);
+  const a = randInt(1, avg * 2 - 1, rng);
+  const answer = avg * 2 - a;
   return makeQuestion(
     `הממוצע של 2 מספרים הוא ${avg} ואחד מהם ${a}. מה השני?`,
     answer,
@@ -115,7 +115,7 @@ function missingValue(rng: Rng): Question {
       { label: "הסכום:", math: `${avg} × 2 = ${avg * 2}` },
       { label: "השני:", math: `${avg * 2} − ${a} = ${answer}` },
     ],
-    `שתי קניות בממוצע ${avg} שקל, כשהאחת הייתה ${a}`,
+    `שתי קניות בממוצע ${avg} שקל, כשהאחת הייתה ${a} — כמה עלתה השנייה?`,
     rng,
   );
 }

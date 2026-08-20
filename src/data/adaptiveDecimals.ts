@@ -26,8 +26,8 @@ function fmt(whole: number, tenths: number): string {
 }
 
 const MONEY_ANALOGIES_ADD = [
-  (a: string, b: string) => `${a} שקל ועוד ${b} שקל`,
-  (a: string, b: string) => `בקבוק של ${a} ליטר ועוד אחד של ${b} ליטר`,
+  (a: string, b: string) => `${a} שקל ועוד ${b} שקל — כמה יש בסך הכל?`,
+  (a: string, b: string) => `בקבוק של ${a} ליטר ועוד אחד של ${b} ליטר — כמה ליטר בסך הכל?`,
 ];
 
 function makeQuestion(
@@ -85,7 +85,7 @@ function subtractDecimals(rng: Rng): Question {
       { label: "מחסרים עשירית מעשירית", math: `${aTenths / 10} − ${bTenths / 10} = ${(aTenths - bTenths) / 10}` },
       { label: "ואז השלמים", math: `${a} − ${b} = ${answer}` },
     ],
-    `היו לך ${a} שקל, הוצאת ${b}`,
+    `היו לך ${a} שקל, הוצאת ${b} — כמה נשאר לך?`,
     rng,
   );
 }
@@ -100,7 +100,7 @@ function timesTen(rng: Rng): Question {
     answer,
     ["כפל ב-`10` מזיז את הנקודה מקום אחד ימינה", `ב-\`${num}\` הנקודה זזה צעד אחד ימינה`],
     [{ label: "כפל ב-10 מזיז את הנקודה מקום אחד ימינה" }, { label: "", math: `${num} × 10 = ${answer}` }],
-    `מחיר של ${num} שקל ליחידה, וקונים עשרה כאלה`,
+    `מחיר של ${num} שקל ליחידה, וקונים עשרה כאלה — כמה זה עולה בסך הכל?`,
     rng,
   );
 }
@@ -119,7 +119,7 @@ function timesWhole(rng: Rng): Question {
     answer,
     ["אפשר להתעלם מהנקודה, לכפול, ואז להחזיר אותה למקומה", `כמה ספרות יש אחרי הנקודה ב-\`${num}\`? כל כך הרבה יחזרו לתשובה`],
     [{ label: "כופלים בלי הנקודה ומחזירים אותה" }, { label: "", math: `${num} × ${factor} = ${answer}` }],
-    `${factor} כוסות שבכל אחת ${num} ליטר`,
+    `${factor} כוסות שבכל אחת ${num} ליטר — כמה ליטר בסך הכל?`,
     rng,
   );
 }
@@ -136,7 +136,7 @@ function divideByWhole(rng: Rng): Question {
     quotient,
     ["מחלקים כרגיל, והנקודה נשארת מעל אותו מקום", `מחלקים את \`${num}\` ל-\`${divisor}\` חלקים שווים`],
     [{ label: "מחלקים כרגיל והנקודה נשארת" }, { label: "", math: `${num} ÷ ${divisor} = ${quotient}` }],
-    `${num} ק״ג קמח שמתחלקים שווה בשווה בין ${divisor}`,
+    `${num} ק״ג קמח שמתחלקים שווה בשווה בין ${divisor} אנשים — כמה מקבל כל אחד?`,
     rng,
   );
 }

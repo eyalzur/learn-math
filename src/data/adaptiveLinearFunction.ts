@@ -35,7 +35,7 @@ function evaluateAdd(rng: Rng): Question {
     answer,
     ["מציבים את הערך של `x` ומחשבים", `\`${a}\` כפול \`${x}\`, ועוד \`${b}\``],
     [{ label: `מציבים ${x} במקום x` }, { label: "", math: `${a} × ${x} + ${b} = ${answer}` }],
-    `מונית שגובה ${b} שקל דמי פתיחה ועוד ${a} שקלים לקילומטר, ל-${x} קילומטרים`,
+    `מונית שגובה ${b} שקל דמי פתיחה, ועוד ${a} שקלים לכל קילומטר — כמה עולה נסיעה של ${x} קילומטרים?`,
     rng,
   );
 }
@@ -55,7 +55,7 @@ function evaluateSubtract(rng: Rng): Question {
       { label: "", math: `${a} × ${x} = ${a * x}` },
       { label: "", math: `${a * x} − ${b} = ${answer}` },
     ],
-    `${a} שקל לכל שעת חנייה, פחות ${b} שקל הנחה, ל-${x} שעות`,
+    `חניון שגובה ${a} שקל לכל שעה, עם הנחה קבועה של ${b} שקל — כמה עולה חניה של ${x} שעות?`,
     rng,
   );
 }
@@ -72,7 +72,9 @@ function readSlope(rng: Rng): Question {
     a,
     ["השיפוע הוא המספר שצמוד ל-`x`, כולל הסימן שלפניו", "מסתכלים רק על מה שכופל את `x`"],
     [{ label: "השיפוע הוא המקדם של x, כולל הסימן" }, { label: "", math: `${slopeText}` }],
-    negative ? `מדרון שיורד ${magnitude} מטרים על כל מטר קדימה` : `מדרגות שכל אחת מעלה ${magnitude} סנטימטרים`,
+    negative
+      ? "כביש במורד שיורד באופן קבוע ככל שמתקדמים בו — מה השיפוע שלו?"
+      : "מדרגות שעולות באופן קבוע בכל צעד — מה השיפוע שלהן?",
     rng,
   );
 }
@@ -90,19 +92,24 @@ function readIntercept(rng: Rng): Question {
       { label: "", math: `${a} × 0 = 0` },
       { label: "", math: `0 + ${b} = ${b}` },
     ],
-    `כמה כסף היה בחשבון עוד לפני שהתחילו לחסוך, אם קצב החיסכון הוא ${a} שקל בשבוע`,
+    `קצב החיסכון בחשבון הוא ${a} שקל בשבוע — כמה כסף היה בחשבון עוד לפני שהתחילו לחסוך?`,
     rng,
   );
 }
 
 /** Pattern 5 — solve for `x` given `y`, built from a chosen solution outward (`x` first,
- *  `y` derived from it — never the other way around, so the arithmetic is exact). A ~30%
- *  share give `x` a `.5`; `a × x` then keeps at most one decimal digit, for `a` up to `6`. */
+ *  `y` derived from it — never the other way around, so the arithmetic is exact). `y` is
+ *  always whole — it is a given number shown directly in the prompt, and a question never
+ *  shows a decimal among its own givens. A ~30% share instead give `x` itself a clean
+ *  fraction (`a` restricted to `2`/`4`/`5`, whose fractions terminate within two decimal
+ *  digits): `x = wholePart + r/a`, so `a × x = a × wholePart + r` is exactly whole, and
+ *  `y` comes out whole no matter which `x` was chosen. */
 function solveForX(rng: Rng): Question {
-  const a = randInt(2, 6, rng);
-  const b = randInt(1, 15, rng);
   const decimal = wantsDecimal(rng);
-  const x = randInt(2, 10, rng) + (decimal ? 0.5 : 0);
+  const a = decimal ? pick([2, 4, 5] as const, rng) : randInt(2, 6, rng);
+  const b = randInt(1, 15, rng);
+  const wholePart = randInt(2, 10, rng);
+  const x = decimal ? round2(wholePart + randInt(1, a - 1, rng) / a) : wholePart;
   const isPlus = rng() < 0.5;
   const y = round2(isPlus ? a * x + b : a * x - b);
   const op = isPlus ? "+" : "−";
@@ -117,8 +124,8 @@ function solveForX(rng: Rng): Question {
     ],
     pick(
       [
-        (n: number) => `חיסכון שמתחיל ב-${b} שקל ועולה ב-${a} בכל שבוע, עד שהגיע ל-${n}`,
-        (n: number) => `מנוי שגובה ${b} שקל בסיס ועוד ${a} שקל ליחידה, עד שהגיע ל-${n}`,
+        (n: number) => `חיסכון שמתחיל ב-${b} שקל ועולה ב-${a} שקל בכל שבוע, עד שהגיע ל-${n} שקל — כמה שבועות עברו?`,
+        (n: number) => `מנוי שגובה ${b} שקל בסיס ועוד ${a} שקל ליחידה, עד שהגיע ל-${n} שקל — כמה יחידות נצרכו?`,
       ],
       rng,
     )(y),

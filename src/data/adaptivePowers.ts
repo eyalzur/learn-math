@@ -32,7 +32,7 @@ function square(rng: Rng): Question {
     answer,
     ["חזקה היא כפל חוזר של הבסיס בעצמו", `\`${base}\` כפול \`${base}\``],
     [{ label: `${base} בריבוע זה ${base} כפול ${base}` }, { label: "", math: `${base} × ${base} = ${answer}` }],
-    `ריבוע שצלעו ${base} משבצות`,
+    `ריבוע שצלעו ${base} משבצות — כמה משבצות בשטח שלו?`,
     rng,
   );
 }
@@ -46,7 +46,7 @@ function cube(rng: Rng): Question {
     answer,
     ["חזקה היא כפל חוזר של הבסיס בעצמו", `\`${base}\` כפול \`${base}\` כפול \`${base}\``],
     [{ label: "כפל חוזר שלוש פעמים" }, { label: "", math: `${base} × ${base} × ${base} = ${answer}` }],
-    `קובייה שצלעה ${base} יחידות`,
+    `קובייה שצלעה ${base} יחידות — מה הנפח שלה?`,
     rng,
   );
 }
@@ -60,7 +60,7 @@ function squareRoot(rng: Rng): Question {
     answer,
     ["שורש שואל איזה מספר כפול עצמו נותן את המספר שבפנים", `מחפשים מספר שכפול עצמו נותן \`${n}\``],
     [{ label: `מחפשים מספר שכפול עצמו נותן ${n}` }, { label: "", math: `${answer} × ${answer} = ${n}` }],
-    `ריבוע ששטחו ${n} משבצות`,
+    `ריבוע ששטחו ${n} משבצות — מה אורך הצלע שלו?`,
     rng,
   );
 }
@@ -79,7 +79,7 @@ function multiplySamePowers(rng: Rng): Question {
       { label: "מחברים את המעריכים:", math: `${m} + ${n} = ${m + n}` },
       { label: "", math: `${base}${sup(m + n)} = ${answer}` },
     ],
-    `מכפילים פי ${base ** m} ואז פי ${base ** n}`,
+    `מכפילים כמות פי ${base ** m}, ואז שוב פי ${base ** n} — פי כמה גדלה הכמות בסך הכל?`,
     rng,
   );
 }
@@ -104,7 +104,7 @@ function powerOfPowerOrDivide(rng: Rng): Question {
         { label: "", math: `(${base}${sup(m)})${sup(n)} = ${base}${sup(m * n)}` },
         { label: "", math: `${base}${sup(m * n)} = ${answer}` },
       ],
-      `קופסה של ${base ** m} קוביות, ואז ${base ** m} קופסאות כאלה`,
+      `אוסף שמוכפל פי ${base ** m} בכל שלב, במשך ${n} שלבים — מה הגודל שלו בסוף?`,
       rng,
     );
   }
@@ -124,7 +124,7 @@ function powerOfPowerOrDivide(rng: Rng): Question {
       { label: "", math: `${m} − ${n} = ${m - n}` },
       { label: "", math: `${base}${sup(m - n)} = ${answer}` },
     ],
-    `נפח אחסון שמצטמצם בכל פעם לחלק מ-${base}, ${m - n} פעמים`,
+    `מלאי של ${base ** m} יחידות שמתחלק ל-${base} חלקים שווים בכל פעם, ${n} פעמים — כמה נשאר?`,
     rng,
   );
 }

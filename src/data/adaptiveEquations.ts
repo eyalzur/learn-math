@@ -1,5 +1,5 @@
 import type { Question } from "./curriculum";
-import { type Rng, randInt, makeFreshId, wantsDecimal, round2 } from "./adaptiveHelpers";
+import { type Rng, randInt, pick, makeFreshId, wantsDecimal, round2 } from "./adaptiveHelpers";
 
 /**
  * "משוואות" (עומר, כיתה ח׳), built at runtime — see
@@ -34,13 +34,18 @@ function additiveEquation(rng: Rng): Question {
   return makeQuestion(
     prompt,
     x,
-    ["מה שעושים לאגף אחד עושים גם לשני", isPlus ? `מורידים \`${a}\` משני האגפים` : `מוסיפים \`${a}\` לשני האגפים`],
+    [
+      "משוואה היא כמו מאזניים מאוזנים: כל פעולה שעושים בצד אחד, חייבים לעשות גם בצד השני",
+      isPlus ? `מורידים \`${a}\` משני האגפים` : `מוסיפים \`${a}\` לשני האגפים`,
+    ],
     [
       { label: `מעבירים את ה-${a} לצד השני ומשנים סימן` },
       { label: "", math: isPlus ? `x = ${c} − ${a}` : `x = ${c} + ${a}` },
       { label: "", math: `x = ${x}` },
     ],
-    isPlus ? `חסכת סכום כלשהו, קיבלת עוד ${a} שקל ועכשיו יש לך ${c}` : `היו לך ${x} שקל, הוצאת ${a} ונשארו לך ${c}`,
+    isPlus
+      ? `חסכת סכום כלשהו, קיבלת עוד ${a} שקל ועכשיו יש לך ${c} — כמה חסכת מלכתחילה?`
+      : `היה לך סכום כלשהו, הוצאת ${a} ונשארו לך ${c} — כמה היה לך מלכתחילה?`,
     rng,
   );
 }
@@ -55,7 +60,7 @@ function multiplicativeEquation(rng: Rng): Question {
     x,
     ["כדי לבודד את `x` מחלקים במקדם שלו", `מחלקים את שני האגפים ב-\`${a}\``],
     [{ label: "מחלקים את שני האגפים:", math: `x = ${b} ÷ ${a}` }, { label: "", math: `x = ${x}` }],
-    `${a} כרטיסים באותו מחיר עלו ${b} שקל`,
+    `${a} כרטיסים באותו מחיר עלו ${b} שקל — כמה עלה כרטיס אחד?`,
     rng,
   );
 }
@@ -76,7 +81,7 @@ function twoStepEquation(rng: Rng): Question {
       { label: `מעבירים את ה-${b}:`, math: isPlus ? `${a}x = ${c} − ${b}` : `${a}x = ${c} + ${b}` },
       { label: `מחלקים ב-${a}:`, math: `x = ${x}` },
     ],
-    `${a} חבילות ${isPlus ? "ועוד" : "פחות"} ${b} פריטים בודדים, יחד ${c}`,
+    `${a} חבילות זהות ${isPlus ? "ועוד" : "שמהן הורדת"} ${b} פריטים בודדים, יחד ${c} — כמה פריטים בכל חבילה?`,
     rng,
   );
 }
@@ -98,29 +103,35 @@ function bothSidesEquation(rng: Rng): Question {
       { label: "ואת המספרים לשני:", math: `${d} − ${b} = ${d - b}` },
       { label: `מחלקים ב-${a - c}:`, math: `x = ${x}` },
     ],
-    `שתי תוכניות מחיר שנפגשות באותו סכום אחרי ${x} יחידות`,
+    `שתי תוכניות מחיר שמגיעות לאותו סכום אחרי כמות מסוימת של יחידות — אחרי כמה יחידות זה קורה?`,
     rng,
   );
 }
 
-/** Pattern 5 — brackets: `A(x + B) = C`, where the two sides share a common factor. A
- *  ~30% share give `x` a `.5` — `a × (x + b)` then keeps at most one decimal digit. */
+/** Pattern 5 — brackets: `A(x + B) = C`, where the two sides share a common factor. `c` is
+ *  always whole — it is a given number shown directly in the prompt, and a question never
+ *  shows a decimal among its own givens; only the answer (`x`) may land on one. A ~30%
+ *  share give `x` a `.5`, restricted to an even `a` so `a × (x + b)` stays exactly whole
+ *  regardless of x's half. */
 function bracketsEquation(rng: Rng): Question {
   const decimal = wantsDecimal(rng);
   const x = randInt(2, 12, rng) + (decimal ? 0.5 : 0);
-  const a = randInt(2, 6, rng);
+  const a = decimal ? pick([2, 4, 6] as const, rng) : randInt(2, 6, rng);
   const b = randInt(1, 10, rng);
   const c = round2(a * (x + b));
   return makeQuestion(
     `${a}(x + ${b}) = ${c}`,
     x,
-    ["כששני האגפים מתחלקים באותו מספר, אפשר לחלק לפני שפותחים סוגריים", `מחלקים את שני האגפים ב-\`${a}\`, ואז מורידים \`${b}\``],
+    [
+      "מחפשים את הדרך הכי פשוטה לפתור: אם שני האגפים מתחלקים באותו מספר, עדיף לחלק קודם — לפני שפותחים סוגריים",
+      `מחלקים את שני האגפים ב-\`${a}\`, ואז מורידים \`${b}\``,
+    ],
     [
       { label: `מחלקים ב-${a}:`, math: `x + ${b} = ${x + b}` },
       { label: `מעבירים את ה-${b}:`, math: `x = ${x + b} − ${b}` },
       { label: "", math: `x = ${x}` },
     ],
-    `${a} חבילות שבכל אחת פריט ועוד ${b} מתנות, בסך הכל ${c}`,
+    `${a} חבילות זהות שבכל אחת אותו מספר פריטים ועוד ${b} מתנות, בסך הכל ${c} — כמה פריטים בכל חבילה?`,
     rng,
   );
 }

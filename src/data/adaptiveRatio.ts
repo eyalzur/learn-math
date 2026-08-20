@@ -1,5 +1,5 @@
 import type { Question } from "./curriculum";
-import { type Rng, randInt, pick, makeFreshId, withoutLeakingHints, wantsDecimal, round2 } from "./adaptiveHelpers";
+import { type Rng, randInt, pick, makeFreshId, withoutLeakingHints } from "./adaptiveHelpers";
 
 /**
  * "יחס ופרופורציה" (רותם, כיתה ו׳), built at runtime — see
@@ -49,7 +49,7 @@ function scaleFirstTerm(rng: Rng): Question {
       { label: `מ-${a} ל-${first} זה פי ${k}` },
       { label: "", math: `${b} × ${k} = ${answer}` },
     ],
-    `על כל ${a} מדבקות שאתה נותן מקבלים ${b}, נתת ${first}`,
+    `על כל ${a} מדבקות שאתה נותן מקבלים ${b}, נתת ${first} — כמה קיבלת?`,
     rng,
   );
 }
@@ -65,29 +65,28 @@ function forEvery(rng: Rng): Question {
     answer,
     ["כופלים את הכמות ביחס הקבוע", `\`${rate}\` ${plural} על כל ${noun}, ויש \`${count}\``],
     [{ label: `על כל ${noun} ${rate} ${plural}` }, { label: "", math: `${rate} × ${count} = ${answer}` }],
-    `מקלט חיות שבו על כל ${noun} יש ${rate} ${plural}`,
+    `מקלט חיות שבו על כל ${noun} יש ${rate} ${plural} — כמה ${plural} יש בסך הכל?`,
     rng,
   );
 }
 
-/** Pattern 3 — scaled recipe: "מתכון ל-A אנשים דורש B כוסות X. כמה כוסות ל-C אנשים?" A
- *  ~30% share give `amount` a `.5` — cups/spoons are a continuous quantity, unlike the
- *  discrete counts (dogs, teachers) the other ratio patterns use, so a fractional cup
- *  amount reads naturally. `amount × k` keeps at most one decimal digit. */
+/** Pattern 3 — scaled recipe: "מתכון ל-A אנשים דורש B כוסות X. כמה כוסות ל-C אנשים?"
+ *  `amount` is always whole — it is a given number shown directly in the prompt, and a
+ *  question never shows a decimal among its own givens. `amount × k` of two whole numbers
+ *  always stays whole too, so this pattern cannot produce a decimal answer either. */
 function scaledRecipe(rng: Rng): Question {
   const base = randInt(2, 6, rng);
   const item = pick(RECIPE_ITEMS, rng);
-  const decimal = wantsDecimal(rng);
-  const amount = randInt(1, 4, rng) + (decimal ? 0.5 : 0);
+  const amount = randInt(1, 4, rng);
   const k = randInt(2, 4, rng);
   const people = base * k;
-  const answer = round2(amount * k);
+  const answer = amount * k;
   return makeQuestion(
     `מתכון ל-${base} אנשים דורש ${amount} ${item}. כמה ${item} ל-${people} אנשים?`,
     answer,
     ["כמה פי כמה גדל מספר האנשים — כך גדלה גם הכמות", `מ-\`${base}\` אנשים ל-\`${people}\` זה פי \`${k}\``],
     [{ label: "פי כמה גדל מספר האנשים?", math: `${people} ÷ ${base} = ${k}` }, { label: "", math: `${amount} × ${k} = ${answer}` }],
-    `עוגה שמכינים למסיבה גדולה יותר מהמתכון המקורי`,
+    `עוגה שמכינים למסיבה גדולה יותר מהמתכון המקורי — כמה ${item} צריך?`,
     rng,
   );
 }
@@ -112,7 +111,7 @@ function splitTotal(rng: Rng): Question {
       { label: "שווי חלק אחד:", math: `${total} ÷ ${a + b} = ${k}` },
       { label: `החלק ${which}:`, math: `${k} × ${askLarge ? larger : smaller} = ${answer}` },
     ],
-    `${total} שקלים שמתחלקים ביחס ${a} ל-${b} בין שני שותפים`,
+    `${total} שקלים שמתחלקים ביחס ${a} ל-${b} בין שני שותפים — כמה מקבל כל אחד?`,
     rng,
   );
 }
@@ -135,7 +134,7 @@ function splitByDifference(rng: Rng): Question {
       { label: "אז יחידה אחת שווה", math: `${diff} ÷ ${largeTerm - smallTerm} = ${k}` },
       { label: "החלק הגדול:", math: `${largeTerm} × ${k} = ${answer}` },
     ],
-    `שני חבלים שאורכם ביחס קבוע, וההפרש ביניהם ${diff} מטרים`,
+    `שני חבלים שאורכם ביחס קבוע, וההפרש ביניהם ${diff} מטרים — מה אורך החבל הארוך?`,
     rng,
   );
 }

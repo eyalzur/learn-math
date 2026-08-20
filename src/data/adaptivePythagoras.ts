@@ -61,7 +61,7 @@ function findHypotenuse(rng: Rng): Question {
       { label: "", math: `${legA}² + ${legB}² = ${legA * legA + legB * legB}` },
       { label: "", math: `√${legA * legA + legB * legB} = ${hyp}` },
     ],
-    `מדרגות שגובהן ${legB} ורוחבן ${legA} - כמה ארוך המעקה מעליהן`,
+    `מדרגות שגובהן ${legB} ורוחבן ${legA} — כמה ארוך המעקה מעליהן?`,
     rng,
   );
 }
@@ -80,7 +80,7 @@ function findLeg(rng: Rng): Question {
       { label: "", math: `${hyp}² − ${given}² = ${hyp * hyp - given * given}` },
       { label: "", math: `√${hyp * hyp - given * given} = ${answer}` },
     ],
-    `מוט באורך ${hyp} שנשען על קיר, כשרגלו ${given} מטר ממנו`,
+    `מוט באורך ${hyp} שנשען על קיר, כשרגלו ${given} מטר ממנו — לאיזה גובה הוא מגיע על הקיר?`,
     rng,
   );
 }
@@ -99,7 +99,7 @@ function rectangleDiagonal(rng: Rng): Question {
       { label: "", math: `${hyp}² − ${given}² = ${hyp * hyp - given * given}` },
       { label: "", math: `√${hyp * hyp - given * given} = ${answer}` },
     ],
-    `מסך שהאלכסון שלו ${hyp} והרוחב ${given} - מה הגובה`,
+    `מסך שהאלכסון שלו ${hyp} והרוחב ${given} — מה הגובה שלו?`,
     rng,
   );
 }
@@ -118,7 +118,7 @@ function ladder(rng: Rng): Question {
       { label: "", math: `${hyp}² − ${given}² = ${hyp * hyp - given * given}` },
       { label: "", math: `√${hyp * hyp - given * given} = ${answer}` },
     ],
-    `כמה להרחיק את בסיס הסולם כדי להגיע לגובה ${given}`,
+    `סולם באורך ${hyp} שצריך להגיע לגובה ${given} על קיר — כמה להרחיק את בסיס הסולם מהקיר?`,
     rng,
   );
 }
@@ -136,7 +136,7 @@ function equalLegsFromArea(rng: Rng): Question {
       { label: "מכפלת הניצבים:", math: `${area} × 2 = ${leg * leg}` },
       { label: "אם שניהם שווים:", math: `${leg} × ${leg} = ${leg * leg}` },
     ],
-    `פינה משולשת בגינה ששתי צלעותיה שוות`,
+    `פינה משולשת בגינה ששתי צלעותיה שוות ושטחה ${area} מטרים — מה אורך כל צלע?`,
     rng,
   );
 }

@@ -1046,18 +1046,20 @@ test("the reported bug does not come back: אחוזים difficulty 1-2 never pro
   expect(violations, `\n${violations.join("\n")}\n`).toEqual([]);
 });
 
-test("the nine decimal-eligible generators sometimes produce a non-integer answer, always at most two decimal digits", () => {
+test("the five decimal-eligible generators sometimes produce a non-integer answer, always at most two decimal digits", () => {
   // Per design.md's table: which topic, which difficulty tier(s) actually carry the ~30%
-  // decimal draw. שברים פשוטים/חזקות ושורשים/משפט פיתגורס are deliberately absent — see
-  // architecture.md's Risks for why those three stay integer-only in this pass.
+  // decimal draw. A later review ruled that a question must never show a decimal among its
+  // own GIVEN numbers, only the answer may land on one — which removed decimal capability
+  // entirely from ממוצע, ביטויים אלגבריים, and יחס ופרופורציה (each one's only decimal-capable
+  // spot was a given, with no way to move it onto the answer instead), and narrowed
+  // אחוזים/שטח והיקף down to just the one tier apiece where the answer alone can carry it.
+  // שברים פשוטים/חזקות ושורשים/משפט פיתגורס were already integer-only from the start — see
+  // architecture.md's Risks for why those three stay that way.
   const DECIMAL_TIERS: Record<string, number[]> = {
-    "אחוזים": [4, 5],
-    "שטח והיקף": [4, 5],
-    "ממוצע": [4, 5],
+    "אחוזים": [5],
+    "שטח והיקף": [4],
     "משוואות": [5],
-    "ביטויים אלגבריים": [4],
     "פונקציה קווית": [5],
-    "יחס ופרופורציה": [3],
     "בעיות מילוליות": [5],
   };
   const samplesPerTier = 300;
@@ -1088,6 +1090,36 @@ test("the nine decimal-eligible generators sometimes produce a non-integer answe
 
   expect(tooManyDecimals, `\n${tooManyDecimals.join("\n")}\n`).toEqual([]);
   expect(neverWentDecimal, `\n${neverWentDecimal.join("\n")}\n`).toEqual([]);
+});
+
+test("a question never shows a decimal among its own given numbers — only the answer may land on one", () => {
+  // The rule this test guards: a generated question's PROMPT numbers (the givens a child
+  // reads and works from) must always be whole. Only the ANSWER — a number the child
+  // computes, never one handed to them — may come out decimal. This was a real review
+  // finding (14.5 as a triangle's base, 24.5 as an average's sum, x = 8.5 shown directly in
+  // a prompt) across several generators; each was redesigned so the decimal draw lands on
+  // the answer or an unshown intermediate instead of a given.
+  // שברים עשרוניים is the one exception: decimal numbers ARE the subject matter there, so
+  // they're expected right in the prompt ("1.5 + 1.5"), not a violation of this rule.
+  const violations: string[] = [];
+  const samplesPerTier = 150;
+
+  for (const [topic, , generate] of ADAPTIVE_GENERATORS) {
+    if (topic === "שברים עשרוניים") continue;
+    for (let difficulty = 1; difficulty <= 5; difficulty++) {
+      const rng = seededRng(topic.length * 65599 + difficulty);
+      for (let i = 0; i < samplesPerTier; i++) {
+        const q = generate(difficulty, rng);
+        for (const n of numbersIn(q.prompt)) {
+          if (decimalDigits(n) > 0) {
+            violations.push(`${q.id} (${topic}, difficulty ${difficulty}) — "${q.prompt}" has a decimal given (${n})`);
+          }
+        }
+      }
+    }
+  }
+
+  expect(violations, `\n${violations.join("\n")}\n`).toEqual([]);
 });
 
 test("a generated question's 'X זה Y עשרות ו-Z יחידה/יחידות' hint stays singular/plural-correct", () => {

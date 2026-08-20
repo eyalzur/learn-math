@@ -39,7 +39,7 @@ function averageSpeed(rng: Rng): Question {
     speed,
     ["מהירות היא מרחק חלקי זמן", `\`${distance}\` חלקי \`${hours}\``],
     [{ label: "מהירות זה מרחק חלקי זמן" }, { label: "", math: `${distance} ÷ ${hours} = ${speed}` }],
-    `נסיעה של ${distance} קילומטר שנמשכה ${hours} שעות`,
+    `נסיעה של ${distance} קילומטר שנמשכה ${hours} שעות — מה המהירות הממוצעת?`,
     rng,
   );
 }
@@ -55,7 +55,7 @@ function priceTimesQuantity(rng: Rng): Question {
     answer,
     ["מחיר של כמה פריטים הוא מחיר אחד כפול הכמות", `\`${price}\` כפול \`${count}\``],
     [{ label: "מכפילים את המחיר בכמות" }, { label: "", math: `${price} × ${count} = ${answer}` }],
-    `${count} ${plural} זהות בקופה`,
+    `${count} ${plural} זהות בקופה, ${price} שקל כל אחת — כמה עולות יחד?`,
     rng,
   );
 }
@@ -70,7 +70,7 @@ function sumMinusOne(rng: Rng): Question {
     answer,
     ["אם ידוע הסכום ואחד המספרים, מחסרים אותו מהסכום", `\`${total}\` פחות \`${b}\``],
     [{ label: "מחסרים מהסכום את המספר הידוע" }, { label: "", math: `${total} − ${b} = ${answer}` }],
-    `ידוע כמה כסף יש בסך הכל ובכיס אחד - כמה בשני`,
+    `סך הכל ${total} שקל בשני כיסים, ובכיס אחד יש ${b} — כמה יש בשני?`,
     rng,
   );
 }
@@ -93,37 +93,39 @@ function percentChange(rng: Rng): Question {
       { label: `כמה ${verb}:`, math: isIncrease ? `${newPrice} − ${base} = ${delta}` : `${base} − ${newPrice} = ${delta}` },
       { label: "ביחס למחיר המקורי:", math: `${delta} ÷ ${base} = ${delta / base}` },
     ],
-    `מחיר שה${isIncrease ? "תייקר" : "וזל"} ב-${percent} אחוזים`,
+    `מחיר ש${verb} מ-${base} ל-${newPrice} שקלים — כמה אחוזים זה ${isIncrease ? "עלה" : "ירד"}?`,
     rng,
   );
 }
 
-/** Pattern 5 — reverse a discount to find the original price. `25%` is excluded from the
- *  decimal draw on purpose: dividing a one-decimal original by `4` produces three decimal
- *  digits, past the two-digit cap — the same reason `adaptivePercent.ts`'s `wordProblem`
- *  excludes it. */
+/** Pattern 5 — reverse a discount to find the original price. `paid` is always whole — it
+ *  is a given number shown directly in the prompt, and a question never shows a decimal
+ *  among its own givens; only the answer (`original`) may land on one. Decimal capability
+ *  is restricted to `percent = 20` (`remaining = 80`): `original = paid × 100/80 = paid ×
+ *  1.25` terminates within two decimal digits for any whole `paid`. `25%` and `50%` stay
+ *  whole-only — `50%` always divides evenly (×2), and `25%` (`×4/3`) can repeat past two
+ *  decimal digits. */
 function reverseDiscount(rng: Rng): Question {
   const decimal = wantsDecimal(rng);
-  const percent = decimal ? pick([20, 50] as const, rng) : pick([20, 25, 50] as const, rng);
+  const percent = decimal ? 20 : pick([20, 25, 50] as const, rng);
   const remaining = 100 - percent;
   const divisor = percent === 25 ? 4 : percent === 50 ? 2 : 5;
-  const original = round2(randInt(2, 30, rng) * divisor + (decimal ? randInt(1, 9, rng) / 10 : 0));
-  const paid = round2((original * remaining) / 100);
+  const paid = decimal ? randInt(10, 120, rng) : randInt(2, 30, rng) * divisor * (remaining / 100);
+  const original = round2((paid * 100) / remaining);
   return makeQuestion(
     `מוצר עולה ${paid} שקל אחרי הנחה של ${percent}%. כמה עלה לפני ההנחה?`,
     original,
     [`אחרי הנחה של \`${percent}%\` המחיר ששולם הוא \`${remaining}%\` מהמקורי`, `\`${paid}\` הם \`${remaining}%\`. כמה זה \`100%\`?`],
     [
       { label: `אחרי הנחה של ${percent}% משלמים ${remaining}% מהמחיר` },
-      // `paid ÷ remaining` is always exactly `original / 100` by construction (paid was
-      // built as `original × remaining / 100`) — computed that way instead of rounding
+      // `paid ÷ remaining` is always exactly `original / 100` by construction (`original`
+      // was derived as `paid × 100 / remaining`) — computed that way instead of rounding
       // the quotient for display, which would state an equation that isn't actually true
-      // when `paid` needs its own two decimal digits (e.g. "13.15 ÷ 50 = 0.26" is false;
-      // the exact quotient is 0.263).
+      // when `original` needs its own two decimal digits.
       { label: `אחוז אחד:`, math: `${paid} ÷ ${remaining} = ${original / 100}` },
       { label: "ומאה אחוז:", math: `${original / 100} × 100 = ${original}` },
     ],
-    `לחשב מחיר מקורי כשרואים רק את המחיר אחרי ההנחה`,
+    `מוצר ששילמת עליו ${paid} שקל אחרי הנחה — כמה הוא עלה לפני ההנחה?`,
     rng,
   );
 }

@@ -38,9 +38,9 @@ const NON_UNIT_FRACTIONS: [string, number, number][] = [
 ];
 
 const UNIT_ANALOGIES = [
-  (name: string, whole: number) => `פיצה של ${whole} פרוסות שמחלקים ל${name}`,
-  (name: string, whole: number) => `${whole} גולות שמתחלקות ל${name}`,
-  (name: string, whole: number) => `חפיסת שוקולד של ${whole} ריבועים שנשברת ל${name}`,
+  (name: string, whole: number) => `פיצה של ${whole} פרוסות שמחלקים ל${name} — כמה פרוסות בחלק אחד?`,
+  (name: string, whole: number) => `${whole} גולות שמתחלקות ל${name} — כמה גולות בחלק אחד?`,
+  (name: string, whole: number) => `חפיסת שוקולד של ${whole} ריבועים שנשברת ל${name} — כמה ריבועים בחלק אחד?`,
 ];
 
 function makeQuestion(
@@ -83,7 +83,7 @@ function nonUnitFraction(rng: Rng): Question {
       { label: `קודם חלק אחד:`, math: `${whole} ÷ ${denom} = ${unitValue}` },
       { label: `ואז ${num} כאלה:`, math: `${unitValue} × ${num} = ${answer}` },
     ],
-    `${whole} שקל שמחלקים ל-${denom} חלקים, ולוקחים ${num} מהם`,
+    `${whole} שקל שמחלקים ל-${denom} חלקים שווים — כמה זה ${num} מהחלקים?`,
     rng,
   );
 }
@@ -99,7 +99,7 @@ function partsInWholes(rng: Rng): Question {
     answer,
     [`קודם סופרים כמה ${partName} יש בשלם אחד`, `בכל שלם יש \`${denom}\` ${partName}, ויש \`${wholes}\` שלמים`],
     [{ label: `בכל שלם יש ${denom} ${partName}` }, { label: "", math: `${denom} × ${wholes} = ${answer}` }],
-    `${wholes} עוגות שכל אחת חתוכה ל-${denom} חלקים`,
+    `${wholes} עוגות שכל אחת חתוכה ל-${denom} חלקים — כמה פרוסות יש בסך הכל?`,
     rng,
   );
 }
@@ -126,7 +126,7 @@ function sumOfTwoFractions(rng: Rng): Question {
       { label: `ה${nameB}:`, math: `${whole} ÷ ${denomB} = ${partB}` },
       { label: "ביחד:", math: `${partA} + ${partB} = ${answer}` },
     ],
-    `${whole} דקות מסך: ${nameA} בבוקר ו${nameB} אחר הצהריים`,
+    `${whole} דקות מסך ליום: ${nameA} בבוקר ו${nameB} אחר הצהריים — כמה דקות מסך יחד?`,
     rng,
   );
 }
@@ -152,7 +152,7 @@ function partsInWholeAndHalf(rng: Rng): Question {
       { label: `ובחצי יש עוד ${halfInParts}` },
       { label: "ביחד:", math: `${denom * wholes} + ${halfInParts} = ${answer}` },
     ],
-    `${wholes} פיצות וחצי שחותכים כל אחת ל-${denom} - כמה פרוסות יצאו`,
+    `${wholes} פיצות וחצי שחותכים כל אחת ל-${denom} — כמה פרוסות יצאו?`,
     rng,
   );
 }
