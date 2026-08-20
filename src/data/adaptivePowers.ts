@@ -30,7 +30,7 @@ function square(rng: Rng): Question {
   return makeQuestion(
     `${base}²`,
     answer,
-    ["חזקה היא כפל חוזר של הבסיס בעצמו", `\`${base}\` כפול \`${base}\``],
+    ["חזקה היא כפל חוזר של הבסיס בעצמו", `הבסיס הוא \`${base}\` והמעריך (החזקה) הוא \`2\` — כלומר \`${base}\` כפול את עצמו`],
     [{ label: `${base} בריבוע זה ${base} כפול ${base}` }, { label: "", math: `${base} × ${base} = ${answer}` }],
     `ריבוע שצלעו ${base} משבצות — כמה משבצות בשטח שלו?`,
     rng,
@@ -51,15 +51,26 @@ function cube(rng: Rng): Question {
   );
 }
 
-/** Pattern 3 — the root of a perfect square. */
+/** Pattern 3 — the root of a perfect square. The explanation teaches the general search
+ *  technique — try squaring a few numbers near a guess and see which one lands — rather
+ *  than just stating the answer's square, by listing five consecutive squares centered on
+ *  the answer (clamped to stay at `1` or above). */
 function squareRoot(rng: Rng): Question {
   const answer = randInt(2, 20, rng);
   const n = answer * answer;
+  const lo = Math.max(1, answer - 2);
+  const nearby = Array.from({ length: 5 }, (_, i) => lo + i)
+    .map((k) => `${k}² = ${k * k}`)
+    .join(", ");
   return makeQuestion(
     `√${n}`,
     answer,
     ["שורש שואל איזה מספר כפול עצמו נותן את המספר שבפנים", `מחפשים מספר שכפול עצמו נותן \`${n}\``],
-    [{ label: `מחפשים מספר שכפול עצמו נותן ${n}` }, { label: "", math: `${answer} × ${answer} = ${n}` }],
+    [
+      { label: `מחפשים מספר שכפול עצמו נותן ${n}` },
+      { label: "מנסים כמה מספרים קרובים בריבוע, עד שמוצאים את המתאים:", math: nearby },
+      { label: "", math: `${answer} × ${answer} = ${n}` },
+    ],
     `ריבוע ששטחו ${n} משבצות — מה אורך הצלע שלו?`,
     rng,
   );

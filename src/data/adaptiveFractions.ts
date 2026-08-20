@@ -63,7 +63,11 @@ function unitFraction(rng: Rng): Question {
     `כמה זה ${name} מ-${whole}?`,
     answer,
     [`${name} זה לחלק ל-\`${denom}\` חלקים שווים`, `מחלקים את \`${whole}\` ל-\`${denom}\` חלקים שווים`],
-    [{ label: `${name} זה לחלק ל-${denom} חלקים שווים` }, { label: "", math: `${whole} ÷ ${denom} = ${answer}` }],
+    [
+      { label: `${name} זה לחלק ל-${denom} חלקים שווים` },
+      { label: "", math: `${whole} ÷ ${denom} = ${answer}` },
+      { label: "אפשר גם לכתוב את זה ככפל בשבר:", math: `${whole} × 1/${denom} = ${answer}` },
+    ],
     pick(UNIT_ANALOGIES, rng)(name, whole),
     rng,
   );
@@ -120,10 +124,10 @@ function sumOfTwoFractions(rng: Rng): Question {
   return makeQuestion(
     `${nameA} מ-${whole} ועוד ${nameB} מ-${whole}. כמה יחד?`,
     answer,
-    ["מחשבים כל חלק בנפרד ואז מחברים", `${nameA} מ-\`${whole}\` הוא \`${partA}\`, ו${nameB} מ-\`${whole}\` הוא \`${partB}\``],
+    ["מחשבים כל חלק בנפרד (ככפל בשבר) ואז מחברים", `אפשר לכתוב את זה ככפל: \`${whole} × 1/${denomA}\` ועוד \`${whole} × 1/${denomB}\``],
     [
-      { label: `ה${nameA}:`, math: `${whole} ÷ ${denomA} = ${partA}` },
-      { label: `ה${nameB}:`, math: `${whole} ÷ ${denomB} = ${partB}` },
+      { label: `ה${nameA}:`, math: `${whole} × 1/${denomA} = ${partA}` },
+      { label: `ה${nameB}:`, math: `${whole} × 1/${denomB} = ${partB}` },
       { label: "ביחד:", math: `${partA} + ${partB} = ${answer}` },
     ],
     `${whole} דקות מסך ליום: ${nameA} בבוקר ו${nameB} אחר הצהריים — כמה דקות מסך יחד?`,
