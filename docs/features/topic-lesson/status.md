@@ -5,19 +5,19 @@
 
 ## Progress
 - [x] Product spec — product-manager — 2026-08-20
-- [ ] Design — designer — not started
+- [x] Design — designer — 2026-08-20
 - [ ] Architecture — tech-lead — not started
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** designer
+**Current phase:** tech-lead
 **Branch:** `feature/topic-lesson`
 **PR:** not opened yet
 
 ## Open questions / blockers
-None. המשתמש אישר (2026-08-20): זהו מסך שיעור נפרד, מציג את כל התוכן הקיים
-(`methodSentence` + שני רמזים + שלבים/דימוי) סביב דוגמה אחת קלה ביותר, בלי לדרוש
-פתרון.
+None. מסך ביניים חדש ("שיעור"/"תרגול") אחרי בחירת נושא; מסך השיעור חוזר על פאנל
+ההסבר הקיים של Practice.tsx (משפט גישה כשיש, רמזים, שלבים, דימוי, ציור) על השאלה
+הראשונה ברמה הקלה הכתובה של הנושא — בלי שדה תשובה. כפתור "→ לתרגול" ישיר בתחתית.
 
 ## Docs
 - [Product spec](./product-spec.md)
