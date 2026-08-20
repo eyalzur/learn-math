@@ -154,12 +154,45 @@ test("two equal, unknown legs both carry a question mark", () => {
 
 // -------------------------------------------------------------------------- percent
 
-test("the strip carries guide lines at every quarter", async ({ page }) => {
-  // The opening tier is always "כמה זה 10% מ-X?" (see adaptivePercent.ts), which the
-  // strip's phrase table recognizes regardless of X.
+test("the strip carries guide lines matching the reduced fraction of the question's percent", async ({ page }) => {
+  // The opening tier is always "כמה זה 10% מ-X?" (see adaptivePercent.ts's tenPercent),
+  // which reduces to `1/10` — nine ticks, not fixed quarters. docs/features/
+  // percent-tenths-teaching changed the strip from fixed quarter-ticks to dividing by the
+  // reduced fraction of the specific rate asked.
   await open(page, "רותם", "אחוזים");
   await answerWrong(page);
-  await expect(page.locator(".ps-tick")).toHaveCount(3);
+  await expect(page.locator(".ps-tick")).toHaveCount(9);
+});
+
+test("the strip's part count follows each percent's own reduced fraction, not the percent itself", () => {
+  // 30% and 75% reduce by their gcd with 100 (10 and 25), not by the rate itself — the
+  // easiest place to get the part count wrong, so all six rates the written questions
+  // cover (10/50/25/75/20/30) are checked explicitly, sampled straight from the
+  // generators (adaptivePercent.ts) rather than through a level picker that no longer
+  // exists for רותם once this topic went adaptive (see levels-as-practice).
+  const EXPECTED: Record<number, [number, number]> = {
+    10: [1, 10],
+    50: [1, 2],
+    25: [1, 4],
+    75: [3, 4],
+    20: [1, 5],
+    30: [3, 10],
+  };
+  const seen = new Map<number, [number, number]>();
+  for (let difficulty = 1; difficulty <= 4 && seen.size < 6; difficulty++) {
+    const rng = seededRng(difficulty * 7919);
+    for (let i = 0; i < 300 && seen.size < 6; i++) {
+      const q = generatePercentQuestion(difficulty, rng);
+      const m = q.prompt.match(/^כמה זה (\d+)% מ-\d+\?$/);
+      if (!m) continue;
+      const strip = percentStrip(q);
+      if (strip?.numerator === undefined || strip.denominator === undefined) continue;
+      seen.set(Number(m[1]), [strip.numerator, strip.denominator]);
+    }
+  }
+  for (const [rate, fraction] of Object.entries(EXPECTED)) {
+    expect(seen.get(Number(rate)), `rate ${rate}% (sampled: ${[...seen.keys()]})`).toEqual(fraction);
+  }
 });
 
 test("a price increase extends the strip past its own whole", () => {

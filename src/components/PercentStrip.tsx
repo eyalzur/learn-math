@@ -16,9 +16,12 @@ interface PercentStripProps {
 }
 
 export function PercentStrip({ strip, label }: PercentStripProps) {
-  const { base, filled, extra } = strip;
+  const { base, filled, extra, denominator } = strip;
   const filledWidth = (filled / base) * BAR_WIDTH;
   const extraWidth = extra ? (extra / base) * BAR_WIDTH : 0;
+  const ticks = denominator
+    ? Array.from({ length: denominator - 1 }, (_, i) => (i + 1) / denominator)
+    : [0.25, 0.5, 0.75];
 
   // The real quantities behind the strip, marked where they sit — not left to the
   // caption alone. A price increase marks the 100% boundary and the new total; every
@@ -44,10 +47,11 @@ export function PercentStrip({ strip, label }: PercentStripProps) {
       role="img"
       aria-label={label}
     >
-      {/* The 100% track, with guide lines every 25% so the eye can estimate a share
-          without counting pixels. */}
+      {/* The 100% track, with guide lines at the question's own fraction (or every 25%
+          when the shape doesn't say) so the eye can estimate a share without counting
+          pixels. */}
       <rect className="ps-track" x={PAD} y={Y} width={BAR_WIDTH} height={BAR_HEIGHT} />
-      {[0.25, 0.5, 0.75].map((f) => (
+      {ticks.map((f) => (
         <path key={f} className="ps-tick" d={`M ${PAD + f * BAR_WIDTH} ${Y} V ${Y + BAR_HEIGHT}`} />
       ))}
       <rect className="ps-filled" x={PAD} y={Y} width={filledWidth} height={BAR_HEIGHT} />

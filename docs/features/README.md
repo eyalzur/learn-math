@@ -6,6 +6,7 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
+| רצועת האחוזים מתחלקת לפי האחוז שבשאלה, וההסבר אומר למה | 🟢 done — מוזג ל-main | [status](./percent-tenths-teaching/status.md) |
 | אבחון "סטייה של אחד" — מתחבר לשיטה | 🟢 done — מוזג ל-main | [status](./offbyone-diagnosis-method/status.md) |
 | כותרות שנשברות בצורה מאוזנת | 🟢 done — מוזג ל-main | [status](./heading-wrap-balance/status.md) |
 | פיתגורס — מסבירים לפני שפותרים | 🟢 done — מוזג ל-main | [status](./pythagoras-explain-first/status.md) |
