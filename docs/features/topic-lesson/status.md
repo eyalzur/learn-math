@@ -6,18 +6,20 @@
 ## Progress
 - [x] Product spec — product-manager — 2026-08-20
 - [x] Design — designer — 2026-08-20
-- [ ] Architecture — tech-lead — not started
+- [x] Architecture — tech-lead — 2026-08-20
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** tech-lead
+**Current phase:** developer
 **Branch:** `feature/topic-lesson`
 **PR:** not opened yet
 
 ## Open questions / blockers
-None. מסך ביניים חדש ("שיעור"/"תרגול") אחרי בחירת נושא; מסך השיעור חוזר על פאנל
-ההסבר הקיים של Practice.tsx (משפט גישה כשיש, רמזים, שלבים, דימוי, ציור) על השאלה
-הראשונה ברמה הקלה הכתובה של הנושא — בלי שדה תשובה. כפתור "→ לתרגול" ישיר בתחתית.
+None. הבלוק "איך פותרים?" הקיים ב-Practice.tsx (method + 11 הדיאגרמות + שלבים +
+דימוי) יוצא לרכיב משותף `QuestionExplanation` + פונקציה טהורה `buildExplanation` —
+כך ש-Practice ומסך השיעור החדש (Lesson) קוראים לאותו קוד בדיוק, בלי שכפול. שני
+מסכים חדשים ב-Screen union: `mode` (בחירת שיעור/תרגול) ו-`lesson`. `insideTopic()`
+(יציאה מתרגול) לא משתנה. פירוט מלא ב-architecture.md.
 
 ## Docs
 - [Product spec](./product-spec.md)
