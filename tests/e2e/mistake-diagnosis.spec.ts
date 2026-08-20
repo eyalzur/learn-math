@@ -1,6 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import { grades } from "../../src/data/curriculum";
 import { diagnose } from "../../src/data/diagnose";
+import { generateDecimalsQuestion } from "../../src/data/adaptiveDecimals";
 
 /**
  * Acceptance criteria under test
@@ -277,87 +278,41 @@ test("the explanation after an off-by-one mistake comes from the original questi
  * and two tenths, got six, and lost the point on the way to the box.
  */
 
-test("a dropped decimal point is named, not treated as a wrong sum", async ({ page }) => {
-  // Rotem → decimals → easy, walking to the reported question.
+/** Rotem's "שברים עשרוניים" is now adaptive (no level picker — see
+ *  docs/features/levels-as-practice), so this test walks a fresh, generated question
+ *  instead of assuming a fixed written one. */
+async function enterDecimals(page: Page) {
   await page.goto("/learn-math/");
   await page.evaluate(() => localStorage.clear());
   await page.goto("/learn-math/");
   await page.locator(".student-card").nth(1).click();
   await page.locator(".topic-card").nth(1).click();
-  await page.locator(".level-card").nth(0).click();
-  for (let i = 0; i < 12; i++) {
-    const prompt = await page.locator(".problem-text").innerText();
-    if (prompt.includes("0.4 + 0.2")) break;
-    await answer(page, "999999");
-    await page.getByRole("button", { name: /הבא|סיום/ }).click();
-  }
-  await expect(page.locator(".problem-text")).toContainText("0.4 + 0.2");
+}
 
-  await answer(page, "6");
-
-  const said = await page.locator(".diagnosis").innerText();
-  // The sentence has to credit the digits she got right — that is the whole point of
-  // naming this mistake rather than announcing the answer.
-  expect(said, "the diagnosis does not say the digits were right").toContain("הספרות נכונות");
-  // And it has to argue from size: both numbers are under one, so six cannot come out.
-  expect(said, "the diagnosis does not argue from the size of the numbers").toContain("קטנים מ");
-  await expect(page.locator(".followup")).toBeVisible();
-});
-
-test("the follow-up builds the size-check habit instead of quizzing a known fact", async ({
-  page,
-}) => {
-  await page.goto("/learn-math/");
-  await page.evaluate(() => localStorage.clear());
-  await page.goto("/learn-math/");
-  await page.locator(".student-card").nth(1).click();
-  await page.locator(".topic-card").nth(1).click();
-  await page.locator(".level-card").nth(0).click();
-  for (let i = 0; i < 12; i++) {
-    const prompt = await page.locator(".problem-text").innerText();
-    if (prompt.includes("0.4 + 0.2")) break;
-    await answer(page, "999999");
-    await page.getByRole("button", { name: /הבא|סיום/ }).click();
-  }
-  await answer(page, "6");
-
-  const asked = await page.locator(".followup-question").innerText();
-  // Two rejected shapes, both for the same reason. "Which is bigger, 0.6 or 6?" tests
-  // something she already knows. "Without computing, how many wholes?" demands the very
-  // estimation skill she was missing — a child who just erred cannot answer it.
-  expect(asked, "the follow-up is still a comparison").not.toContain("גדול יותר");
-  expect(asked, "the follow-up still asks her to estimate").not.toContain("בלי לחשב");
-  // What she *can* do: turn shekels into agora. That is the place-value insight itself.
-  expect(asked, "the follow-up does not use money").toContain("אגורות");
-
-  await answerFollowUp(page, "40");
-  const reply = await page.locator(".followup-reply").innerText();
-  expect(reply, "the reply does not land on the real answer").toContain("60");
-  expect(reply).toContain("0.6");
-});
+// The "both operands under 1" shape ("0.4 + 0.2") is roughly one generated question in
+// forty — rare enough that walking a live session to find one would be slow and flaky.
+// The diagnosis-content assertions that need it moved to "without the browser" below,
+// next to this file's other direct-function checks; the DOM/UI wiring they'd otherwise
+// exercise (`.followup`, `.followup-question`, `.followup-input`, `.followup-reply`) is
+// already covered generically by the "מה בא אחרי" tests above, on Mika's route.
 
 test("a decimal near-miss is never called almost — counting has nothing to do with it", async ({
   page,
 }) => {
-  // Reported from the live app: "7.5 − 2.5" answered `6` was met with "כמעט! זה אחד
-  // יותר מדי" and asked "כמה זה 6 − 1?". Nobody counts back two and a half on their
-  // fingers; the distance of one is a coincidence, not a slip.
-  await page.goto("/learn-math/");
-  await page.evaluate(() => localStorage.clear());
-  await page.goto("/learn-math/");
-  await page.locator(".student-card").nth(1).click();
-  await page.locator(".topic-card").nth(1).click();
-  await page.locator(".level-card").nth(1).click();
-  for (let i = 0; i < 12; i++) {
-    const prompt = await page.locator(".problem-text").innerText();
-    if (prompt.includes("7.5 − 2.5")) break;
-    await answer(page, "999999");
-    await page.getByRole("button", { name: /הבא|סיום/ }).click();
-  }
-  await expect(page.locator(".problem-text")).toContainText("7.5 − 2.5");
+  // Reported from the live app: "7.5 − 2.5" answered `6` (one too many) was met with
+  // "כמעט! זה אחד יותר מדי" and asked "כמה זה 6 − 1?". Nobody counts back two and a half
+  // on their fingers; the distance of one is a coincidence, not a slip. Any decimal
+  // question missed by exactly one, addition or subtraction, has to avoid the same trap.
+  await enterDecimals(page);
+  // The opening tier is always an addition (see adaptiveDecimals.ts) — "A + B =" every
+  // time — so its two operands can be read straight off the prompt.
+  const prompt = (await page.locator(".problem-text").innerText()).trim();
+  const m = prompt.match(/^(\d+\.\d) \+ (\d+\.\d)\s*=?$/);
+  expect(m, "the opening tier of שברים עשרוניים is always an addition").not.toBeNull();
+  const correct = Number((Number(m![1]) + Number(m![2])).toFixed(1));
 
-  await answer(page, "6");
-  const said = await page.locator(".diagnosis").count()
+  await answer(page, String(Number((correct + 1).toFixed(1))));
+  const said = (await page.locator(".diagnosis").count())
     ? await page.locator(".diagnosis").innerText()
     : "";
   expect(said, "a decimal miss was called a counting slip").not.toContain("כמעט");
@@ -405,6 +360,104 @@ test.describe("without the browser", () => {
       }
     }
     expect(wrong, `\n${wrong.join("\n")}\n`).toEqual([]);
+  });
+
+  // ------------------------------------------------ the digits are right, the point is not
+  //
+  // Reported from the live app: "0.4 + 0.2" answered `6` — but the child had already done
+  // the arithmetic (four tenths and two tenths is six) and lost the point on the way to
+  // the box. That question used to sit at a fixed level index; now that "שברים עשרוניים"
+  // is adaptive (docs/features/levels-as-practice), the "both operands under one" shape is
+  // roughly one generated question in forty — sampling it directly, deterministically, is
+  // far more reliable than walking a live session hoping to land on one.
+
+  function seededRng(seed: number): () => number {
+    let state = seed >>> 0;
+    return () => {
+      state |= 0;
+      state = (state + 0x6d2b79f5) | 0;
+      let t = Math.imul(state ^ (state >>> 15), 1 | state);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  /** Samples the generator's opening tier (always an addition) until both operands are
+   *  under one and their tenths don't carry — "0.4 + 0.2" is one instance of this shape.
+   *  A carry (e.g. "0.4 + 0.6" = 1.0) breaks the digit-matching identity this diagnosis
+   *  relies on: "4"+"6" concatenates to "10", but the correct answer's own digits are
+   *  just "1" — so it has to be excluded, not just "under one". */
+  function findSubOneAddition(): { aTenths: number; bTenths: number } {
+    const rng = seededRng(2026);
+    for (let i = 0; i < 2000; i++) {
+      const q = generateDecimalsQuestion(1, rng);
+      const m = q.prompt.match(/^0\.(\d) \+ 0\.(\d)$/);
+      if (m && Number(m[1]) + Number(m[2]) < 10) return { aTenths: Number(m[1]), bTenths: Number(m[2]) };
+    }
+    throw new Error("never sampled a sub-one, non-carrying decimal addition in 2000 tries");
+  }
+
+  test("a dropped decimal point is named, not treated as a wrong sum", () => {
+    const { aTenths, bTenths } = findSubOneAddition();
+    const a = Number(`0.${aTenths}`);
+    const b = Number(`0.${bTenths}`);
+    const question = {
+      id: "test",
+      topic: "שברים עשרוניים",
+      prompt: `${a} + ${b}`,
+      answer: Number((a + b).toFixed(1)),
+      hints: ["", ""] as const,
+      analogy: "",
+    };
+    // The mistake this diagnoses: adding the digits and forgetting the point.
+    const given = aTenths + bTenths;
+    const diagnosis = diagnose(question, given);
+
+    expect(diagnosis?.id).toBe("decimalPoint");
+    // The sentence has to credit the digits she got right — that is the whole point of
+    // naming this mistake rather than announcing the answer.
+    expect(diagnosis?.headline, "the diagnosis does not say the digits were right").toContain(
+      "הספרות נכונות",
+    );
+    // And it has to argue from size: both numbers are under one, so a whole number cannot
+    // come out of adding them.
+    expect(
+      diagnosis?.headline,
+      "the diagnosis does not argue from the size of the numbers",
+    ).toContain("קטנים מ");
+  });
+
+  test("the follow-up builds the size-check habit instead of quizzing a known fact", () => {
+    const { aTenths, bTenths } = findSubOneAddition();
+    const a = Number(`0.${aTenths}`);
+    const b = Number(`0.${bTenths}`);
+    const question = {
+      id: "test",
+      topic: "שברים עשרוניים",
+      prompt: `${a} + ${b}`,
+      answer: Number((a + b).toFixed(1)),
+      hints: ["", ""] as const,
+      analogy: "",
+    };
+    const diagnosis = diagnose(question, aTenths + bTenths);
+    const followUp = diagnosis?.followUp;
+    expect(followUp, "no follow-up was built").toBeTruthy();
+
+    // Two rejected shapes, both for the same reason. "Which is bigger, 0.6 or 6?" tests
+    // something she already knows. "Without computing, how many wholes?" demands the very
+    // estimation skill she was missing — a child who just erred cannot answer it.
+    expect(followUp!.question, "the follow-up is still a comparison").not.toContain("גדול יותר");
+    expect(followUp!.question, "the follow-up still asks her to estimate").not.toContain(
+      "בלי לחשב",
+    );
+    // What she *can* do: turn shekels into agora. That is the place-value insight itself.
+    expect(followUp!.question, "the follow-up does not use money").toContain("אגורות");
+
+    const wholeAgorot = Math.round(a * 100);
+    expect(followUp!.answer).toBe(wholeAgorot);
+    expect(followUp!.onRight, "the reply does not land on the real answer").toContain(
+      String(question.answer),
+    );
   });
 });
 

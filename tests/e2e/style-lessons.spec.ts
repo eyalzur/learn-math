@@ -49,11 +49,20 @@ test("a topic with one style is untouched and never shows the new screen", async
   await expect(page.locator(".style-card")).toHaveCount(0);
 });
 
-test("a grade that has not been classified still practises by level", async ({ page }) => {
+test("a grade that has not been classified into styles never shows the style screen", async ({
+  page,
+}) => {
+  // This used to demonstrate "an unclassified grade falls back to plain levels" — true
+  // when it was written, but Rotem's topics have since all moved to adaptive difficulty
+  // (docs/features/levels-as-practice), which is now the fallback instead of levels for
+  // every one of them. "A topic with one style still shows the level screen" above
+  // already covers the levels case, on Mika's own unclassified single-style topic. What
+  // still matters here, and is still style-lessons' own concern: an unclassified topic
+  // must never show the *style* screen either, whichever of the other two it lands on.
   await openTopic(page, ROTEM, 0);
 
-  await expect(page.locator(".level-card")).toHaveCount(3);
   await expect(page.locator(".style-card")).toHaveCount(0);
+  await expect(page.locator(".problem-text")).toBeVisible();
 });
 
 test("every one of Mika's topics lands somewhere, and never on both", async ({ page }) => {

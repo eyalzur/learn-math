@@ -14,6 +14,18 @@ import { ratioStrips } from "../../src/data/ratioStrips";
 import { linearGraph } from "../../src/data/linearGraph";
 import { STYLE_META, stylesOf, hasStyleLessons } from "../../src/data/style";
 import { generateAdd100Question } from "../../src/data/adaptiveAdd100";
+import { generateFractionsQuestion } from "../../src/data/adaptiveFractions";
+import { generateDecimalsQuestion } from "../../src/data/adaptiveDecimals";
+import { generatePercentQuestion } from "../../src/data/adaptivePercent";
+import { generateRatioQuestion } from "../../src/data/adaptiveRatio";
+import { generateAreaPerimeterQuestion } from "../../src/data/adaptiveAreaPerimeter";
+import { generateAverageQuestion } from "../../src/data/adaptiveAverage";
+import { generateExpressionsQuestion } from "../../src/data/adaptiveExpressions";
+import { generateEquationsQuestion } from "../../src/data/adaptiveEquations";
+import { generatePowersQuestion } from "../../src/data/adaptivePowers";
+import { generatePythagorasQuestion } from "../../src/data/adaptivePythagoras";
+import { generateLinearFunctionQuestion } from "../../src/data/adaptiveLinearFunction";
+import { generateWordProblemsQuestion } from "../../src/data/adaptiveWordProblems";
 
 /**
  * Content correctness, checked against the data rather than through the browser.
@@ -925,6 +937,188 @@ test("every generated חיבור עד 100 question passes every content rule, ac
   expect(badPrompt, `\n${badPrompt.join("\n")}\n`).toEqual([]);
   expect(wrongAnswer, `\n${wrongAnswer.join("\n")}\n`).toEqual([]);
   expect(outOfRange, `\n${outOfRange.join("\n")}\n`).toEqual([]);
+  expect(violations, `\n${violations.join("\n")}\n`).toEqual([]);
+});
+
+/**
+ * `RULES` above only ever sees the static `grades` tree, so a question built at runtime
+ * by any of the twelve generators under `src/data/adaptive*.ts` (see
+ * docs/features/levels-as-practice) is invisible to every check above no matter how
+ * wrong it is — the same gap `generateAdd100Question`'s own test closes, extended to
+ * every topic that moved to adaptive difficulty after it. A seeded RNG keeps the sample
+ * and any failure reproducible.
+ */
+const ADAPTIVE_GENERATORS: [string, string, (difficulty: number, rng: () => number) => Question][] = [
+  ["שברים פשוטים", "6", generateFractionsQuestion],
+  ["שברים עשרוניים", "6", generateDecimalsQuestion],
+  ["אחוזים", "6", generatePercentQuestion],
+  ["יחס ופרופורציה", "6", generateRatioQuestion],
+  ["שטח והיקף", "6", generateAreaPerimeterQuestion],
+  ["ממוצע", "6", generateAverageQuestion],
+  ["ביטויים אלגבריים", "8", generateExpressionsQuestion],
+  ["משוואות", "8", generateEquationsQuestion],
+  ["חזקות ושורשים", "8", generatePowersQuestion],
+  ["משפט פיתגורס", "8", generatePythagorasQuestion],
+  ["פונקציה קווית", "8", generateLinearFunctionQuestion],
+  ["בעיות מילוליות", "8", generateWordProblemsQuestion],
+];
+
+test("every generated question, across all twelve levels-as-practice topics, passes every content rule", () => {
+  const violations: string[] = [];
+  const badAnswer: string[] = [];
+  const samplesPerDifficulty = 100;
+
+  for (const [topic, gradeId, generate] of ADAPTIVE_GENERATORS) {
+    const rng = seededRng(topic.length * 1000003);
+    for (let difficulty = 1; difficulty <= 5; difficulty++) {
+      for (let i = 0; i < samplesPerDifficulty; i++) {
+        const q = generate(difficulty, rng);
+
+        for (const rule of RULES) {
+          const problem = rule.check(q, gradeId);
+          if (problem) violations.push(`${q.id} (${topic}, difficulty ${difficulty}) — ${rule.name}: ${problem}`);
+        }
+
+        if (!Number.isFinite(q.answer)) {
+          badAnswer.push(`${q.id} (${topic}, difficulty ${difficulty}) — "${q.prompt}" answer is ${q.answer}`);
+        }
+      }
+    }
+  }
+
+  expect(badAnswer, `\n${badAnswer.join("\n")}\n`).toEqual([]);
+  expect(violations, `\n${violations.join("\n")}\n`).toEqual([]);
+});
+
+/**
+ * docs/features/difficulty-number-scaling/product-spec.md's Acceptance Criteria, checked
+ * directly against generated output rather than relying on `RULES` (which never looked at
+ * digit counts or decimal precision — a 3-digit number or a 3-decimal answer passes every
+ * existing rule just fine).
+ */
+function numbersIn(text: string): number[] {
+  return (text.match(/\d+(?:\.\d+)?/g) ?? []).map(Number);
+}
+
+function integerDigits(n: number): number {
+  return String(Math.trunc(Math.abs(n))).length;
+}
+
+function decimalDigits(n: number): number {
+  const s = String(n);
+  const dot = s.indexOf(".");
+  return dot === -1 ? 0 : s.length - dot - 1;
+}
+
+test("every difficulty-1 question, across all twelve topics, uses only single/double-digit numbers", () => {
+  const violations: string[] = [];
+  const samples = 200;
+
+  for (const [topic, , generate] of ADAPTIVE_GENERATORS) {
+    const rng = seededRng(topic.length * 7919 + 1);
+    for (let i = 0; i < samples; i++) {
+      const q = generate(1, rng);
+      for (const n of [...numbersIn(q.prompt), q.answer]) {
+        if (integerDigits(n) > 2) {
+          violations.push(`${q.id} (${topic}, difficulty 1) — "${q.prompt}" = ${q.answer} has a ${integerDigits(n)}-digit number (${n})`);
+        }
+      }
+    }
+  }
+
+  expect(violations, `\n${violations.join("\n")}\n`).toEqual([]);
+});
+
+test("the reported bug does not come back: אחוזים difficulty 1-2 never produces a 3-digit base", () => {
+  // The exact complaint: "כמה זה 10% מ-960?" as a difficulty-1 question, and "50% מ-78"
+  // being reachable almost immediately (difficulty 2 — a two-correct-streak away).
+  const rng = seededRng(99);
+  const violations: string[] = [];
+  for (let difficulty = 1; difficulty <= 2; difficulty++) {
+    for (let i = 0; i < 300; i++) {
+      const q = generatePercentQuestion(difficulty, rng);
+      const m = q.prompt.match(/^כמה זה (\d+)% מ-(\d+)\?$/);
+      if (!m) continue; // difficulty 2 can occasionally land elsewhere via retry; skip
+      const base = Number(m[2]);
+      if (base >= 100) violations.push(`${q.id} (difficulty ${difficulty}) — "${q.prompt}" has a 3-digit base`);
+    }
+  }
+  expect(violations, `\n${violations.join("\n")}\n`).toEqual([]);
+});
+
+test("the five decimal-eligible generators sometimes produce a non-integer answer, always at most two decimal digits", () => {
+  // Per design.md's table: which topic, which difficulty tier(s) actually carry the ~30%
+  // decimal draw. A later review ruled that a question must never show a decimal among its
+  // own GIVEN numbers, only the answer may land on one — which removed decimal capability
+  // entirely from ממוצע, ביטויים אלגבריים, and יחס ופרופורציה (each one's only decimal-capable
+  // spot was a given, with no way to move it onto the answer instead), and narrowed
+  // אחוזים/שטח והיקף down to just the one tier apiece where the answer alone can carry it.
+  // שברים פשוטים/חזקות ושורשים/משפט פיתגורס were already integer-only from the start — see
+  // architecture.md's Risks for why those three stay that way.
+  const DECIMAL_TIERS: Record<string, number[]> = {
+    "אחוזים": [5],
+    "שטח והיקף": [4],
+    "משוואות": [5],
+    "פונקציה קווית": [5],
+    "בעיות מילוליות": [5],
+  };
+  const samplesPerTier = 300;
+  const tooManyDecimals: string[] = [];
+  const neverWentDecimal: string[] = [];
+
+  for (const [topic, , generate] of ADAPTIVE_GENERATORS) {
+    const tiers = DECIMAL_TIERS[topic];
+    if (!tiers) continue;
+    for (const difficulty of tiers) {
+      const rng = seededRng(topic.length * 104729 + difficulty);
+      let sawDecimal = false;
+      for (let i = 0; i < samplesPerTier; i++) {
+        const q = generate(difficulty, rng);
+        for (const n of [...numbersIn(q.prompt), q.answer]) {
+          const dd = decimalDigits(n);
+          if (dd > 0) sawDecimal = true;
+          if (dd > 2) {
+            tooManyDecimals.push(`${q.id} (${topic}, difficulty ${difficulty}) — "${q.prompt}" = ${q.answer} has a number with ${dd} decimal digits (${n})`);
+          }
+        }
+      }
+      if (!sawDecimal) {
+        neverWentDecimal.push(`${topic} (difficulty ${difficulty}) never produced a decimal in ${samplesPerTier} samples`);
+      }
+    }
+  }
+
+  expect(tooManyDecimals, `\n${tooManyDecimals.join("\n")}\n`).toEqual([]);
+  expect(neverWentDecimal, `\n${neverWentDecimal.join("\n")}\n`).toEqual([]);
+});
+
+test("a question never shows a decimal among its own given numbers — only the answer may land on one", () => {
+  // The rule this test guards: a generated question's PROMPT numbers (the givens a child
+  // reads and works from) must always be whole. Only the ANSWER — a number the child
+  // computes, never one handed to them — may come out decimal. This was a real review
+  // finding (14.5 as a triangle's base, 24.5 as an average's sum, x = 8.5 shown directly in
+  // a prompt) across several generators; each was redesigned so the decimal draw lands on
+  // the answer or an unshown intermediate instead of a given.
+  // שברים עשרוניים is the one exception: decimal numbers ARE the subject matter there, so
+  // they're expected right in the prompt ("1.5 + 1.5"), not a violation of this rule.
+  const violations: string[] = [];
+  const samplesPerTier = 150;
+
+  for (const [topic, , generate] of ADAPTIVE_GENERATORS) {
+    if (topic === "שברים עשרוניים") continue;
+    for (let difficulty = 1; difficulty <= 5; difficulty++) {
+      const rng = seededRng(topic.length * 65599 + difficulty);
+      for (let i = 0; i < samplesPerTier; i++) {
+        const q = generate(difficulty, rng);
+        for (const n of numbersIn(q.prompt)) {
+          if (decimalDigits(n) > 0) {
+            violations.push(`${q.id} (${topic}, difficulty ${difficulty}) — "${q.prompt}" has a decimal given (${n})`);
+          }
+        }
+      }
+    }
+  }
+
   expect(violations, `\n${violations.join("\n")}\n`).toEqual([]);
 });
 

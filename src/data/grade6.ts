@@ -1,5 +1,53 @@
 import type { Topic } from "./curriculum";
 import { level } from "./level";
+import {
+  generateFractionsQuestion,
+  nextFractionsDifficulty,
+  FRACTIONS_MIN_DIFFICULTY,
+  FRACTIONS_MAX_DIFFICULTY,
+  FRACTIONS_INITIAL_DIFFICULTY,
+  FRACTIONS_QUESTION_COUNT,
+} from "./adaptiveFractions";
+import {
+  generateDecimalsQuestion,
+  nextDecimalsDifficulty,
+  DECIMALS_MIN_DIFFICULTY,
+  DECIMALS_MAX_DIFFICULTY,
+  DECIMALS_INITIAL_DIFFICULTY,
+  DECIMALS_QUESTION_COUNT,
+} from "./adaptiveDecimals";
+import {
+  generatePercentQuestion,
+  nextPercentDifficulty,
+  PERCENT_MIN_DIFFICULTY,
+  PERCENT_MAX_DIFFICULTY,
+  PERCENT_INITIAL_DIFFICULTY,
+  PERCENT_QUESTION_COUNT,
+} from "./adaptivePercent";
+import {
+  generateRatioQuestion,
+  nextRatioDifficulty,
+  RATIO_MIN_DIFFICULTY,
+  RATIO_MAX_DIFFICULTY,
+  RATIO_INITIAL_DIFFICULTY,
+  RATIO_QUESTION_COUNT,
+} from "./adaptiveRatio";
+import {
+  generateAreaPerimeterQuestion,
+  nextAreaPerimeterDifficulty,
+  AREA_PERIMETER_MIN_DIFFICULTY,
+  AREA_PERIMETER_MAX_DIFFICULTY,
+  AREA_PERIMETER_INITIAL_DIFFICULTY,
+  AREA_PERIMETER_QUESTION_COUNT,
+} from "./adaptiveAreaPerimeter";
+import {
+  generateAverageQuestion,
+  nextAverageDifficulty,
+  AVERAGE_MIN_DIFFICULTY,
+  AVERAGE_MAX_DIFFICULTY,
+  AVERAGE_INITIAL_DIFFICULTY,
+  AVERAGE_QUESTION_COUNT,
+} from "./adaptiveAverage";
 
 /**
  * Grade 6, organised topic by topic so a student who failed a test on percentages can
@@ -16,6 +64,14 @@ export const grade6Topics: Topic[] = [
     id: "fractions",
     title: "שברים פשוטים",
     reviewed: true,
+    adaptive: {
+      generate: generateFractionsQuestion,
+      minDifficulty: FRACTIONS_MIN_DIFFICULTY,
+      maxDifficulty: FRACTIONS_MAX_DIFFICULTY,
+      initialDifficulty: FRACTIONS_INITIAL_DIFFICULTY,
+      nextDifficulty: nextFractionsDifficulty,
+      questionCount: FRACTIONS_QUESTION_COUNT,
+    },
     levels: [
       level("easy", [
         { id: "g6-fractions-e1", topic: "שברים פשוטים", prompt: "כמה זה חצי מ-20?", answer: 10, hints: ["חצי זה לחלק ל`2` חלקים שווים", "מחלקים את `20` ל-`2` חלקים שווים"] as const, steps: [{ label: "חצי זה לחלק לשני חלקים שווים" }, { label: "20 ÷ 2 = 10" }], analogy: "20 שקל שמתחלקים שווה בשווה בין שניים - כל אחד מקבל 10" },
@@ -59,6 +115,14 @@ export const grade6Topics: Topic[] = [
     id: "decimals",
     title: "שברים עשרוניים",
     reviewed: true,
+    adaptive: {
+      generate: generateDecimalsQuestion,
+      minDifficulty: DECIMALS_MIN_DIFFICULTY,
+      maxDifficulty: DECIMALS_MAX_DIFFICULTY,
+      initialDifficulty: DECIMALS_INITIAL_DIFFICULTY,
+      nextDifficulty: nextDecimalsDifficulty,
+      questionCount: DECIMALS_QUESTION_COUNT,
+    },
     levels: [
       level("easy", [
         { id: "g6-decimals-e1", topic: "שברים עשרוניים", prompt: "0.5 + 0.3", answer: 0.8, hints: ["מיישרים את הנקודה זו מתחת לזו ומחברים כרגיל", "מחברים קודם את מה שאחרי הנקודה: `0.5` ו-`0.3`"] as const, steps: [{ label: "מחברים עשירית לעשירית" }, { label: "0.5 + 0.3 = 0.8" }], analogy: "חצי שקל ועוד 30 אגורות" },
@@ -102,6 +166,14 @@ export const grade6Topics: Topic[] = [
     id: "percent",
     title: "אחוזים",
     reviewed: true,
+    adaptive: {
+      generate: generatePercentQuestion,
+      minDifficulty: PERCENT_MIN_DIFFICULTY,
+      maxDifficulty: PERCENT_MAX_DIFFICULTY,
+      initialDifficulty: PERCENT_INITIAL_DIFFICULTY,
+      nextDifficulty: nextPercentDifficulty,
+      questionCount: PERCENT_QUESTION_COUNT,
+    },
     levels: [
       level("easy", [
         { id: "g6-percent-e1", topic: "אחוזים", prompt: "כמה זה 10% מ-200?", answer: 20, hints: ["`10%` זה כמו `1/10`", "`200` חלקי `10`"] as const, steps: [{ label: "`10%` זה `10/100`" }, { label: "מצמצמים: `10/100` שווה ל-`1/10` (מחלקים את שני המספרים ב-`10`)" }, { label: "10% זה עשירית מהמספר" }, { label: "200 ÷ 10 = 20" }], analogy: "הנחה של 10% על מוצר ב-200 שקל - כמה חוסכים" },
@@ -145,6 +217,14 @@ export const grade6Topics: Topic[] = [
     id: "ratio",
     title: "יחס ופרופורציה",
     reviewed: true,
+    adaptive: {
+      generate: generateRatioQuestion,
+      minDifficulty: RATIO_MIN_DIFFICULTY,
+      maxDifficulty: RATIO_MAX_DIFFICULTY,
+      initialDifficulty: RATIO_INITIAL_DIFFICULTY,
+      nextDifficulty: nextRatioDifficulty,
+      questionCount: RATIO_QUESTION_COUNT,
+    },
     levels: [
       level("easy", [
         { id: "g6-ratio-e1", topic: "יחס ופרופורציה", prompt: "היחס הוא 1 ל-2. אם החלק הראשון הוא 3, כמה השני?", answer: 6, hints: ["ביחס, מה שעושים לצד אחד עושים בדיוק גם לשני", "מ-`1` הגיעו ל-`3` — פי כמה? אותו דבר עושים ל-`2`"] as const, steps: [{ label: "ביחס 1 ל-2, השני גדול פי שניים" }, { label: "3 × 2 = 6" }], analogy: "על כל ילד בטיול צריך שני מבוגרים - יש 3 ילדים" },
@@ -188,6 +268,14 @@ export const grade6Topics: Topic[] = [
     id: "geometry",
     title: "שטח והיקף",
     reviewed: true,
+    adaptive: {
+      generate: generateAreaPerimeterQuestion,
+      minDifficulty: AREA_PERIMETER_MIN_DIFFICULTY,
+      maxDifficulty: AREA_PERIMETER_MAX_DIFFICULTY,
+      initialDifficulty: AREA_PERIMETER_INITIAL_DIFFICULTY,
+      nextDifficulty: nextAreaPerimeterDifficulty,
+      questionCount: AREA_PERIMETER_QUESTION_COUNT,
+    },
     levels: [
       level("easy", [
         { id: "g6-geometry-e1", topic: "שטח והיקף", prompt: "שטח מלבן שאורכו 5 ורוחבו 4", answer: 20, hints: ["שטח מלבן הוא אורך כפול רוחב", "האורך הוא `5` והרוחב `4`"] as const, steps: [{ label: "שטח מלבן זה אורך כפול רוחב" }, { label: "5 × 4 = 20" }], analogy: "טבלת שוקולד מחולקת לריבועים: 5 ריבועים לאורך ו-4 לרוחב. כמה ריבועים יש בה בסך הכל" },
@@ -231,6 +319,14 @@ export const grade6Topics: Topic[] = [
     id: "average",
     title: "ממוצע",
     reviewed: true,
+    adaptive: {
+      generate: generateAverageQuestion,
+      minDifficulty: AVERAGE_MIN_DIFFICULTY,
+      maxDifficulty: AVERAGE_MAX_DIFFICULTY,
+      initialDifficulty: AVERAGE_INITIAL_DIFFICULTY,
+      nextDifficulty: nextAverageDifficulty,
+      questionCount: AVERAGE_QUESTION_COUNT,
+    },
     levels: [
       level("easy", [
         { id: "g6-average-e1", topic: "ממוצע", prompt: "הממוצע של 4 ושל 8", answer: 6, hints: ["ממוצע הוא הסכום, חלקי כמה מספרים יש", "מחברים את כל `2` המספרים, ואז מחלקים ב-`2`"] as const, steps: [{ label: "ממוצע זה לחבר הכל ולחלק בכמות" }, { label: "4 + 8 = 12" }, { label: "12 ÷ 2 = 6" }], analogy: "שני מבחנים, 4 ו-8 - מה הציון ה״ממוצע״" },

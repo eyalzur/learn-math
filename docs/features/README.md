@@ -32,3 +32,5 @@ architecture, implementation notes, and tests.
 | ספירה לאחור למעבר לשאלה הבאה | 🟢 done — מוזג ל-main | [status](./countdown-next/status.md) |
 | תוכן כיתה ב׳ למיקה | 🟢 done | [status](./mika-grade2-content/status.md) |
 | קושי מסתגל — תרגילים מטמפלייט | 🟢 done — מוזג ל-main | [status](./adaptive-difficulty/status.md) |
+| רמות הופכות לתרגול מסתגל — כל נושאי רותם ועומר | 🟢 done — מוזג ל-main | [status](./levels-as-practice/status.md) |
+| חוקי בחירת מספרים לפי קושי — 12 המחוללים האדפטיביים | 🟢 done — ממתין ל-PR | [status](./difficulty-number-scaling/status.md) |

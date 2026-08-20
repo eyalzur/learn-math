@@ -65,17 +65,18 @@ test("חיבור עד 100 skips the level picker and lands straight on practice"
 
   await expect(page.locator(".level-card")).toHaveCount(0);
   await expect(page.locator(".problem-text")).toBeVisible();
-  await expect(page.locator(".progress")).toContainText("מתוך 10");
+  await expect(page.locator(".progress")).toContainText("מתוך 20");
 });
 
 test("a streak of correct answers climbs to needing carrying, a streak of wrong answers never does", async ({
   page,
 }) => {
   // Run A: never answer correctly. Difficulty can only ever back off from its starting
-  // point, so no question in this run should require carrying past a ten.
+  // point, so no question in this run should require carrying past a ten. Runs the full
+  // session (20 questions, not 10) so it actually reaches the result screen below.
   await enterAdd100(page);
   const wrongRunCarries: boolean[] = [];
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 20; i++) {
     const ops = await currentPrompt(page);
     wrongRunCarries.push(needsCarrying(ops));
     await answer(page, ops[0] + ops[1] + 1000); // guaranteed wrong
@@ -130,7 +131,7 @@ test("questions vary between sessions, even at the same starting difficulty", as
 
 test("history records the topic without a level suffix", async ({ page }) => {
   await enterAdd100(page);
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 20; i++) {
     const ops = await currentPrompt(page);
     await answer(page, ops[0] + ops[1]);
   }
@@ -143,7 +144,7 @@ test("history records the topic without a level suffix", async ({ page }) => {
   const row = page.locator(".history-row").first();
   await expect(row).toBeVisible();
   await expect(row.locator(".history-what")).toHaveText("חיבור עד 100");
-  await expect(row.locator(".history-score")).toHaveText("10/10");
+  await expect(row.locator(".history-score")).toHaveText("20/20");
 });
 
 test("חיסור עד 100, the topic not in the pilot, still shows three levels exactly like before", async ({

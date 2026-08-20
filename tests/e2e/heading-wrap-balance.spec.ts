@@ -46,8 +46,13 @@ test("the topic picker's heading balances", async ({ page }) => {
 });
 
 test("the level picker's heading balances", async ({ page }) => {
-  await page.locator(".student-card").nth(ROTEM).click();
-  await page.locator(".topic-card").first().click();
+  // Rotem's own topics used to be the vehicle here, but every one of them now skips the
+  // level picker entirely (see docs/features/levels-as-practice) — the screen this test
+  // is about no longer exists on that route. Mika's "חיבור עד 10" is still a single-style,
+  // three-level topic exactly like Rotem's used to be, so it exercises the same heading.
+  await page.locator(".student-card").nth(MIKA).click();
+  await page.locator(".grade-card").first().click();
+  await page.locator(".topic-card", { hasText: "חיבור עד 10" }).click();
   await expect(page.locator(".level-card")).toHaveCount(3);
   await expectBalancedH1(page);
 });
@@ -62,8 +67,11 @@ test("the style picker's heading balances", async ({ page }) => {
 });
 
 test("the result screen's heading balances", async ({ page }) => {
-  await page.locator(".student-card").nth(ROTEM).click();
-  await page.locator(".topic-card").first().click();
+  // Same substitution as "the level picker's heading balances" above, and for the same
+  // reason — Rotem's topics no longer offer a level to click through on the way here.
+  await page.locator(".student-card").nth(MIKA).click();
+  await page.locator(".grade-card").first().click();
+  await page.locator(".topic-card", { hasText: "חיבור עד 10" }).click();
   await page.locator(".level-card").first().click();
   const total = Number((await page.locator(".progress").innerText()).match(/מתוך (\d+)/)![1]);
   for (let i = 0; i < total; i++) {

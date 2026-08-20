@@ -223,7 +223,7 @@ export function generateAdd100Question(difficulty: number, rng: Rng = Math.rando
 export const ADD100_MIN_DIFFICULTY = 1;
 export const ADD100_MAX_DIFFICULTY = 5;
 export const ADD100_INITIAL_DIFFICULTY = 1;
-export const ADD100_QUESTION_COUNT = 10;
+export const ADD100_QUESTION_COUNT = 20;
 
 /**
  * Two in a row before pushing harder — one lucky guess should not ramp difficulty up.
