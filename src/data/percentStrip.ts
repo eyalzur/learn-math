@@ -21,7 +21,17 @@ export interface PercentStrip {
   filled: number;
   /** Set only for a price increase: how far the bar extends past `base`. */
   extra?: number;
+  /** Set only for the "X% of Y?" pattern — the reduced fraction of `X/100`. Determines
+   *  how many equal parts the strip is drawn with, instead of fixed quarter-ticks.
+   *  undefined for every other question shape (discount/increase/"what percent"), where
+   *  the existing fixed quarter-ticks stay as they are. */
+  numerator?: number;
+  denominator?: number;
   caption: string;
+}
+
+function gcd(a: number, b: number): number {
+  return b === 0 ? a : gcd(b, a % b);
 }
 
 function readShape(prompt: string): PercentStrip | null {
@@ -30,10 +40,20 @@ function readShape(prompt: string): PercentStrip | null {
   if ((m = prompt.match(/^כמה זה (\d+)% מ-(\d+)\?$/))) {
     const [rate, base] = [Number(m[1]), Number(m[2])];
     const filled = (base * rate) / 100;
+    const g = gcd(rate, 100);
+    const numerator = rate / g;
+    const denominator = 100 / g;
     return {
       base,
       filled,
-      caption: `\`${rate}%\` מתוך \`${base}\` הם \`${filled}\` — הצבוע ברצועה`,
+      numerator,
+      denominator,
+      // Describes the picture, not the result — "X% of Y" and where the colour sits, the
+      // same way geometryShape.ts's captions say "the area is everything inside" rather
+      // than stating a number. The strip already appears after a wrong answer, so this
+      // caption sitting above the step-by-step explanation must not hand over the answer
+      // before the reasoning that leads to it.
+      caption: `\`${rate}%\` מ-\`${base}\` — הצבוע ברצועה`,
     };
   }
 
