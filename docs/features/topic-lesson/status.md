@@ -10,16 +10,14 @@
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** product-manager — blocked, see Open questions below
+**Current phase:** designer
 **Branch:** `feature/topic-lesson`
 **PR:** not opened yet
 
 ## Open questions / blockers
-- **Product:** אימות ניסוח — ההודעה המקורית אמרה "דף/אזור תרגול לכל נושא" אבל ההקשר
-  מתאר פיצול לשיעור+תרגול, ותרגול כבר קיים. ממשיכים בהנחה שהכוונה לדף **שיעור** חדש.
-- **Product:** מה בפועל מוצג במסך השיעור בשלב הראשון — ארבע אפשרויות שונות מאוד
-  (`methodSentence`, רמזי שאלה, הסבר-אחרי-טעות של שאלת דוגמה, או תוכן חדש שטרם נכתב).
-  חוסם את designer.
+None. המשתמש אישר (2026-08-20): זהו מסך שיעור נפרד, מציג את כל התוכן הקיים
+(`methodSentence` + שני רמזים + שלבים/דימוי) סביב דוגמה אחת קלה ביותר, בלי לדרוש
+פתרון.
 
 ## Docs
 - [Product spec](./product-spec.md)
