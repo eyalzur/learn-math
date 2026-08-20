@@ -12,7 +12,7 @@
 
 **Current phase:** done — ממתין ל-PR
 **Branch:** `fix/algebraic-brackets-teaching`
-**PR:** not opened yet
+**PR:** [#50](https://github.com/eyalzur/learn-math/pull/50)
 
 ## Open questions / blockers
 None.
