@@ -2,6 +2,7 @@ import { useState } from "react";
 import { StudentPicker } from "./components/StudentPicker";
 import { GradePicker } from "./components/GradePicker";
 import { TopicPicker } from "./components/TopicPicker";
+import { TopicLesson } from "./components/TopicLesson";
 import { LevelPicker } from "./components/LevelPicker";
 import { StylePicker } from "./components/StylePicker";
 import { History } from "./components/History";
@@ -67,6 +68,7 @@ function rememberGradeId(studentId: string, gradeId: string | null) {
 
 type Screen =
   | { name: "home" }
+  | { name: "lesson"; topic: Topic }
   | { name: "levels"; topic: Topic | null }
   | { name: "styles"; topic: Topic }
   | { name: "history" }
@@ -148,10 +150,10 @@ function App() {
     setGradeId(id);
   }
 
-  /** Entering a topic from its card. An adaptive topic skips the level screen entirely —
-   *  there is nothing to pick, so a fresh set of questions is generated immediately and
-   *  practice starts on it. Every other topic is unaffected: `insideTopic` alone decides
-   *  where it lands, exactly as before this existed. */
+  /** Entering a topic from its card — unchanged from before docs/features/topic-lesson
+   *  existed. An adaptive topic skips the level screen entirely — there is nothing to
+   *  pick, so a fresh set of questions is generated immediately and practice starts on
+   *  it. Every other topic is unaffected: `insideTopic` alone decides where it lands. */
   function enterTopic(topic: Topic) {
     if (topic.adaptive) {
       const session = freshAdaptiveSession(topic as Topic & { adaptive: NonNullable<Topic["adaptive"]> });
@@ -160,6 +162,22 @@ function App() {
       return;
     }
     setScreen(insideTopic(topic));
+  }
+
+  /** The topic's card also offers "שיעור" as a secondary action (see
+   *  `TopicPicker`'s `onLesson`) — this opens it directly, without touching how picking
+   *  the card itself behaves. */
+  function enterLesson(topic: Topic) {
+    setScreen({ name: "lesson", topic });
+  }
+
+  /** The topic's easiest written example, for the lesson screen — the first question of
+   *  its written "easy" level. Still present even for a topic that went adaptive (PR #48
+   *  left `levels` in place; only the practice screen stopped reading from it), so this is
+   *  the same lookup for every topic in every grade. `null` only if a topic's data is
+   *  missing this entirely, which nothing in today's content does. */
+  function lessonExample(topic: Topic): Question | null {
+    return topic.levels.find((l) => l.id === "easy")?.questions[0] ?? topic.levels[0]?.questions[0] ?? null;
   }
 
   /** The one thing an adaptive lesson adds to answering a question: the next not-yet-seen
@@ -240,6 +258,7 @@ function App() {
         gradeLabel={`שלום ${student.name}! · ${grade.label}`}
         topics={grade.topicSets}
         onSelect={enterTopic}
+        onLesson={enterLesson}
         onBack={grades.length > 1 ? () => chooseGrade(null) : switchStudent}
         backLabel={grades.length > 1 ? "← חזרה" : "← החלף תלמיד"}
         onHistory={() => setScreen({ name: "history" })}
@@ -249,6 +268,25 @@ function App() {
           // The value lives in storage, so a render is needed to pick it back up.
           setReadAloudTick((n) => n + 1);
         }}
+      />
+    );
+  }
+
+  if (screen.name === "lesson") {
+    const topic = screen.topic;
+    const question = lessonExample(topic);
+    // `TopicPicker` only offers the "שיעור" link on a reviewed topic, and every reviewed
+    // topic's data carries a written "easy" level — so this is not a state a click can
+    // produce today; the null check is only a safety net against topic data changing
+    // under an already-open tab, not something a real session hits.
+    if (question === null) return null;
+    return (
+      <TopicLesson
+        topicTitle={topic.title}
+        gradeLabel={grade.label}
+        question={question}
+        onBack={() => setScreen({ name: "home" })}
+        onPractice={() => enterTopic(topic)}
       />
     );
   }
@@ -324,6 +362,7 @@ function App() {
     gradeLabel={grade.label}
     topics={grade.topicSets}
     onSelect={enterTopic}
+    onLesson={enterLesson}
     onBack={grades.length > 1 ? () => chooseGrade(null) : switchStudent}
     backLabel={grades.length > 1 ? "← חזרה" : "← החלף תלמיד"}
     onHistory={() => setScreen({ name: "history" })}

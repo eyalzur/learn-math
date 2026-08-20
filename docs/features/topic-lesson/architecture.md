@@ -1,12 +1,14 @@
 # שיעור לעומת תרגול — מסך לימוד לכל נושא — Architecture
 
 ## Overview
-שני מסכים חדשים (`ModePicker`, `Lesson`) נכנסים ל-`Screen` union של `App.tsx` בין
-בחירת נושא לכניסה לתרגול. הבלוק שכבר מרנדר את "איך פותרים?" בתוך `Practice.tsx`
-(שיטה + כל הדיאגרמות + שלבים + דימוי) יוצא לרכיב משותף `QuestionExplanation`, יחד עם
-פונקציה טהורה שמחשבת את כל אובייקטי הדיאגרמה + מערך ההקראה פעם אחת — כך ש-`Practice`
-ו-`Lesson` קוראים לאותו קוד בדיוק, במקום ששני מקומות יחשבו את אותם `diagram`/`frame`/
-`strip`/... בנפרד ויסתכנו לסטות זה מזה.
+מסך שיעור חדש (`TopicLesson`) נכנס ל-`Screen` union של `App.tsx`, נגיש דרך כפתור
+משני על כרטיס הנושא ב-`TopicPicker` — **לא** דרך מסך ביניים חובה (ראו "תיקון אחרי
+גילוי" למטה: הגרסה הראשונה של המסמך הזה תכננה מסך ביניים, והתגלתה כבעיה בזמן
+הפיתוח). הבלוק שכבר מרנדר את "איך פותרים?" בתוך `Practice.tsx` (שיטה + כל
+הדיאגרמות + שלבים + דימוי) יוצא לרכיב משותף `QuestionExplanation`, יחד עם פונקציה
+טהורה שמחשבת את כל אובייקטי הדיאגרמה + מערך ההקראה פעם אחת — כך ש-`Practice` ו-
+`TopicLesson` קוראים לאותו קוד בדיוק, במקום ששני מקומות יחשבו את אותם
+`diagram`/`frame`/`strip`/... בנפרד ויסתכנו לסטות זה מזה.
 
 ## Affected Files / Components
 
@@ -26,34 +28,28 @@
   46–56) עוברת לכאן ומיוצאת — שני הצרכנים (`Practice`, `Lesson`) משתמשים באותה אחת.
   Prop אופציונלי `speak?: { active: boolean; onToggle: () => void }` לכפתור ה-🔊 —
   נעדר ⇒ בלי כפתור הקראה, כמו שקורה היום כש-`speechSupported()` הוא false.
-- `src/components/ModePicker.tsx` — מסך הביניים "שיעור"/"תרגול", לפי `design.md`
-  §Screens/States #1. Props: `topicTitle`, `gradeLabel`, `onLesson`, `onPractice`,
-  `onBack`. אותו דפוס חזותי כמו `StylePicker`/`TopicPicker` (כרטיסים ב-grid, לא
-  רשימה).
-- `src/components/Lesson.tsx` — מסך השיעור לפי `design.md` §Screens/States #2. Props:
-  `topic: Topic`, `gradeLabel: string`, `onBack`, `onPractice`, `readAloud?: boolean`.
-  מציג: כותרת נושא, problem-box (משתמש באותן class names `box-rtl`/`box-ltr`/
-  `prompt-rtl`/`prompt-ltr` ש-`Practice.tsx` כבר משתמש בהן, ו-`segmented()` המיובא
-  מ-`QuestionExplanation.tsx`), שני הרמזים כטקסט פשוט (לא כפתור-חשיפה כמו בתרגול —
-  זו לא אינטראקציה, הכל גלוי מההתחלה), `<QuestionExplanation>`, וכפתור "→ לתרגול".
+- `src/components/TopicLesson.tsx` — מסך השיעור לפי `design.md` §Screens/States #2.
+  Props: `topicTitle: string`, `gradeLabel: string`, `question: Question`, `onBack`,
+  `onPractice`. מציג: כותרת נושא, problem-box (משתמש באותן class names
+  `box-rtl`/`box-ltr`/`prompt-rtl`/`prompt-ltr` ש-`Practice.tsx` כבר משתמש בהן,
+  ו-`segmented()` המיובא מ-`components/segmented.tsx`), שני הרמזים כטקסט פשוט (לא
+  כפתור-חשיפה כמו בתרגול — זו לא אינטראקציה, הכל גלוי מההתחלה), `<QuestionExplanation>`,
+  וכפתור "→ לתרגול". שם הרכיב `TopicLesson`, לא `Lesson` — `Lesson` הוא כבר הטיפוס
+  הקיים ב-`data/style.ts` (title+questions), ושם זהה לשניהם היה מתנגש בייבוא.
 
 **משתנים:**
+- `src/components/TopicPicker.tsx` — כל כרטיס נושא עוטף בשורה (`.topic-row`) עם
+  כפתור-אייקון נוסף (`onLesson?: (topic: Topic) => void`) לצידו — לא בתוכו. הכרטיס
+  הראשי (`onSelect`) לא משתנה כלל.
 - `src/App.tsx` —
-  - `Screen` union: מוסיף `{ name: "mode"; topic: Topic }` ו-
-    `{ name: "lesson"; topic: Topic }`.
-  - `enterTopic(topic)` (הלוגיקה הקיימת — התחלת סשן אדפטיבי + ניתוב ל-`insideTopic`)
-    משנה שם ל-`enterPractice(topic)` ותוכנה לא משתנה כלל.
-  - פונקציה חדשה: `enterTopic(topic)` הופכת ל-`setScreen({ name: "mode", topic })` —
-    זה מה ש-`TopicPicker`'s `onSelect` עדיין קורא לו, בלי שינוי ב-`TopicPicker` עצמו.
-  - שני ענפי רינדור חדשים: `screen.name === "mode"` מרנדר `<ModePicker>` עם
-    `onLesson={() => setScreen({ name: "lesson", topic: screen.topic })}`,
-    `onPractice={() => enterPractice(screen.topic)}`,
-    `onBack={() => setScreen({ name: "home" })}`; `screen.name === "lesson"` מרנדר
-    `<Lesson>` עם `onBack={() => setScreen({ name: "mode", topic: screen.topic })}`,
-    `onPractice={() => enterPractice(screen.topic)}`.
-  - `insideTopic()` **לא משתנה** — יציאה מתרגול/תוצאה ממשיכה ללכת בדיוק לאותו מקום
-    כמו היום (home/levels/styles), לא דרך מסך הביניים. זה מה ש-Acceptance Criteria
-    "התרגול מתנהג בדיוק כמו היום" דורש.
+  - `Screen` union: מוסיף רק `{ name: "lesson"; topic: Topic }`.
+  - `enterTopic(topic)` **לא משתנה** — אותה פונקציה, אותה התנהגות, בדיוק כמו לפני
+    הפיצ'ר הזה.
+  - פונקציה חדשה `enterLesson(topic)`: `setScreen({ name: "lesson", topic })`.
+  - ענף רינדור חדש: `screen.name === "lesson"` מרנדר `<TopicLesson>` עם
+    `onBack={() => setScreen({ name: "home" })}`, `onPractice={() => enterTopic(topic)}`.
+  - `TopicPicker`'s שתי קריאות (מסך הבית + ה-fallback) מקבלות `onLesson={enterLesson}`.
+  - `insideTopic()` **לא משתנה בכלל**.
 - `src/components/Practice.tsx` —
   - מסיר את 11 שורות החישוב (`const diagram = ...` וכו') ואת `segmented()` המקומית;
     מייבא `buildExplanation`, `explanationSpeechParts`, `segmented` מהקבצים החדשים.
@@ -65,57 +61,89 @@
   - שום שינוי בהתנהגות גלויה — זה ריפקטור, לא פיצ'ר.
 
 ## Data / State Changes
-- `Screen` union גדל בשני איברים (`mode`, `lesson`) — ראו למעלה.
+- `Screen` union גדל באיבר אחד (`lesson`) — ראו למעלה.
 - אין שינוי בטיפוסי `Topic`/`Level`/`Question`/`AdaptiveConfig` ב-`curriculum.ts`.
 - אין state חדש ב-`localStorage`/`progress.ts` — מסך השיעור לא נרשם בהיסטוריה
   (Out of Scope בספק).
 
 ## Technical Approach
-1. **שאלת הדוגמה** נגזרת ב-`Lesson.tsx` (או ב-`App.tsx` לפני שהיא מועברת כ-prop —
-   עדיף ב-`App.tsx`, כך ש-`Lesson` נשאר פשוט ומקבל `question` מוכן, לא לוגיקת בחירה):
+1. **שאלת הדוגמה** נגזרת ב-`App.tsx` (`lessonExample(topic)`), לפני שהיא מועברת
+   כ-prop מוכן ל-`TopicLesson` — כך שהרכיב עצמו נשאר פשוט, בלי לוגיקת בחירה:
    `topic.levels.find(l => l.id === "easy")?.questions[0] ?? topic.levels[0]?.questions[0] ?? null`.
    אם התוצאה `null` (לא אמור לקרות בנתונים הקיימים — כל נושא שומר `levels` גם
-   כשהוא אדפטיבי, ראו PR #48), `App.tsx` לא בונה מסך שיעור ריק: כפתור "שיעור" ב-
-   `ModePicker` מקבל `disabled` כש-`exampleQuestion === null`.
-2. **`buildExplanation(question)`** רץ פעם אחת בראש `Lesson` ובראש `Practice` (רק
-   כש-`feedback === "wrong"`, כמו היום) — לא בכל render של כל שאלה בתרגול, אותו
+   כשהוא אדפטיבי, ראו PR #48), `App.tsx`'s `screen.name === "lesson"` branch מחזיר
+   `null` במקום לקרוס — לא אמור להיות נגיש, כי `TopicPicker` מציע את כפתור השיעור
+   רק לנושא `reviewed`, וכל נושא `reviewed` היום מחזיק `levels` תקין.
+2. **`buildExplanation(question)`** רץ פעם אחת בראש `TopicLesson` ובראש `Practice`
+   (רק כש-`feedback === "wrong"`, כמו היום) — לא בכל render של כל שאלה בתרגול, אותו
    עיקרון ביצועים שכבר קיים.
 3. **`QuestionExplanation`** לא יודע כלום על "תרגול" מול "שיעור" — הוא מקבל `bundle`
    ו-`speak` אופציונלי ומרנדר. ה-caller מחליט מתי להראות אותו (Practice: אחרי טעות;
-   Lesson: תמיד).
+   TopicLesson: תמיד).
 4. **הרמזים בשיעור** הם `question.hints[0]`/`[1]` מוצגים ישירות כטקסט, עטופים
    ב-`segmented()` (יש בהם ביטויים בגרשיים אחוריים בדיוק כמו בתרגול) — בלי מנגנון
    ה"חשיפת רמז בלחיצה" של `Practice.tsx`, כי אין כאן ניסיון לפתור.
-5. **מבנה `ModePicker`/`Lesson`** עוקב אחרי `StylePicker.tsx` כתבנית (props דומות,
-   `grade-header` + `h1` + grid של כרטיסים) — לא ממציא class names חדשים בלי צורך;
-   `App.css` מקבל כללים חדשים לכרטיסי "שיעור"/"תרגול" ולכפתור "→ לתרגול" בלבד.
+5. **כפתור השיעור ב-`TopicPicker`** עוקב אחרי `StylePicker.tsx`'s כפתור ה-🔊 כתבנית —
+   כפתור-אייקון קטן, לצד הכרטיס בתוך שורה משותפת, לא class names חדשים בלי צורך.
 
 ## Edge Cases
-- **נושא בלי `levels` בפועל (לא אמור לקרות)**: מטופל בסעיף 1 למעלה — כפתור "שיעור"
-  מנוטרל במקום קריסה או מסך ריק.
-- **`methodSentence` מחזיר `null`** (רוב הנושאים): `Lesson`/`QuestionExplanation` לא
-  מרנדרים את השורה בכלל — כבר ההתנהגות הקיימת ב-`Practice.tsx` (`{method && ...}`),
+- **נושא בלי `levels` בפועל (לא אמור לקרות)**: מטופל בסעיף 1 למעלה — `TopicPicker`
+  לא מציע שיעור לנושא לא-`reviewed`, וכל נושא `reviewed` מחזיק `levels`.
+- **`methodSentence` מחזיר `null`** (רוב הנושאים): `TopicLesson`/`QuestionExplanation`
+  לא מרנדרים את השורה בכלל — כבר ההתנהגות הקיימת ב-`Practice.tsx` (`{method && ...}`),
   שום קוד חדש נדרש.
 - **נושא בלי אף דיאגרמה** (הרוב — לרוב הצורות אין ציור): `QuestionExplanation` מרנדר
   רק method+שלבים+דימוי, בדיוק כמו שקורה היום ב-Practice לאותם נושאים.
-- **הקראה (`readAloud`)**: `Lesson` מעביר `speak` ל-`QuestionExplanation` רק אם
-  `speechSupported()` — אותו תנאי שכבר קיים ב-Practice, לא כתיבה כפולה של הבדיקה.
-- **תלמיד/ה שמגיעים ל-`Lesson` דרך ניווט ישיר (`onBack` מ-Result וכו')**: לא רלוונטי
-  — `Lesson` נגיש רק דרך `ModePicker`, ו-`insideTopic()` לעולם לא מחזיר `lesson`.
+- **הקראה (`readAloud`)**: `TopicLesson` מציע כפתור הקראה רק אם `speechSupported()` —
+  אותו תנאי שכבר קיים ב-Practice, לא כתיבה כפולה של הבדיקה.
 
 ## Risks / Tradeoffs
-- **הריפקטור ב-`Practice.tsx` הוא הסיכון האמיתי כאן** — לא הוספת קוד, אלא הזזת ~150
-  שורות קיימות. חובה להריץ את הסוויטה המלאה (ריצה נקייה בודדת) אחרי הריפקטור, לפני
-  שממשיכים להוסיף את המסכים החדשים — אם משהו ב-`Practice.tsx` נשבר, עדיף לגלות את
-  זה מיד ולא אחרי שגם `Lesson`/`ModePicker` כבר נבנו על גביו.
-- **`buildExplanation` נקרא גם ל-`Lesson` וגם, בעקיפין, בכל מקום ש-`Practice.tsx`
-  היה קורא בעבר לחישובים הנפרדים** — מבחינת ביצועים זה אותו מספר קריאות בדיוק, רק
-  מקובץ יחד; אין רגרסיית ביצועים.
-- **נבחר לא לגעת ב-`insideTopic()`** (יציאה מתרגול) כדי לצמצם סיכון — המשמעות היא
-  שהזרימה **לא** סימטרית לגמרי (כניסה תמיד עוברת דרך `ModePicker`, יציאה מתרגול לא
-  חוזרת דרכו) אלא הולכת ישר ל-`home`/`levels`/`styles`. זה תואם את קריטריון הקבלה
-  המפורש ("תרגול מתנהג בדיוק כמו היום") ואת מה ש-`design.md` בפועל תיאר (רק כניסה
-  ל-שיעור/תרגול משתנה, לא יציאה מתרגול).
+- **הריפקטור ב-`Practice.tsx` הוא סיכון אמיתי** — לא הוספת קוד, אלא הזזת ~150 שורות
+  קיימות. הסוויטה המלאה (ריצה נקייה בודדת) רצה אחרי הריפקטור ולפני הוספת המסכים
+  החדשים, בדיוק כמו שתוכנן.
+- **תיקון אחרי גילוי בזמן הפיתוח**: התכנון המקורי (ראו design.md) היה מסך ביניים
+  חובה ("שיעור"/"תרגול") בין כל כניסה לנושא לתרגול. מימוש ראשוני שלו + ריצת הסוויטה
+  המלאה חשפו שכמעט כל בדיקות ה-e2e הקיימות (כ-20 קבצי spec) מניחות שכרטיס נושא
+  נכנס ישר לתרגול — כל אחת מהן נכשלה (timeout, לא שגיאה אמיתית בקוד). זה סיכון
+  שהיה צריך להיצפות כבר בשלב העיצוב ולא נצפה. **התיקון**: הוחלף למסך ביניים בכפתור
+  משני על הכרטיס (לא מסך חוסם) — קריאה ל-`enterTopic` חוזרת בדיוק להתנהגות המקורית,
+  אפס נגיעה בזרימת התרגול הקיימת. `design.md` עודכן לשקף את זה. הלקח לפעמים הבאות:
+  שינוי בזרימת הניווט הראשית (לא רק הוספת מסך בקצה) מצדיק בדיקה ידנית של כמה בדיקות
+  e2e קיימות תלויות בנתיב הזה, לפני מימוש מלא — לא רק אחריו.
 
 ## Open Questions
 None.
+
+## Implementation Notes
+
+בנוי בדיוק לפי הארכיטקטורה למעלה (הגרסה המתוקנת), אחרי סבב אחד של תיקון אמיתי
+שתועד למעלה תחת "תיקון אחרי גילוי בזמן הפיתוח" — לא חוזר על זה כאן.
+
+**מה נבנה בפועל:**
+- `src/data/questionExplanation.ts` — `buildExplanation`/`explanationSpeechParts`,
+  בדיוק כמתוכנן.
+- `src/components/segmented.tsx` — קובץ נפרד ל-`segmented()` שלא תוכנן מראש
+  ב-architecture.md (שם תוכנן שהיא תגור ב-`QuestionExplanation.tsx`): oxlint's
+  `react(only-export-components)` מזהיר כשקובץ מייצא גם קומפוננטה וגם פונקציה רגילה
+  (שובר Fast Refresh) — `segmented()` הוצאה לקובץ נפרד במקום, ו-`Practice.tsx`/
+  `TopicLesson.tsx`/`QuestionExplanation.tsx` שלושתם מייבאים ממנו.
+- `src/components/QuestionExplanation.tsx`, `src/components/TopicLesson.tsx` —
+  כמתוכנן, עם התאמת השם `TopicLesson` (לא `Lesson`) שתועדה למעלה.
+- `src/components/TopicPicker.tsx` — כפתור-אייקון `.lesson-link` נוסף לכל שורת נושא
+  `reviewed`, בתוך `.topic-row` חדש שעוטף את `.topic-card` הקיים. הכרטיס עצמו לא
+  נגע בכלל.
+- `src/App.tsx` — `enterTopic` נשאר בדיוק כמו שהיה; `enterLesson` חדש; `Screen`
+  מקבל רק `"lesson"`. תוך כדי התיקון נמצא ותוקן גם באג אמיתי (לא קשור לתכנון
+  המקורי, לא קשור לתיקון עצמו): `Result`'s `onRetry` לנושא אדפטיבי קרא ל-`enterTopic`
+  שבגרסת-הביניים (המסך החוסם) כבר לא נכנס ישר לתרגול — "נסה שוב" היה שולח למסך
+  ביניים במקום להתחיל תרגול חדש. תוקן יחד עם המעבר לגרסה הסופית, שבה `enterTopic`
+  חזר להתנהג בדיוק כמו לפני הפיצ'ר.
+- `src/App.css` — `.topic-row`, `.lesson-link` (בהשראת `.style-row`/`.style-speak`
+  הקיימים).
+
+**מה לא נבנה בכלל (ורוד בכוונה, לא הושמט בטעות):** `src/components/ModePicker.tsx`
+נכתב, נבדק ידנית, ואז נמחק לגמרי כשהתכנון המקורי הוחלף — לא נשאר קוד מת ממנו.
+
+**בדיקות:** `236/236` בריצה אחת נקייה (`npm run build && npm run lint && npm run
+test:e2e`), גרסה `1.19.0`. שום קובץ בדיקה קיים לא נגע — הגרסה הסופית לא שינתה שום
+נתיב שבדיקה קיימת תלויה בו.

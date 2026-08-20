@@ -619,6 +619,34 @@ button.secondary {
   color: var(--text-h);
 }
 
+.topic-row {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.topic-row .topic-card {
+  flex: 1;
+  min-width: 0;
+}
+
+/* The topic card's secondary action — open the lesson instead of practice. Same shape as
+   StylePicker's .style-speak: a small square button beside the card, not inside it. */
+.lesson-link {
+  flex: 0 0 auto;
+  width: 48px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  font-size: 20px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.lesson-link:hover {
+  border-color: var(--accent-border);
+}
+
 /* ---- history ---- */
 
 .history {
