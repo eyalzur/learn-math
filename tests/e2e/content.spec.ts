@@ -305,6 +305,34 @@ const RULES: {
       return null;
     },
   },
+  {
+    name: "an 'opening brackets' question shows the full expanded expression and defines מקדם/מספר חופשי",
+    check: (q) => {
+      // Reported live on the site: "צריך להציג גם את 3X+6, להראות איך פתחנו סוגריים, מה
+      // זה מס חופשי ומה זה מקדם" — the pattern `A(v + B)`, whether written (grade8.ts)
+      // or generated (adaptiveExpressions.ts's openBrackets), used to compute only the
+      // free number in isolation.
+      const m = q.prompt.match(/^פתחו סוגריים: `(\d+)\(([a-z]) \+ (\d+)\)`\. מה המספר החופשי\?$/);
+      if (!m) return null;
+      const [, aStr, v] = m;
+      const expanded = `${aStr}${v} + ${q.answer}`;
+
+      const written = [
+        ...(q.hints ?? []),
+        ...explainQuestion(q)!.steps.map((s) => `${s.label ?? ""} ${s.math ?? ""}`),
+      ];
+      if (!written.some((t) => t.includes(expanded))) {
+        return `never shows the expanded expression "${expanded}" — "${written.join(" | ")}"`;
+      }
+      if (!(q.hints ?? []).some((h) => h.includes("מקדם"))) {
+        return `no hint defines "מקדם"`;
+      }
+      if (!(q.hints ?? []).some((h) => h.includes("מספר החופשי"))) {
+        return `no hint defines "מספר החופשי"`;
+      }
+      return null;
+    },
+  },
 ];
 
 test("every question passes every content rule", () => {
@@ -988,6 +1016,54 @@ test("every generated question, across all twelve levels-as-practice topics, pas
 
   expect(badAnswer, `\n${badAnswer.join("\n")}\n`).toEqual([]);
   expect(violations, `\n${violations.join("\n")}\n`).toEqual([]);
+});
+
+/**
+ * docs/features/algebraic-brackets-teaching/product-spec.md — combineLikeTerms ("כנסו
+ * איברים", no brackets) also asks for the coefficient, and now defines the word. This is
+ * deliberately not a RULES entry: the equivalent written questions in grade8.ts
+ * (g8-expressions-e3/e5/e8/e10/m4/m9/h3/h8) were explicitly left out of this fix's scope
+ * (see architecture.md's Risks/Tradeoffs), so a pattern-wide rule keyed on the prompt would
+ * wrongly fail on them.
+ */
+test("every generated 'combine like terms' question defines מקדם in its first hint", () => {
+  const rng = seededRng(4242);
+  for (let i = 0; i < 200; i++) {
+    const q = generateExpressionsQuestion(2, rng);
+    if (!/^כנסו איברים:/.test(q.prompt)) continue; // difficulty 2 is always this pattern, but stay safe
+    expect(q.hints[0], `${q.id} — "${q.prompt}"`).toContain("מקדם");
+  }
+});
+
+/**
+ * Second review round on docs/features/algebraic-brackets-teaching (2026-08-21): the old
+ * hint 2 for "combine like terms" just stated the exact addition/subtraction as a finished
+ * sentence ("`A` ועוד `B` מאותו סוג") — nothing left to compute. Fixed in both the generator
+ * and the six written grade8.ts questions sharing that exact old string
+ * (e3/e5/e8/e10/m4/m9 — h3/h8 are the different "open and combine" pattern, out of scope).
+ * Checks the fix rather than re-checking the old bug (content-rules.md: describable as a
+ * pattern, so it belongs here rather than being a one-off).
+ */
+test("'combine like terms' hint 2 names the coefficients instead of stating the sum", () => {
+  const rng = seededRng(4242);
+  let sawAny = false;
+  for (let i = 0; i < 200; i++) {
+    const q = generateExpressionsQuestion(2, rng);
+    if (!/^כנסו איברים:/.test(q.prompt)) continue;
+    sawAny = true;
+    expect(q.hints[1], `${q.id} — "${q.prompt}"`).toContain("מקדמים");
+    expect(q.hints[1], `${q.id} — "${q.prompt}"`).toMatch(/בלי לגעת/);
+  }
+  expect(sawAny).toBe(true);
+
+  const written = everyQuestion()
+    .map(({ q }) => q)
+    .filter((q) => ["g8-expressions-e3", "g8-expressions-e5", "g8-expressions-e8", "g8-expressions-e10", "g8-expressions-m4", "g8-expressions-m9"].includes(q.id));
+  expect(written).toHaveLength(6);
+  for (const q of written) {
+    expect(q.hints[1], `${q.id} — "${q.prompt}"`).toContain("מקדמים");
+    expect(q.hints[1], `${q.id} — "${q.prompt}"`).toMatch(/בלי לגעת/);
+  }
 });
 
 /**
