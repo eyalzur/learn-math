@@ -215,3 +215,38 @@ function lessonQuestions(topic: Topic): Question[] {
 
 ## Open Questions (מעודכן)
 None.
+
+## Implementation Notes — סבב רוויזיה (2026-08-21)
+
+בוצע בדיוק לפי התוכנית למעלה:
+
+- **`src/App.tsx`** — `lessonExample` הוחלף ב-`lessonQuestions(topic): Question[]`
+  (בדיוק כמתוכנן: ללא `adaptive` → מערך של איבר אחד מ-`levels["easy"]`; עם
+  `adaptive` → לולאה `minDifficulty..maxDifficulty` על `generate(d)`, בלי `rng`
+  מפורש). הענף `screen.name === "lesson"` עודכן לבדוק `questions.length === 0`
+  ולהעביר `questions` ל-`TopicLesson`.
+- **`src/components/TopicLesson.tsx`** — `question: Question` → `questions: Question[]`.
+  הבלוק (problem-box+hints+`QuestionExplanation`) עטוף עכשיו ב-`questions.map(...)`
+  בתוך `<div className="lesson-example" key={question.id}>`, עם `<h3>דוגמה {i+1}
+  מתוך {questions.length}</h3>` המוצג רק כש-`questions.length > 1`. `isWordProblem`
+  ו-`bundle` חושבו פעם אחת בראש הרכיב לפני הרוויזיה — עכשיו מחושבים בתוך הלולאה,
+  לכל שאלה בנפרד (כל שאלה יכולה להיות word-problem אחרת). `toggleSpeak` בנוי
+  עם `questions.flatMap(...)`, מוסיף כותרת "דוגמה N מתוך M" (דרך `speechParts`)
+  לפני החלקים של כל שאלה, רק כש-`questions.length > 1`.
+- **`src/App.css`** — `.lesson-example` חדש: קו מפריד עליון (`border-top`) בין
+  דוגמאות עוקבות, מוסר מהראשונה (`:first-of-type`) כדי לא ליצור קו מיותם מתחת
+  לכותרת הנושא; `.lesson-example h3` בסגנון עדין (16px, ממורכז), עקבי עם
+  `.followup-header h3` הקיים.
+
+**אומת ידנית (Playwright, לא רק אוטומטי):**
+- עומר ← "ביטויים אלגבריים" ← 📖: **5** בלוקי `.lesson-example`, כותרות "דוגמה 1
+  מתוך 5" עד "דוגמה 5 מתוך 5", בסדר קל→קשה (הצבה → כינוס איברים → פתיחת סוגריים
+  → הצבה בריבוע → פתיחה+כינוס). RTL/LTR תקין בכל בלוק. אפס שגיאות קונסולה.
+- מיקה ← כיתה א׳ ← "מספרים עד 20" ← 📖: **בלוק אחד בדיוק**, בלי כותרת "דוגמה N
+  מתוך M" — זהה להתנהגות שלפני הרוויזיה. אפס שגיאות קונסולה.
+
+`npm run build`/`npm run lint` נקיים. גרסה: `1.19.0` נשארת נכונה בלי בַאמפ נוסף —
+הבראנץ' כבר בדיוק בַאמפ-פיצ'ר אחד (`middle+1`, `minor→0`) יחסית ל-`origin/main`
+הנוכחי (`1.18.1`, אחרי מיזוג `fix/algebraic-brackets-teaching`): `1.18.1` →
+`1.19.0` הוא בדיוק הבַאמפ הנכון, בין אם מחשבים מהבסיס המקורי של הבראנץ' (`1.18.0`)
+או מ-`main` העדכני — צירוף מקרים נוח, לא הכרעה ידנית.

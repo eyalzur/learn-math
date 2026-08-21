@@ -439,6 +439,25 @@
   font-size: 14px;
 }
 
+/* Separates consecutive worked examples on the lesson screen (one per difficulty tier
+   for a topic with adaptive difficulty) — a border, not just spacing, so it reads as a
+   new example starting rather than a continuation of the one above. */
+.lesson-example {
+  padding-top: 20px;
+  margin-top: 4px;
+  border-top: 1px solid var(--border);
+}
+.lesson-example:first-of-type {
+  padding-top: 0;
+  border-top: none;
+}
+.lesson-example h3 {
+  margin: 0 0 12px;
+  font-size: 16px;
+  color: var(--text-h);
+  text-align: center;
+}
+
 .explanation {
   max-width: 420px;
   margin: 0 auto 24px;

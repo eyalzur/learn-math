@@ -9,9 +9,11 @@ import { speak, speechParts, speechSupported, stopSpeaking } from "../data/speec
 interface TopicLessonProps {
   topicTitle: string;
   gradeLabel: string;
-  /** The topic's easiest written example — chosen by the caller (App.tsx), not here, so
-   *  this component stays a pure "show this question, solved" screen. */
-  question: Question;
+  /** The topic's worked examples — chosen by the caller (App.tsx), not here, so this
+   *  component stays a pure "show these questions, solved" screen. One example for a
+   *  topic without adaptive difficulty (מיקה), one per difficulty tier for a topic with
+   *  it (רותם/עומר) — see `App.tsx`'s `lessonQuestions`. */
+  questions: Question[];
   onBack: () => void;
   onPractice: () => void;
 }
@@ -25,10 +27,9 @@ interface TopicLessonProps {
  * practice session's title+questions, and a component of the same name would either
  * collide with that import or force every caller to alias one of them.
  */
-export function TopicLesson({ topicTitle, gradeLabel, question, onBack, onPractice }: TopicLessonProps) {
+export function TopicLesson({ topicTitle, gradeLabel, questions, onBack, onPractice }: TopicLessonProps) {
   const [speaking, setSpeaking] = useState(false);
-  const isWordProblem = isHebrewPrompt(question.prompt);
-  const bundle = buildExplanation(question);
+  const showTierHeadings = questions.length > 1;
 
   function toggleSpeak() {
     if (speaking) {
@@ -36,18 +37,20 @@ export function TopicLesson({ topicTitle, gradeLabel, question, onBack, onPracti
       setSpeaking(false);
       return;
     }
-    // Same shape Practice.tsx's own question-speech button builds: a word problem's
-    // arithmetic runs stay backtick-marked so speech.ts converts them to words, a bare
-    // expression is backtick-marked whole.
-    const promptText = isWordProblem
-      ? promptSegments(question.prompt)
-          .map((s) => (s.kind === "math" ? `\`${s.value}\`` : s.value))
-          .join(" ")
-      : `\`${question.prompt}\``;
-    const parts = [
-      ...speechParts([promptText, ...question.hints]),
-      ...explanationSpeechParts(bundle),
-    ];
+    const parts = questions.flatMap((question, i) => {
+      const isWordProblem = isHebrewPrompt(question.prompt);
+      // Same shape Practice.tsx's own question-speech button builds: a word problem's
+      // arithmetic runs stay backtick-marked so speech.ts converts them to words, a bare
+      // expression is backtick-marked whole.
+      const promptText = isWordProblem
+        ? promptSegments(question.prompt)
+            .map((s) => (s.kind === "math" ? `\`${s.value}\`` : s.value))
+            .join(" ")
+        : `\`${question.prompt}\``;
+      const heading = showTierHeadings ? speechParts([`דוגמה ${i + 1} מתוך ${questions.length}`]) : [];
+      const bundle = buildExplanation(question);
+      return [...heading, ...speechParts([promptText, ...question.hints]), ...explanationSpeechParts(bundle)];
+    });
     if (!parts.length) return;
     setSpeaking(true);
     speak(parts, () => setSpeaking(false));
@@ -80,19 +83,28 @@ export function TopicLesson({ topicTitle, gradeLabel, question, onBack, onPracti
           </button>
         </div>
       )}
-      <div className={`problem-box ${isWordProblem ? "box-rtl" : "box-ltr"}`}>
-        <span className={`problem-text ${isWordProblem ? "prompt-rtl" : "prompt-ltr"}`}>
-          {isWordProblem ? segmented(question.prompt) : <>{`${question.prompt} =`}</>}
-        </span>
-      </div>
-      <div className="hints">
-        {question.hints.map((hint, i) => (
-          <p key={i} className="hint">
-            {segmented(hint)}
-          </p>
-        ))}
-      </div>
-      <QuestionExplanation bundle={bundle} />
+      {questions.map((question, i) => {
+        const isWordProblem = isHebrewPrompt(question.prompt);
+        const bundle = buildExplanation(question);
+        return (
+          <div key={question.id} className="lesson-example">
+            {showTierHeadings && <h3>{`דוגמה ${i + 1} מתוך ${questions.length}`}</h3>}
+            <div className={`problem-box ${isWordProblem ? "box-rtl" : "box-ltr"}`}>
+              <span className={`problem-text ${isWordProblem ? "prompt-rtl" : "prompt-ltr"}`}>
+                {isWordProblem ? segmented(question.prompt) : <>{`${question.prompt} =`}</>}
+              </span>
+            </div>
+            <div className="hints">
+              {question.hints.map((hint, j) => (
+                <p key={j} className="hint">
+                  {segmented(hint)}
+                </p>
+              ))}
+            </div>
+            <QuestionExplanation bundle={bundle} />
+          </div>
+        );
+      })}
       <div className="actions">
         <button type="button" onClick={onPractice}>
           → לתרגול
