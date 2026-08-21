@@ -216,6 +216,105 @@ function lessonQuestions(topic: Topic): Question[] {
 ## Open Questions (מעודכן)
 None.
 
+## עדכון ארכיטקטורה לרוויזיה ב׳ (2026-08-21) — דפדוף עמוד-אחר-עמוד
+
+design.md's "עדכון עיצוב לרוויזיה ב׳" קובע: מסך השיעור מציג עמוד (דוגמה) אחד
+בכל רגע נתון, עם ניווט "← הקודם"/"הבא →" — לא רשימה שלמה בגלילה כמו הרוויזיה א׳.
+
+### Affected Files / Components (מעודכן)
+- **`src/components/TopicLesson.tsx`** — משתנה מהותית: מוסיף `useState<number>`
+  לעמוד הנוכחי; מרנדר `questions[currentPage]` בלבד במקום `questions.map(...)`;
+  `toggleSpeak` בונה את מערך ההקראה מהעמוד הנוכחי בלבד; מוסיפה שני כפתורי ניווט.
+  אין שינוי ב-Props Interface (`questions: Question[]` נשאר כמו שהוא) — כל
+  השינוי פנימי לרכיב.
+- אין שינוי ב-`src/App.tsx` — `lessonQuestions(topic)` ממשיכה להחזיר את אותו
+  מערך בדיוק; המעבר לדפדוף הוא כולו בתוך `TopicLesson`.
+
+### Data / State Changes
+- `TopicLesson` מוסיף `const [currentPage, setCurrentPage] = useState(0)`.
+  מתאפס אוטומטית בכל כניסה מחדש למסך השיעור — `App.tsx` יוצר מופע `TopicLesson`
+  חדש בכל פעם ש-`screen.name` עובר ל-`"lesson"` (הרכיב היה לא-מורכב לפני כן,
+  ה-state לא שורד), אז אין צורך באיפוס ידני של `currentPage`.
+- אין שינוי בטיפוסים משותפים (`Question`, `Topic`) ואין שינוי ב-props.
+
+### Technical Approach
+```ts
+const hasPrevPage = currentPage > 0;
+const isLastPage = currentPage === questions.length - 1;
+const question = questions[currentPage];
+```
+מרנדרים **פעם אחת** את הבלוק שהיה עד עכשיו בתוך `questions.map(...)` — עם
+`question`/`i = currentPage`/`questions.length` באותם מקומות בדיוק (הכותרת
+`showTierHeadings && <h3>דוגמה {currentPage + 1} מתוך {questions.length}</h3>`
+משתמשת באותו תנאי `showTierHeadings = questions.length > 1` שכבר קיים).
+
+**כפתורי ניווט, בתוך `.actions` (מחליפים את כפתור "→ לתרגול" הקבוע היחיד
+שהיה שם)**:
+```tsx
+<div className="actions">
+  {hasPrevPage && (
+    <button type="button" className="link-button" onClick={goToPrevPage}>
+      ← הקודם
+    </button>
+  )}
+  <button type="button" onClick={isLastPage ? onPractice : goToNextPage}>
+    {isLastPage ? "→ לתרגול" : "הבא →"}
+  </button>
+</div>
+```
+כאשר `goToPrevPage`/`goToNextPage` הן `() => { stopSpeaking(); setSpeaking(false);
+setCurrentPage((p) => p ± 1); }` — עוצרות הקראה פעילה לפני מעבר עמוד, **אותו
+עיקרון בדיוק** שכבר קיים ב-`onBack`'s handler (שורות 64–67 היום: `stopSpeaking()`
+לפני `onBack()`) — לא ממציאים כלל חדש, מיישמים את הקיים גם כאן.
+
+**המקרה של מיקה (`questions.length === 1`) לא צריך שום ענף מיוחד**: כש-
+`currentPage = 0` ו-`questions.length = 1`, מתקיים `hasPrevPage = false`
+(אין "← הקודם") וגם `isLastPage = true` (אין "הבא →", רק "→ לתרגול") —
+**אותה נוסחה בדיוק**, בלי `if (!adaptive)` נפרד. זה בדיוק מה ש-design.md ביקש
+("אין טעם בכפתור ניווט שלא עושה כלום") ומתקבל אוטומטית מהחשבון, לא מקוד נוסף.
+
+**`toggleSpeak` — מקריא רק את העמוד הנוכחי**:
+```ts
+function toggleSpeak() {
+  if (speaking) { stopSpeaking(); setSpeaking(false); return; }
+  const isWordProblem = isHebrewPrompt(question.prompt);
+  const promptText = /* אותה בנייה כמו היום, על `question` בלבד */;
+  const heading = showTierHeadings ? speechParts([`דוגמה ${currentPage + 1} מתוך ${questions.length}`]) : [];
+  const bundle = buildExplanation(question);
+  const parts = [...heading, ...speechParts([promptText, ...question.hints]), ...explanationSpeechParts(bundle)];
+  if (!parts.length) return;
+  setSpeaking(true);
+  speak(parts, () => setSpeaking(false));
+}
+```
+זהה במבנה למימוש **המקורי** (לפני שהורחב לרשימה ברוויזיה א׳) — הרוויזיה הזו
+בעצם מחזירה את `toggleSpeak` לצורתו המקורית (שאלה בודדת), רק עם התוספת של
+כותרת "דוגמה N מתוך M" כשרלוונטית.
+
+### Edge Cases
+- **מעבר עמוד תוך כדי הקראה**: `goToPrevPage`/`goToNextPage` עוצרות הקראה
+  פעילה קודם (ראו למעלה) — בלי זה, קול היה ממשיך להקריא תוכן של עמוד שכבר לא
+  מוצג על המסך.
+- **עמוד יחיד (מיקה, וגם המקרה התיאורטי `minDifficulty === maxDifficulty`)**:
+  מטופל בנוסחה הכללית, לא בענף נפרד — ראו למעלה.
+- **לחיצה כפולה מהירה על "הבא →"**: `setCurrentPage((p) => p + 1)` (הפונקציונלי,
+  לא `setCurrentPage(currentPage + 1)`) מבטיחה עדכון נכון גם אם שתי לחיצות
+  נכנסות לפני ריצה מחדש — אותו עיקרון קיים כבר בקוד הפרויקט (למשל `hintsShown`
+  ב-`Practice.tsx`).
+
+### Risks / Tradeoffs
+- הרוויזיה הזו **מבטלת** חלק מהמימוש שנבנה ברוויזיה א׳ (הלולאה על כל
+  `questions`, `.lesson-example` ב-`App.css`) — לא קוד מת שנשאר, אלא קוד
+  שמוחלף במפורש. `.lesson-example`'s CSS (הפרדה בין דוגמאות ברשימה) כבר לא
+  נחוץ כשיש עמוד אחד גלוי בכל רגע; להסיר אותו ב-`App.css` (לא להשאיר CSS יתום).
+- שני סבבי רוויזיה על אותו PR פתוח (#51) — לא בעיה טכנית, אבל שווה לציין:
+  ה-diff הסופי של ה-PR "יראה" כאילו נבנה ישר ככה, כי commits קודמים על
+  `.lesson-example` יוחלפו בקומיטים חדשים על אותו קובץ — ההיסטוריה עדיין
+  משקפת את מסע ההחלטות (זה בדיוק הערך של הפייפליין, ראו `git-workflow.md`).
+
+## Open Questions (סבב ב׳)
+None.
+
 ## Implementation Notes — סבב רוויזיה (2026-08-21)
 
 בוצע בדיוק לפי התוכנית למעלה:

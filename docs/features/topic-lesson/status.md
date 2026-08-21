@@ -7,11 +7,11 @@
 ## Progress
 - [x] Product spec — product-manager — 2026-08-20 (עודכן 2026-08-21 פעמיים: כמה דוגמאות אצל רותם/עומר; ואז UI-מחברת עם דפדוף במקום גלילה)
 - [x] Design — designer — 2026-08-20, 2026-08-21 פעמיים (סבב ב': מחברת עם דפדוף עמוד-אחר-עמוד במקום גלילה, רק במסך השיעור)
-- [x] Architecture — tech-lead — 2026-08-20, 2026-08-21 (סבב עדכון ראשון בוצע; סבב ב' עדיין לפני)
+- [x] Architecture — tech-lead — 2026-08-20, 2026-08-21 פעמיים (סבב ב': currentPage state, כפתור קדימה יחיד עם טקסט משתנה, toggleSpeak לעמוד הנוכחי בלבד)
 - [x] Implementation — developer — 2026-08-20, 2026-08-21 (סבב עדכון ראשון בוצע; סבב ב' עדיין לפני)
 - [x] Tests — qa — 2026-08-21 (עבור הסבב הראשון: tests/e2e/topic-lesson.spec.ts 8/8, סוויטה מלאה 244/244 — יתעדכן אחרי סבב UI-מחברת)
 
-**Current phase:** tech-lead
+**Current phase:** developer
 **Branch:** `feature/topic-lesson`
 **PR:** [#51](https://github.com/eyalzur/learn-math/pull/51) — פתוח, עדיין לא מוזג; הסבב הזה מוסיף קומיטים לאותו PR
 
