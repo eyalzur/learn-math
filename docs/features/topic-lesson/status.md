@@ -9,9 +9,9 @@
 - [x] Design — designer — 2026-08-20, 2026-08-21 (סבב עדכון: כמה דוגמאות אצל רותם/עומר לפי `topic.adaptive`, מיקה ללא שינוי)
 - [x] Architecture — tech-lead — 2026-08-20, 2026-08-21 (סבב עדכון: lessonQuestions() מחזירה Question[], לולאה ב-TopicLesson)
 - [x] Implementation — developer — 2026-08-20, 2026-08-21 (סבב עדכון: lessonQuestions()/TopicLesson מרנדר לולאה, אומת ידנית עומר=5 דוגמאות, מיקה=1)
-- [ ] Tests — qa — not started
+- [x] Tests — qa — 2026-08-21 (tests/e2e/topic-lesson.spec.ts: 8/8; סוויטת e2e מלאה: 244/244, ריצה בודדת ונקייה)
 
-**Current phase:** qa
+**Current phase:** done — ממתין ל-PR
 **Branch:** `feature/topic-lesson`
 **PR:** not opened yet
 
