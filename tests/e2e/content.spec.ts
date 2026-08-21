@@ -1036,6 +1036,37 @@ test("every generated 'combine like terms' question defines מקדם in its firs
 });
 
 /**
+ * Second review round on docs/features/algebraic-brackets-teaching (2026-08-21): the old
+ * hint 2 for "combine like terms" just stated the exact addition/subtraction as a finished
+ * sentence ("`A` ועוד `B` מאותו סוג") — nothing left to compute. Fixed in both the generator
+ * and the six written grade8.ts questions sharing that exact old string
+ * (e3/e5/e8/e10/m4/m9 — h3/h8 are the different "open and combine" pattern, out of scope).
+ * Checks the fix rather than re-checking the old bug (content-rules.md: describable as a
+ * pattern, so it belongs here rather than being a one-off).
+ */
+test("'combine like terms' hint 2 names the coefficients instead of stating the sum", () => {
+  const rng = seededRng(4242);
+  let sawAny = false;
+  for (let i = 0; i < 200; i++) {
+    const q = generateExpressionsQuestion(2, rng);
+    if (!/^כנסו איברים:/.test(q.prompt)) continue;
+    sawAny = true;
+    expect(q.hints[1], `${q.id} — "${q.prompt}"`).toContain("מקדמים");
+    expect(q.hints[1], `${q.id} — "${q.prompt}"`).toMatch(/בלי לגעת/);
+  }
+  expect(sawAny).toBe(true);
+
+  const written = everyQuestion()
+    .map(({ q }) => q)
+    .filter((q) => ["g8-expressions-e3", "g8-expressions-e5", "g8-expressions-e8", "g8-expressions-e10", "g8-expressions-m4", "g8-expressions-m9"].includes(q.id));
+  expect(written).toHaveLength(6);
+  for (const q of written) {
+    expect(q.hints[1], `${q.id} — "${q.prompt}"`).toContain("מקדמים");
+    expect(q.hints[1], `${q.id} — "${q.prompt}"`).toMatch(/בלי לגעת/);
+  }
+});
+
+/**
  * docs/features/difficulty-number-scaling/product-spec.md's Acceptance Criteria, checked
  * directly against generated output rather than relying on `RULES` (which never looked at
  * digit counts or decimal precision — a 3-digit number or a 3-decimal answer passes every
