@@ -11,9 +11,9 @@
 - [x] Implementation — developer — 2026-08-20, 2026-08-21 (סבב עדכון: lessonQuestions()/TopicLesson מרנדר לולאה, אומת ידנית עומר=5 דוגמאות, מיקה=1)
 - [x] Tests — qa — 2026-08-21 (tests/e2e/topic-lesson.spec.ts: 8/8; סוויטת e2e מלאה: 244/244, ריצה בודדת ונקייה)
 
-**Current phase:** done — ממתין ל-PR
+**Current phase:** done — ממתין לריוויו
 **Branch:** `feature/topic-lesson`
-**PR:** not opened yet
+**PR:** [#51](https://github.com/eyalzur/learn-math/pull/51)
 
 ## Open questions / blockers
 None. הבלוק "איך פותרים?" הקיים ב-Practice.tsx (method + 11 הדיאגרמות + שלבים +
