@@ -9,9 +9,9 @@
 - [x] Design — designer — 2026-08-20, 2026-08-21 פעמיים (סבב ב': מחברת עם דפדוף עמוד-אחר-עמוד במקום גלילה, רק במסך השיעור)
 - [x] Architecture — tech-lead — 2026-08-20, 2026-08-21 פעמיים (סבב ב': currentPage state, כפתור קדימה יחיד עם טקסט משתנה, toggleSpeak לעמוד הנוכחי בלבד)
 - [x] Implementation — developer — 2026-08-20, 2026-08-21 פעמיים (סבב ב': דפדוף עמוד-אחר-עמוד, אומת ידנית; 244/246 בסוויטה המלאה — 2 כשלים צפויים בבדיקות ישנות שצריכות להיכתב מחדש)
-- [ ] Tests — qa — צריך לשכתב tests/e2e/topic-lesson.spec.ts לזרימת הדפדוף
+- [x] Tests — qa — 2026-08-21 (שוכתב לזרימת הדפדוף: tests/e2e/topic-lesson.spec.ts 8/8; סוויטת e2e מלאה: 246/246, ריצה בודדת ונקייה)
 
-**Current phase:** qa
+**Current phase:** done — ממתין לריוויו
 **Branch:** `feature/topic-lesson`
 **PR:** [#51](https://github.com/eyalzur/learn-math/pull/51) — פתוח, עדיין לא מוזג; הסבב הזה מוסיף קומיטים לאותו PR
 
