@@ -7,11 +7,11 @@
 ## Progress
 - [x] Product spec — product-manager — 2026-08-20 (עודכן 2026-08-21: כמה דוגמאות אצל רותם/עומר, לא רק הקלה ביותר)
 - [x] Design — designer — 2026-08-20, 2026-08-21 (סבב עדכון: כמה דוגמאות אצל רותם/עומר לפי `topic.adaptive`, מיקה ללא שינוי)
-- [x] Architecture — tech-lead — 2026-08-20 (סבב עדכון עדיין לפני — ראה למטה)
+- [x] Architecture — tech-lead — 2026-08-20, 2026-08-21 (סבב עדכון: lessonQuestions() מחזירה Question[], לולאה ב-TopicLesson)
 - [x] Implementation — developer — 2026-08-20 (סבב עדכון עדיין לפני — ראה למטה)
 - [ ] Tests — qa — not started
 
-**Current phase:** tech-lead
+**Current phase:** developer
 **Branch:** `feature/topic-lesson`
 **PR:** not opened yet
 

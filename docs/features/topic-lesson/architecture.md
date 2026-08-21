@@ -147,3 +147,71 @@ None.
 **בדיקות:** `236/236` בריצה אחת נקייה (`npm run build && npm run lint && npm run
 test:e2e`), גרסה `1.19.0`. שום קובץ בדיקה קיים לא נגע — הגרסה הסופית לא שינתה שום
 נתיב שבדיקה קיימת תלויה בו.
+
+## עדכון ארכיטקטורה לרוויזיה (2026-08-21) — כמה דוגמאות אצל topic.adaptive
+
+המשתמש אישר את המסך בתצוגה מקדימה, אבל ביקש (design.md's "עדכון עיצוב לרוויזיה"):
+נושא עם `Topic.adaptive` (רותם/עומר, 12 מחוללים) מציג דוגמה אחת לכל דרגת קושי
+(`minDifficulty..maxDifficulty`, בפועל תמיד `1`–`5`), לא רק את הקלה ביותר; נושא
+בלעדיו (מיקה) ללא שינוי — דוגמה אחת בדיוק כמו היום.
+
+### Affected Files / Components (מעודכן)
+- **`src/App.tsx`** — `lessonExample(topic): Question | null` (שורה 179) הופך
+  ל-`lessonQuestions(topic): Question[]`. הענף `screen.name === "lesson"`
+  (שורות 275–292) קורא לפונקציה החדשה, בודק `questions.length === 0` במקום
+  `question === null`, ומעביר `questions` (לא `question`) ל-`TopicLesson`.
+- **`src/components/TopicLesson.tsx`** — פרופ `question: Question` הופך ל-
+  `questions: Question[]` (שינוי לא-תואם לאחור בכוונה — קורא יחיד, `App.tsx`,
+  מתעדכן באותו commit). הבלוק שמרנדר קופסת שאלה + רמזים + `QuestionExplanation`
+  (שורות 83–95 היום) עובר לתוך `questions.map(...)`; `toggleSpeak` מתרחב לבנות
+  את מערך ההקראה על פני כל השאלות ברצף.
+- אין שינוי ב-`src/data/curriculum.ts` — `Topic.adaptive` כבר מחזיק בדיוק את
+  השדות הדרושים (`generate`, `minDifficulty`, `maxDifficulty`).
+
+### Technical Approach
+```ts
+function lessonQuestions(topic: Topic): Question[] {
+  if (!topic.adaptive) {
+    const q = topic.levels.find((l) => l.id === "easy")?.questions[0] ?? topic.levels[0]?.questions[0];
+    return q ? [q] : [];
+  }
+  const { generate, minDifficulty, maxDifficulty } = topic.adaptive;
+  const questions: Question[] = [];
+  for (let d = minDifficulty; d <= maxDifficulty; d++) questions.push(generate(d));
+  return questions;
+}
+```
+נקרא **בלי `rng` מפורש** — `generate` נופל חזרה ל-`Math.random` כברירת המחדל שלו
+(אותה חתימה בה `Practice.tsx` כבר משתמש), כך שכל פתיחה של מסך השיעור מציגה מספרים
+טריים לאותה דרגת קושי — עקבי עם איך שהתרגול עצמו כבר מתנהג, לא בונים seed קבוע רק
+בשביל מסך אחד.
+
+ב-`TopicLesson.tsx`, הבלוק החוזר (`problem-box` + `hints` + `QuestionExplanation`)
+עובר ללולאה על `questions`, עם `key={question.id}` (כבר ייחודי בשני המקורות —
+`makeFreshId` במחוללים, מזהה כתוב קבוע בשאלות הכתובות). כותרת
+`<h3>דוגמה {i + 1} מתוך {questions.length}</h3>` מוצגת **רק כש-`questions.length > 1`**
+— כך גם נושא לא-`adaptive` (תמיד מערך של איבר אחד) וגם המקרה הקיצוני התיאורטי
+`minDifficulty === maxDifficulty` (מערך של איבר אחד מנושא `adaptive`) מתנהגים
+זהה: בלי כותרת, בדיוק כמו העיצוב הישן.
+
+`toggleSpeak` בונה את מערך החלקים כך: לכל שאלה ב-`questions`, אם
+`questions.length > 1` מוסיף קודם חלק טקסט "דוגמה {i+1} מתוך {questions.length}"
+(דרך `speechParts`, לא מחרוזת גולמית מוזרקת לתור ה-`speak` — עקבי עם שאר הקוד),
+ואז את `speechParts([promptText, ...hints])` + `explanationSpeechParts(bundle)`
+של אותה שאלה, לפני שעובר לשאלה הבאה.
+
+### Edge Cases
+- **`minDifficulty === maxDifficulty`** (תיאורטי — אף `AdaptiveConfig` היום לא
+  כזה): מערך של איבר אחד, אין כותרת "דוגמה N מתוך M" — זהה להתנהגות נושא לא-`adaptive`.
+- **סדר הדרגות**: `for (d = minDifficulty; d <= maxDifficulty; d++)` מבטיח קל→קשה
+  תמיד, לא סדר יצירה שרירותי.
+
+### Risks / Tradeoffs
+- מסך ארוך יותר משמעותית אצל רותם/עומר (חמישה בלוקי הסבר מלאים במקום אחד) —
+  הוחלט ואושר במפורש ב-design.md, לא תגלית של השלב הזה.
+- `generate(d)` בלי `rng` קבוע אומר שהדוגמאות משתנות בכל פתיחה מחדש של השיעור —
+  qa יצטרך לבדוק מבנה/ספירה (מספר בלוקים, כותרות, קל→קשה), לא תוכן מדויק, בדיוק
+  כמו כל בדיקת e2e קיימת שנוגעת במחוללים האדפטיביים.
+
+## Open Questions (מעודכן)
+None.
