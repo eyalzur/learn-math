@@ -315,6 +315,39 @@ function toggleSpeak() {
 ## Open Questions (סבב ב׳)
 None.
 
+## Implementation Notes (סבב ב׳)
+
+בוצע בדיוק לפי הארכיטקטורה למעלה:
+- `src/components/TopicLesson.tsx` — `currentPage` state, `hasPrevPage`/`isLastPage`
+  מחושבים ישירות, מרנדר `questions[currentPage]` בלבד. כפתור "← הקודם" מותנה
+  ב-`hasPrevPage`; כפתור קדימה יחיד עם `onClick`/טקסט מותנים ב-`isLastPage`.
+  `goToPrevPage`/`goToNextPage` עוצרות הקראה פעילה לפני שינוי עמוד. `toggleSpeak`
+  חזר לצורתו המקורית (שאלה בודדת + כותרת מותנית), בדיוק כמו שתוכנן — אין ענף
+  מיוחד למיקה, הנוסחה הכללית (`hasPrevPage`/`isLastPage`) כבר נותנת את ההתנהגות
+  הנכונה כש-`questions.length === 1`.
+- `src/App.css` — `.lesson-example`/`.lesson-example:first-of-type`/`.lesson-example h3`
+  (מרוויזיה א', כבר לא בשימוש) הוחלפו ב-`.lesson-page-heading` יחיד לכותרת
+  "דוגמה N מתוך M" (שעכשיו מרונדרת ישירות בתוך `.practice`, לא בתוך רשימה).
+- אין שינוי ב-`App.tsx` — כצפוי, השינוי כולו פנימי ל-`TopicLesson`.
+
+**אומת ידנית (Playwright, לא רק אוטומטי) על עומר/"ביטויים אלגבריים":** עמוד 1 —
+בלי "← הקודם", עם "הבא →"; עמודים 2–4 — עם שניהם; עמוד 5 — עם "← הקודם" ו"→
+לתרגול" (לא "הבא →"); "← הקודם" מהעמוד האחרון חוזר לעמוד 4 עם השאלה הנכונה.
+אצל מיקה — בלי כותרת, בלי "← הקודם"/"הבא →", רק "→ לתרגול". `build`/`lint` נקיים.
+
+**סוויטת ה-e2e המלאה (`246` בדיקות, ריצה בודדת ונקייה): `244` עברו, `2` נכשלו —
+כצפוי ומתועד מראש.** שני הכשלים הם ב-`tests/e2e/topic-lesson.spec.ts` (מרוויזיה
+א'), ששניהם הניחו שכל הדוגמאות מוצגות בבת אחת בגלילה:
+- `"moving from lesson to practice and back to the topic list keeps the same student
+  and topic"` — לוחצת "→ לתרגול" מיד אחרי כניסה לשיעור; עכשיו זה קיים רק בעמוד
+  האחרון (בעמוד 1 הכפתור אומר "הבא →").
+- `"an adaptive topic's lesson shows one worked example per difficulty tier, numbered
+  in order"` — סופרת `h3`/`​.problem-box` ומצפה למספר שווה לכמות הרמות; עכשיו יש
+  תמיד בדיוק אחד מכל אחד (עמוד יחיד גלוי).
+
+**אלה לא כשלי מימוש** — הם הבדיקות הישנות שצריכות להיכתב מחדש לפי הזרימה החדשה
+(דפדוף), וזו בדיוק העבודה של שלב `qa` הבא. אין לתקן אותן כאן.
+
 ## Implementation Notes — סבב רוויזיה (2026-08-21)
 
 בוצע בדיוק לפי התוכנית למעלה:

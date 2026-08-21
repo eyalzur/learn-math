@@ -29,7 +29,25 @@ interface TopicLessonProps {
  */
 export function TopicLesson({ topicTitle, gradeLabel, questions, onBack, onPractice }: TopicLessonProps) {
   const [speaking, setSpeaking] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
   const showTierHeadings = questions.length > 1;
+  const hasPrevPage = currentPage > 0;
+  const isLastPage = currentPage === questions.length - 1;
+  const question = questions[currentPage];
+  const isWordProblem = isHebrewPrompt(question.prompt);
+  const bundle = buildExplanation(question);
+
+  function goToPrevPage() {
+    stopSpeaking();
+    setSpeaking(false);
+    setCurrentPage((p) => p - 1);
+  }
+
+  function goToNextPage() {
+    stopSpeaking();
+    setSpeaking(false);
+    setCurrentPage((p) => p + 1);
+  }
 
   function toggleSpeak() {
     if (speaking) {
@@ -37,20 +55,16 @@ export function TopicLesson({ topicTitle, gradeLabel, questions, onBack, onPract
       setSpeaking(false);
       return;
     }
-    const parts = questions.flatMap((question, i) => {
-      const isWordProblem = isHebrewPrompt(question.prompt);
-      // Same shape Practice.tsx's own question-speech button builds: a word problem's
-      // arithmetic runs stay backtick-marked so speech.ts converts them to words, a bare
-      // expression is backtick-marked whole.
-      const promptText = isWordProblem
-        ? promptSegments(question.prompt)
-            .map((s) => (s.kind === "math" ? `\`${s.value}\`` : s.value))
-            .join(" ")
-        : `\`${question.prompt}\``;
-      const heading = showTierHeadings ? speechParts([`דוגמה ${i + 1} מתוך ${questions.length}`]) : [];
-      const bundle = buildExplanation(question);
-      return [...heading, ...speechParts([promptText, ...question.hints]), ...explanationSpeechParts(bundle)];
-    });
+    // Same shape Practice.tsx's own question-speech button builds: a word problem's
+    // arithmetic runs stay backtick-marked so speech.ts converts them to words, a bare
+    // expression is backtick-marked whole.
+    const promptText = isWordProblem
+      ? promptSegments(question.prompt)
+          .map((s) => (s.kind === "math" ? `\`${s.value}\`` : s.value))
+          .join(" ")
+      : `\`${question.prompt}\``;
+    const heading = showTierHeadings ? speechParts([`דוגמה ${currentPage + 1} מתוך ${questions.length}`]) : [];
+    const parts = [...heading, ...speechParts([promptText, ...question.hints]), ...explanationSpeechParts(bundle)];
     if (!parts.length) return;
     setSpeaking(true);
     speak(parts, () => setSpeaking(false));
@@ -83,31 +97,30 @@ export function TopicLesson({ topicTitle, gradeLabel, questions, onBack, onPract
           </button>
         </div>
       )}
-      {questions.map((question, i) => {
-        const isWordProblem = isHebrewPrompt(question.prompt);
-        const bundle = buildExplanation(question);
-        return (
-          <div key={question.id} className="lesson-example">
-            {showTierHeadings && <h3>{`דוגמה ${i + 1} מתוך ${questions.length}`}</h3>}
-            <div className={`problem-box ${isWordProblem ? "box-rtl" : "box-ltr"}`}>
-              <span className={`problem-text ${isWordProblem ? "prompt-rtl" : "prompt-ltr"}`}>
-                {isWordProblem ? segmented(question.prompt) : <>{`${question.prompt} =`}</>}
-              </span>
-            </div>
-            <div className="hints">
-              {question.hints.map((hint, j) => (
-                <p key={j} className="hint">
-                  {segmented(hint)}
-                </p>
-              ))}
-            </div>
-            <QuestionExplanation bundle={bundle} />
-          </div>
-        );
-      })}
+      {showTierHeadings && (
+        <h3 className="lesson-page-heading">{`דוגמה ${currentPage + 1} מתוך ${questions.length}`}</h3>
+      )}
+      <div className={`problem-box ${isWordProblem ? "box-rtl" : "box-ltr"}`}>
+        <span className={`problem-text ${isWordProblem ? "prompt-rtl" : "prompt-ltr"}`}>
+          {isWordProblem ? segmented(question.prompt) : <>{`${question.prompt} =`}</>}
+        </span>
+      </div>
+      <div className="hints">
+        {question.hints.map((hint, j) => (
+          <p key={j} className="hint">
+            {segmented(hint)}
+          </p>
+        ))}
+      </div>
+      <QuestionExplanation bundle={bundle} />
       <div className="actions">
-        <button type="button" onClick={onPractice}>
-          → לתרגול
+        {hasPrevPage && (
+          <button type="button" className="link-button" onClick={goToPrevPage}>
+            ← הקודם
+          </button>
+        )}
+        <button type="button" onClick={isLastPage ? onPractice : goToNextPage}>
+          {isLastPage ? "→ לתרגול" : "הבא →"}
         </button>
       </div>
     </div>
