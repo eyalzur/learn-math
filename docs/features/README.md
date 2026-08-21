@@ -6,7 +6,7 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
-| שיעור לעומת תרגול — מסך לימוד לכל נושא | 🟢 done — ממתין לריוויו ([#51](https://github.com/eyalzur/learn-math/pull/51)) | [status](./topic-lesson/status.md) |
+| שיעור לעומת תרגול — מסך לימוד לכל נושא | 🟡 in design (סבב רוויזיה ב׳ — UI מחברת) | [status](./topic-lesson/status.md) |
 | רצועת האחוזים מתחלקת לפי האחוז שבשאלה, וההסבר אומר למה | 🟢 done — מוזג ל-main | [status](./percent-tenths-teaching/status.md) |
 | אבחון "סטייה של אחד" — מתחבר לשיטה | 🟢 done — מוזג ל-main | [status](./offbyone-diagnosis-method/status.md) |
 | כותרות שנשברות בצורה מאוזנת | 🟢 done — מוזג ל-main | [status](./heading-wrap-balance/status.md) |
