@@ -11,9 +11,9 @@
 - [x] Implementation — developer — 2026-08-20, 2026-08-21 פעמיים (סבב ב': דפדוף עמוד-אחר-עמוד, אומת ידנית; 244/246 בסוויטה המלאה — 2 כשלים צפויים בבדיקות ישנות שצריכות להיכתב מחדש)
 - [x] Tests — qa — 2026-08-21 (שוכתב לזרימת הדפדוף: tests/e2e/topic-lesson.spec.ts 8/8; סוויטת e2e מלאה: 246/246, ריצה בודדת ונקייה)
 
-**Current phase:** done — ממתין לריוויו
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `feature/topic-lesson`
-**PR:** [#51](https://github.com/eyalzur/learn-math/pull/51) — פתוח, עדיין לא מוזג; הסבב הזה מוסיף קומיטים לאותו PR
+**PR:** [#51](https://github.com/eyalzur/learn-math/pull/51) — מוזג 2026-08-21 — פתוח, עדיין לא מוזג; הסבב הזה מוסיף קומיטים לאותו PR
 
 ## Open questions / blockers
 None. הבלוק "איך פותרים?" הקיים ב-Practice.tsx (method + 11 הדיאגרמות + שלבים +
