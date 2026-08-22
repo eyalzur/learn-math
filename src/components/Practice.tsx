@@ -3,35 +3,10 @@ import { useEffect, useRef, useState } from "react";
 import { isHebrewPrompt, promptSegments } from "../data/curriculum";
 import type { Diagnosis } from "../data/diagnose";
 import { diagnose } from "../data/diagnose";
-import { explainQuestion } from "../data/explain";
-import { fractionDiagram } from "../data/fractionDiagram";
-import { methodSentence } from "../data/method";
-import { verticalSum } from "../data/verticalSum";
-import { numberLine } from "../data/numberLine";
-import { tenFrame } from "../data/tenFrame";
-import { twentyStrip } from "../data/twentyStrip";
-import { geometryShape } from "../data/geometryShape";
-import { pythagorasTriangle } from "../data/pythagorasTriangle";
-import { percentStrip } from "../data/percentStrip";
-import { ratioStrips } from "../data/ratioStrips";
-import { linearGraph } from "../data/linearGraph";
-import { NumberLine } from "./NumberLine";
-import { TenFrame } from "./TenFrame";
-import { TwentyStrip } from "./TwentyStrip";
-import { FractionCircle } from "./FractionCircle";
-import { GeometryShape } from "./GeometryShape";
-import { PythagorasTriangle } from "./PythagorasTriangle";
-import { PercentStrip } from "./PercentStrip";
-import { RatioStrips } from "./RatioStrips";
-import { LinearGraph } from "./LinearGraph";
-import {
-  explanationToSpeechParts,
-  primeVoices,
-  speak,
-  speechParts,
-  speechSupported,
-  stopSpeaking,
-} from "../data/speech";
+import { buildExplanation, explanationSpeechParts } from "../data/questionExplanation";
+import { QuestionExplanation } from "./QuestionExplanation";
+import { segmented } from "./segmented";
+import { primeVoices, speak, speechParts, speechSupported, stopSpeaking } from "../data/speech";
 
 /**
  * Which box is talking. One engine, three speak buttons — a boolean would light up "stop"
@@ -41,19 +16,6 @@ type SpeakingBox = "question" | "diagnosis" | "explanation" | null;
 
 /** How long a correct answer rests on screen before the next question opens itself. */
 const COUNTDOWN_SECONDS = 5;
-
-/** Hebrew wrapped around an arithmetic run, split so the run can be isolated. */
-function segmented(text: string) {
-  return promptSegments(text).map((segment, i) =>
-    segment.kind === "math" ? (
-      <span key={i} className="prompt-math">
-        {segment.value}
-      </span>
-    ) : (
-      <span key={i}>{segment.value}</span>
-    ),
-  );
-}
 
 interface PracticeProps {
   /**
@@ -101,29 +63,11 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
   const question = lesson.questions[index];
   const isLast = index === lesson.questions.length - 1;
   const isWordProblem = isHebrewPrompt(question.prompt);
-  const explanation = explainQuestion(question);
-  /** A picture of the fraction, when one can be drawn honestly from this question. */
-  const diagram = fractionDiagram(question);
-  /** How to approach this kind of exercise — the sentence a teacher opens with. */
-  const method = methodSentence(question);
-  /** The exercise in columns, when the column arithmetic reproduces the answer. */
-  const vertical = verticalSum(question);
-  /** Where the question's numbers sit on a line — Mika's first topic. */
-  const line = numberLine(question);
-  /** Full boxes of ten and the loose ones beside them — Mika's second topic. */
-  const frame = tenFrame(question);
-  /** Twenty circles, some filled — how many are missing to reach twenty. */
-  const strip = twentyStrip(question);
-  /** A rectangle, square, triangle or circle — area and perimeter. */
-  const geometry = geometryShape(question);
-  /** A right triangle, in true proportion — Pythagoras. */
-  const pythagoras = pythagorasTriangle(question);
-  /** A strip out of a hundred — percentages. */
-  const percent = percentStrip(question);
-  /** Two strips at the same unit size — ratio and proportion. */
-  const ratio = ratioStrips(question);
-  /** A line on axes, with the point that answers the question marked. */
-  const linear = linearGraph(question);
+  /** Every diagram/explanation extractor for this question, computed once — see
+   *  questionExplanation.ts. The lesson screen (docs/features/topic-lesson) builds the
+   *  identical bundle for the same question, off the same function. */
+  const bundle = buildExplanation(question);
+  const { explanation } = bundle;
 
   /**
    * The countdown's clock.
@@ -297,22 +241,7 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
             // diagnosis, so this button says it instead — an unreadable diagnosis is
             // exactly as good as one that was never said (see design.md, Accessibility).
             ...(diagnosis && diagnosis.followUp === undefined ? speechParts([diagnosis.headline]) : []),
-            ...(method ? speechParts([method]) : []),
-            ...(diagram ? speechParts([diagram.caption]) : []),
-            ...(frame ? speechParts([frame.caption]) : []),
-            ...(strip ? speechParts([strip.caption]) : []),
-            ...(vertical ? speechParts([vertical.caption]) : []),
-            // Already an array of lines: the rule, then this question. Separate parts so
-            // a listener gets a pause between them rather than twenty words in one breath.
-            ...(line ? speechParts(line.caption) : []),
-            ...(geometry ? speechParts([geometry.caption]) : []),
-            ...(pythagoras ? speechParts([pythagoras.caption]) : []),
-            ...(percent ? speechParts([percent.caption]) : []),
-            // Two strips, two things to say — a pause between them, same reason as the
-            // number line above.
-            ...(ratio ? speechParts(ratio.caption) : []),
-            ...(linear ? speechParts([linear.caption]) : []),
-            ...explanationToSpeechParts(explanation),
+            ...explanationSpeechParts(bundle),
           ];
     if (!parts?.length) return;
     setSpeakingBox(box);
@@ -466,129 +395,17 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
         </button>
       )}
       {feedback === "wrong" && revealed && explanation !== null && (
-        <div className="explanation">
-          <div className="explanation-header">
-            <h3>איך פותרים?</h3>
-            {speechSupported() && (
-              <button
-                type="button"
-                className="speak-button"
-                onClick={() => toggleSpeech("explanation")}
-                aria-label={
-                  speakingBox === "explanation" ? "עצרו את ההקראה" : "הקריאו לי את ההסבר"
+        <QuestionExplanation
+          bundle={bundle}
+          speak={
+            speechSupported()
+              ? {
+                  active: speakingBox === "explanation",
+                  onToggle: () => toggleSpeech("explanation"),
                 }
-              >
-                {speakingBox === "explanation" ? "⏹" : "🔊"}
-              </button>
-            )}
-          </div>
-          {method && <p className="explanation-method">{segmented(method)}</p>}
-          {diagram && (
-            <figure className="fraction-figure">
-              <FractionCircle diagram={diagram} label={diagram.caption.replace(/`/g, "")} />
-              <figcaption className="fraction-caption">{segmented(diagram.caption)}</figcaption>
-            </figure>
-          )}
-          {frame && (
-            <figure className="ten-frame-figure">
-              <TenFrame frame={frame} label={frame.caption.replace(/`/g, "")} />
-              <figcaption className="figure-caption">{segmented(frame.caption)}</figcaption>
-            </figure>
-          )}
-          {strip && (
-            <figure className="twenty-strip-figure">
-              <TwentyStrip strip={strip} label={strip.caption.replace(/`/g, "")} />
-              <figcaption className="figure-caption">{segmented(strip.caption)}</figcaption>
-            </figure>
-          )}
-          {vertical && (
-            <figure className="vertical-figure">
-              {/* One LTR island. Rows arrive pre-padded from the data module, so the
-                  alignment lives where a test can read it off a string — never in CSS,
-                  and never at the mercy of the page's bidi algorithm. */}
-              <div className="vertical-sum" role="img" aria-label={vertical.caption.replace(/`/g, "")}>
-                {vertical.carries && (
-                  <div className="vs-carries" aria-hidden="true">
-                    {vertical.carries}
-                  </div>
-                )}
-                <div className="vs-row" aria-hidden="true">
-                  {vertical.top}
-                </div>
-                <div className="vs-row" aria-hidden="true">
-                  {vertical.bottom}
-                </div>
-                <div className="vs-row vs-result" aria-hidden="true">
-                  {vertical.result}
-                </div>
-              </div>
-              <figcaption className="vertical-caption">{segmented(vertical.caption)}</figcaption>
-            </figure>
-          )}
-          {line && (
-            <figure className="number-line-figure">
-              {/* One aria-label because it is one picture, even though the caption is
-                  two lines and is spoken as two parts. */}
-              <NumberLine line={line} label={line.caption.join(" ").replace(/`/g, "")} />
-              <figcaption className="figure-caption">
-                {line.caption.map((part, i) => (
-                  <span key={i} className="caption-line">
-                    {segmented(part)}
-                  </span>
-                ))}
-              </figcaption>
-            </figure>
-          )}
-          {geometry && (
-            <figure className="geometry-figure">
-              <GeometryShape shape={geometry} label={geometry.caption.replace(/`/g, "")} />
-              <figcaption className="figure-caption">{segmented(geometry.caption)}</figcaption>
-            </figure>
-          )}
-          {pythagoras && (
-            <figure className="pythagoras-figure">
-              <PythagorasTriangle triangle={pythagoras} label={pythagoras.caption.replace(/`/g, "")} />
-              <figcaption className="figure-caption">{segmented(pythagoras.caption)}</figcaption>
-            </figure>
-          )}
-          {percent && (
-            <figure className="percent-figure">
-              <PercentStrip strip={percent} label={percent.caption.replace(/`/g, "")} />
-              <figcaption className="figure-caption">{segmented(percent.caption)}</figcaption>
-            </figure>
-          )}
-          {ratio && (
-            <figure className="ratio-figure">
-              {/* One aria-label because it is one picture, even though the caption is two
-                  lines and is spoken as two parts — same reasoning as the number line. */}
-              <RatioStrips strips={ratio} label={ratio.caption.join(" ").replace(/`/g, "")} />
-              <figcaption className="figure-caption">
-                {ratio.caption.map((part, i) => (
-                  <span key={i} className="caption-line">
-                    {segmented(part)}
-                  </span>
-                ))}
-              </figcaption>
-            </figure>
-          )}
-          {linear && (
-            <figure className="linear-figure">
-              <LinearGraph graph={linear} label={linear.caption.replace(/`/g, "")} />
-              <figcaption className="figure-caption">{segmented(linear.caption)}</figcaption>
-            </figure>
-          )}
-          {explanation.steps.map((step, i) => (
-            <p key={i} className="explanation-step">
-              {/* Same isolation every other text field gets — a step label can carry a
-                  backtick-marked number (e.g. "`10%` זה `10/100`") exactly like a hint
-                  can, and without this it renders the backticks themselves instead of
-                  isolating the number they mark. */}
-              <span>{segmented(step.label)}</span>
-              {step.math && <span className="explanation-math">{step.math}</span>}
-            </p>
-          ))}
-          <p className="explanation-analogy">💡 {explanation.analogy}</p>
-        </div>
+              : undefined
+          }
+        />
       )}
       <div className="actions">
         {feedback === null ? (

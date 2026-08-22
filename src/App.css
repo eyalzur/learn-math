@@ -439,6 +439,15 @@
   font-size: 14px;
 }
 
+/* "דוגמה N מתוך M" heading on the lesson screen's current page (only shown when the
+   topic has more than one worked example — see TopicLesson.tsx's showTierHeadings). */
+.lesson-page-heading {
+  margin: 0 0 12px;
+  font-size: 16px;
+  color: var(--text-h);
+  text-align: center;
+}
+
 .explanation {
   max-width: 420px;
   margin: 0 auto 24px;
@@ -617,6 +626,34 @@ button.secondary {
   font-size: 19px;
   font-weight: 600;
   color: var(--text-h);
+}
+
+.topic-row {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.topic-row .topic-card {
+  flex: 1;
+  min-width: 0;
+}
+
+/* The topic card's secondary action — open the lesson instead of practice. Same shape as
+   StylePicker's .style-speak: a small square button beside the card, not inside it. */
+.lesson-link {
+  flex: 0 0 auto;
+  width: 48px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  font-size: 20px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.lesson-link:hover {
+  border-color: var(--accent-border);
 }
 
 /* ---- history ---- */

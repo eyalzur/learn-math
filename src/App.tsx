@@ -2,6 +2,7 @@ import { useState } from "react";
 import { StudentPicker } from "./components/StudentPicker";
 import { GradePicker } from "./components/GradePicker";
 import { TopicPicker } from "./components/TopicPicker";
+import { TopicLesson } from "./components/TopicLesson";
 import { LevelPicker } from "./components/LevelPicker";
 import { StylePicker } from "./components/StylePicker";
 import { History } from "./components/History";
@@ -67,6 +68,7 @@ function rememberGradeId(studentId: string, gradeId: string | null) {
 
 type Screen =
   | { name: "home" }
+  | { name: "lesson"; topic: Topic }
   | { name: "levels"; topic: Topic | null }
   | { name: "styles"; topic: Topic }
   | { name: "history" }
@@ -148,10 +150,10 @@ function App() {
     setGradeId(id);
   }
 
-  /** Entering a topic from its card. An adaptive topic skips the level screen entirely —
-   *  there is nothing to pick, so a fresh set of questions is generated immediately and
-   *  practice starts on it. Every other topic is unaffected: `insideTopic` alone decides
-   *  where it lands, exactly as before this existed. */
+  /** Entering a topic from its card — unchanged from before docs/features/topic-lesson
+   *  existed. An adaptive topic skips the level screen entirely — there is nothing to
+   *  pick, so a fresh set of questions is generated immediately and practice starts on
+   *  it. Every other topic is unaffected: `insideTopic` alone decides where it lands. */
   function enterTopic(topic: Topic) {
     if (topic.adaptive) {
       const session = freshAdaptiveSession(topic as Topic & { adaptive: NonNullable<Topic["adaptive"]> });
@@ -160,6 +162,32 @@ function App() {
       return;
     }
     setScreen(insideTopic(topic));
+  }
+
+  /** The topic's card also offers "שיעור" as a secondary action (see
+   *  `TopicPicker`'s `onLesson`) — this opens it directly, without touching how picking
+   *  the card itself behaves. */
+  function enterLesson(topic: Topic) {
+    setScreen({ name: "lesson", topic });
+  }
+
+  /** The lesson screen's worked examples: one per difficulty tier for a topic with
+   *  `adaptive` (רותם/עומר — each tier is usually a different question pattern, not just
+   *  bigger numbers, so showing only the easiest would skip most of the topic), or the
+   *  topic's single easiest written example otherwise (מיקה — kept short on purpose, she's
+   *  still learning to read). `generate` is called with no explicit `rng`, so it falls back
+   *  to `Math.random` exactly like practice already does — fresh numbers each time the
+   *  lesson opens, not a fixed snapshot. Empty only if a topic's data is missing entirely,
+   *  which nothing in today's content does. */
+  function lessonQuestions(topic: Topic): Question[] {
+    if (!topic.adaptive) {
+      const q = topic.levels.find((l) => l.id === "easy")?.questions[0] ?? topic.levels[0]?.questions[0];
+      return q ? [q] : [];
+    }
+    const { generate, minDifficulty, maxDifficulty } = topic.adaptive;
+    const questions: Question[] = [];
+    for (let d = minDifficulty; d <= maxDifficulty; d++) questions.push(generate(d));
+    return questions;
   }
 
   /** The one thing an adaptive lesson adds to answering a question: the next not-yet-seen
@@ -240,6 +268,7 @@ function App() {
         gradeLabel={`שלום ${student.name}! · ${grade.label}`}
         topics={grade.topicSets}
         onSelect={enterTopic}
+        onLesson={enterLesson}
         onBack={grades.length > 1 ? () => chooseGrade(null) : switchStudent}
         backLabel={grades.length > 1 ? "← חזרה" : "← החלף תלמיד"}
         onHistory={() => setScreen({ name: "history" })}
@@ -249,6 +278,25 @@ function App() {
           // The value lives in storage, so a render is needed to pick it back up.
           setReadAloudTick((n) => n + 1);
         }}
+      />
+    );
+  }
+
+  if (screen.name === "lesson") {
+    const topic = screen.topic;
+    const questions = lessonQuestions(topic);
+    // `TopicPicker` only offers the "שיעור" link on a reviewed topic, and every reviewed
+    // topic's data carries either `adaptive` or a written "easy" level — so this is not a
+    // state a click can produce today; the empty check is only a safety net against topic
+    // data changing under an already-open tab, not something a real session hits.
+    if (questions.length === 0) return null;
+    return (
+      <TopicLesson
+        topicTitle={topic.title}
+        gradeLabel={grade.label}
+        questions={questions}
+        onBack={() => setScreen({ name: "home" })}
+        onPractice={() => enterTopic(topic)}
       />
     );
   }
@@ -324,6 +372,7 @@ function App() {
     gradeLabel={grade.label}
     topics={grade.topicSets}
     onSelect={enterTopic}
+    onLesson={enterLesson}
     onBack={grades.length > 1 ? () => chooseGrade(null) : switchStudent}
     backLabel={grades.length > 1 ? "← חזרה" : "← החלף תלמיד"}
     onHistory={() => setScreen({ name: "history" })}

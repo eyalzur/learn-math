@@ -5,6 +5,11 @@ interface TopicPickerProps {
   gradeLabel: string;
   topics: Topic[];
   onSelect: (topic: Topic) => void;
+  /** Opens the topic's lesson screen instead of practice — a secondary action beside the
+   *  card, not a step in front of it, so picking a topic still goes straight to practice
+   *  exactly as it always has (see docs/features/topic-lesson). Absent means no lesson
+   *  entry point is offered here at all. */
+  onLesson?: (topic: Topic) => void;
   onBack: () => void;
   /** What `onBack` actually does, in the caller's own words — a mid-flow "back" and a
    *  first-screen "switch student" read differently, and only the caller (who wires
@@ -25,6 +30,7 @@ export function TopicPicker({
   gradeLabel,
   topics,
   onSelect,
+  onLesson,
   onBack,
   backLabel,
   onHistory,
@@ -81,18 +87,33 @@ export function TopicPicker({
 
       <div className="topic-grid">
         {topics.map((topic) => (
-          <button
-            key={topic.id}
-            className="topic-card"
-            onClick={() => onSelect(topic)}
-            /* The real attribute, not just a class: it keeps the card out of the tab
-               order and announces it to a screen reader. Dimming alone would leave it
-               reachable by keyboard — a block you can walk around. */
-            disabled={!topic.reviewed}
-          >
-            <span className="topic-title">{topic.title}</span>
-            {!topic.reviewed && <span className="topic-soon">בקרוב</span>}
-          </button>
+          <div key={topic.id} className="topic-row">
+            <button
+              className="topic-card"
+              onClick={() => onSelect(topic)}
+              /* The real attribute, not just a class: it keeps the card out of the tab
+                 order and announces it to a screen reader. Dimming alone would leave it
+                 reachable by keyboard — a block you can walk around. */
+              disabled={!topic.reviewed}
+            >
+              <span className="topic-title">{topic.title}</span>
+              {!topic.reviewed && <span className="topic-soon">בקרוב</span>}
+            </button>
+            {onLesson && topic.reviewed && (
+              /* Beside the card, never inside it — same reason StylePicker's speaker
+                 button sits beside its card: a button within a button is invalid HTML,
+                 and nesting them would make tapping this one ambiguous with picking
+                 practice. */
+              <button
+                type="button"
+                className="lesson-link"
+                aria-label={`שיעור: ${topic.title}`}
+                onClick={() => onLesson(topic)}
+              >
+                <span aria-hidden="true">📖</span>
+              </button>
+            )}
+          </div>
         ))}
       </div>
     </div>
