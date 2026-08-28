@@ -10,9 +10,9 @@
 - [x] Implementation — developer — 2026-08-28
 - [x] Tests — qa — 2026-08-28
 
-**Current phase:** done — ממתין ל-PR review
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `feature/mika-adaptive-difficulty`
-**PR:** https://github.com/eyalzur/learn-math/pull/53
+**PR:** https://github.com/eyalzur/learn-math/pull/53 — מוזג 2026-08-28
 
 ## Open questions / blockers
 - **Product (לא חוסם את שלב א׳, חוסם שלב ב׳):** שלושת נושאי כיתה א׳ הנותרים
