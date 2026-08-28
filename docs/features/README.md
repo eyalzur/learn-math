@@ -36,4 +36,4 @@ architecture, implementation notes, and tests.
 | רמות הופכות לתרגול מסתגל — כל נושאי רותם ועומר | 🟢 done — מוזג ל-main | [status](./levels-as-practice/status.md) |
 | חוקי בחירת מספרים לפי קושי — 12 המחוללים האדפטיביים | 🟢 done — ממתין ל-PR | [status](./difficulty-number-scaling/status.md) |
 | פתיחת סוגריים בביטויים אלגבריים — מסבירה תהליך ומושגים | 🟢 done — מוזג ל-main | [status](./algebraic-brackets-teaching/status.md) |
-| קושי מסתגל למיקה — שלב א׳ (חיבור/חיסור עד 10, חיסור עד 100) | 🟡 בפיתוח | [status](./mika-adaptive-difficulty/status.md) |
+| קושי מסתגל למיקה — שלב א׳ (חיבור/חיסור עד 10, חיסור עד 100) | 🟡 ב-QA | [status](./mika-adaptive-difficulty/status.md) |

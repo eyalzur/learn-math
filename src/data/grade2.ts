@@ -8,6 +8,14 @@ import {
   ADD100_INITIAL_DIFFICULTY,
   ADD100_QUESTION_COUNT,
 } from "./adaptiveAdd100";
+import {
+  generateSub100Question,
+  nextSub100Difficulty,
+  SUB100_MIN_DIFFICULTY,
+  SUB100_MAX_DIFFICULTY,
+  SUB100_INITIAL_DIFFICULTY,
+  SUB100_QUESTION_COUNT,
+} from "./adaptiveSub100";
 
 /**
  * Grade 2 — Mika's step up from grade 1, which topped out at 20 with no number above it
@@ -87,6 +95,16 @@ export const grade2Topics: Topic[] = [
     id: "sub100",
     title: "חיסור עד 100",
     reviewed: true,
+    // Pilot topic's own note applies here too: the written questions below stay, only no
+    // longer the entry point.
+    adaptive: {
+      generate: generateSub100Question,
+      minDifficulty: SUB100_MIN_DIFFICULTY,
+      maxDifficulty: SUB100_MAX_DIFFICULTY,
+      initialDifficulty: SUB100_INITIAL_DIFFICULTY,
+      nextDifficulty: nextSub100Difficulty,
+      questionCount: SUB100_QUESTION_COUNT,
+    },
     levels: [
       level("easy", [
         { id: "g2-sub100-e1", topic: "חיסור עד 100", style: "sub100", prompt: "28 − 5", answer: 23, hints: ["מחסרים יחידות מיחידות, ועשרות מעשרות", "`28` זה `2` עשרות ו-`8` יחידות. מורידים `5` מהיחידות"] as const, steps: [{ label: "מחסרים מהיחידות:", math: "8 − 5 = 3" }, { label: "העשרות נשארות כמו שהן:", math: "20 + 3 = 23" }], analogy: "היו לך 28 מדבקות ונתת 5 לחברה" },
