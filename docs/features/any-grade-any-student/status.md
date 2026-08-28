@@ -10,9 +10,9 @@
 - [x] Implementation — developer — 2026-08-28
 - [x] Tests — qa — 2026-08-28 (279/279 עוברות)
 
-**Current phase:** done — ממתין ל-PR
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `feature/any-grade-any-student`
-**PR:** https://github.com/eyalzur/learn-math/pull/54
+**PR:** https://github.com/eyalzur/learn-math/pull/54 — מוזג 2026-08-28
 
 ## Open questions / blockers
 None.
