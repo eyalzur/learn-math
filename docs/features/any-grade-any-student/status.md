@@ -12,7 +12,7 @@
 
 **Current phase:** done — ממתין ל-PR
 **Branch:** `feature/any-grade-any-student`
-**PR:** not opened yet
+**PR:** https://github.com/eyalzur/learn-math/pull/54
 
 ## Open questions / blockers
 None.
