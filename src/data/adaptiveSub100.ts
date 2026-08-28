@@ -149,10 +149,16 @@ function twoDigitNoBorrow(rng: Rng): Question {
 
 /** Tiers 4/5 — borrowing. `unitsB` always exceeds `unitsA`, forcing a borrow; `maxTensA`
  *  narrows the range for the easier of the two carry tiers, leaving the full range for the
- *  hardest — the same shape as `adaptiveAdd100.ts`'s `carrying(rng, maxTens)`. */
+ *  hardest — the same shape as `adaptiveAdd100.ts`'s `carrying(rng, maxTens)`.
+ *
+ * `tensA - tensB` is forced to be at least `2` (not just `1`), so the answer's own tens
+ * digit is never `0` — otherwise the answer can come out as a single digit (e.g.
+ * `46 − 38 = 8`), which then coincidentally matches `unitsA` or `unitsB` spoken aloud in
+ * hint 2 ("...אין מספיק כדי להוריד `8`...") and trips the "hint hands over the answer"
+ * content rule. A real content bug this rule caught during QA, not a test to relax. */
 function borrowing(rng: Rng, maxTensA: number): Question {
-  const tensA = randInt(2, maxTensA, rng);
-  const tensB = randInt(1, tensA - 1, rng);
+  const tensA = randInt(3, maxTensA, rng);
+  const tensB = randInt(1, tensA - 2, rng);
   const unitsA = randInt(0, 8, rng);
   const unitsB = randInt(unitsA + 1, 9, rng);
   const a = tensA * 10 + unitsA;

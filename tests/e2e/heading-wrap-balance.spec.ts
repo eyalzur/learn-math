@@ -45,17 +45,14 @@ test("the topic picker's heading balances", async ({ page }) => {
   await expectBalancedH1(page, "מה נתרגל היום?");
 });
 
-test("the level picker's heading balances", async ({ page }) => {
-  // Rotem's own topics used to be the vehicle here, but every one of them now skips the
-  // level picker entirely (see docs/features/levels-as-practice) — the screen this test
-  // is about no longer exists on that route. Mika's "חיבור עד 10" is still a single-style,
-  // three-level topic exactly like Rotem's used to be, so it exercises the same heading.
-  await page.locator(".student-card").nth(MIKA).click();
-  await page.locator(".grade-card").first().click();
-  await page.locator(".topic-card", { hasText: "חיבור עד 10" }).click();
-  await expect(page.locator(".level-card")).toHaveCount(3);
-  await expectBalancedH1(page);
-});
+// "the level picker's heading balances" used to live here. Rotem's own topics stopped
+// reaching that screen after docs/features/levels-as-practice, and Mika's "חיבור עד 10"
+// was the last topic anywhere in the app that still entered it by level rather than by
+// style or adaptively — docs/features/mika-adaptive-difficulty converted it too, so the
+// level picker is no longer reachable through any route in the live app. Nothing to
+// browser-test through navigation the app never offers; the `text-wrap: balance` rule
+// itself is a single global CSS rule already proven by the other six headings below, so
+// no coverage is actually lost by removing this one.
 
 test("the style picker's heading balances", async ({ page }) => {
   await page.locator(".student-card").nth(MIKA).click();
@@ -67,12 +64,11 @@ test("the style picker's heading balances", async ({ page }) => {
 });
 
 test("the result screen's heading balances", async ({ page }) => {
-  // Same substitution as "the level picker's heading balances" above, and for the same
-  // reason — Rotem's topics no longer offer a level to click through on the way here.
+  // "חיבור עד 10" reaches the result screen just as well now that it enters practice
+  // directly (docs/features/mika-adaptive-difficulty) — no level click needed on the way.
   await page.locator(".student-card").nth(MIKA).click();
   await page.locator(".grade-card").first().click();
   await page.locator(".topic-card", { hasText: "חיבור עד 10" }).click();
-  await page.locator(".level-card").first().click();
   const total = Number((await page.locator(".progress").innerText()).match(/מתוך (\d+)/)![1]);
   for (let i = 0; i < total; i++) {
     await page.locator(".answer-input").fill("999999");

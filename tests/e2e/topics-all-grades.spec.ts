@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { grades } from "../../src/data/curriculum";
 
 /**
  * Acceptance criteria under test
@@ -38,8 +39,7 @@ const GRADE_8_TOPICS = [
   "בעיות מילוליות",
 ];
 
-/** Mika 0, Rotem 1, Omer 2. */
-const MIKA = 0;
+/** Rotem 1, Omer 2. */
 const ROTEM = 1;
 const OMER = 2;
 
@@ -75,13 +75,22 @@ for (const [name, index, topics] of [
   });
 }
 
-test("grade 1 still practises ten questions per level", async ({ page }) => {
-  // "חיבור עד 10" holds one kind of question, so it is still entered by level — which is
-  // what this test is about. The topics that hold several kinds are entered by style and
-  // run however many questions that style has; style-lessons.spec.ts covers those.
-  await pickStudent(page, MIKA);
-  await page.locator(".topic-card", { hasText: "חיבור עד 10" }).click();
-  await page.locator(".level-card").first().click();
-
-  await expect(page.locator(".progress")).toContainText("מתוך 10");
+test("grade 1's written levels still hold ten questions each", () => {
+  // This used to walk "חיבור עד 10" through the UI, since it was the one topic still
+  // entered by level. docs/features/mika-adaptive-difficulty converted it (and חיסור עד
+  // 10 alongside it) to adaptive — every one of grade 1's topics now enters by style or
+  // adaptively, so there is no level screen left to click through. Same move
+  // content.spec.ts's own comment already describes for criteria 3/4/6 above: a
+  // statement about the data is checked against the data once walking the UI to reach it
+  // stops being possible.
+  const grade1 = grades.find((g) => g.id === "1")!;
+  const wrongSize: string[] = [];
+  for (const topic of grade1.topicSets) {
+    for (const level of topic.levels) {
+      if (level.questions.length !== 10) {
+        wrongSize.push(`${topic.title}/${level.id} has ${level.questions.length}`);
+      }
+    }
+  }
+  expect(wrongSize, `\n${wrongSize.join("\n")}\n`).toEqual([]);
 });

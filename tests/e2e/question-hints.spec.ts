@@ -28,10 +28,13 @@ async function openTopic(page: Page, topicTitle: string) {
   // Mika now has two grades available; every topic this file tests is grade 1 (א׳).
   await page.locator(".grade-card").first().click();
   await page.locator(".topic-card", { hasText: topicTitle }).click();
-  // Grade 1's multi-style topics are entered by style; the rest still ask for a level.
+  // Grade 1's multi-style topics are entered by style; a written-level topic still asks
+  // for a level; an adaptive topic (docs/features/mika-adaptive-difficulty) skips both
+  // and lands straight on practice.
   const byStyle = page.locator(".style-card");
+  const byLevel = page.locator(".level-card");
   if (await byStyle.count()) await byStyle.first().click();
-  else await page.locator(".level-card").first().click();
+  else if (await byLevel.count()) await byLevel.first().click();
 }
 
 const openHinted = (page: Page) => openTopic(page, "חיבור וחיסור עד 20");

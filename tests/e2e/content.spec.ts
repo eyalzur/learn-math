@@ -14,6 +14,9 @@ import { ratioStrips } from "../../src/data/ratioStrips";
 import { linearGraph } from "../../src/data/linearGraph";
 import { STYLE_META, stylesOf, hasStyleLessons } from "../../src/data/style";
 import { generateAdd100Question } from "../../src/data/adaptiveAdd100";
+import { generateAdd10Question } from "../../src/data/adaptiveAdd10";
+import { generateSub10Question } from "../../src/data/adaptiveSub10";
+import { generateSub100Question } from "../../src/data/adaptiveSub100";
 import { generateFractionsQuestion } from "../../src/data/adaptiveFractions";
 import { generateDecimalsQuestion } from "../../src/data/adaptiveDecimals";
 import { generatePercentQuestion } from "../../src/data/adaptivePercent";
@@ -969,6 +972,117 @@ test("every generated חיבור עד 100 question passes every content rule, ac
 });
 
 /**
+ * The same gap, for Mika's own three topics that moved to adaptive difficulty (see
+ * docs/features/mika-adaptive-difficulty) — `חיבור עד 10` and `חיסור עד 10` (grade 1,
+ * three difficulty tiers, not five: the 1–10 range is too small to support five distinct
+ * tiers) and `חיסור עד 100` (grade 2, a direct subtraction mirror of `חיבור עד 100`'s
+ * own five tiers).
+ */
+test("every generated חיבור עד 10 question passes every content rule, across the whole difficulty range", () => {
+  const rng = seededRng(10);
+  const samplesPerDifficulty = 200;
+  const violations: string[] = [];
+  const outOfRange: string[] = [];
+  const wrongAnswer: string[] = [];
+  const badPrompt: string[] = [];
+
+  for (let difficulty = 1; difficulty <= 3; difficulty++) {
+    for (let i = 0; i < samplesPerDifficulty; i++) {
+      const q = generateAdd10Question(difficulty, rng);
+
+      for (const rule of RULES) {
+        const problem = rule.check(q, "1");
+        if (problem) violations.push(`${q.id} (difficulty ${difficulty}) — ${rule.name}: ${problem}`);
+      }
+
+      const m = q.prompt.trim().match(/^(\d+)\s*\+\s*(\d+)$/);
+      if (!m) {
+        badPrompt.push(`${q.id} — "${q.prompt}" is not a bare addition`);
+        continue;
+      }
+      const [a, b] = [Number(m[1]), Number(m[2])];
+      if (a + b !== q.answer) wrongAnswer.push(`${q.id} — "${q.prompt}" answer is ${q.answer}, not ${a + b}`);
+      if (q.answer > 10 || q.answer < 0) outOfRange.push(`${q.id} — "${q.prompt}" = ${q.answer} is outside 0-10`);
+    }
+  }
+
+  expect(badPrompt, `\n${badPrompt.join("\n")}\n`).toEqual([]);
+  expect(wrongAnswer, `\n${wrongAnswer.join("\n")}\n`).toEqual([]);
+  expect(outOfRange, `\n${outOfRange.join("\n")}\n`).toEqual([]);
+  expect(violations, `\n${violations.join("\n")}\n`).toEqual([]);
+});
+
+test("every generated חיסור עד 10 question passes every content rule, across the whole difficulty range", () => {
+  const rng = seededRng(11);
+  const samplesPerDifficulty = 200;
+  const violations: string[] = [];
+  const outOfRange: string[] = [];
+  const wrongAnswer: string[] = [];
+  const badPrompt: string[] = [];
+
+  for (let difficulty = 1; difficulty <= 3; difficulty++) {
+    for (let i = 0; i < samplesPerDifficulty; i++) {
+      const q = generateSub10Question(difficulty, rng);
+
+      for (const rule of RULES) {
+        const problem = rule.check(q, "1");
+        if (problem) violations.push(`${q.id} (difficulty ${difficulty}) — ${rule.name}: ${problem}`);
+      }
+
+      const m = q.prompt.trim().match(/^(\d+)\s*−\s*(\d+)$/);
+      if (!m) {
+        badPrompt.push(`${q.id} — "${q.prompt}" is not a bare subtraction`);
+        continue;
+      }
+      const [a, b] = [Number(m[1]), Number(m[2])];
+      if (a - b !== q.answer) wrongAnswer.push(`${q.id} — "${q.prompt}" answer is ${q.answer}, not ${a - b}`);
+      if (q.answer > 10 || q.answer < 0) outOfRange.push(`${q.id} — "${q.prompt}" = ${q.answer} is outside 0-10`);
+      if (a > 10) outOfRange.push(`${q.id} — "${q.prompt}" minuend ${a} is outside 0-10`);
+    }
+  }
+
+  expect(badPrompt, `\n${badPrompt.join("\n")}\n`).toEqual([]);
+  expect(wrongAnswer, `\n${wrongAnswer.join("\n")}\n`).toEqual([]);
+  expect(outOfRange, `\n${outOfRange.join("\n")}\n`).toEqual([]);
+  expect(violations, `\n${violations.join("\n")}\n`).toEqual([]);
+});
+
+test("every generated חיסור עד 100 question passes every content rule, across the whole difficulty range", () => {
+  const rng = seededRng(100);
+  const samplesPerDifficulty = 200;
+  const violations: string[] = [];
+  const outOfRange: string[] = [];
+  const wrongAnswer: string[] = [];
+  const badPrompt: string[] = [];
+
+  for (let difficulty = 1; difficulty <= 5; difficulty++) {
+    for (let i = 0; i < samplesPerDifficulty; i++) {
+      const q = generateSub100Question(difficulty, rng);
+
+      for (const rule of RULES) {
+        const problem = rule.check(q, "2");
+        if (problem) violations.push(`${q.id} (difficulty ${difficulty}) — ${rule.name}: ${problem}`);
+      }
+
+      const m = q.prompt.trim().match(/^(\d+)\s*−\s*(\d+)$/);
+      if (!m) {
+        badPrompt.push(`${q.id} — "${q.prompt}" is not a bare subtraction`);
+        continue;
+      }
+      const [a, b] = [Number(m[1]), Number(m[2])];
+      if (a - b !== q.answer) wrongAnswer.push(`${q.id} — "${q.prompt}" answer is ${q.answer}, not ${a - b}`);
+      if (q.answer > 99 || q.answer < 0) outOfRange.push(`${q.id} — "${q.prompt}" = ${q.answer} is outside 0-99`);
+      if (a > 99) outOfRange.push(`${q.id} — "${q.prompt}" minuend ${a} is outside 0-99`);
+    }
+  }
+
+  expect(badPrompt, `\n${badPrompt.join("\n")}\n`).toEqual([]);
+  expect(wrongAnswer, `\n${wrongAnswer.join("\n")}\n`).toEqual([]);
+  expect(outOfRange, `\n${outOfRange.join("\n")}\n`).toEqual([]);
+  expect(violations, `\n${violations.join("\n")}\n`).toEqual([]);
+});
+
+/**
  * `RULES` above only ever sees the static `grades` tree, so a question built at runtime
  * by any of the twelve generators under `src/data/adaptive*.ts` (see
  * docs/features/levels-as-practice) is invisible to every check above no matter how
@@ -1207,21 +1321,26 @@ test("a generated question's 'X זה Y עשרות ו-Z יחידה/יחידות' 
   // יחידות" also contains a literal `1`, but it is naming the units *place* for a sum of
   // two numbers, not counting a single item — "יחידות" is correct there regardless of
   // either addend's value, and is not the pattern this check is about.
+  //
+  // Runs against both `add100` and its subtraction mirror `sub100` — same sentence shape,
+  // same mistake to guard against (docs/features/mika-adaptive-difficulty).
   const rng = seededRng(7);
   const wrong: string[] = [];
-  for (let difficulty = 1; difficulty <= 5; difficulty++) {
-    for (let i = 0; i < 200; i++) {
-      const q = generateAdd100Question(difficulty, rng);
-      for (const hint of q.hints) {
-        const m = hint.match(/זה\s*`\d+`\s*עשרות ו-`(\d+)`\s*(יחידה|יחידות)\b/);
-        if (!m) continue;
-        const [, count, word] = m;
-        const shouldBeSingular = count === "1";
-        if (shouldBeSingular && word !== "יחידה") {
-          wrong.push(`${q.id} — "1" paired with plural "${word}": "${hint}"`);
-        }
-        if (!shouldBeSingular && word !== "יחידות") {
-          wrong.push(`${q.id} — "${count}" paired with singular "${word}": "${hint}"`);
+  for (const generate of [generateAdd100Question, generateSub100Question]) {
+    for (let difficulty = 1; difficulty <= 5; difficulty++) {
+      for (let i = 0; i < 200; i++) {
+        const q = generate(difficulty, rng);
+        for (const hint of q.hints) {
+          const m = hint.match(/זה\s*`\d+`\s*עשרות ו-`(\d+)`\s*(יחידה|יחידות)\b/);
+          if (!m) continue;
+          const [, count, word] = m;
+          const shouldBeSingular = count === "1";
+          if (shouldBeSingular && word !== "יחידה") {
+            wrong.push(`${q.id} — "1" paired with plural "${word}": "${hint}"`);
+          }
+          if (!shouldBeSingular && word !== "יחידות") {
+            wrong.push(`${q.id} — "${count}" paired with singular "${word}": "${hint}"`);
+          }
         }
       }
     }
@@ -1229,26 +1348,29 @@ test("a generated question's 'X זה Y עשרות ו-Z יחידה/יחידות' 
   expect(wrong, `\n${wrong.join("\n")}\n`).toEqual([]);
 });
 
-test("a generated question's 'X עשרה/עשרות ועוד Y עשרה/עשרות' hint stays singular/plural-correct", () => {
-  // Same distinction, different sentence: the whole-tens pattern (`30 + 40`) names each
-  // operand's own ten count directly. The two hand-written examples (e6: 3+4, e7: 5+3)
-  // never happened to land on a tens digit of exactly 1, so this shape of the mistake
-  // had nothing to be caught against until the generator started sampling the full 1-8
-  // range — this is the check that closes that gap.
+test("a generated question's 'X עשרה/עשרות ועוד/פחות Y עשרה/עשרות' hint stays singular/plural-correct", () => {
+  // Same distinction, different sentence: the whole-tens pattern (`30 + 40` / `70 − 30`)
+  // names each operand's own ten count directly. The two hand-written add100 examples
+  // (e6: 3+4, e7: 5+3) never happened to land on a tens digit of exactly 1, so this shape
+  // of the mistake had nothing to be caught against until the generator started sampling
+  // the full 1-8 range — this is the check that closes that gap, now also for sub100's
+  // own whole-tens pattern (docs/features/mika-adaptive-difficulty).
   const rng = seededRng(13);
   const wrong: string[] = [];
-  for (let difficulty = 1; difficulty <= 5; difficulty++) {
-    for (let i = 0; i < 200; i++) {
-      const q = generateAdd100Question(difficulty, rng);
-      for (const hint of q.hints) {
-        for (const m of hint.matchAll(/`(\d+)`\s*(עשרה|עשרות)\b/g)) {
-          const [, count, word] = m;
-          const shouldBeSingular = count === "1";
-          if (shouldBeSingular && word !== "עשרה") {
-            wrong.push(`${q.id} — "1" paired with plural "${word}": "${hint}"`);
-          }
-          if (!shouldBeSingular && word !== "עשרות") {
-            wrong.push(`${q.id} — "${count}" paired with singular "${word}": "${hint}"`);
+  for (const generate of [generateAdd100Question, generateSub100Question]) {
+    for (let difficulty = 1; difficulty <= 5; difficulty++) {
+      for (let i = 0; i < 200; i++) {
+        const q = generate(difficulty, rng);
+        for (const hint of q.hints) {
+          for (const m of hint.matchAll(/`(\d+)`\s*(עשרה|עשרות)\b/g)) {
+            const [, count, word] = m;
+            const shouldBeSingular = count === "1";
+            if (shouldBeSingular && word !== "עשרה") {
+              wrong.push(`${q.id} — "1" paired with plural "${word}": "${hint}"`);
+            }
+            if (!shouldBeSingular && word !== "עשרות") {
+              wrong.push(`${q.id} — "${count}" paired with singular "${word}": "${hint}"`);
+            }
           }
         }
       }

@@ -144,11 +144,13 @@ async function failFirstQuestion(page: Page, topicIndex = 1) {
   // Mika now has two grades available; every route here is grade 1 (א׳).
   await page.locator(".grade-card").first().click();
   await page.locator(".topic-card").nth(topicIndex).click();
-  // Grade 1's multi-style topics are entered by style, the rest by level. These tests are
-  // about what gets spoken, not about which screen led there.
+  // Grade 1's multi-style topics are entered by style, a written-level topic by level, and
+  // an adaptive one (docs/features/mika-adaptive-difficulty) lands straight on practice.
+  // These tests are about what gets spoken, not about which screen led there.
   const byStyle = page.locator(".style-card");
+  const byLevel = page.locator(".level-card");
   if (await byStyle.count()) await byStyle.first().click();
-  else await page.locator(".level-card").first().click();
+  else if (await byLevel.count()) await byLevel.first().click();
   await page.locator(".answer-input").fill("999999");
   await page.getByRole("button", { name: "בדיקה" }).click();
 }

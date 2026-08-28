@@ -8,9 +8,9 @@
 - [x] Design — designer — 2026-08-28
 - [x] Architecture — tech-lead — 2026-08-28
 - [x] Implementation — developer — 2026-08-28
-- [ ] Tests — qa — not started
+- [x] Tests — qa — 2026-08-28
 
-**Current phase:** qa
+**Current phase:** done — ממתין ל-PR review
 **Branch:** `feature/mika-adaptive-difficulty`
 **PR:** not opened yet
 
@@ -20,6 +20,10 @@
   בורר סגנונות. האם בורר הסגנונות נשאר גם אחרי מעבר לתרגול מסתגל (קושי אדפטיבי בתוך כל
   סגנון), או מתבטל (כל הסגנונות מתערבבים לתרגול רציף אחד, כמו רותם/עומר)? ראו
   product-spec.md, "היקף והמשך" — צריך תשובת המשתמש לפני שלב ב׳.
+- **תגלית לוואי (לא חוסמת, לא באג):** מסך "בחירת רמה" (`LevelPicker`) אינו נגיש יותר
+  משום מסלול ניווט באתר החי — כל נושא בכל הכיתות עבר לתרגול מסתגל או לבחירת סגנון. ראו
+  tests.md, "רגרסיות שנמצאו ותוקנו". לא טופל בפיצ'ר הזה (לא התבקש) — מועמד סביר לניקוי
+  קוד עתידי אם המשתמש ירצה.
 
 ## Docs
 - [Product spec](./product-spec.md)

@@ -14,7 +14,7 @@ const ROTEM = 1;
 
 /** Mika's topics, in the order the picker shows them. */
 const NUMBERS = 0; // מספרים עד 20 — five styles
-const ADD10 = 1; // חיבור עד 10 — one style, so levels stay
+const ADD10 = 1; // חיבור עד 10 — one style; became adaptive later, see below
 const PLACE = 4; // עשרות ויחידות — six styles
 // חיבור וחיסור עד 20 (index 3) also has two styles; clearer-explanations.spec.ts walks it.
 
@@ -41,12 +41,16 @@ test("a topic with several styles asks which style, not which level", async ({ p
 });
 
 test("a topic with one style is untouched and never shows the new screen", async ({ page }) => {
-  // "חיבור עד 10" is one kind of question. A screen offering a single choice teaches a
-  // child that there is a decision here when there is not.
+  // "חיבור עד 10" is one kind of question — a screen offering a single choice teaches a
+  // child that there is a decision here when there is not. It used to land on the level
+  // screen to prove that; it moved to adaptive difficulty later
+  // (docs/features/mika-adaptive-difficulty), which is its own, different way of never
+  // asking a single-choice question — it does not ask at all, straight into practice.
+  // What still matters here is style-lessons' own concern: the style screen never shows.
   await openTopic(page, MIKA, ADD10);
 
-  await expect(page.locator(".level-card")).toHaveCount(3);
   await expect(page.locator(".style-card")).toHaveCount(0);
+  await expect(page.locator(".problem-text")).toBeVisible();
 });
 
 test("a grade that has not been classified into styles never shows the style screen", async ({
@@ -65,12 +69,21 @@ test("a grade that has not been classified into styles never shows the style scr
   await expect(page.locator(".problem-text")).toBeVisible();
 });
 
-test("every one of Mika's topics lands somewhere, and never on both", async ({ page }) => {
+test("every one of Mika's topics lands somewhere, and never on both a style and a level screen", async ({
+  page,
+}) => {
   for (const topic of [0, 1, 2, 3, 4]) {
     await openTopic(page, MIKA, topic);
     const styles = await page.locator(".style-card").count();
     const levels = await page.locator(".level-card").count();
-    expect(styles > 0 || levels > 0, `topic ${topic} opened on nothing`).toBe(true);
+    // A third valid landing spot since docs/features/mika-adaptive-difficulty: an
+    // adaptive topic (חיבור/חיסור עד 10) skips both pickers and lands straight on
+    // practice — still "somewhere", just not a choice screen at all.
+    const straightToPractice = await page.locator(".problem-text").count();
+    expect(
+      styles > 0 || levels > 0 || straightToPractice > 0,
+      `topic ${topic} opened on nothing`,
+    ).toBe(true);
     expect(styles > 0 && levels > 0, `topic ${topic} opened on both screens`).toBe(false);
   }
 });
@@ -146,14 +159,11 @@ test("leaving a lesson returns to the styles, not to the levels", async ({ page 
   await expect(page.locator(".level-card")).toHaveCount(0);
 });
 
-test("leaving a level still returns to the levels", async ({ page }) => {
-  await openTopic(page, MIKA, ADD10);
-  await page.locator(".level-card").first().click();
-  await expect(page.locator(".problem-text")).toBeVisible();
-
-  await page.locator(".link-button").first().click();
-  await expect(page.locator(".level-card")).toHaveCount(3);
-});
+// "leaving a level still returns to the levels" used to live here, walking "חיבור עד 10"
+// as the one remaining single-style level-based topic. docs/features/mika-adaptive-
+// difficulty converted it (and its grade ב׳ counterpart) to adaptive — the level screen
+// is not reachable through any route left in the live app (see the same note in
+// tests/e2e/heading-wrap-balance.spec.ts), so there is nothing left to walk back from.
 
 // ---------------------------------------------------------------- the history
 

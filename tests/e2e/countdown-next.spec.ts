@@ -15,7 +15,14 @@ import { test, expect, type Page } from "@playwright/test";
 
 const ALWAYS_WRONG = "999999";
 
-/** Mika's "חיבור עד 10" — one style, so it is still entered by level: ten questions. */
+/**
+ * Mika's "מספרים עד 20" — a style-based topic, entered by picking a style (not a level).
+ * Deliberately **not** one of her topics that moved to adaptive difficulty
+ * (docs/features/mika-adaptive-difficulty: חיבור/חיסור עד 10): this suite harvests wrong
+ * answers and then replays the exact same questions from the start via "נסו שוב" — which
+ * only works against a fixed, written question list. An adaptive topic regenerates fresh
+ * random questions on every fresh entry, so the harvested answers would no longer match.
+ */
 async function openLevel(page: Page) {
   await page.goto("/learn-math/");
   await page.evaluate(() => localStorage.clear());
@@ -23,8 +30,8 @@ async function openLevel(page: Page) {
   await page.locator(".student-card").first().click();
   // Mika now has two grades available; this suite is about her grade 1 (א׳) content.
   await page.locator(".grade-card").first().click();
-  await page.locator(".topic-card").nth(1).click();
-  await page.locator(".level-card").first().click();
+  await page.locator(".topic-card").first().click();
+  await page.locator(".style-card").first().click();
 }
 
 /**

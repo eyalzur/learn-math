@@ -38,7 +38,7 @@ test.beforeEach(async ({ page }) => {
   await open(page);
 });
 
-test("picking a student shows the grade's topics, and a topic shows its levels", async ({
+test("picking a student shows the grade's topics, and a topic leads somewhere to practise", async ({
   page,
 }) => {
   await page.locator(".student-card").nth(MIKA).click();
@@ -56,8 +56,14 @@ test("picking a student shows the grade's topics, and a topic shows its levels",
     await topics.first().locator(".topic-title").innerText(),
   );
 
+  // A topic leads to a level, a style, or straight into practice (an adaptive topic,
+  // docs/features/mika-adaptive-difficulty) — which one is this test's sibling below.
   await topics.nth(1).click();
-  await expect(page.locator(".level-card")).toHaveCount(3);
+  const landed =
+    (await page.locator(".level-card").count()) ||
+    (await page.locator(".style-card").count()) ||
+    (await page.locator(".problem-text").count());
+  expect(landed, "picking a topic opened on nothing").toBeGreaterThan(0);
 });
 
 test("grade 1 has three levels of ten questions for every topic", async ({ page }) => {
@@ -73,7 +79,14 @@ test("grade 1 has three levels of ten questions for every topic", async ({ page 
     await page.locator(".topic-card").nth(t).click();
     const levels = page.locator(".level-card");
     if (!(await levels.count())) {
-      await expect(page.locator(".style-card").first()).toBeVisible();
+      const styles = page.locator(".style-card");
+      if (await styles.count()) {
+        await expect(styles.first()).toBeVisible();
+      } else {
+        // No style, no level: an adaptive topic (docs/features/mika-adaptive-difficulty)
+        // lands straight on practice instead.
+        await expect(page.locator(".problem-text")).toBeVisible();
+      }
       await page.getByRole("button", { name: "← חזרה" }).click();
       continue;
     }
@@ -92,9 +105,12 @@ test("grade 1 has three levels of ten questions for every topic", async ({ page 
 /**
  * Enters the lesson chooser a topic actually shows, and reports the chosen lesson's name.
  *
- * Grade 1's multi-style topics are entered by style; the rest still by level. Tests that
- * are about history or navigation do not care which — they care that a lesson was entered
- * and what it was called.
+ * Grade 1's multi-style topics are entered by style; a written-level topic still by
+ * level; an adaptive topic (docs/features/mika-adaptive-difficulty) is already on
+ * practice with nothing to pick, and no level/style name to report (same empty
+ * `levelTitle` an adaptive topic already records in history). Tests that are about
+ * history or navigation do not care which of the three it was — they care that a lesson
+ * was entered and what it was called.
  */
 async function enterFirstLesson(page: Page): Promise<string> {
   const style = page.locator(".style-card").first();
@@ -104,18 +120,21 @@ async function enterFirstLesson(page: Page): Promise<string> {
     return title;
   }
   const level = page.locator(".level-card").first();
-  const title = await level.locator(".level-title").innerText();
-  await level.click();
-  return title;
+  if (await page.locator(".level-card").count()) {
+    const title = await level.locator(".level-title").innerText();
+    await level.click();
+    return title;
+  }
+  return "";
 }
 
 test("a level practises only its own topic", async ({ page }) => {
   // Every question in "חיסור עד 10" must be a subtraction — the whole point of choosing
-  // a topic is not getting a mixed sample.
+  // a topic is not getting a mixed sample. Adaptive now (docs/features/mika-adaptive-
+  // difficulty), so it lands straight on practice with no level to pick.
   await page.locator(".student-card").nth(MIKA).click();
   await page.locator(".grade-card").first().click();
   await page.getByText("חיסור עד 10", { exact: true }).click();
-  await page.locator(".level-card").first().click();
 
   for (let i = 0; i < 10; i++) {
     const prompt = await page.locator(".problem-text").innerText();
@@ -187,7 +206,13 @@ test("history is newest first", async ({ page }) => {
     await enterFirstLesson(page);
     await playLevel(page, "999999");
     await page.getByRole("button", { name: "חזרה לתפריט" }).click();
-    await page.getByRole("button", { name: "← חזרה" }).click();
+    // A style-based or written-level topic lands one screen short of the topics list
+    // (styles/levels), needing one more "← חזרה"; an adaptive topic
+    // (docs/features/mika-adaptive-difficulty) goes there directly, so only click again
+    // if the topics list is not already showing.
+    if (!(await page.locator(".topic-card").count())) {
+      await page.getByRole("button", { name: "← חזרה" }).click();
+    }
   }
 
   const second = await page.locator(".topic-card").nth(1).locator(".topic-title").innerText();
