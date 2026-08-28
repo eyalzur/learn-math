@@ -15,17 +15,20 @@ import { test, expect, type Page } from "@playwright/test";
 
 const ALWAYS_WRONG = "999999";
 
-/** Mika's "חיבור עד 10" — one style, so it is still entered by level: ten questions.
+/** Mika's "מספרים עד 20" — a style-based topic, entered by picking a style (not a level).
  *  Same fixed entry point countdown-next.spec.ts uses, for the same reason: predictable
- *  navigation to a real Practice screen without depending on this feature's own UI. */
+ *  navigation to a real Practice screen without depending on this feature's own UI, and
+ *  deliberately not one of the topics that moved to adaptive difficulty
+ *  (docs/features/mika-adaptive-difficulty), which no longer have a level/style card to
+ *  click at all. */
 async function openLevel(page: Page) {
   await page.goto("/learn-math/");
   await page.evaluate(() => localStorage.clear());
   await page.goto("/learn-math/");
   await page.locator(".student-card").first().click();
   await page.locator(".grade-card").first().click();
-  await page.locator(".topic-card").nth(1).click();
-  await page.locator(".level-card").first().click();
+  await page.locator(".topic-card").first().click();
+  await page.locator(".style-card").first().click();
 }
 
 /** Answers the first question wrong to read the right answer off the feedback, then
