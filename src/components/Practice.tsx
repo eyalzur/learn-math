@@ -3,7 +3,10 @@ import { useEffect, useRef, useState } from "react";
 import { isHebrewPrompt, promptSegments } from "../data/curriculum";
 import type { Diagnosis } from "../data/diagnose";
 import { diagnose } from "../data/diagnose";
+import type { NotebookPage } from "../data/notebook";
+import { createBlankPage } from "../data/notebook";
 import { buildExplanation, explanationSpeechParts } from "../data/questionExplanation";
+import { PracticeNotebook } from "./PracticeNotebook";
 import { QuestionExplanation } from "./QuestionExplanation";
 import { segmented } from "./segmented";
 import { primeVoices, speak, speechParts, speechSupported, stopSpeaking } from "../data/speech";
@@ -54,6 +57,17 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
   /** The child asked to stay here. Cleared when the question changes, never before. */
   const [countdownStopped, setCountdownStopped] = useState(false);
+
+  /**
+   * The notebook's pages, and whether it's open. Deliberately state on *this* component,
+   * not a screen of its own in App.tsx: that's what lets it survive across questions
+   * (nothing here resets when `index` changes) while still disappearing the moment the
+   * child leaves practice — the same lifecycle every other piece of state above already
+   * has, not a new one built for this.
+   */
+  const [notebookOpen, setNotebookOpen] = useState(false);
+  const [pages, setPages] = useState<NotebookPage[]>(() => [createBlankPage()]);
+  const [currentPageIndex, setCurrentPageIndex] = useState(0);
 
   // Voices load asynchronously, so warm the list before the first press.
   useEffect(primeVoices, []);
@@ -254,6 +268,28 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
     else next();
   }
 
+  // Opening the notebook must not let the countdown or a read-aloud sentence carry on
+  // somewhere the child isn't looking at — same stop calls a real navigation away from
+  // this question would trigger.
+  function openNotebook() {
+    stopCountdown();
+    stopSpeaking();
+    setSpeakingBox(null);
+    setNotebookOpen(true);
+  }
+
+  if (notebookOpen) {
+    return (
+      <PracticeNotebook
+        pages={pages}
+        currentPageIndex={currentPageIndex}
+        onPagesChange={setPages}
+        onCurrentPageIndexChange={setCurrentPageIndex}
+        onClose={() => setNotebookOpen(false)}
+      />
+    );
+  }
+
   return (
     <div className="practice">
       <div className="practice-header">
@@ -269,6 +305,9 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
         <span className="progress">
           שאלה {index + 1} מתוך {lesson.questions.length}
         </span>
+        <button type="button" className="link-button notebook-open-button" onClick={openNotebook}>
+          📝 מחברת
+        </button>
       </div>
       <h2>{lesson.title}</h2>
       {/* Outside .problem-box on purpose: that box forces a direction, and a button
