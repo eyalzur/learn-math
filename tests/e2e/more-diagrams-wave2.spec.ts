@@ -36,11 +36,16 @@ import type { Question } from "../../src/data/curriculum";
  * through `evaluateAll`.
  */
 
+// Every student now picks a grade first (docs/features/any-grade-any-student) — this file
+// only ever uses Rotem (ו׳, third card) and Omer (ח׳, fourth card).
+const GRADE_CARD_INDEX: Record<string, number> = { "רותם": 2, "עומר": 3 };
+
 async function open(page: Page, student: string, topic: string) {
   await page.goto("/learn-math/");
   await page.evaluate(() => localStorage.clear());
   await page.goto("/learn-math/");
   await page.locator(".student-card").filter({ hasText: student }).click();
+  await page.locator(".grade-card").nth(GRADE_CARD_INDEX[student]).click();
   await page.locator(".topic-card").filter({ hasText: topic }).click();
 }
 

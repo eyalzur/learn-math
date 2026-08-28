@@ -40,6 +40,7 @@ test("a topic card still enters practice directly, unchanged, with a separate le
   page,
 }) => {
   await page.locator(".student-card").nth(ROTEM).click();
+  await page.locator(".grade-card").nth(2).click(); // grade ו׳ (docs/features/any-grade-any-student)
 
   const row = page.locator(".topic-row").first();
   await expect(row.locator(".lesson-link")).toBeVisible();
@@ -53,6 +54,7 @@ test("a topic card still enters practice directly, unchanged, with a separate le
 
 test("the lesson screen has no answer input and no check button", async ({ page }) => {
   await page.locator(".student-card").nth(OMER).click();
+  await page.locator(".grade-card").nth(3).click(); // grade ח׳ (docs/features/any-grade-any-student)
   await page.locator(".lesson-link").first().click();
 
   await expect(page.locator(".answer-input")).toHaveCount(0);
@@ -61,6 +63,7 @@ test("the lesson screen has no answer input and no check button", async ({ page 
 
 test("the lesson screen shows real learning content, not a blank screen", async ({ page }) => {
   await page.locator(".student-card").nth(OMER).click();
+  await page.locator(".grade-card").nth(3).click(); // grade ח׳ (docs/features/any-grade-any-student)
   const topicTitle = await page.locator(".topic-title").first().innerText();
   await page.locator(".lesson-link").first().click();
 
@@ -74,6 +77,7 @@ test("the lesson screen shows real learning content, not a blank screen", async 
 
 test("the last page's '→ לתרגול' enters practice for the same topic", async ({ page }) => {
   await page.locator(".student-card").nth(ROTEM).click();
+  await page.locator(".grade-card").nth(2).click(); // grade ו׳ (docs/features/any-grade-any-student)
   const topicTitle = await page.locator(".topic-title").first().innerText();
   await page.locator(".lesson-link").first().click();
 
@@ -94,6 +98,7 @@ test("'← חזרה' from the lesson screen returns to the same student's topic 
   page,
 }) => {
   await page.locator(".student-card").nth(ROTEM).click();
+  await page.locator(".grade-card").nth(2).click(); // grade ו׳ (docs/features/any-grade-any-student)
   const topicsBefore = await page.locator(".topic-title").allInnerTexts();
   await page.locator(".lesson-link").first().click();
 
@@ -106,6 +111,7 @@ test("an adaptive topic's lesson pages through one worked example per difficulty
   page,
 }) => {
   await page.locator(".student-card").nth(OMER).click();
+  await page.locator(".grade-card").nth(3).click(); // grade ח׳ (docs/features/any-grade-any-student)
   await page.locator(".lesson-link").first().click();
 
   const prev = page.getByRole("button", { name: "← הקודם" });

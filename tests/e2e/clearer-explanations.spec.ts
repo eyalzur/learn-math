@@ -31,8 +31,8 @@ async function start(page: Page, student: number, topicIdx: number, pick: number
   await page.evaluate(() => localStorage.clear());
   await page.goto("/learn-math/");
   await page.locator(".student-card").nth(student).click();
-  // Mika (student 0) now has two grades available; every route this file uses for her is
-  // grade 1 (א׳). Rotem (student 1) has just the one grade and never sees this screen.
+  // Every student picks a grade first (docs/features/any-grade-any-student). This helper
+  // is only ever called for Mika (student 0), whose route here is always grade 1 (א׳).
   if (student === 0) await page.locator(".grade-card").first().click();
   await page.locator(".topic-card").nth(topicIdx).click();
   if (pick === null) {
@@ -45,12 +45,14 @@ async function start(page: Page, student: number, topicIdx: number, pick: number
 }
 
 /** Rotem's "שברים עשרוניים" — adaptive, so entering it lands straight on practice with a
- *  generated question rather than a chosen level. */
+ *  generated question rather than a chosen level. Every student now picks a grade first
+ *  (docs/features/any-grade-any-student) — Rotem's usual grade is ו׳, third card. */
 async function enterDecimals(page: Page) {
   await page.goto("/learn-math/");
   await page.evaluate(() => localStorage.clear());
   await page.goto("/learn-math/");
   await page.locator(".student-card").nth(1).click(); // Rotem
+  await page.locator(".grade-card").nth(2).click(); // grade ו׳
   await page.locator(".topic-card").nth(1).click(); // שברים עשרוניים
 }
 

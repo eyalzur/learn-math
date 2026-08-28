@@ -40,8 +40,10 @@ async function open(page: Page) {
 
 async function pickStudent(page: Page, index: number) {
   await page.locator(".student-card").nth(index).click();
-  // Mika (index 0) now has two grades available; every route here is grade 1 (א׳).
-  if (index === 0) await page.locator(".grade-card").first().click();
+  // Every student now picks a grade first (docs/features/any-grade-any-student). Which
+  // one doesn't matter for what these tests check, except for Mika (index 0), who needs
+  // grade א׳ specifically — and it happens to be the first card for her too.
+  await page.locator(".grade-card").first().click();
 }
 
 test.beforeEach(async ({ page }) => {
@@ -132,6 +134,10 @@ test("you can switch student from the grade screen", async ({ page }) => {
   await pickStudent(page, 2);
   await expect(page.locator(".greeting")).toContainText("עומר");
 
+  // Every student now picks a grade first, so getting back to the student picker from
+  // the topic list is two steps: back to the grade choice, then switch student from there
+  // (docs/features/any-grade-any-student).
+  await page.getByRole("button", { name: "← חזרה" }).click();
   await page.getByRole("button", { name: "← החלף תלמיד" }).click();
   await expect(page.locator(".student-picker h1")).toBeVisible();
 
@@ -152,6 +158,7 @@ test("the chosen student is remembered across a reload", async ({ page }) => {
 
 test("switching student is also forgotten across a reload", async ({ page }) => {
   await pickStudent(page, 1);
+  await page.getByRole("button", { name: "← חזרה" }).click();
   await page.getByRole("button", { name: "← החלף תלמיד" }).click();
   await page.reload();
 

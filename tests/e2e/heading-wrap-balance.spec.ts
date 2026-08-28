@@ -42,6 +42,7 @@ test("the grade picker's heading balances — the reported case", async ({ page 
 
 test("the topic picker's heading balances", async ({ page }) => {
   await page.locator(".student-card").nth(ROTEM).click();
+  await page.locator(".grade-card").nth(2).click(); // grade ו׳ (docs/features/any-grade-any-student)
   await expectBalancedH1(page, "מה נתרגל היום?");
 });
 

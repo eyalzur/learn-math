@@ -23,8 +23,9 @@ async function openTopic(page: Page, student: number, topic: number) {
   await page.evaluate(() => localStorage.clear());
   await page.goto("/learn-math/");
   await page.locator(".student-card").nth(student).click();
-  // Mika now has two grades available; every route here is grade 1 (א׳).
-  if (student === MIKA) await page.locator(".grade-card").first().click();
+  // Every student now picks a grade first (docs/features/any-grade-any-student). Mika's
+  // route here is always grade א׳ (first card); Rotem's is grade ו׳ (third card).
+  await page.locator(".grade-card").nth(student === MIKA ? 0 : 2).click();
   await page.locator(".topic-card").nth(topic).click();
 }
 
@@ -177,7 +178,10 @@ test("history says which style was practised, not just which topic", async ({ pa
     await page.getByRole("button", { name: /הבא|סיום/ }).click();
   }
 
-  await page.goto("/learn-math/");
+  // A reload would resume inside the style picker just entered, not the topics list
+  // (docs/features/any-grade-any-student) — walk back through the UI instead.
+  await page.getByRole("button", { name: "חזרה לתפריט" }).click();
+  await page.getByRole("button", { name: "← חזרה" }).click();
   await page.locator(".history-link").click();
   await expect(page.locator("body")).toContainText("עשרות ויחידות · כמה עשרות");
 });
@@ -189,7 +193,9 @@ test("a child who cannot read gets the example spoken, one button per card", asy
   // Read-aloud is the setting that exists for exactly this child; the speaker follows it.
   await expect(page.locator(".style-speak")).toHaveCount(0);
 
-  await page.goto("/learn-math/");
+  // A reload would resume inside the style picker just entered, not the topics list
+  // (docs/features/any-grade-any-student) — walk back through the UI instead.
+  await page.getByRole("button", { name: "← חזרה" }).click();
   await page.locator(".read-aloud-switch").click();
   await page.locator(".topic-card").nth(PLACE).click();
   await expect(page.locator(".style-speak")).toHaveCount(6);
