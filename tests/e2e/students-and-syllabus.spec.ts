@@ -109,21 +109,23 @@ test("every question in every level belongs to its own grade's syllabus", async 
   expect(offenders).toEqual([]);
 });
 
-test("picking a level runs its ten questions and ends on a score summary", async ({
+test("picking a topic runs a full practice and ends on a score summary", async ({
   page,
 }) => {
-  // A level holds ten; topic 1 still offers levels because it holds one kind of question.
+  // Topic 1 ("חיבור עד 10") moved to adaptive difficulty
+  // (docs/features/mika-adaptive-difficulty) and now enters practice directly, twenty
+  // questions instead of the ten a written level used to hold — the behaviour this test
+  // is actually about (a full run ends on a score summary) is unchanged.
   await openLevels(page, 0, 1);
-  await page.locator(".level-card").first().click();
 
-  for (let i = 1; i <= 10; i++) {
-    await expect(page.locator(".progress")).toContainText(`שאלה ${i} מתוך 10`);
+  for (let i = 1; i <= 20; i++) {
+    await expect(page.locator(".progress")).toContainText(`שאלה ${i} מתוך 20`);
     await page.locator(".answer-input").fill("0");
     await page.getByRole("button", { name: "בדיקה" }).click();
     await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
   }
 
-  await expect(page.locator(".result .score")).toContainText("מתוך 10");
+  await expect(page.locator(".result .score")).toContainText("מתוך 20");
 });
 
 test("you can switch student from the grade screen", async ({ page }) => {
@@ -188,7 +190,6 @@ test("a bare expression is shown left-to-right with a trailing equals sign", asy
   // Topic 1 is "חיבור עד 10" — bare arithmetic. Topic 0 is number-sense word questions,
   // which are RTL by design and covered by the sibling test above.
   await openLevels(page, 0, 1);
-  await page.locator(".level-card").first().click();
 
   const box = page.locator(".problem-box");
   await expect(box).toHaveClass(/box-ltr/);

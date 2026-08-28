@@ -1,5 +1,21 @@
 import type { StyledQuestion, Topic } from "./curriculum";
 import { level } from "./level";
+import {
+  generateAdd10Question,
+  nextAdd10Difficulty,
+  ADD10_MIN_DIFFICULTY,
+  ADD10_MAX_DIFFICULTY,
+  ADD10_INITIAL_DIFFICULTY,
+  ADD10_QUESTION_COUNT,
+} from "./adaptiveAdd10";
+import {
+  generateSub10Question,
+  nextSub10Difficulty,
+  SUB10_MIN_DIFFICULTY,
+  SUB10_MAX_DIFFICULTY,
+  SUB10_INITIAL_DIFFICULTY,
+  SUB10_QUESTION_COUNT,
+} from "./adaptiveSub10";
 
 /**
  * Grade 1, organised topic by topic so a student can drill the thing that is
@@ -64,6 +80,16 @@ export const grade1Topics: Topic[] = [
     id: "add10",
     title: "חיבור עד 10",
     reviewed: true,
+    // Pilot topic's own note (docs/features/adaptive-difficulty/architecture.md) applies
+    // here too: the written questions below stay, only no longer the entry point.
+    adaptive: {
+      generate: generateAdd10Question,
+      minDifficulty: ADD10_MIN_DIFFICULTY,
+      maxDifficulty: ADD10_MAX_DIFFICULTY,
+      initialDifficulty: ADD10_INITIAL_DIFFICULTY,
+      nextDifficulty: nextAdd10Difficulty,
+      questionCount: ADD10_QUESTION_COUNT,
+    },
     levels: [
       level("easy", [
         { id: "g1-add10-e1", topic: "חיבור עד 10", style: "add10", prompt: "1 + 2", answer: 3, hints: ["לחבר זה להוסיף: מתחילים ממספר אחד וסופרים קדימה", "תתחילי מ-`2` ותספרי `1` צעדים קדימה"] as const, analogy: "היו לך 1 סוכריות וקיבלת עוד 2" },
@@ -107,6 +133,14 @@ export const grade1Topics: Topic[] = [
     id: "sub10",
     title: "חיסור עד 10",
     reviewed: true,
+    adaptive: {
+      generate: generateSub10Question,
+      minDifficulty: SUB10_MIN_DIFFICULTY,
+      maxDifficulty: SUB10_MAX_DIFFICULTY,
+      initialDifficulty: SUB10_INITIAL_DIFFICULTY,
+      nextDifficulty: nextSub10Difficulty,
+      questionCount: SUB10_QUESTION_COUNT,
+    },
     levels: [
       level("easy", [
         { id: "g1-sub10-e1", topic: "חיסור עד 10", style: "sub10", prompt: "3 − 1", answer: 2, hints: ["לחסר זה לקחת: סופרים אחורה מהמספר הגדול", "תתחילי מ-`3` ותספרי `1` צעדים אחורה"] as const, analogy: "היו 3 מדבקות, לקחו 1" },

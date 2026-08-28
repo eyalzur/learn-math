@@ -64,18 +64,23 @@ test("grade א׳ keeps its original five topics, unchanged by the new grade", as
   }
 });
 
-test("grade ב׳'s topics run three levels of ten questions, same shape as grade א׳", async ({
+test("grade ב׳'s topics are both adaptive, entered directly with no level to pick", async ({
   page,
 }) => {
-  // חיבור עד 100 is now adaptive (see docs/features/adaptive-difficulty) and skips the
-  // level picker on purpose — חיסור עד 100 is its untouched twin, still level-based.
+  // This test used to describe the opposite: three written levels of ten questions, the
+  // same shape as grade א׳'s topics. חיבור עד 100 became adaptive first (see
+  // docs/features/adaptive-difficulty), and חיסור עד 100 — its "untouched twin" at the
+  // time — followed later (docs/features/mika-adaptive-difficulty). Grade ב׳ now has no
+  // level-based topic left at all; both enter straight into a 20-question practice.
   await page.locator(".student-card").nth(MIKA).click();
   await page.locator(".grade-card").nth(1).click();
-  await page.locator(".topic-card", { hasText: "חיסור עד 100" }).click();
 
-  await expect(page.locator(".level-card")).toHaveCount(3);
-  await page.locator(".level-card").first().click();
-  await expect(page.locator(".progress")).toContainText("מתוך 10");
+  for (const title of ["חיבור עד 100", "חיסור עד 100"]) {
+    await page.locator(".topic-card", { hasText: title }).click();
+    await expect(page.locator(".level-card")).toHaveCount(0);
+    await expect(page.locator(".progress")).toContainText("מתוך 20");
+    await page.locator(".link-button").first().click(); // ← חזרה, back to the topics list
+  }
 });
 
 test("a grade ב׳ arithmetic problem still renders left-to-right inside the RTL page", async ({
@@ -86,7 +91,6 @@ test("a grade ב׳ arithmetic problem still renders left-to-right inside the RTL
   await page.locator(".student-card").nth(MIKA).click();
   await page.locator(".grade-card").nth(1).click();
   await page.locator(".topic-card", { hasText: "חיסור עד 100" }).click();
-  await page.locator(".level-card").first().click();
 
   const box = page.locator(".problem-box, .problem-text").first();
   await expect(box).toBeVisible();

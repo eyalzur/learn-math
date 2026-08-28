@@ -14,8 +14,12 @@ import { test, expect, type Page } from "@playwright/test";
  *  4. Questions vary between sessions, even starting from the same initial difficulty.
  *  5. History keeps recording the topic, without inventing a level label that no longer
  *     exists (design.md, "היסטוריה").
- *  6. A topic that was not part of the pilot — חיסור עד 100, add100's twin — keeps
- *     showing three levels exactly like before (product-spec.md, "Out of Scope").
+ *
+ * Criterion 6 used to live here: "חיסור עד 100, the topic not in the pilot, still shows
+ * three levels exactly like before" (this feature's own product-spec.md explicitly left
+ * it Out of Scope). docs/features/mika-adaptive-difficulty converted חיסור עד 100 too —
+ * grade ב׳ now has zero level-based topics — so that criterion is superseded, not broken;
+ * see tests/e2e/mika-adaptive-difficulty.spec.ts for its replacement coverage.
  */
 
 const MIKA = 0;
@@ -145,15 +149,4 @@ test("history records the topic without a level suffix", async ({ page }) => {
   await expect(row).toBeVisible();
   await expect(row.locator(".history-what")).toHaveText("חיבור עד 100");
   await expect(row.locator(".history-score")).toHaveText("20/20");
-});
-
-test("חיסור עד 100, the topic not in the pilot, still shows three levels exactly like before", async ({
-  page,
-}) => {
-  await toGradeB(page);
-  await page.locator(".topic-card", { hasText: "חיסור עד 100" }).click();
-
-  await expect(page.locator(".level-card")).toHaveCount(3);
-  await page.locator(".level-card").first().click();
-  await expect(page.locator(".progress")).toContainText("מתוך 10");
 });

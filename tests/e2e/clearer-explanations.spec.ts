@@ -20,11 +20,13 @@ import { test, expect, type Page } from "@playwright/test";
  */
 
 /**
- * Grade 1's multi-style topics are entered by picking a style; every other topic still
- * asks for a level. Passing a string means "this style", a number means "this level", so
- * each call site says which screen it is actually going through.
+ * Grade 1's multi-style topics are entered by picking a style; a written-level topic
+ * still asks for a level. Passing a string means "this style", a number means "this
+ * level", `null` means "neither — an adaptive topic (docs/features/mika-adaptive-
+ * difficulty) that lands straight on practice", so each call site says which screen it is
+ * actually going through.
  */
-async function start(page: Page, student: number, topicIdx: number, pick: number | string) {
+async function start(page: Page, student: number, topicIdx: number, pick: number | string | null) {
   await page.goto("/learn-math/");
   await page.evaluate(() => localStorage.clear());
   await page.goto("/learn-math/");
@@ -33,7 +35,9 @@ async function start(page: Page, student: number, topicIdx: number, pick: number
   // grade 1 (א׳). Rotem (student 1) has just the one grade and never sees this screen.
   if (student === 0) await page.locator(".grade-card").first().click();
   await page.locator(".topic-card").nth(topicIdx).click();
-  if (typeof pick === "string") {
+  if (pick === null) {
+    // Adaptive: already on practice, nothing left to click.
+  } else if (typeof pick === "string") {
     await page.locator(".style-card").filter({ hasText: pick }).first().click();
   } else {
     await page.locator(".level-card").nth(pick).click();
@@ -200,7 +204,9 @@ test("a borrowing question shows the vertical with a borrow mark, and the explan
 });
 
 test("single-digit sums get a sentence but no column layout", async ({ page }) => {
-  await start(page, 0, 1, 0);
+  // חיבור עד 10 is adaptive now (docs/features/mika-adaptive-difficulty), always starting
+  // at its easiest tier — single-digit sums — so the first question already fits.
+  await start(page, 0, 1, null);
   await answerWrong(page);
 
   await expect(page.locator(".explanation-method")).toContainText("סופרים");
