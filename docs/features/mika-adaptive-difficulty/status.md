@@ -12,7 +12,7 @@
 
 **Current phase:** done — ממתין ל-PR review
 **Branch:** `feature/mika-adaptive-difficulty`
-**PR:** not opened yet
+**PR:** https://github.com/eyalzur/learn-math/pull/53
 
 ## Open questions / blockers
 - **Product (לא חוסם את שלב א׳, חוסם שלב ב׳):** שלושת נושאי כיתה א׳ הנותרים
