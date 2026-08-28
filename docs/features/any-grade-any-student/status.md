@@ -6,11 +6,11 @@
 ## Progress
 - [x] Product spec — product-manager — 2026-08-28
 - [x] Design — designer — 2026-08-28
-- [ ] Architecture — tech-lead — not started
+- [x] Architecture — tech-lead — 2026-08-28
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** tech-lead
+**Current phase:** developer
 **Branch:** `feature/any-grade-any-student`
 **PR:** not opened yet
 
