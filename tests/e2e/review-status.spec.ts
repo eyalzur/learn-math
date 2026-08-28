@@ -28,8 +28,10 @@ async function pickStudent(page: Page, index: number) {
   await page.evaluate(() => localStorage.clear());
   await page.goto("/learn-math/");
   await page.locator(".student-card").nth(index).click();
-  // Mika (index 0) now has two grades available; every route here is grade 1 (א׳).
-  if (index === 0) await page.locator(".grade-card").first().click();
+  // Every student now picks a grade first (docs/features/any-grade-any-student). Which
+  // one doesn't matter for what these tests check, except for Mika (index 0), who needs
+  // grade א׳ specifically — and it happens to be the first card for her too.
+  await page.locator(".grade-card").first().click();
 }
 
 const MIKA = 0, ROTEM = 1, OMER = 2;

@@ -186,7 +186,15 @@ test("finishing a practice records the topic, level and score, and it survives a
   const total = await playLevel(page, "999999");
   await expect(page.locator(".result")).toBeVisible();
 
+  // A reload doesn't resume inside the finished practice or its result screen
+  // (docs/features/any-grade-any-student) — it resumes at the deepest *menu* screen
+  // reached along the way, which for this topic is its style/level picker, one screen
+  // short of the topics list (and its history link) the same way "history is newest
+  // first" below already accounts for.
   await page.reload();
+  if (!(await page.locator(".topic-card").count())) {
+    await page.getByRole("button", { name: "← חזרה" }).click();
+  }
   await page.getByRole("button", { name: "ההתקדמות שלי →" }).click();
 
   const row = page.locator(".history-row").first();

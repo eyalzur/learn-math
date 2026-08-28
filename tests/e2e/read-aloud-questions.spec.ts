@@ -199,11 +199,14 @@ test("the setting belongs to the student, not the device", async ({ page }) => {
   await page.getByRole("button", { name: "← חזרה" }).click();
   await page.getByRole("button", { name: "← החלף תלמיד" }).click();
   await page.locator(".student-card").nth(1).click();
+  // Every student now picks a grade first (docs/features/any-grade-any-student).
+  await page.locator(".grade-card").nth(2).click(); // grade ו׳
   await expect(page.getByRole("switch")).toHaveAttribute("aria-checked", "false");
 
   // And the first child's choice is still there — the read-aloud setting, that is; her
   // grade choice was explicitly forgotten by stepping back to reconsider it earlier in
   // this test (a plain reload would have kept it, going back to pick again does not).
+  await page.getByRole("button", { name: "← חזרה" }).click();
   await page.getByRole("button", { name: "← החלף תלמיד" }).click();
   await page.locator(".student-card").nth(0).click();
   await page.locator(".grade-card").first().click();

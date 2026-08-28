@@ -8,9 +8,9 @@
 - [x] Design — designer — 2026-08-28
 - [x] Architecture — tech-lead — 2026-08-28
 - [x] Implementation — developer — 2026-08-28
-- [ ] Tests — qa — not started
+- [x] Tests — qa — 2026-08-28 (279/279 עוברות)
 
-**Current phase:** qa
+**Current phase:** done — ממתין ל-PR
 **Branch:** `feature/any-grade-any-student`
 **PR:** not opened yet
 

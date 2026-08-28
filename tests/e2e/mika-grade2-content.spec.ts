@@ -25,13 +25,16 @@ test.beforeEach(async ({ page }) => {
   await open(page);
 });
 
-test("picking Mika offers a choice between grade א׳ and grade ב׳, not an automatic switch", async ({
+test("picking Mika offers a choice that includes grade א׳ and grade ב׳, not an automatic switch", async ({
   page,
 }) => {
+  // Every student now sees every grade (docs/features/any-grade-any-student) — this test
+  // is no longer about Mika being special, just that her original two grades are both
+  // still genuinely present among the choices, in their original order.
   await page.locator(".student-card").nth(MIKA).click();
 
   await expect(page.locator("h1")).toHaveText("באיזו כיתה מתרגלים היום?");
-  await expect(page.locator(".grade-card")).toHaveCount(2);
+  await expect(page.locator(".grade-card")).toHaveCount(4);
   await expect(page.locator(".grade-card").nth(0)).toContainText("כיתה א׳");
   await expect(page.locator(".grade-card").nth(1)).toContainText("כיתה ב׳");
 });
@@ -45,7 +48,7 @@ test("both grades stay reachable in the same visit — picking one does not lose
 
   // Back to the grade choice — not stuck inside grade א׳.
   await page.locator(".link-button").first().click();
-  await expect(page.locator(".grade-card")).toHaveCount(2);
+  await expect(page.locator(".grade-card")).toHaveCount(4);
 
   // The other grade is right there, still offering its own topics.
   await page.locator(".grade-card").nth(1).click(); // כיתה ב׳
@@ -106,7 +109,7 @@ test("you can walk back from the topics screen to the grade choice, and from the
   await expect(page.locator(".topic-card")).toHaveCount(2);
 
   await page.locator(".link-button").first().click();
-  await expect(page.locator(".grade-card")).toHaveCount(2);
+  await expect(page.locator(".grade-card")).toHaveCount(4);
 
   await page.locator(".link-button").first().click();
   await expect(page.locator(".student-card")).toHaveCount(3);

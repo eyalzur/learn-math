@@ -55,6 +55,7 @@ async function openFractions(page: Page) {
   await page.evaluate(() => localStorage.clear());
   await page.goto("/learn-math/");
   await page.locator(".student-card").nth(ROTEM).click();
+  await page.locator(".grade-card").nth(2).click(); // grade ו׳ (docs/features/any-grade-any-student)
   await page.locator(".topic-card").nth(0).click();
 }
 
