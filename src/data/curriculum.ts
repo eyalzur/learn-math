@@ -139,13 +139,9 @@ export type Grade = {
 export interface Student {
   id: string;
   name: string;
+  /** This student's usual grade — shown on their card in `StudentPicker`. Every student
+   *  can actually practise in any grade (see `grades`); this is a label, not a filter. */
   gradeId: string;
-  /**
-   * The full set of grades this student can practise in, in display order — set only for
-   * a student with more than one. Absent means exactly one grade, `gradeId`, same as
-   * before this field existed; nothing about a single-grade student changes.
-   */
-  gradeIds?: string[];
 }
 
 const GRADE_1_TOPICS = [
@@ -157,7 +153,7 @@ const GRADE_1_TOPICS = [
 ];
 
 export const students: Student[] = [
-  { id: "mika", name: "מיקה", gradeId: "1", gradeIds: ["1", "2"] },
+  { id: "mika", name: "מיקה", gradeId: "1" },
   { id: "rotem", name: "רותם", gradeId: "6" },
   { id: "omer", name: "עומר", gradeId: "8" },
 ];
@@ -227,23 +223,6 @@ export function gradeById(id: string): Grade {
   const grade = grades.find((g) => g.id === id);
   if (!grade) throw new Error(`No grade "${id}"`);
   return grade;
-}
-
-export function gradeOf(student: Student): Grade {
-  try {
-    return gradeById(student.gradeId);
-  } catch {
-    throw new Error(`No grade "${student.gradeId}" for student "${student.id}"`);
-  }
-}
-
-/**
- * Every grade a student can practise in, in display order. A plain `[gradeOf(student)]`
- * for the common case — one grade, same as before this existed — so every existing
- * caller that only ever expected one grade keeps working without noticing this exists.
- */
-export function availableGrades(student: Student): Grade[] {
-  return student.gradeIds ? student.gradeIds.map(gradeById) : [gradeOf(student)];
 }
 
 /**

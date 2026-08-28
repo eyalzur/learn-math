@@ -6,7 +6,7 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
-| כל כיתה לכל תלמיד/ה | 🟡 בפיתוח | [status](./any-grade-any-student/status.md) |
+| כל כיתה לכל תלמיד/ה | 🟡 ב-QA | [status](./any-grade-any-student/status.md) |
 | מחברת תרגול | 🟢 done — מוזג ל-main | [status](./practice-notebook/status.md) |
 | שיעור לעומת תרגול — מסך לימוד לכל נושא | 🟢 done — מוזג ל-main | [status](./topic-lesson/status.md) |
 | רצועת האחוזים מתחלקת לפי האחוז שבשאלה, וההסבר אומר למה | 🟢 done — מוזג ל-main | [status](./percent-tenths-teaching/status.md) |

@@ -8,7 +8,7 @@ import { StylePicker } from "./components/StylePicker";
 import { History } from "./components/History";
 import { Practice } from "./components/Practice";
 import { Result } from "./components/Result";
-import { students, availableGrades } from "./data/curriculum";
+import { students, grades, gradeById } from "./data/curriculum";
 import type { Student, Topic, Question } from "./data/curriculum";
 import type { Lesson } from "./data/style";
 import { hasStyleLessons, stylesOf } from "./data/style";
@@ -18,7 +18,7 @@ import { readAloud as readAloudFor, setReadAloud } from "./data/preferences";
 import "./App.css";
 
 const STORAGE_KEY = "learn-math:student";
-const GRADE_STORAGE_KEY = "learn-math:grade";
+const MENU_POSITION_STORAGE_KEY = "learn-math:menu-position";
 
 /** localStorage throws in private mode in some browsers — remembering a preference is
  *  never worth taking the app down with it. */
@@ -40,27 +40,37 @@ function rememberStudent(id: string | null) {
   }
 }
 
-/** Which grade each multi-grade student last chose, keyed by student id — same
- *  reload-survives-but-switching-resets rule the student picker already follows, so
- *  choosing a grade behaves exactly as familiar as choosing a student does. */
-function loadGradeId(studentId: string): string | null {
+/**
+ * Where in the menu each student last was, keyed by student id — same
+ * reload-survives-but-switching-resets rule the student picker already follows, so
+ * returning to the app feels as familiar as choosing a student does.
+ *
+ * `topic` is present only once the student has gone deeper than the grade's topic list —
+ * absent means "home" (the topic list itself) is as deep as it goes.
+ */
+interface MenuPosition {
+  gradeId: string;
+  topic?: { id: string; kind: "styles" | "levels" };
+}
+
+function loadMenuPosition(studentId: string): MenuPosition | null {
   try {
-    const raw = localStorage.getItem(GRADE_STORAGE_KEY);
+    const raw = localStorage.getItem(MENU_POSITION_STORAGE_KEY);
     if (!raw) return null;
-    const saved = JSON.parse(raw) as Record<string, string>;
+    const saved = JSON.parse(raw) as Record<string, MenuPosition>;
     return saved[studentId] ?? null;
   } catch {
     return null;
   }
 }
 
-function rememberGradeId(studentId: string, gradeId: string | null) {
+function rememberMenuPosition(studentId: string, position: MenuPosition | null) {
   try {
-    const raw = localStorage.getItem(GRADE_STORAGE_KEY);
-    const saved = raw ? (JSON.parse(raw) as Record<string, string>) : {};
-    if (gradeId === null) delete saved[studentId];
-    else saved[studentId] = gradeId;
-    localStorage.setItem(GRADE_STORAGE_KEY, JSON.stringify(saved));
+    const raw = localStorage.getItem(MENU_POSITION_STORAGE_KEY);
+    const saved = raw ? (JSON.parse(raw) as Record<string, MenuPosition>) : {};
+    if (position === null) delete saved[studentId];
+    else saved[studentId] = position;
+    localStorage.setItem(MENU_POSITION_STORAGE_KEY, JSON.stringify(saved));
   } catch {
     // ignore
   }
@@ -101,17 +111,46 @@ function freshAdaptiveSession(topic: Topic & { adaptive: NonNullable<Topic["adap
   return { difficulty: adaptive.initialDifficulty, streak: 0, answeredCount: 0, questions };
 }
 
+/**
+ * Where a returning student should land — the deepest screen their saved position still
+ * actually supports. Falls back a layer at a time (never throws, never guesses) whenever
+ * something about the saved position no longer matches today's data: a removed grade or
+ * topic, or a topic that has since moved to adaptive difficulty or switched between
+ * styles and levels. `gradeId === null` defers entirely to the grade gate, which already
+ * shows `GradePicker` in that case regardless of what this returns.
+ */
+function resolveScreen(studentId: string, gradeId: string | null): Screen {
+  if (gradeId === null) return { name: "home" };
+  const position = loadMenuPosition(studentId);
+  if (!position || position.gradeId !== gradeId || !position.topic) return { name: "home" };
+  let grade;
+  try {
+    grade = gradeById(gradeId);
+  } catch {
+    return { name: "home" };
+  }
+  const topic = grade.topicSets.find((t) => t.id === position.topic!.id);
+  if (!topic || topic.adaptive) return { name: "home" };
+  if (position.topic.kind === "styles" && hasStyleLessons(topic)) return { name: "styles", topic };
+  if (position.topic.kind === "levels" && !hasStyleLessons(topic)) return { name: "levels", topic };
+  return { name: "home" };
+}
+
 function App() {
   const [student, setStudent] = useState<Student | null>(loadStudent);
-  const [screen, setScreen] = useState<Screen>({ name: "home" });
-  /** Which of the student's available grades is active. Not part of `Screen` — like
-   *  `student`, it is decided before any screen renders, and every place that resets it
-   *  also resets `screen` to "home" in the same breath, so the two never drift apart.
-   *  Survives a reload the same way `student` does; only switching away from the grade
-   *  screen (or the student) clears it, never a refresh mid-session. */
+  /** Which grade is active. Not part of `Screen` — like `student`, it is decided before
+   *  any screen renders. Survives a reload the same way `student` does; only switching
+   *  away from the grade screen (or the student) clears it, never a refresh mid-session. */
   const [gradeId, setGradeId] = useState<string | null>(() => {
     const initial = loadStudent();
-    return initial ? loadGradeId(initial.id) : null;
+    return initial ? (loadMenuPosition(initial.id)?.gradeId ?? null) : null;
+  });
+  /** Starts wherever the student's saved menu position points, not always "home" — see
+   *  `resolveScreen`. */
+  const [screen, setScreen] = useState<Screen>(() => {
+    const initial = loadStudent();
+    if (!initial) return { name: "home" };
+    return resolveScreen(initial.id, loadMenuPosition(initial.id)?.gradeId ?? null);
   });
   /** The read-aloud setting is stored, not held in state; this forces a re-read of it. */
   const [, setReadAloudTick] = useState(0);
@@ -132,8 +171,9 @@ function App() {
   function selectStudent(next: Student) {
     rememberStudent(next.id);
     setStudent(next);
-    setGradeId(loadGradeId(next.id));
-    setScreen({ name: "home" });
+    const nextGradeId = loadMenuPosition(next.id)?.gradeId ?? null;
+    setGradeId(nextGradeId);
+    setScreen(resolveScreen(next.id, nextGradeId));
   }
 
   function switchStudent() {
@@ -144,9 +184,10 @@ function App() {
   }
 
   /** Choosing a grade, or explicitly stepping back to reconsider — either way this is
-   *  the one place that keeps `gradeId` and its stored copy in sync. */
+   *  the one place that keeps `gradeId` and its stored copy in sync. A new (or cleared)
+   *  grade always drops any deeper saved position — it belonged to the previous grade. */
   function chooseGrade(id: string | null) {
-    if (student) rememberGradeId(student.id, id);
+    if (student) rememberMenuPosition(student.id, id === null ? null : { gradeId: id });
     setGradeId(id);
   }
 
@@ -156,12 +197,22 @@ function App() {
    *  it. Every other topic is unaffected: `insideTopic` alone decides where it lands. */
   function enterTopic(topic: Topic) {
     if (topic.adaptive) {
+      if (student && gradeId) rememberMenuPosition(student.id, { gradeId });
       const session = freshAdaptiveSession(topic as Topic & { adaptive: NonNullable<Topic["adaptive"]> });
       setAdaptiveSession(session);
       setScreen({ name: "practice", topic, lesson: { title: topic.title, questions: session.questions } });
       return;
     }
-    setScreen(insideTopic(topic));
+    const dest = insideTopic(topic);
+    if (student && gradeId) {
+      rememberMenuPosition(
+        student.id,
+        dest.name === "styles" || dest.name === "levels"
+          ? { gradeId, topic: { id: topic.id, kind: dest.name } }
+          : { gradeId },
+      );
+    }
+    setScreen(dest);
   }
 
   /** The topic's card also offers "שיעור" as a secondary action (see
@@ -220,14 +271,9 @@ function App() {
     return <History student={student} onBack={() => setScreen({ name: "home" })} />;
   }
 
-  const grades = availableGrades(student);
-
-  // A student with more than one grade (today, only Mika) picks between them before
-  // anything else — this is deliberately not folded into `Screen`, see the `gradeId`
-  // declaration above. A student with exactly one grade never sees this: `grades.length
-  // > 1` is false, so this returns nothing and behaviour is unchanged from before this
-  // existed.
-  if (grades.length > 1 && gradeId === null) {
+  // Every student picks a grade before anything else — this is deliberately not folded
+  // into `Screen`, see the `gradeId` declaration above.
+  if (gradeId === null) {
     return (
       <GradePicker
         grades={grades}
@@ -238,7 +284,7 @@ function App() {
     );
   }
 
-  const grade = grades.length > 1 ? grades.find((g) => g.id === gradeId)! : grades[0];
+  const grade = grades.find((g) => g.id === gradeId)!;
   const readAloud = readAloudFor(student.id);
 
   function finish(topic: Topic | null, lesson: Lesson, correctCount: number) {
@@ -269,8 +315,8 @@ function App() {
         topics={grade.topicSets}
         onSelect={enterTopic}
         onLesson={enterLesson}
-        onBack={grades.length > 1 ? () => chooseGrade(null) : switchStudent}
-        backLabel={grades.length > 1 ? "← חזרה" : "← החלף תלמיד"}
+        onBack={() => chooseGrade(null)}
+        backLabel="← חזרה"
         onHistory={() => setScreen({ name: "history" })}
         readAloud={readAloud}
         onReadAloudChange={(value) => {
@@ -309,7 +355,10 @@ function App() {
         subheading={grade.label}
         levels={topic.levels}
         onSelect={(level) => setScreen({ name: "practice", topic, lesson: level })}
-        onBack={() => setScreen({ name: "home" })}
+        onBack={() => {
+          if (student && gradeId) rememberMenuPosition(student.id, { gradeId });
+          setScreen({ name: "home" });
+        }}
       />
     );
   }
@@ -328,7 +377,10 @@ function App() {
             lesson: { title: style.title, questions: style.questions },
           })
         }
-        onBack={() => setScreen({ name: "home" })}
+        onBack={() => {
+          if (student && gradeId) rememberMenuPosition(student.id, { gradeId });
+          setScreen({ name: "home" });
+        }}
         onSpeak={readAloud ? (text) => speak(speechParts([text])) : undefined}
       />
     );
@@ -373,8 +425,8 @@ function App() {
     topics={grade.topicSets}
     onSelect={enterTopic}
     onLesson={enterLesson}
-    onBack={grades.length > 1 ? () => chooseGrade(null) : switchStudent}
-    backLabel={grades.length > 1 ? "← חזרה" : "← החלף תלמיד"}
+    onBack={() => chooseGrade(null)}
+    backLabel="← חזרה"
     onHistory={() => setScreen({ name: "history" })}
   />;
 }
