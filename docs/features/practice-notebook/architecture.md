@@ -134,3 +134,48 @@ scale(zoom)`; חלון הצפייה מקבל `overflow: hidden` ו-`touch-action
 
 ## Open Questions
 None.
+
+## Implementation Notes
+
+נבנה בדיוק לפי התכנון — שני קבצים חדשים, שינויים ממוקדים בשני קבצים קיימים:
+
+- `src/data/notebook.ts` — `NotebookPage`, קבועי הגיאומטריה, `fillCellBlock`,
+  `clampZoom`/`zoomAroundPoint`/`computeFitTransform`/`minimapViewRect`. כל
+  הפונקציות טהורות, בלי תלות ב-DOM/React — ניתנות לבדיקת יחידה ישירה.
+- `src/components/PracticeNotebook.tsx` — הרכיב המלא. state עתיר-תדירות (pan/
+  zoom, מעקב אצבעות, ציור) יושב ב-`useRef`, לא `useState`: `pointermove` יכול
+  לירות עשרות פעמים בשנייה, ורינדור-מחדש של React על כל אחת מהן הוא בדיוק
+  העלות שהאב-טיפוס החיצוני נמנע ממנה בעזרת מניפולציה ישירה של ה-DOM
+  (`applyTransform`, עדכון המיני-מפה). זה נשמר כאן: שכבת ה-transform וקטע
+  המיני-מפה מעודכנים ישירות דרך `ref.current.style`, לא נתיב state→JSX.
+  `useState` נשאר רק למה שבאמת גורם לרינדור-UI (הכלי הנבחר, אחוז הזום המוצג,
+  דיאלוג האישור).
+- `src/components/Practice.tsx` — שלושה `useState` חדשים (`notebookOpen`,
+  `pages`, `currentPageIndex`), כפתור "📝 מחברת" בשורת הכותרת (אחרי "שאלה X
+  מתוך Y", לפני שום דבר אחר — סדר ה-DOM קובע את הסדר החזותי ב-RTL עם
+  `justify-content: space-between`), ופונקציית `openNotebook` שקוראת
+  ל-`stopCountdown()` ול-`stopSpeaking()`/`setSpeakingBox(null)` הקיימים
+  לפני `setNotebookOpen(true)`. `if (notebookOpen) return <PracticeNotebook .../>`
+  מוקדם ב-render, במקום ה-JSX הרגיל — לא עוטף אותו.
+- `src/App.css` — סעיף `/* ---- practice notebook ---- */` חדש בסוף הקובץ,
+  משתמש רק בטוקנים קיימים (`--accent`, `--accent-bg`, `--border`, `--text`,
+  `--text-h`, `--code-bg`, `--bg`, `--shadow`) פרט לצבע האדום להסרה/מחיקה
+  (`#dc2626`) — הועתק מ-`.feedback.wrong`/`.level-hard` הקיימים, לא הומצא.
+
+**אומת בדפדפן בפועל (לא רק build+lint):** הורצה סביבת dev מקומית ונבדק עם
+Playwright — פתיחת/סגירת המחברת שומרת את מצב התרגול (תשובה מוקלדת נשארת),
+ציור, הוספת/הסרת דפים, ניווט, זום (+/−/⤢), פינצ' דו-אצבעי דרך CDP touch
+אמיתי (לא PointerEvent מלאכותי) בלי שהוא משאיר דיו מיותר, ודיאלוג האישור —
+גם מופיע לדף עם תוכן וגם מדלג עליו לדף ריק, וגם המסלול "אישור" וגם "ביטול".
+בלי שגיאות קונסול בשום שלב.
+
+**באג אמיתי שנתפס ותוקן תוך כדי הבדיקה הידנית (לא הגיע מהתכנון, התגלה רק
+בבדיקה בדפדפן):** לא בקוד עצמו — בסקריפט הבדיקה הראשון: חישוב נקודת הלחיצה
+לפי `getBoundingClientRect()` של `.notebook-canvas` עצמו (1200×1600, הגודל
+המקומי הבלתי-חתוך) במקום `.notebook-stage` (חלון הצפייה החתוך בפועל) גרם
+ללחיצה "לצייר" מחוץ לאזור הנראה/אינטראקטיבי בפועל, וכך הראה בטעות שהסרת דף
+"עם תוכן" קרתה בלי אישור. תיקון הסקריפט (לא הקוד) אישר שההתנהגות בפועל
+נכונה — תזכורת שבדיקת "זה עובד" חייבת למדוד את מה שהמשתמש/ת באמת רואה
+ולוחצ/ת עליו, לא כל אלמנט DOM שנוח לתפוס.
+
+`npm run build` ו-`npm run lint` נקיים.

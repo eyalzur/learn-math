@@ -7,10 +7,10 @@
 - [x] Product spec — product-manager — 2026-08-28
 - [x] Design — designer — 2026-08-28
 - [x] Architecture — tech-lead — 2026-08-28
-- [ ] Implementation — developer — not started
+- [x] Implementation — developer — 2026-08-28
 - [ ] Tests — qa — not started
 
-**Current phase:** developer
+**Current phase:** qa
 **Branch:** `feature/practice-notebook`
 **PR:** not opened yet
 
@@ -20,4 +20,4 @@ None.
 ## Docs
 - [Product spec](./product-spec.md)
 - [Design](./design.md)
-- [Architecture](./architecture.md)
+- [Architecture](./architecture.md) (includes Implementation Notes)

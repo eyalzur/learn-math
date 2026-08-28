@@ -6,7 +6,7 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
-| מחברת תרגול | 🟡 in development | [status](./practice-notebook/status.md) |
+| מחברת תרגול | 🟡 in testing | [status](./practice-notebook/status.md) |
 | שיעור לעומת תרגול — מסך לימוד לכל נושא | 🟢 done — מוזג ל-main | [status](./topic-lesson/status.md) |
 | רצועת האחוזים מתחלקת לפי האחוז שבשאלה, וההסבר אומר למה | 🟢 done — מוזג ל-main | [status](./percent-tenths-teaching/status.md) |
 | אבחון "סטייה של אחד" — מתחבר לשיטה | 🟢 done — מוזג ל-main | [status](./offbyone-diagnosis-method/status.md) |
