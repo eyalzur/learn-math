@@ -10,9 +10,22 @@
 - [x] Implementation — developer — 2026-08-29
 - [x] Tests — qa — 2026-08-29
 
-**Current phase:** done — מוזג ל-`main` (287/287 בדיקות עברו)
-**Branch:** `feature/notebook-server-relay`
-**PR:** https://github.com/eyalzur/learn-math/pull/55 — מוזג 2026-08-29
+**Current phase:** done — מוזג ל-`main` (299/299 עם server-auto-deploy)
+**Branch:** `fix/notebook-teacher-wording` (הסבב הנוכחי)
+**PR:** https://github.com/eyalzur/learn-math/pull/55 — מוזג 2026-08-29 · סבב
+הרוויזיה: https://github.com/eyalzur/learn-math/pull/57 — מוזג 2026-08-29
+
+## סבב רוויזיה — 2026-08-29 (ניסוח)
+הפיצ'ר עצמו מוזג ונמצא באתר החי. אחרי שהמשתמש בדק אותו בפועל, הוא הכריע לשנות
+את כותרת חלון התמונה מ-"זה מה שהשרת קיבל" לניסוח שילד/ה מבינ/ה. שינוי מחרוזת
+אחת, ללא שינוי התנהגות. ההנמקה והקריטריון הכללי שנגזר ממנה: `product-spec.md`,
+סעיף "רוויזיה".
+
+- [x] Product spec — product-manager — 2026-08-29
+- [x] Design — designer — 2026-08-29
+- [x] Architecture — tech-lead — 2026-08-29
+- [x] Implementation — developer — 2026-08-29
+- [x] Tests — qa — 2026-08-29
 
 ## הפריסה בפועל
 השרת נפרס לגוגל קלאוד באותו יום וחי ב-

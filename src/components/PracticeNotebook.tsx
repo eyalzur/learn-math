@@ -508,8 +508,8 @@ export function PracticeNotebook({
       {serverImage && (
         <div className="notebook-confirm-backdrop">
           <div className="notebook-confirm-dialog notebook-image-dialog" role="alertdialog" aria-modal="true">
-            <h2>זה מה שהשרת קיבל</h2>
-            <img src={serverImage} alt="התמונה שהשרת יצר מהדף שנשלח" className="notebook-server-image" />
+            <h2>זה הדף שהמורה מסתכל עליו</h2>
+            <img src={serverImage} alt="הדף שכתבתם, כפי שהמורה רואה אותו" className="notebook-server-image" />
             <div className="notebook-confirm-actions">
               <button type="button" className="secondary" onClick={() => setServerImage(null)}>
                 סגירה
