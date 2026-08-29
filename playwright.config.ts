@@ -19,6 +19,13 @@ export default defineConfig({
     command: 'npm run dev -- --port 5173 --strictPort',
     url: 'http://localhost:5173/learn-math/',
     reuseExistingServer: !process.env.CI,
+    env: {
+      // A fixed, never-resolvable host (RFC 2606) so the "send to teacher" button always
+      // attempts a request tests can intercept with page.route — see
+      // tests/e2e/notebook-server-relay.spec.ts. No real notebook server is deployed yet,
+      // and even if this ever escaped mocking, .invalid can never resolve to a real host.
+      VITE_NOTEBOOK_SERVER_URL: 'https://notebook-server.invalid',
+    },
   },
   projects: [
     {

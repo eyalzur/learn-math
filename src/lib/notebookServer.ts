@@ -1,7 +1,8 @@
 /**
  * Talks to the notebook-server-relay server (docs/features/notebook-server-relay/) — sends
  * one page's filled-cell matrix and gets back the PNG the server rendered from it, as a
- * data URL ready for an <img src>. No Claude/Anthropic involved at this stage.
+ * data URL ready for an <img src>. This stage is a pure format-conversion relay, nothing
+ * more — see the product spec for why that boundary matters.
  */
 
 import { CELL, PAGE_HEIGHT, PAGE_WIDTH, type NotebookPage } from "../data/notebook";

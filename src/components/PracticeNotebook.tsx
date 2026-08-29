@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useReducer, useRef, useState } from "react";
 import type { DrawTool, NotebookPage, PanZoom } from "../data/notebook";
 import {
   CELL,
@@ -47,6 +47,13 @@ export function PracticeNotebook({
   const [zoomPercent, setZoomPercent] = useState(100);
   const [sendState, setSendState] = useState<"idle" | "sending" | "error">("idle");
   const [serverImage, setServerImage] = useState<string | null>(null);
+
+  // Drawing mutates currentPage.filledCells directly through refs, on purpose (see the
+  // comment on panZoomRef above) — a pointermove can fire dozens of times a second, and
+  // re-rendering React for each one would defeat that. But "does the page have content"
+  // (canSendToTeacher below) is read at render time, so something still has to tell React
+  // a render is due once a stroke actually finishes — this is that something.
+  const [, notifyContentChanged] = useReducer((c: number) => c + 1, 0);
 
   const stageRef = useRef<HTMLDivElement>(null);
   const stackRef = useRef<HTMLDivElement>(null);
@@ -216,6 +223,7 @@ export function PracticeNotebook({
     if (recordingTimer.current) clearTimeout(recordingTimer.current);
     if (recordingCells.current && currentPage) {
       const ctx = ctxRef.current;
+      if (recordingCells.current.length > 0) notifyContentChanged();
       for (const key of recordingCells.current) {
         currentPage.filledCells.delete(key);
         if (ctx) {
@@ -309,11 +317,13 @@ export function PracticeNotebook({
 
   function endPointer(e: React.PointerEvent<HTMLCanvasElement>) {
     if (!activePointers.current.has(e.pointerId)) return;
+    const wasDrawing = drawing.current;
     activePointers.current.delete(e.pointerId);
     drawing.current = false;
     lastPoint.current = null;
     singlePanStart.current = null;
     pinch.current = null;
+    if (wasDrawing) notifyContentChanged();
     if (activePointers.current.size === 1) {
       const [, p] = Array.from(activePointers.current.entries())[0];
       if (toolRef.current === "pan") {
@@ -351,6 +361,7 @@ export function PracticeNotebook({
   function clearCurrentPage() {
     if (!currentPage) return;
     currentPage.filledCells.clear();
+    notifyContentChanged();
     redrawFromPage(currentPage);
   }
 
