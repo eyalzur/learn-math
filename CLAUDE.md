@@ -79,7 +79,8 @@
 ```bash
 npm run build && npm run lint && npm run test:e2e
 ```
-כל 113 הבדיקות צריכות לעבור. Playwright כבר מוגדר; הדפדפן ב-`/opt/pw-browsers/chromium`.
+כל הבדיקות צריכות לעבור (`299` נכון ל-2026-08-29). Playwright כבר מוגדר; הדפדפן
+ב-`/opt/pw-browsers/chromium`.
 
 ## מלכודות שכבר עלו ביוקר
 
@@ -145,8 +146,13 @@ docs/features/    מסמך לכל פיצ'ר. README.md הוא האינדקס
 ל-Claude בשלב הזה — זו הוכחת תשתית בכוונה. **השרת נפרס בפועל באותו יום** ל-Cloud
 Run (`https://notebook-server-864901299725.me-west1.run.app`, פרויקט
 `learn-math-506923`, region `me-west1`) והכתובת חוברה ל-build של האתר, ולכן זה
-עובד מקצה לקצה **באתר החי**. 287/287 בדיקות. ראו `server/README.md` לפריסה מחדש
-ולשני המכשולים החד-פעמיים שנתקלנו בהם.
+עובד מקצה לקצה **באתר החי**. ראו `server/README.md` לפריסה מחדש ולשני המכשולים
+החד-פעמיים שנתקלנו בהם. · [#56](https://github.com/eyalzur/learn-math/pull/56)
+פריסה אוטומטית של השרת — כל push ל-`main` שנוגע ב-`server/` נפרס לבדו ל-Cloud
+Run דרך GitHub Actions, בלי סוד כלשהו בריפו (Workload Identity Federation). המשתמש
+ביצע את ההגדרה החד-פעמית בגוגל קלאוד לפני המיזוג. · [#57](https://github.com/eyalzur/learn-math/pull/57)
+תיקון ניסוח — כותרת מסך "שלח למורה" שינתה מ"זה מה שהשרת קיבל" (מונח תשתית, לא
+מתאים לילד/ה) ל"זה הדף שהמורה מסתכל עליו". 299/299 בדיקות. שלושתם **באתר החי**.
 
 **מוזג ב-2026-08-21:** [#51](https://github.com/eyalzur/learn-math/pull/51)
 שיעור לעומת תרגול — מסך לימוד לכל נושא, כפתור 📖 משני על כרטיס נושא. עבר שני
@@ -214,9 +220,15 @@ Run (`https://notebook-server-864901299725.me-west1.run.app`, פרויקט
 ### רק המשתמש יכול לעשות
 - **הגנת בראנץ'.** `main` נפרס אוטומטית לאתר החי, אבל אין עדיין דרישה שהבדיקות יעברו
   לפני מיזוג. Settings → Branches → `main` → require `check` + `test`.
-- **מפתח API של Anthropic** עם תקרה של `$5` לחודש — טרם נוצר, וזה מה שחוסם את
-  חיבור קלוד. **המפתח נכנס ישירות לכספת של גוגל (Secret Manager) ולא נשלח לאיש** —
-  לא לריפו, לא לדפדפן, לא לצ'אט.
+- **חיבור קלוד ↔ גוגל קלאוד.** התוכנית השתנתה: **לא** מפתח API סטטי ב-Secret
+  Manager, אלא Workload Identity Federation — כמו שכבר נבנה בין GitHub Actions
+  לגוגל קלאוד ב-`server-auto-deploy`. ה-service account שמצורף ל-Cloud Run מבקש
+  OIDC identity token ישירות מ-Google, ו-Anthropic מאמת אותו מול `accounts.google.com`
+  — **אין מפתח API בכלל**, ולא רק "לא בריפו". דרושים: יצירת service account ייעודי
+  חדש (`notebook-server-claude`), פריסה מחדש של Cloud Run איתו, והרשמה של אותו
+  service account ב-Anthropic Console ("Connect workload"). **המשתמש מבצע את זה
+  כרגע בסשן נפרד** — טרם אושר סיום. תקרת ה-`$5` שכבר נרכשה תקפה גם תחת federation
+  (אותה הקצאת שימוש כמו מפתח API).
 - ~~**חשבון גוגל קלאוד.**~~ **בוצע (2026-08-29):** פרויקט `learn-math-506923`,
   חשבון חיוב מקושר, והשרת הראשון (`server/`) נפרס ל-Cloud Run ועובד.
 - ~~**פריסה ידנית של השרת בכל שינוי.**~~ **בוצע (2026-08-29):** פריסה אוטומטית
