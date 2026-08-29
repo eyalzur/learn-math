@@ -10,9 +10,17 @@
 - [x] Implementation — developer — 2026-08-29
 - [x] Tests — qa — 2026-08-29
 
-**Current phase:** done — ready to open PR (299/299 בדיקות עברו)
+**Current phase:** done — מוזג ל-`main` (299/299 בדיקות עברו)
 **Branch:** `feature/server-auto-deploy`
-**PR:** not opened yet
+**PR:** https://github.com/eyalzur/learn-math/pull/56 — מוזג 2026-08-29
+
+## ההגדרה בגוגל קלאוד כבר בוצעה
+המשתמש ביצע את ההגדרה החד-פעמית (`server/README.md`, סעיף "פריסה אוטומטית —
+הגדרה חד-פעמית") **לפני** המיזוג הזה: חשבון השירות `github-deployer`, חמשת
+ה-roles, ה-workload identity pool וה-provider, והקישור לריפו `eyalzur/learn-math`.
+הפלט אומת — אפס שגיאות. כלומר הפריסה האוטומטית **פעילה מיד** עם המיזוג הזה, לא
+ממתינה לצעד נוסף. הבדיקה האמיתית הראשונה: Actions → Deploy server to Cloud Run
+→ Run workflow.
 
 ## Open questions / blockers
 None.
