@@ -15,6 +15,7 @@ import {
   pageHasContent,
   zoomAroundPoint,
 } from "../data/notebook";
+import { sendPageToServer } from "../lib/notebookServer";
 
 interface PracticeNotebookProps {
   pages: NotebookPage[];
@@ -44,6 +45,8 @@ export function PracticeNotebook({
   const [tool, setTool] = useState<DrawTool | "pan">("pen");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [zoomPercent, setZoomPercent] = useState(100);
+  const [sendState, setSendState] = useState<"idle" | "sending" | "error">("idle");
+  const [serverImage, setServerImage] = useState<string | null>(null);
 
   const stageRef = useRef<HTMLDivElement>(null);
   const stackRef = useRef<HTMLDivElement>(null);
@@ -374,7 +377,20 @@ export function PracticeNotebook({
     }
   }
 
+  async function sendToTeacher() {
+    if (!currentPage) return;
+    setSendState("sending");
+    try {
+      const imageDataUrl = await sendPageToServer(currentPage);
+      setServerImage(imageDataUrl);
+      setSendState("idle");
+    } catch {
+      setSendState("error");
+    }
+  }
+
   const atMaxPages = pages.length >= MAX_PAGES;
+  const canSendToTeacher = !!currentPage && pageHasContent(currentPage) && sendState !== "sending";
 
   return (
     <div className="notebook-screen">
@@ -449,6 +465,9 @@ export function PracticeNotebook({
         <button type="button" className="notebook-clear-btn" onClick={clearCurrentPage}>
           נקה דף
         </button>
+        <button type="button" className="notebook-send-btn" onClick={sendToTeacher} disabled={!canSendToTeacher}>
+          {sendState === "sending" ? "שולח..." : "שלח למורה"}
+        </button>
         <div className="notebook-page-nav">
           <button type="button" onClick={() => onCurrentPageIndexChange(currentPageIndex - 1)} disabled={currentPageIndex === 0}>
             ◀ דף קודם
@@ -469,6 +488,25 @@ export function PracticeNotebook({
         </div>
       </div>
       {atMaxPages && <p className="notebook-max-pages-note">הגעתם למספר המרבי של דפים במחברת הזאת.</p>}
+      {sendState === "error" && (
+        <p className="notebook-send-error" aria-live="polite">
+          לא הצלחנו לשלוח את הדף. נסו שוב.
+        </p>
+      )}
+
+      {serverImage && (
+        <div className="notebook-confirm-backdrop">
+          <div className="notebook-confirm-dialog notebook-image-dialog" role="alertdialog" aria-modal="true">
+            <h2>זה מה שהשרת קיבל</h2>
+            <img src={serverImage} alt="התמונה שהשרת יצר מהדף שנשלח" className="notebook-server-image" />
+            <div className="notebook-confirm-actions">
+              <button type="button" className="secondary" onClick={() => setServerImage(null)}>
+                סגירה
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {confirmDelete && (
         <div className="notebook-confirm-backdrop">

@@ -190,3 +190,49 @@ build הלקוח (`.env` מקומי / secret ב-GitHub Actions של `deploy.yml`
 
 ## Open Questions
 None.
+
+## Implementation Notes
+
+נבנה בדיוק לפי התוכנית, ללא סטיות ארכיטקטוניות. פרטים:
+
+**שרת (`server/`):** Node.js + TypeScript + Express, כמתוכנן. `npm install` הותקן
+בפועל בתוך `server/` (תלויות: `express`, `cors`, `pngjs` + טיפוסים) ו-`npm run build`
+(`tsc -b`) עבר נקי. השרת נבדק ידנית עם `node dist/index.js`: `GET /health` החזיר
+`ok`, `POST /render-page` עם מטריצה תקינה החזיר `imageDataUrl` תקין, ובקשה לא תקינה
+(`cols` שלילי) החזירה `400` עם `{"error": "invalid request body"}` כמתוכנן.
+`server/package-lock.json` נוצר על ידי `npm install` והוא חלק מהקומיט (לפריסת
+Docker דטרמיניסטית עם `npm ci`). נוסף `server/.gitignore` (לא הוזכר בארכיטקטורה
+במפורש) ל-`node_modules`/`dist`/`*.tsbuildinfo` של תיקיית השרת — הגיגנור הראשי
+של הריפו כבר מכסה את שני הראשונים בלי `/` מוביל, אבל `.tsbuildinfo` לא היה מכוסה.
+
+**לקוח:** `src/lib/notebookServer.ts` נוסף בדיוק כמתוכנן — פונקציה טהורה אחת,
+`sendPageToServer`, קוראת ל-`import.meta.env.VITE_NOTEBOOK_SERVER_URL` (משתנה
+Vite קיים מסוג `any` דרך `ImportMetaEnv`, לא נדרשה הצהרת טיפוס נוספת). כשה-URL
+ריק, הפונקציה זורקת מיד (`fetch` אפילו לא מתבצע) — הלקוח מטפל בזה כמו כל כשל
+תקשורת אחר, כפי שה-Edge Cases תיארו.
+
+`src/components/PracticeNotebook.tsx`: נוספו `sendState`
+(`"idle" | "sending" | "error"`) ו-`serverImage` (`string | null`), כפתור "שלח
+למורה" בין "נקה דף" לניווט הדפים, הודעת שגיאה עם `aria-live="polite"`, ודיאלוג
+תמונה חדש שמשתמש באותו `.notebook-confirm-backdrop`/`.notebook-confirm-dialog`
+עם קלאס נוסף (`notebook-image-dialog`) להרחבת ה-`max-width`. כותרת הדיאלוג
+("זה מה שהשרת קיבל") מומשה כ-`<h2>` (לא `<p>` כמו דיאלוג המחיקה) כי design.md
+מכנה אותה במפורש "כותרת" — הבחנה סמנטית קלה, לא סטייה מהעיצוב.
+
+**סגירת הדיאלוג בקליק על הרקע:** design.md תיאר "קליק על הרקע — אותה התנהגות
+שכבר קיימת בחלון אישור המחיקה", אך בפועל דיאלוג המחיקה הקיים **לא** תומך בסגירה
+בקליק על הרקע (רק כפתור). מומש כאן באותה צורה בדיוק (סגירה רק דרך "סגירה") —
+התאמה להתנהגות שבאמת קיימת בקוד, לא לתיאור. שינוי סמנטי קטן, לא מוצרי — לא
+נדרשה חזרה ל-designer.
+
+**גילוי בזמן פיתוח (לא סטייה מהתכנון, אך דורש עדכון בדיקה קיימת):**
+`tests/e2e/practice-notebook.spec.ts` הכיל בדיקה קודמת, "the notebook has no
+submit or export action", שקבעה כאינווריאנט שלא יהיה שום כפתור "שלח"/"ייצוא"/
+"הגש" במחברת — נכון כשהמחברת הייתה טיוטה בלבד, ועכשיו סותר במפורש את
+product-spec.md המאושר של הפיצ'ר הזה. עודכנה לבדוק את מה שבאמת אמור להיות נכון
+עכשיו: יש בדיוק כפתור "שלח למורה" אחד, ואין שום כפתור ייצוא/הגשה **אחר**. שם
+הבדיקה עודכן בהתאם. הרצת קובץ הבדיקה בבידוד (7/7) ואז הסוויטה המלאה (279/279,
+כולל הקובץ הזה) אישרו שאין רגרסיה נוספת.
+
+**גרסה:** `npm run bump:feature` הורץ (1.22.0 → 1.23.0), `npm run build` ו-
+`npm run lint` נקיים.
