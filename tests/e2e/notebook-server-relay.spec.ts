@@ -100,10 +100,13 @@ test("clicking it sends the page and shows the image the server returned", async
 
   const dialog = page.getByRole("alertdialog");
   await expect(dialog).toBeVisible();
-  await expect(dialog.getByText("זה מה שהשרת קיבל")).toBeVisible();
+  await expect(dialog.getByText("זה הדף שהמורה מסתכל עליו")).toBeVisible();
   const image = dialog.locator("img");
   await expect(image).toHaveAttribute("src", MOCK_IMAGE);
-  await expect(image).toHaveAttribute("alt", "התמונה שהשרת יצר מהדף שנשלח");
+  // The alt is asserted, not assumed: it is the copy a screen-reader user gets instead of
+  // the picture, and it is the one that quietly kept saying "שרת" after the visible title
+  // had already been fixed (see design.md, "הכרעת הרוויזיה").
+  await expect(image).toHaveAttribute("alt", "הדף שכתבתם, כפי שהמורה רואה אותו");
 });
 
 test("closing the image dialog returns to the same page, unchanged", async ({ page }) => {
