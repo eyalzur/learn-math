@@ -42,10 +42,106 @@ https://notebook-server-864901299725.me-west1.run.app
 (תל אביב), שם השירות `notebook-server`. הכתובת הזו מחוברת ל-build של האתר דרך
 `.github/workflows/deploy.yml`.
 
+## פריסה אוטומטית — הגדרה חד-פעמית
+
+מרגע שההגדרה כאן הושלמה, כל מיזוג ל-`main` שנוגע בקבצים תחת `server/` פורס את
+השרת מעצמו, בלי שום פקודה ידנית. ה-workflow שעושה זאת הוא
+`.github/workflows/deploy-server.yml`, והוא מופיע ב-GitHub תחת
+**Actions → Deploy server to Cloud Run**.
+
+> **עד שתסיימו את הצעדים כאן, הפריסה האוטומטית לא תעבוד וריצות הפריסה ב-GitHub
+> ייכשלו. זה צפוי — זו לא תקלה.**
+
+**מה זה עושה, בקצרה:** נותן ל-GitHub רשות לפרוס לפרויקט הזה — ובלי לייצר שום
+סיסמה או מפתח שצריך לשמור. במקום זה, גוגל לומד לסמוך על ריצות שמגיעות מהריפו
+`eyalzur/learn-math` בלבד. אין כאן שום ערך סודי, ולכן גם **אין שום דבר להדביק
+בממשק של GitHub** — הכל קורה בטרמינל אחד.
+
+### הצעדים
+
+פותחים **Cloud Shell** (אייקון `>_` בקונסולה של גוגל קלאוד) ומדביקים את הבלוק
+הבא **כולו בבת אחת**. הוא מכיל את כל הערכים האמיתיים — אין מה למלא:
+
+```bash
+gcloud config set project learn-math-506923
+
+# 1. מפעיל את השירות שמנפיק אישורים זמניים
+gcloud services enable iamcredentials.googleapis.com
+
+# 2. יוצר את הזהות ש-GitHub יתחזה אליה בזמן פריסה
+gcloud iam service-accounts create github-deployer \
+  --display-name="GitHub Actions deployer"
+
+# 3. נותן לזהות הזו את חמש ההרשאות הדרושות לפריסה מקוד מקור
+for ROLE in roles/run.admin roles/cloudbuild.builds.editor \
+            roles/artifactregistry.writer roles/storage.admin \
+            roles/iam.serviceAccountUser; do
+  gcloud projects add-iam-policy-binding learn-math-506923 \
+    --member="serviceAccount:github-deployer@learn-math-506923.iam.gserviceaccount.com" \
+    --role="$ROLE" --condition=None
+done
+
+# 4. יוצר "מאגר זהויות" שאליו GitHub יתחבר
+gcloud iam workload-identity-pools create github \
+  --location=global --display-name="GitHub Actions"
+
+# 5. מגדיר שרק הריפו הזה מורשה. השורה attribute-condition היא ההגנה עצמה:
+#    בלעדיה כל ריפו ב-GitHub כולו יכול היה להתחזות ולפרוס לפרויקט שלכם.
+gcloud iam workload-identity-pools providers create-oidc github \
+  --location=global --workload-identity-pool=github \
+  --display-name="GitHub" \
+  --issuer-uri="https://token.actions.githubusercontent.com" \
+  --attribute-mapping="google.subject=assertion.sub,attribute.repository=assertion.repository" \
+  --attribute-condition="assertion.repository=='eyalzur/learn-math'"
+
+# 6. מקשר בין השניים: הריפו הזה רשאי להתחזות לזהות מצעד 2
+gcloud iam service-accounts add-iam-policy-binding \
+  github-deployer@learn-math-506923.iam.gserviceaccount.com \
+  --role=roles/iam.workloadIdentityUser \
+  --member="principalSet://iam.googleapis.com/projects/864901299725/locations/global/workloadIdentityPools/github/attribute.repository/eyalzur/learn-math"
+```
+
+### מה אמור לחזור
+
+| צעד | מה אמור להופיע |
+|---|---|
+| 1 | `Operation ... finished successfully` |
+| 2 | `Created service account [github-deployer]` |
+| 3 | שש פעמים `Updated IAM policy for project [learn-math-506923]` |
+| 4 | `Created workload identity pool [github]` |
+| 5 | `Created workload identity pool provider [github]` |
+| 6 | `Updated IAM policy for serviceAccount [github-deployer@...]` |
+
+**`already exists` אינו כשל.** אם אתם מריצים את הבלוק פעם שנייה (למשל אחרי
+תיקון של צעד שנתקע), הצעדים שכבר הצליחו יגידו שהם קיימים. זה תקין — אפשר
+להמשיך הלאה.
+
+### לבדוק שזה עובד
+
+אין צורך לחכות למיזוג הבא. ב-GitHub: **Actions → Deploy server to Cloud Run →
+Run workflow**. ריצה ידנית תמיד מנסה לפרוס בפועל, ולכן היא בדיקה אמיתית של
+ההגדרה. אמורה להסתיים ירוקה, ובעמוד הריצה תופיע השורה `deployed:` עם כתובת
+השרת.
+
+### מה תראו מכאן והלאה
+
+בכל מיזוג ל-`main` תופיע ריצה אחת בשם **Deploy server to Cloud Run**, באחד
+משלושה מצבים:
+
+| מה קרה | מה מופיע |
+|---|---|
+| נגעתם בקוד השרת | ✅ ירוק, ובסוף `deployed: <כתובת>` |
+| השינוי היה רק בלקוח | ✅ ירוק וקצר, `no changes under server/ — nothing to deploy` |
+| משהו נשבר | ❌ אדום, עם רשימת שלוש הסיבות הסבירות והפניה לכאן |
+
+המצב האמצעי קיים בכוונה: כך אתם יודעים שהשרת **לא** התעדכן ושזה תקין, במקום
+לנחש. ומכיוון שריצה מופיעה תמיד, **היעדר ריצה הוא בעצמו סימן שמשהו לא בסדר.**
+
 ## פריסה מחדש ל-Google Cloud Run
 
-הכי פשוט דרך **Cloud Shell** (אייקון `>_` בקונסולה של גוגל קלאוד) — אין צורך
-להתקין `gcloud` מקומית, והוא כבר מחובר לחשבון:
+הפריסה הידנית נשארת תקפה וזמינה — שימושית לבדיקה מהירה, או אם האוטומציה
+מושבתת. הכי פשוט דרך **Cloud Shell** (אייקון `>_` בקונסולה של גוגל קלאוד) — אין
+צורך להתקין `gcloud` מקומית, והוא כבר מחובר לחשבון:
 
 ```bash
 git clone https://github.com/eyalzur/learn-math.git
