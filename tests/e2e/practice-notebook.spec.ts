@@ -147,12 +147,15 @@ test("writing in the notebook does not change whether an answer is marked right 
   await expect(page.locator(".feedback.correct")).toBeVisible();
 });
 
-test("the notebook has no submit or export action", async ({ page }) => {
+test("the notebook's only action beyond drawing is the explicit 'send to teacher' button", async ({ page }) => {
   await notebookButton(page).click();
   await expect(page.locator("canvas")).toBeVisible();
 
   // The regular practice "check" button belongs to the question flow, not the notebook —
   // it should not still be reachable while the notebook is open.
   await expect(page.getByRole("button", { name: "בדיקה" })).toHaveCount(0);
-  await expect(page.locator("button", { hasText: /שלח|ייצוא|הגש/ })).toHaveCount(0);
+  // "שלח למורה" (docs/features/notebook-server-relay) is the one deliberate exception —
+  // no other export/submit action exists.
+  await expect(page.getByRole("button", { name: "שלח למורה" })).toHaveCount(1);
+  await expect(page.locator("button", { hasText: /ייצוא|הגש/ })).toHaveCount(0);
 });

@@ -1423,12 +1423,45 @@ button.secondary {
   color: #dc2626;
 }
 
+.notebook-send-btn {
+  min-height: 44px;
+  background: var(--code-bg);
+  color: var(--text-h);
+}
+
 .notebook-max-pages-note {
   margin: 0;
   padding: 6px 16px 10px;
   font-size: 13px;
   color: var(--text);
   text-align: center;
+}
+
+.notebook-send-error {
+  margin: 0;
+  padding: 6px 16px 10px;
+  font-size: 13px;
+  color: #dc2626;
+  text-align: center;
+}
+
+.notebook-image-dialog {
+  max-width: 480px;
+}
+
+.notebook-image-dialog h2 {
+  margin: 0 0 12px;
+  color: var(--text-h);
+  font-size: 16px;
+}
+
+.notebook-server-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  margin-bottom: 16px;
 }
 
 .notebook-confirm-backdrop {
