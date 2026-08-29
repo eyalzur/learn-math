@@ -305,3 +305,15 @@ secret — היא ממילא מגיעה ל-bundle הציבורי, והשירות
 
 ### Open Questions
 None.
+
+### Implementation Notes — סבב הרוויזיה
+
+בוצע בדיוק כמתוכנן: שתי מחרוזות ב-`src/components/PracticeNotebook.tsx`
+(שורות 511-512), מילה במילה מ-design.md. שום קובץ אחר לא נגע.
+`npm run bump:fix` הורץ (1.23.0 → 1.23.1), `npm run build` ו-`npm run lint`
+נקיים.
+
+סוויטת ה-e2e **לא** הורצה בשלב הזה במכוון — שתי ה-assertions ב-
+`tests/e2e/notebook-server-relay.spec.ts` עדיין נועלות את המחרוזות הישנות
+וייכשלו עד שיעודכנו. זו עבודת qa, והכישלון הזה הוא הראיה שהבדיקות באמת בודקות
+את מה שהן מתיימרות לבדוק.

@@ -10,7 +10,7 @@
 - [x] Implementation — developer — 2026-08-29
 - [x] Tests — qa — 2026-08-29
 
-**Current phase:** developer — סבב רוויזיה (ניסוח כותרת חלון התמונה)
+**Current phase:** qa — סבב רוויזיה (ניסוח כותרת חלון התמונה)
 **Branch:** `fix/notebook-teacher-wording` (הסבב הנוכחי)
 **PR:** https://github.com/eyalzur/learn-math/pull/55 — מוזג 2026-08-29 · סבב
 הרוויזיה: טרם נפתח
@@ -24,7 +24,7 @@
 - [x] Product spec — product-manager — 2026-08-29
 - [x] Design — designer — 2026-08-29
 - [x] Architecture — tech-lead — 2026-08-29
-- [ ] Implementation — developer — not started
+- [x] Implementation — developer — 2026-08-29
 - [ ] Tests — qa — not started
 
 ## הפריסה בפועל
