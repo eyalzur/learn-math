@@ -10,10 +10,10 @@
 - [x] Implementation — developer — 2026-08-29
 - [x] Tests — qa — 2026-08-29
 
-**Current phase:** done — סבב הרוויזיה הושלם, ממתין ל-PR (287/287)
+**Current phase:** done — מוזג ל-`main` (299/299 עם server-auto-deploy)
 **Branch:** `fix/notebook-teacher-wording` (הסבב הנוכחי)
 **PR:** https://github.com/eyalzur/learn-math/pull/55 — מוזג 2026-08-29 · סבב
-הרוויזיה: טרם נפתח
+הרוויזיה: https://github.com/eyalzur/learn-math/pull/57 — מוזג 2026-08-29
 
 ## סבב רוויזיה — 2026-08-29 (ניסוח)
 הפיצ'ר עצמו מוזג ונמצא באתר החי. אחרי שהמשתמש בדק אותו בפועל, הוא הכריע לשנות

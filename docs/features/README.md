@@ -7,7 +7,7 @@ architecture, implementation notes, and tests.
 | Feature | Status | Details |
 |---|---|---|
 | פריסה אוטומטית של השרת | 🟢 done — מוזג ל-main, ההגדרה בגוגל בוצעה | [status](./server-auto-deploy/status.md) |
-| שרת המחברת — שלב א׳ (מטריצה → תמונה) | 🟢 done — מוזג וחי · סבב ניסוח ממתין ל-PR | [status](./notebook-server-relay/status.md) |
+| שרת המחברת — שלב א׳ (מטריצה → תמונה) | 🟢 done — מוזג וחי, כולל סבב ניסוח | [status](./notebook-server-relay/status.md) |
 | כל כיתה לכל תלמיד/ה | 🟢 done — מוזג ל-main | [status](./any-grade-any-student/status.md) |
 | מחברת תרגול | 🟢 done — מוזג ל-main | [status](./practice-notebook/status.md) |
 | שיעור לעומת תרגול — מסך לימוד לכל נושא | 🟢 done — מוזג ל-main | [status](./topic-lesson/status.md) |
