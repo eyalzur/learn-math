@@ -6,7 +6,7 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
-| פריסה אוטומטית של השרת | 🟡 בפיתוח | [status](./server-auto-deploy/status.md) |
+| פריסה אוטומטית של השרת | 🟡 בבדיקות | [status](./server-auto-deploy/status.md) |
 | שרת המחברת — שלב א׳ (מטריצה → תמונה) | 🟢 done — מוזג ל-main, השרת נפרס וחי | [status](./notebook-server-relay/status.md) |
 | כל כיתה לכל תלמיד/ה | 🟢 done — מוזג ל-main | [status](./any-grade-any-student/status.md) |
 | מחברת תרגול | 🟢 done — מוזג ל-main | [status](./practice-notebook/status.md) |
