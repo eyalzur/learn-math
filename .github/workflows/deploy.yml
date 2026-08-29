@@ -25,6 +25,14 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+        env:
+          # The notebook server on Cloud Run (docs/features/notebook-server-relay/).
+          # Deliberately in plain text and not a secret: the browser has to know this
+          # address to call it, so it ends up in the published bundle either way — and
+          # the service is intentionally public (--allow-unauthenticated, see
+          # server/README.md for why). Keeping it here means the address the live site
+          # uses is version-controlled and reviewable, not hidden in a repo setting.
+          VITE_NOTEBOOK_SERVER_URL: https://notebook-server-864901299725.me-west1.run.app
       - uses: actions/upload-pages-artifact@v4
         with:
           path: dist

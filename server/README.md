@@ -30,19 +30,54 @@ npm start
 
 בדיקת חיות: `curl http://localhost:8080/health` אמור להחזיר `ok`.
 
-## פריסה ל-Google Cloud Run
+## הפריסה הנוכחית
 
-דורש `gcloud` CLI מותקן ומחובר לפרויקט הגוגל קלאוד הייעודי (`learn-math`).
+השרת **נפרס בפועל** (2026-08-29) וחי בכתובת:
+
+```
+https://notebook-server-864901299725.me-west1.run.app
+```
+
+פרויקט גוגל קלאוד: `learn-math-506923` (שם תצוגה `learn-math`), region `me-west1`
+(תל אביב), שם השירות `notebook-server`. הכתובת הזו מחוברת ל-build של האתר דרך
+`.github/workflows/deploy.yml`.
+
+## פריסה מחדש ל-Google Cloud Run
+
+הכי פשוט דרך **Cloud Shell** (אייקון `>_` בקונסולה של גוגל קלאוד) — אין צורך
+להתקין `gcloud` מקומית, והוא כבר מחובר לחשבון:
 
 ```bash
+git clone https://github.com/eyalzur/learn-math.git
+cd learn-math
 gcloud run deploy notebook-server \
   --source server/ \
-  --region <בחרו region, למשל me-west1> \
+  --region me-west1 \
   --allow-unauthenticated
 ```
 
-בסיום, הפקודה מדפיסה את כתובת השירות (נראית כמו
-`https://notebook-server-xxxxxxxxxx.a.run.app`).
+בסיום, הפקודה מדפיסה את כתובת השירות. **אם הכתובת משתנה** (שם שירות אחר, region
+אחר), צריך לעדכן אותה גם ב-`.github/workflows/deploy.yml`.
+
+### מכשולים חד-פעמיים שנתקלנו בהם (מתועדים כדי לא לגלות אותם מחדש)
+
+בהקמה הראשונה נדרשו שני צעדים שאינם חלק מהפקודה עצמה:
+
+1. **חשבון חיוב לא היה מקושר לפרויקט.** יצירת חשבון חיוב וקישורו לפרויקט הם שני
+   דברים נפרדים — קיומו של חשבון לא אומר שהוא מקושר:
+   ```bash
+   gcloud billing accounts list   # למצוא את ה-ACCOUNT_ID
+   gcloud billing projects link learn-math-506923 --billing-account=<ACCOUNT_ID>
+   ```
+2. **חשבון השירות של הבנייה היה חסר הרשאות.** בפרויקטים חדשים גוגל כבר לא מעניק
+   אותן אוטומטית, והפריסה נכשלת ב-`Uploading sources...` עם `PERMISSION_DENIED`:
+   ```bash
+   gcloud projects add-iam-policy-binding learn-math-506923 \
+     --member=serviceAccount:<PROJECT_NUMBER>-compute@developer.gserviceaccount.com \
+     --role=roles/cloudbuild.builds.builder
+   ```
+   (`PROJECT_NUMBER` הוא `864901299725`.) אחרי ההענקה כדאי להמתין כחצי דקה
+   להתפשטות ההרשאה לפני ניסיון חוזר.
 
 **`--allow-unauthenticated` הוא מכוון, לא פשרת אבטחה שנשכחה**: השירות בשלב הזה לא
 מבצע שום פעולה בתשלום (אין קריאת Claude), ולקוח סטטי ב-GitHub Pages לא יכול לצרף
@@ -50,15 +85,19 @@ gcloud run deploy notebook-server \
 לכל בקשה), יידרש להוסיף הגנה מפני שימוש לרעה (rate limiting וכד') לפני שהוא נפרס —
 ראו `docs/features/notebook-server-relay/architecture.md`, סעיף Risks.
 
-## חיבור הלקוח לכתובת שהתקבלה
+## חיבור הלקוח לכתובת
 
-לאחר הפריסה, הזינו את הכתובת שהתקבלה כמשתנה סביבה בזמן ה-build של הלקוח (בשורש
-הריפו, לא כאן):
+**באתר החי זה כבר מחובר** — `.github/workflows/deploy.yml` מעביר את הכתובת
+כ-`VITE_NOTEBOOK_SERVER_URL` בזמן ה-build. הכתובת שם בטקסט גלוי ולא כ-secret,
+במכוון: הדפדפן חייב להכיר אותה כדי לקרוא לשרת, ולכן היא ממילא מופיעה ב-bundle
+שמתפרסם — והשירות עצמו ציבורי בכוונה. כך הכתובת שהאתר משתמש בה נמצאת בבקרת גרסאות
+וניתנת לריוויו, במקום להיות מוסתרת בהגדרה בממשק של GitHub.
 
-```bash
-VITE_NOTEBOOK_SERVER_URL=https://notebook-server-xxxxxxxxxx.a.run.app npm run build
+לפיתוח מקומי, אפשר קובץ `.env.local` בשורש הריפו:
+
+```
+VITE_NOTEBOOK_SERVER_URL=https://notebook-server-864901299725.me-west1.run.app
 ```
 
-לפיתוח מקומי, אפשר גם קובץ `.env.local` בשורש הריפו עם אותה שורה. בלי המשתנה הזה
-מוגדר, כפתור "שלח למורה" במחברת עדיין מוצג, אך כל לחיצה נכשלת מיד עם הודעת השגיאה
-הרגילה (אין כתובת לשלוח אליה).
+בלי המשתנה הזה מוגדר, כפתור "שלח למורה" במחברת עדיין מוצג, אך כל לחיצה נכשלת מיד
+עם הודעת השגיאה הרגילה (אין כתובת לשלוח אליה).
