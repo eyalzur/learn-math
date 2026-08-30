@@ -6,7 +6,7 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
-| המורה מבינה מה נכתב בדף | 🟡 in architecture | [status](./notebook-teacher-understanding/status.md) |
+| המורה מבינה מה נכתב בדף | 🟡 in development | [status](./notebook-teacher-understanding/status.md) |
 | פריסה אוטומטית של השרת | 🟢 done — מוזג ל-main, ההגדרה בגוגל בוצעה | [status](./server-auto-deploy/status.md) |
 | שרת המחברת — שלב א׳ (מטריצה → תמונה) | 🟢 done — מוזג וחי, כולל סבב ניסוח | [status](./notebook-server-relay/status.md) |
 | כל כיתה לכל תלמיד/ה | 🟢 done — מוזג ל-main | [status](./any-grade-any-student/status.md) |
