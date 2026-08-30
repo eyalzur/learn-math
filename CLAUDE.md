@@ -220,15 +220,18 @@ Run דרך GitHub Actions, בלי סוד כלשהו בריפו (Workload Identit
 ### רק המשתמש יכול לעשות
 - **הגנת בראנץ'.** `main` נפרס אוטומטית לאתר החי, אבל אין עדיין דרישה שהבדיקות יעברו
   לפני מיזוג. Settings → Branches → `main` → require `check` + `test`.
-- **חיבור קלוד ↔ גוגל קלאוד.** התוכנית השתנתה: **לא** מפתח API סטטי ב-Secret
-  Manager, אלא Workload Identity Federation — כמו שכבר נבנה בין GitHub Actions
-  לגוגל קלאוד ב-`server-auto-deploy`. ה-service account שמצורף ל-Cloud Run מבקש
-  OIDC identity token ישירות מ-Google, ו-Anthropic מאמת אותו מול `accounts.google.com`
-  — **אין מפתח API בכלל**, ולא רק "לא בריפו". דרושים: יצירת service account ייעודי
-  חדש (`notebook-server-claude`), פריסה מחדש של Cloud Run איתו, והרשמה של אותו
-  service account ב-Anthropic Console ("Connect workload"). **המשתמש מבצע את זה
-  כרגע בסשן נפרד** — טרם אושר סיום. תקרת ה-`$5` שכבר נרכשה תקפה גם תחת federation
-  (אותה הקצאת שימוש כמו מפתח API).
+- ~~**חיבור קלוד ↔ גוגל קלאוד.**~~ **בוצע (2026-08-30):** Workload Identity
+  Federation, בלי מפתח API בכלל. חשבון השירות
+  `notebook-server-claude@learn-math-506923.iam.gserviceaccount.com` נוצר ב-GCP,
+  ה-Cloud Run נפרס מחדש איתו (`--service-account`), ונרשם ב-Anthropic Console
+  תחת workspace `Default` (federation rule `fdrl_01XniC27RcjaHrrtruBHC3ht`). נבדק
+  קצה-לקצה: אסימון OIDC שהופק דרך
+  `gcloud auth print-identity-token --impersonate-service-account` הוחלף בהצלחה
+  ב-`access_token` מול `/v1/oauth/token`. פרטי החיבור וההרשאות הדרושות (כולל
+  המכשול עם `roles/iam.serviceAccountTokenCreator`) מתועדים ב-`server/README.md`.
+  **הקוד עדיין לא משתמש בזה** — ראו "אילוצים" ו"עוד לא התחיל". כדאי לוודא שתקרת
+  השימוש (`$5`/חודש) אכן מוגדרת על ה-workspace הזה תחת Rate limits — לא אומת
+  בסבב הזה.
 - ~~**חשבון גוגל קלאוד.**~~ **בוצע (2026-08-29):** פרויקט `learn-math-506923`,
   חשבון חיוב מקושר, והשרת הראשון (`server/`) נפרס ל-Cloud Run ועובד.
 - ~~**פריסה ידנית של השרת בכל שינוי.**~~ **בוצע (2026-08-29):** פריסה אוטומטית
@@ -249,6 +252,10 @@ Run בפרויקט `learn-math-506923`. כרגע הוא עושה דבר אחד �
 ל-Claude** — זו הייתה הכרעה מכוונת לבודד את התשתית לפני שמוסיפים LLM. הצרכן הבא
 המתוכנן: קריאת דף המחברת בכתב יד. ראו `server/README.md` ו-
 `docs/features/notebook-server-relay/`.
+
+**נתיב האימות מול Claude מוכן ונבדק (2026-08-30)** — Workload Identity Federation,
+פרטים ב"רק המשתמש יכול לעשות" למטה ובקטע הייעודי ב-`server/README.md`. מה שחסר
+הוא הקוד שמשתמש בו: endpoint שקורא בפועל ל-Claude.
 
 שני כללים שאינם משתנים: **מפתח API לעולם לא בדפדפן ולא בריפו**, ו**הילד לעולם לא
 ממתין לשרת** — ההסבר הקיים מוצג מיד, והשרת רק משפר. הכלל השני אינו נשבר על ידי

@@ -181,6 +181,74 @@ gcloud run deploy notebook-server \
 לכל בקשה), יידרש להוסיף הגנה מפני שימוש לרעה (rate limiting וכד') לפני שהוא נפרס —
 ראו `docs/features/notebook-server-relay/architecture.md`, סעיף Risks.
 
+## חיבור ל-Claude — Workload Identity Federation (2026-08-30)
+
+השרת **עדיין לא קורא ל-Claude בקוד** — הסעיף הזה מתעד רק את נתיב האימות שהוקם
+ונבדק, כדי שהפיצ'ר הבא (קריאת דף המחברת בכתב יד) יוכל להשתמש בו בלי לגלות מחדש
+את ההגדרה. **אין כאן שום מפתח API** — לא בכספת, לא בריפו, לא בשום מקום. במקום
+זה, חשבון השירות של Cloud Run מזדהה ישירות מול Anthropic דרך OIDC, בדיוק כמו
+שכבר נעשה בין GitHub Actions לגוגל קלאוד (ראו "פריסה אוטומטית" למעלה).
+
+### מה קיים
+
+- חשבון שירות ייעודי: `notebook-server-claude@learn-math-506923.iam.gserviceaccount.com`
+- ה-Cloud Run של `notebook-server` פרוס איתו (`gcloud run deploy ... --service-account=...`)
+- כלל federation ב-Anthropic Console (Settings → Workload identity), workspace
+  `Default`, מזהה `fdrl_01XniC27RcjaHrrtruBHC3ht`
+
+### איך זה עובד בזמן ריצה
+
+קוד שרץ בתוך אותו Cloud Run יכול לבקש אסימון OIDC מ-metadata server מקומי
+(`http://metadata.google.internal/.../identity?audience=https://api.anthropic.com`),
+ולהחליף אותו ב-access token אמיתי מול `POST https://api.anthropic.com/v1/oauth/token`
+עם `grant_type: urn:ietf:params:oauth:grant-type:jwt-bearer`. זה מה שקוד השרת
+יצטרך לעשות בפועל כשיתווסף endpoint שקורא ל-Claude.
+
+### איך בודקים את זה ידנית (בלי לפרוס קוד)
+
+מ-Cloud Shell, בהתחזות (impersonation) לחשבון השירות — אין צורך ב-VM או ב-Cloud
+Run job זמניים:
+
+```bash
+JWT=$(gcloud auth print-identity-token \
+  --impersonate-service-account=notebook-server-claude@learn-math-506923.iam.gserviceaccount.com \
+  --audiences=https://api.anthropic.com \
+  --include-email)
+
+curl -sS https://api.anthropic.com/v1/oauth/token \
+  -H "content-type: application/json" \
+  --data @- <<JSON | jq 'with_entries(if (.key | test("token$")) then .value = "<redacted>" else . end)'
+{
+  "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
+  "assertion": "$JWT",
+  "federation_rule_id": "fdrl_01XniC27RcjaHrrtruBHC3ht",
+  "organization_id": "623419be-a6b9-442d-a558-435eaacb4d2d",
+  "service_account_id": "svac_01G2VDg1jBnmiQDmszYuJgq7",
+  "workspace_id": "wrkspc_01Fd13eMa6fpYvRpwdJMpMF3"
+}
+JSON
+```
+
+תשובה תקינה מחזירה `access_token` (עם ttl של `expires_in` שניות, `600` בבדיקה
+שנעשתה). **אף פעם אל תדפיסו/תשמרו את ה-`access_token` בפועל** — ה-`jq` למעלה
+מחליף אותו ב-`<redacted>` לפני שהוא מודפס, בדיוק כדי שלא ייחשף בטעות בלוגים.
+
+### מכשול חד-פעמי שנתקלנו בו
+
+הפקודה הראשונה (`print-identity-token --impersonate-service-account`) נכשלת
+עם `PERMISSION_DENIED` אם המשתמש שמריץ אותה חסר את ההרשאה להתחזות לחשבון
+השירות — זה **נפרד** מיצירת חשבון השירות עצמו:
+
+```bash
+gcloud iam service-accounts add-iam-policy-binding \
+  notebook-server-claude@learn-math-506923.iam.gserviceaccount.com \
+  --member="user:<your-email>" \
+  --role="roles/iam.serviceAccountTokenCreator"
+```
+
+אחרי ההענקה יש להמתין כחצי דקה-דקה להתפשטות ההרשאה לפני ניסיון חוזר — כמו כל
+IAM binding אחר בפרויקט הזה.
+
 ## חיבור הלקוח לכתובת
 
 **באתר החי זה כבר מחובר** — `.github/workflows/deploy.yml` מעביר את הכתובת
