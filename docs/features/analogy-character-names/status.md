@@ -8,9 +8,9 @@
 - [x] Design — designer — 2026-08-30
 - [x] Architecture — tech-lead — 2026-08-30
 - [x] Implementation — developer — 2026-08-30
-- [ ] Tests — qa — not started
+- [x] Tests — qa — 2026-08-30
 
-**Current phase:** qa
+**Current phase:** done — ready to push and open PR
 **Branch:** `feature/analogy-character-names`
 **PR:** not opened yet
 
