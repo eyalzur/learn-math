@@ -8,9 +8,9 @@
 - [x] Design — designer — 2026-08-31
 - [x] Architecture — tech-lead — 2026-08-31
 - [x] Implementation — developer — 2026-08-31
-- [ ] Tests — qa — not started
+- [x] Tests — qa — 2026-08-31 (300/300, ריצה בודדת ונקייה)
 
-**Current phase:** qa
+**Current phase:** done — ממתין ל-PR ולריוויו
 **Branch:** `feature/notebook-default-practice`
 **PR:** not opened yet
 
@@ -30,12 +30,12 @@ None שחוסם. שלוש ההכרעות שהמשתמש סימן כלא-ידוע
   (`processReflection`/`errorPointer`/`finalAnswer` במקום `question`/`answer`
   הישנים; `imageDataUrl` הוסר). מומש במלואו — ראו architecture.md, Implementation
   Notes.
-- **Developer → QA, חשוב לפני שכותבים בדיקות:** הסרת שדה התשובה המוקלד שוברת
-  **23 מתוך 29** קובצי e2e קיימים — לא רק אלה שעוסקים במחברת, כל בדיקה
-  שהשתמשה בהקלדת תשובה כדרך להגיע למסך תוצאה. הרשימה המלאה, ולמה, ב-
-  architecture.md § Implementation Notes. סביר שנדרש helper משותף חדש
-  ("לכתוב תשובה במחברת ולשלוח למורה, עם מוק `/read-page`") שכל הקבצים האלה
-  יעברו להשתמש בו — זו החלטת qa.
+- **Developer → QA (טופל):** הסרת שדה התשובה המוקלד שברה 23 מתוך 29 קובצי e2e
+  קיימים. נפתר עם helper משותף חדש (`tests/e2e/helpers/notebookAnswer.ts`) —
+  ראו tests.md לפירוט המלא, כולל שני באגים אמיתיים ושלושה תיקוני-בדיקות
+  שהתגלו רק תוך כדי הרצת הסוויטה המלאה (regex לא מעוגן שתפס בטעות את כפתור
+  ניווט הדפים של המחברת, ומרוץ תזמון כי מענה במחברת עובר `await` אמיתי
+  בניגוד לשדה הטקסט הישן).
 
 ## Docs
 - [Product spec](./product-spec.md)
