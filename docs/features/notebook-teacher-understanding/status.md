@@ -10,15 +10,16 @@
 - [x] Implementation — developer — 2026-08-30
 - [x] Tests — qa — 2026-08-30 (305/305, ריצה בודדת ונקייה)
 
-**Current phase:** done, ready for PR
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `feature/notebook-teacher-understanding`
-**PR:** not opened yet
+**PR:** [#60](https://github.com/eyalzur/learn-math/pull/60) — מוזג 2026-08-31
 
 ## Open questions / blockers
-None שחוסם את המימוש או המיזוג. **הערה תפעולית:** `/read-page` לא יעבוד
-בפרודקשן עד שהמשתמש יריץ צעד חד-פעמי (הגדרת ארבעה משתני סביבה על שירות
-ה-Cloud Run) — מתועד ב-`server/README.md`, סעיף "הפעלת /read-page — צעד
-חד-פעמי נדרש", ובהערות ה-Implementation Notes ב-architecture.md.
+None שחוסם את המימוש או המיזוג. **הערה תפעולית, לאחר המיזוג (2026-08-31):**
+המשתמש דיווח שביצע את הצעד החד-פעמי (ארבעה משתני סביבה על שירות ה-Cloud
+Run — `server/README.md`, "הפעלת /read-page — צעד חד-פעמי נדרש"), אך זה
+**טרם אומת** מול קריאה חיה אמיתית ל-Claude. הבדיקה הבאה: לחיצה אמיתית על
+"שלח למורה" באתר החי אחרי שהדיפלוי האוטומטי התפשט.
 
 ## Docs
 - [Product spec](./product-spec.md)
