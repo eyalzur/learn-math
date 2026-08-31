@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { DrawTool, NotebookPage, PanZoom } from "../data/notebook";
 import {
   CELL,
@@ -63,9 +63,13 @@ export function PracticeNotebook({
   // Drawing mutates currentPage.filledCells directly through refs, on purpose (see the
   // comment on panZoomRef above) — a pointermove can fire dozens of times a second, and
   // re-rendering React for each one would defeat that. But "does the page have content"
-  // (canSendToTeacher below) is read at render time, so something still has to tell React
-  // a render is due once a stroke actually finishes — this is that something.
-  const [, notifyContentChanged] = useReducer((c: number) => c + 1, 0);
+  // is now read at render time in the *parent* (Practice.tsx computes primaryAction.disabled
+  // from it), so a stroke finishing has to make the parent re-render, not just this
+  // component — passing a new array reference through the pages prop it already owns does
+  // that without a reducer or an extra callback prop of its own.
+  function notifyContentChanged() {
+    onPagesChange([...pages]);
+  }
 
   const stageRef = useRef<HTMLDivElement>(null);
   const stackRef = useRef<HTMLDivElement>(null);
