@@ -10,9 +10,9 @@
 - [x] Implementation — developer — 2026-08-31
 - [x] Tests — qa — 2026-08-31 (307/307, ריצה בודדת ונקייה)
 
-**Current phase:** done, ready for PR
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `fix/server-auto-deploy`
-**PR:** not opened yet (סבב התיקון; הפיצ'ר המקורי כבר מוזג — https://github.com/eyalzur/learn-math/pull/56)
+**PR:** [#61](https://github.com/eyalzur/learn-math/pull/61) — מוזג 2026-08-31 (סבב התיקון; הפיצ'ר המקורי כבר מוזג — https://github.com/eyalzur/learn-math/pull/56)
 
 ## ההגדרה בגוגל קלאוד כבר בוצעה
 המשתמש ביצע את ההגדרה החד-פעמית (`server/README.md`, סעיף "פריסה אוטומטית —
