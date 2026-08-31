@@ -15,7 +15,8 @@ import {
   pageHasContent,
   zoomAroundPoint,
 } from "../data/notebook";
-import { sendPageToServer } from "../lib/notebookServer";
+import { readPageWithTeacher, type TeacherReading } from "../lib/notebookServer";
+import { speak, speechParts, speechSupported, stopSpeaking } from "../data/speech";
 
 interface PracticeNotebookProps {
   pages: NotebookPage[];
@@ -46,7 +47,8 @@ export function PracticeNotebook({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [zoomPercent, setZoomPercent] = useState(100);
   const [sendState, setSendState] = useState<"idle" | "sending" | "error">("idle");
-  const [serverImage, setServerImage] = useState<string | null>(null);
+  const [teacherResult, setTeacherResult] = useState<TeacherReading | null>(null);
+  const [teacherSpeaking, setTeacherSpeaking] = useState(false);
 
   // Drawing mutates currentPage.filledCells directly through refs, on purpose (see the
   // comment on panZoomRef above) — a pointermove can fire dozens of times a second, and
@@ -84,6 +86,10 @@ export function PracticeNotebook({
   useEffect(() => {
     toolRef.current = tool;
   }, [tool]);
+
+  // Leaving the notebook mid-reading must not leave a voice talking over whatever screen
+  // comes next — same reasoning as Practice.tsx's identical cleanup.
+  useEffect(() => stopSpeaking, []);
 
   function inkColor() {
     return getComputedStyle(document.documentElement).getPropertyValue("--text-h").trim() || "#08060d";
@@ -392,12 +398,30 @@ export function PracticeNotebook({
     if (!currentPage) return;
     setSendState("sending");
     try {
-      const imageDataUrl = await sendPageToServer(currentPage);
-      setServerImage(imageDataUrl);
+      const result = await readPageWithTeacher(currentPage);
+      setTeacherResult(result);
       setSendState("idle");
     } catch {
       setSendState("error");
     }
+  }
+
+  function closeTeacherResult() {
+    stopSpeaking();
+    setTeacherSpeaking(false);
+    setTeacherResult(null);
+  }
+
+  function toggleTeacherSpeech() {
+    if (teacherSpeaking) {
+      stopSpeaking();
+      setTeacherSpeaking(false);
+      return;
+    }
+    if (!teacherResult || !teacherResult.reading.certain) return;
+    const { question, answer } = teacherResult.reading;
+    setTeacherSpeaking(true);
+    speak(speechParts([`מה שכתבת: \`${question}\`.`, `התשובה שרשמת: \`${answer}\`.`]), () => setTeacherSpeaking(false));
   }
 
   const atMaxPages = pages.length >= MAX_PAGES;
@@ -477,7 +501,7 @@ export function PracticeNotebook({
           נקה דף
         </button>
         <button type="button" className="notebook-send-btn" onClick={sendToTeacher} disabled={!canSendToTeacher}>
-          {sendState === "sending" ? "שולח..." : "שלח למורה"}
+          {sendState === "sending" ? "המורה קוראת..." : "שלח למורה"}
         </button>
         <div className="notebook-page-nav">
           <button type="button" onClick={() => onCurrentPageIndexChange(currentPageIndex - 1)} disabled={currentPageIndex === 0}>
@@ -505,13 +529,46 @@ export function PracticeNotebook({
         </p>
       )}
 
-      {serverImage && (
+      {teacherResult && (
         <div className="notebook-confirm-backdrop">
           <div className="notebook-confirm-dialog notebook-image-dialog" role="alertdialog" aria-modal="true">
             <h2>זה הדף שהמורה מסתכל עליו</h2>
-            <img src={serverImage} alt="הדף שכתבתם, כפי שהמורה רואה אותו" className="notebook-server-image" />
+            <img
+              src={teacherResult.imageDataUrl}
+              alt="הדף שכתבתם, כפי שהמורה רואה אותו"
+              className="notebook-server-image"
+            />
+            <div className="teacher-reading">
+              <div className="teacher-reading-header">
+                <h3>מה המורה הבינה</h3>
+                {teacherResult.reading.certain && speechSupported() && (
+                  <button
+                    type="button"
+                    className="speak-button"
+                    onClick={toggleTeacherSpeech}
+                    aria-label={teacherSpeaking ? "עצרו את ההקראה" : "הקריאו לי את מה שהמורה הבינה"}
+                  >
+                    {teacherSpeaking ? "⏹" : "🔊"}
+                  </button>
+                )}
+              </div>
+              {teacherResult.reading.certain ? (
+                <>
+                  <p className="teacher-reading-line">
+                    <span>מה שכתבת: </span>
+                    <span className="prompt-math">{teacherResult.reading.question}</span>
+                  </p>
+                  <p className="teacher-reading-line">
+                    <span>התשובה שרשמת: </span>
+                    <span className="prompt-math">{teacherResult.reading.answer}</span>
+                  </p>
+                </>
+              ) : (
+                <p className="teacher-reading-line">לא הצלחתי לקרוא את זה בבירור. אפשר לכתוב שוב, קצת יותר גדול או ברור?</p>
+              )}
+            </div>
             <div className="notebook-confirm-actions">
-              <button type="button" className="secondary" onClick={() => setServerImage(null)}>
+              <button type="button" className="secondary" onClick={closeTeacherResult}>
                 סגירה
               </button>
             </div>

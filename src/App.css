@@ -1464,6 +1464,30 @@ button.secondary {
   margin-bottom: 16px;
 }
 
+.teacher-reading {
+  margin-bottom: 16px;
+}
+
+.teacher-reading-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.teacher-reading-header h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.teacher-reading-line {
+  margin: 0 0 6px;
+  color: var(--text-h);
+}
+
 .notebook-confirm-backdrop {
   position: fixed;
   inset: 0;

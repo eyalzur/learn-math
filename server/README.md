@@ -1,9 +1,10 @@
-# שרת המחברת — שלב א׳
+# שרת המחברת
 
 שרת Node.js/Express שמקבל מטריצת תאים מלאים של דף מחברת (`filledCells`, מפתחות
-`"col,row"` — אותו פורמט שהלקוח כבר משתמש בו ב-`src/data/notebook.ts`) והופך אותה
-לתמונת PNG. **אין כאן שום קריאה ל-Claude/Anthropic** — זו תשתית תקשורת והמרת פורמט
-בלבד. פרטים מלאים: `docs/features/notebook-server-relay/`.
+`"col,row"` — אותו פורמט שהלקוח כבר משתמש בו ב-`src/data/notebook.ts`). מספק שני
+endpoints: `/render-page` (המרה לתמונה בלבד, בלי Claude — פרטים מלאים:
+`docs/features/notebook-server-relay/`) ו-`/read-page` (המרה לתמונה **וגם** קריאה
+ל-Claude שמתמללת מה נכתב בדף — פרטים מלאים: `docs/features/notebook-teacher-understanding/`).
 
 הקוד כאן עצמאי לגמרי מהלקוח (הריפו הראשי): `npm run build`/`npm run lint`/
 `npm run test:e2e` בשורש הריפו לא נוגעים בתיקייה הזו, ואין CI שבודק או פורס אותה.
@@ -18,6 +19,21 @@
 ```
 תשובה מוצלחת (`200`): `{ "imageDataUrl": "data:image/png;base64,...." }`.
 שגיאת ולידציה (`400`) או שרת (`500`): `{ "error": "..." }`.
+
+`POST /read-page` — גוף הבקשה **זהה** ל-`/render-page` למעלה. תשובה מוצלחת (`200`):
+```json
+{
+  "imageDataUrl": "data:image/png;base64,....",
+  "reading": { "certain": true, "question": "7 + 5=", "answer": "12" }
+}
+```
+או, כשהקריאה לא ודאית: `"reading": { "certain": false }` (בלי `question`/`answer`).
+שגיאת ולידציה (`400`), rate limit (`429`), או שגיאת שרת/Claude (`500`): `{ "error": "..." }`
+— הלקוח מציג תמיד את אותה הודעת שגיאה גנרית לכל השלושה, ראו
+`docs/features/notebook-teacher-understanding/design.md`. **חשוב:** `/read-page`
+עולה כסף אמיתי לכל קריאה (Claude vision) — `/render-page` לא. פרטים מלאים על
+ההתנהגות, כולל למה `certain: false` הוא תשובה תקינה ולא שגיאה:
+`docs/features/notebook-teacher-understanding/architecture.md`.
 
 ## הרצה מקומית
 
@@ -175,19 +191,23 @@ gcloud run deploy notebook-server \
    (`PROJECT_NUMBER` הוא `864901299725`.) אחרי ההענקה כדאי להמתין כחצי דקה
    להתפשטות ההרשאה לפני ניסיון חוזר.
 
-**`--allow-unauthenticated` הוא מכוון, לא פשרת אבטחה שנשכחה**: השירות בשלב הזה לא
-מבצע שום פעולה בתשלום (אין קריאת Claude), ולקוח סטטי ב-GitHub Pages לא יכול לצרף
-אישור מבלי לחשוף סוד בדפדפן. כשיתווסף בעתיד endpoint שקורא ל-Claude (עלות אמיתית
-לכל בקשה), יידרש להוסיף הגנה מפני שימוש לרעה (rate limiting וכד') לפני שהוא נפרס —
-ראו `docs/features/notebook-server-relay/architecture.md`, סעיף Risks.
+**`--allow-unauthenticated` הוא מכוון, לא פשרת אבטחה שנשכחה**: `/render-page`
+לא מבצע שום פעולה בתשלום, ולקוח סטטי ב-GitHub Pages לא יכול לצרף אישור מבלי
+לחשוף סוד בדפדפן. `/read-page` (שכן עולה כסף אמיתי — קריאת Claude) מוגן ברמת
+ה-endpoint עצמו ב-rate limiting בזיכרון (ראו
+`docs/features/notebook-teacher-understanding/architecture.md`, סעיף Technical
+Approach) — לא ב-auth ברמת Cloud Run, מאותה סיבה בדיוק שמנעה auth ב-`/render-page`.
 
-## חיבור ל-Claude — Workload Identity Federation (2026-08-30)
+## חיבור ל-Claude — Workload Identity Federation (2026-08-30, בשימוש בפועל מ-2026-08-30)
 
-השרת **עדיין לא קורא ל-Claude בקוד** — הסעיף הזה מתעד רק את נתיב האימות שהוקם
-ונבדק, כדי שהפיצ'ר הבא (קריאת דף המחברת בכתב יד) יוכל להשתמש בו בלי לגלות מחדש
-את ההגדרה. **אין כאן שום מפתח API** — לא בכספת, לא בריפו, לא בשום מקום. במקום
-זה, חשבון השירות של Cloud Run מזדהה ישירות מול Anthropic דרך OIDC, בדיוק כמו
-שכבר נעשה בין GitHub Actions לגוגל קלאוד (ראו "פריסה אוטומטית" למעלה).
+**השרת קורא ל-Claude בפועל** דרך `/read-page` (`server/src/readPage.ts`) —
+הסעיף הזה מתעד את נתיב האימות. **אין כאן שום מפתח API** — לא בכספת, לא בריפו,
+לא בשום מקום. במקום זה, חשבון השירות של Cloud Run מזדהה ישירות מול Anthropic
+דרך OIDC, בדיוק כמו שכבר נעשה בין GitHub Actions לגוגל קלאוד (ראו "פריסה
+אוטומטית" למעלה). **ה-SDK הרשמי (`@anthropic-ai/sdk`) מבצע את חילופי ה-OAuth
+בעצמו** כשמשתני הסביבה הנכונים מוגדרים (ראו "הפעלת /read-page" למטה) — הקוד
+בפרויקט הזה לא קורא ידנית ל-`/v1/oauth/token`; הדוגמה למטה היא לבדיקה ידנית
+בלבד, לא קטע שקיים בקוד השרת.
 
 ### מה קיים
 
@@ -198,11 +218,52 @@ gcloud run deploy notebook-server \
 
 ### איך זה עובד בזמן ריצה
 
-קוד שרץ בתוך אותו Cloud Run יכול לבקש אסימון OIDC מ-metadata server מקומי
-(`http://metadata.google.internal/.../identity?audience=https://api.anthropic.com`),
-ולהחליף אותו ב-access token אמיתי מול `POST https://api.anthropic.com/v1/oauth/token`
-עם `grant_type: urn:ietf:params:oauth:grant-type:jwt-bearer`. זה מה שקוד השרת
-יצטרך לעשות בפועל כשיתווסף endpoint שקורא ל-Claude.
+קוד שרץ בתוך אותו Cloud Run מבקש אסימון OIDC מ-metadata server מקומי
+(`http://metadata.google.internal/.../identity?audience=https://api.anthropic.com`)
+— זה `server/src/anthropicAuth.ts`, שרק שומר אסימון טרי לקובץ. **את ההחלפה של
+האסימון הזה ב-access token אמיתי מול Anthropic עושה ה-SDK בעצמו**
+(`new Anthropic()` מזהה WIF אוטומטית כשמשתני הסביבה למטה מוגדרים, וגם מרענן
+את ה-access token בעצמו) — שום קוד בפרויקט הזה לא קורא ידנית ל-
+`/v1/oauth/token`.
+
+## הפעלת `/read-page` — צעד חד-פעמי נדרש (המשתמש מבצע, לא ה-CI)
+
+`/read-page` לא יעבוד עד שארבעת משתני הסביבה האלה יוגדרו על שירות ה-Cloud Run
+עצמו. **הם אינם סודיים** (מזהים, לא credentials — בדיוק כמו `WIF_PROVIDER`
+ב-`deploy-server.yml` למעלה), ולכן הפקודה כאן בטוחה להריץ ולתעד כמו שהיא:
+
+```bash
+gcloud run services update notebook-server \
+  --region me-west1 \
+  --update-env-vars \
+ANTHROPIC_FEDERATION_RULE_ID=fdrl_01XniC27RcjaHrrtruBHC3ht,\
+ANTHROPIC_ORGANIZATION_ID=623419be-a6b9-442d-a558-435eaacb4d2d,\
+ANTHROPIC_SERVICE_ACCOUNT_ID=svac_01G2VDg1jBnmiQDmszYuJgq7,\
+ANTHROPIC_WORKSPACE_ID=wrkspc_01Fd13eMa6fpYvRpwdJMpMF3
+```
+
+זה צעד **חד-פעמי**: `--update-env-vars` מוסיף/מעדכן בלי לגעת במה שכבר מוגדר
+על השירות (חשבון השירות `notebook-server-claude@...` כלול), ו-דיפלוי אוטומטי
+עתידי (`deploy-server.yml`) לא נוגע במשתני סביבה בכלל — לכן מה שמוגדר כאן
+פעם אחת נשאר. **בלי הצעד הזה**, כל לחיצה על "שלח למורה" תיכשל עם הודעת השגיאה
+הרגילה (בדיוק כמו כל בעיית תקשורת אחרת) — לא תהיה שום הודעה שאומרת "משתני
+סביבה חסרים", כי הלקוח לא מבחין בין סוגי כשלים. `ANTHROPIC_IDENTITY_TOKEN_FILE`
+**לא** צריך הגדרה ידנית — הקוד קובע אותו לבד (`server/src/anthropicAuth.ts`).
+
+**לוודא שהצעד הצליח**, אחרי המיזוג הראשון שנוגע ב-`server/`: לחיצה אמיתית על
+"שלח למורה" באתר החי על דף עם תוכן, ולוודא שמתקבל תיאור ולא הודעת שגיאה. לבדוק
+לוגים אם זה נכשל (`gcloud run services logs read notebook-server --region
+me-west1`) — שגיאת אימות מול Anthropic תופיע שם, גם אם הלקוח מציג רק הודעה
+גנרית.
+
+**כדאי גם לוודא** שחשבון השירות עדיין `notebook-server-claude@...` אחרי הדיפלוי
+האוטומטי הראשון שנוגע בשרת (לא רק בהגדרה הידנית הזו):
+```bash
+gcloud run services describe notebook-server --region me-west1 \
+  --format "value(spec.template.spec.serviceAccountName)"
+```
+לפי איך ש-`gcloud run deploy` עובד, זה אמור להישמר גם בלי `--service-account`
+מפורש בכל דיפלוי — אבל שווה לאמת פעם אחת בפועל ולא להניח.
 
 ### איך בודקים את זה ידנית (בלי לפרוס קוד)
 
