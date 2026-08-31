@@ -14,13 +14,23 @@ import "./anthropicAuth.js"; // sets ANTHROPIC_IDENTITY_TOKEN_FILE as a side eff
 // per-request.
 const anthropic = new Anthropic();
 
-const TEACHER_SYSTEM_PROMPT = `אתם מתמללים דף כתוב ביד ממחברת תרגול חשבון של ילד/ה. התפקיד שלכם הוא לדווח מה נכתב — לא לפתור, לא לשפוט אם התשובה נכונה, ולא להוסיף שום דבר שלא נכתב בפועל.
+/**
+ * `expectedPrompt` is the exercise text the student was actually given (e.g. "7 + 5" or a
+ * Hebrew word problem) — never the correct answer. It grounds the reading (the model isn't
+ * left to re-guess what exercise this even is from handwriting alone), without handing the
+ * model a known-correct value to grade against — that judgment stays entirely with the
+ * app's own local, instant check (see src/components/Practice.tsx), never with the model.
+ */
+function teacherSystemPrompt(expectedPrompt: string): string {
+  return `אתם "המורה" — קוראים דף עבודה כתוב ביד ממחברת תרגול חשבון. התלמיד/ה עבד/ה על התרגיל: ${expectedPrompt}. תפקידכם לדווח מה נעשה בדף, לא לפתור את התרגיל בעצמכם ולא לקבוע אם התשובה הסופית נכונה — אין לכם את התשובה הנכונה, ואתם לא צריכים אותה.
 
-בדף כתוב תרגיל חשבוני אחד ותשובה אחת שהתלמיד/ה רשם/ה לו. דווחו את שניהם בנפרד: question הוא התרגיל/השאלה כפי שנכתב (למשל "7 + 5="), answer היא התשובה שנרשמה (למשל "12"). שני השדות האלה הם תמיד ביטוי חשבוני בלבד — מספרים וסימני פעולה, בלי מילים ובלי פיסוק נוסף.
+דווחו:
+1. processReflection — משפט קצר אחד בעברית פשוטה שמתאר מה התלמיד/ה עשה/תה, כאילו אתם מסבירים למישהו שלא ראה את הדף. סמנו כל ביטוי חשבוני בגרשיים אחוריים, למשל: "ראיתי שחישבת \`7 + 5\` וקיבלת \`12\`."
+2. errorPointer — רק אם אתם רואים שלב בתהליך הכתוב שאינו עקבי עם השלב שלפניו (למשל: שורה לא נובעת חשבונית מהשורה הקודמת, פעולה שהוחסרה) — משפט קצר שמצביע איפה זה קרה, לא מה התוצאה הנכונה הייתה צריכה להיות. אם התהליך עקבי מתחילתו ועד סופו — השמיטו שדה זה לגמרי, אל תמציאו טעות.
+3. finalAnswer — התשובה הסופית שהתלמיד/ה כתב/ה, כמספר בלבד.
 
-אם כתב היד אינו קריא בבירור, יש יותר מתשובה אחת בדף, הדף כמעט ריק, או שאתם לא בטוחים במה שנכתב — אל תנחשו. החזירו certain: false בלבד, בלי question ובלי answer.
-
-רק כשאתם בטוחים במה שקראתם, החזירו certain: true עם question ו-answer.`;
+אם כתב היד אינו קריא, יש יותר מפתרון אחד, הדף כמעט ריק, או שאין שורת תשובה סופית ברורה — אל תנחשו. החזירו certain: false בלבד.`;
+}
 
 const REQUEST_TIMEOUT_MS = 30_000;
 
@@ -30,19 +40,19 @@ const REQUEST_TIMEOUT_MS = 30_000;
  * failed (network, auth, timeout) — the caller (index.ts) maps that to the same generic
  * error every other communication failure already gets.
  */
-export async function readPage(pngBuffer: Buffer): Promise<PageReading> {
+export async function readPage(pngBuffer: Buffer, expectedPrompt: string): Promise<PageReading> {
   const response = await anthropic.messages.parse(
     {
       model: "claude-opus-5",
       max_tokens: 4096,
       output_config: { effort: "low", format: zodOutputFormat(PageReadingSchema) },
-      system: TEACHER_SYSTEM_PROMPT,
+      system: teacherSystemPrompt(expectedPrompt),
       messages: [
         {
           role: "user",
           content: [
             { type: "image", source: { type: "base64", media_type: "image/png", data: pngBuffer.toString("base64") } },
-            { type: "text", text: "זה דף ממחברת תרגול. מה כתוב בו?" },
+            { type: "text", text: "זה דף ממחברת תרגול. תארו מה נעשה בו." },
           ],
         },
       ],
@@ -51,10 +61,16 @@ export async function readPage(pngBuffer: Buffer): Promise<PageReading> {
   );
 
   const parsed = response.parsed_output;
-  if (parsed && parsed.certain && parsed.question && parsed.answer) {
-    return { certain: true, question: parsed.question, answer: parsed.answer };
+  if (parsed && parsed.certain && parsed.processReflection && Number.isFinite(parsed.finalAnswer)) {
+    return {
+      certain: true,
+      processReflection: parsed.processReflection,
+      ...(parsed.errorPointer ? { errorPointer: parsed.errorPointer } : {}),
+      finalAnswer: parsed.finalAnswer as number,
+    };
   }
   // Covers: parsing failed entirely (null), the model itself said certain: false, or it
-  // said certain: true but left question/answer empty — all the same "don't guess" case.
+  // said certain: true but left processReflection/finalAnswer empty — all the same "don't
+  // guess" case.
   return { certain: false };
 }

@@ -291,3 +291,73 @@ function handleTeacherReading(reading: PageReading) {
 
 ## Open Questions
 None.
+
+## Implementation Notes
+
+נבנה בעיקרו בדיוק לפי התוכנית. סטיות/פרטים שהתבררו רק בכתיבה:
+
+**`.notebook-screen` הפך מ-overlay למסך-מלא לפאנל מוטמע בגובה חסום.**
+architecture.md לא פירט CSS, אבל design.md דורש שהשאלה תישאר גלויה מעל המחברת
+כל הזמן — וה-`position: fixed; inset: 0` הקיים (מ-`practice-notebook`) תפס את
+כל המסך ולא השאיר מקום לשום דבר מעליו. הפתרון: `.notebook-screen` הוא כעת בלוק
+רגיל בזרימת המסמך, בגובה חסום (`height: min(60vh, 620px)`), במקום overlay
+מלא — `.notebook-stage` הפנימי (עם ה-`flex:1`/`overflow:hidden` הקיימים) עובד
+זהה בתוך מיכל בגובה חסום כמו בתוך מסך מלא; חישובי הזום/pan מבוססים על
+`getBoundingClientRect()` של האלמנט בפועל, לא על גודל המסך. `.practice` עצמו
+נשאר בלוק פשוט וגלילה רגילה, בדיוק כמו היום — לא הפך למיכל fullscreen משלו.
+זו החלטת CSS מקומית, לא סטייה מהחלטת עיצוב: התוצאה (שאלה למעלה, מחברת מתחתיה,
+כל השאר גולל למטה) זהה למה ש-design.md ביקש.
+
+**מיקום כפתור "רמז 💡" — נשאר במקומו הקיים (אחרי המחברת), לא הוזז לפס העליון.**
+לדיאגרמת ה-ASCII של design.md (מצב A) יש סתירה פנימית קטנה מול הפרוזה שלה:
+הדיאגרמה מציירת את הכפתור מתחת לשאלה, אבל הטקסט אומר במפורש "כפתור הרמז נשאר
+במקומו הרגיל". נבחרה הפרוזה (המפורשת) על פני קירוב חזותי בדיאגרמה — הכפתור
+וכל רשימת הרמזים הפתוחה נשארו במיקום ה-DOM המקורי שלהם (אחרי בלוק המחברת),
+בלי שינוי בקוד או בהתנהגות שלהם בכלל.
+
+**CSS של דיאלוג התמונה שהוסר לא נזרק — עבר שימוש חוזר.** `.teacher-reading`,
+`.teacher-reading-header`, `.teacher-reading-line` (שעיצבו את הבלוק בתוך
+הדיאלוג שהוסר) הפכו לעיצוב של הפאנל העצמאי החדש ב-`Practice.tsx`, עם תוספת
+`max-width`/`padding`/`border` כדי שיעמוד לבד (לא בתוך `.notebook-confirm-dialog`
+יותר) — לא הומצא שם class חדש. `.notebook-image-dialog`, `.notebook-server-image`,
+ו-`.notebook-open-button` (הכפתור "📝 מחברת" שהוסר) נמחקו לגמרי — לא נשאר בהם
+שימוש בקוד.
+
+**`useEffect(() => stopSpeaking, [])` הוסר מ-`PracticeNotebook.tsx`.** ב-`PR
+#60` זה מנע קול ממשיך לדבר כש-`PracticeNotebook` נסגר (mount/unmount עצמאי,
+כשהיה toggle נפרד). עכשיו `PracticeNotebook` תמיד מותקן לצד `Practice` ולא
+עולה/יורד בפני עצמו — הניקוי המקביל שכבר קיים ב-`Practice.tsx` (אותו קוד
+בדיוק) מכסה את זה במלואו. הושאר היה dead code שלא עושה כלום, לפי הכלל נגד קוד
+מת ב-`CLAUDE.md`.
+
+**`server/README.md` עודכן** (לא היה ברשימת Affected Files של הארכיטקטורה) —
+תיעד את חוזה `/read-page` הישן (`question`/`answer`/`imageDataUrl`), שהיה נשאר
+שגוי אחרי השינוי בפועל. זו תיקון דיוק תיעודי לחוזה שהשתנה, לא החלטה טכנית
+חדשה.
+
+**נבדק:** `npm run build`, `npm run lint` (שורש הריפו) נקיים; `npm run build`
+(`tsc -b`) נקי בשרת (`server/`). `npm run bump:feature` הורץ (1.24.0 → 1.25.0).
+לא הורצה סוויטת ה-e2e — זה תפקיד `qa`, ולפי ההנחיה המפורשת לסבב הזה.
+
+**בדיקות e2e קיימות שיישברו, וצריכות תשומת לב מיוחדת של `qa` (לא רק "לתקן"):**
+הסרת שדה הטקסט לתשובה (`.answer-input`) וכפתור "📝 מחברת" (`.notebook-open-button`)
+משפיעה על **23 מתוך 29** קובצי הספסיפיקציה הקיימים — לא רק אלה שעוסקים במחברת
+עצמה, אלא כל בדיקה שהשתמשה במענה מוקלד רק כאמצעי להגיע למסך תוצאה לצורך בדיקת
+משהו אחר (הקראה, רמזים, דיאגרמות, סגנונות וכו'). אין קובץ helper משותף אחד
+שמרכז את הדפוס — כל קובץ ממש את זה בעצמו (`page.locator(".answer-input").fill(...)`),
+אז זו לא ערבוב-והחלפה במקום אחד:
+`adaptive-difficulty.spec.ts`, `clearer-explanations.spec.ts`,
+`countdown-next.spec.ts`, `fraction-diagram.spec.ts`, `heading-wrap-balance.spec.ts`,
+`mika-adaptive-difficulty.spec.ts`, `mika-diagrams.spec.ts`, `mistake-diagnosis.spec.ts`,
+`mistake-explanation.spec.ts`, `more-diagrams-wave2.spec.ts`, `notebook-server-relay.spec.ts`,
+`notebook-teacher-understanding.spec.ts`, `perfect-score-message.spec.ts`,
+`practice-notebook.spec.ts`, `question-hints.spec.ts`, `read-aloud-questions.spec.ts`,
+`read-aloud.spec.ts`, `review-status.spec.ts`, `students-and-syllabus.spec.ts`,
+`style-lessons.spec.ts`, `teaching-explanations.spec.ts`, `topic-lesson.spec.ts`,
+`topics-and-progress.spec.ts`, `version-number.spec.ts`. בנוסף,
+`notebook-teacher-understanding.spec.ts` מוקק תשובות מ-`/read-page` בפורמט הישן
+(`question`/`answer`/`imageDataUrl`) שכבר לא קיים — כל מוק כזה צריך גם להתעדכן
+לפורמט החדש (`processReflection`/`errorPointer`/`finalAnswer`, בלי
+`imageDataUrl`), לא רק לשינוי הסלקטור. סביר שהפתרון הנכון הוא helper משותף
+אחד ל"לכתוב תשובה במחברת ולשלוח למורה" (עם מוק `/read-page` ניתן להגדרה),
+שכל הקבצים האלה יעברו להשתמש בו — אבל זו החלטת `qa`, לא הוכרעה כאן.

@@ -20,20 +20,34 @@ endpoints: `/render-page` (המרה לתמונה בלבד, בלי Claude — פ�
 תשובה מוצלחת (`200`): `{ "imageDataUrl": "data:image/png;base64,...." }`.
 שגיאת ולידציה (`400`) או שרת (`500`): `{ "error": "..." }`.
 
-`POST /read-page` — גוף הבקשה **זהה** ל-`/render-page` למעלה. תשובה מוצלחת (`200`):
+`POST /read-page` — גוף הבקשה כמו `/render-page` למעלה, **פלוס** `expectedPrompt`
+(הטקסט של התרגיל שהתלמיד/ה קיבל/ה, למשל `"7 + 5"` — לעולם לא התשובה הנכונה):
+```json
+{ "cols": 258, "rows": 343, "cell": 4.665, "filledCells": ["10,20", "10,21"], "expectedPrompt": "7 + 5" }
+```
+תשובה מוצלחת (`200`) — **אין** `imageDataUrl` בתשובת ה-endpoint הזה (רק
+ב-`/render-page`):
 ```json
 {
-  "imageDataUrl": "data:image/png;base64,....",
-  "reading": { "certain": true, "question": "7 + 5=", "answer": "12" }
+  "reading": {
+    "certain": true,
+    "processReflection": "ראיתי שחישבת `7 + 5` וקיבלת `12`.",
+    "errorPointer": "שמתי לב ש...",
+    "finalAnswer": 12
+  }
 }
 ```
-או, כשהקריאה לא ודאית: `"reading": { "certain": false }` (בלי `question`/`answer`).
+`errorPointer` מופיע רק כשנראתה טעות בתהליך הכתוב; אחרת הוא נעדר מהתשובה
+לגמרי. כשהקריאה לא ודאית: `"reading": { "certain": false }` (בלי שדות נוספים).
+`finalAnswer` הוא מספר, לא מחרוזת — מוזן ישירות לבדיקת הנכון/שגוי המקומית
+הקיימת בלקוח, בלי שכבת פרסור נוספת. פרטים מלאים (כולל השדות הישנים
+`question`/`answer` שהוחלפו בשדות האלה): `docs/features/notebook-default-practice/`.
 שגיאת ולידציה (`400`), rate limit (`429`), או שגיאת שרת/Claude (`500`): `{ "error": "..." }`
-— הלקוח מציג תמיד את אותה הודעת שגיאה גנרית לכל השלושה, ראו
-`docs/features/notebook-teacher-understanding/design.md`. **חשוב:** `/read-page`
-עולה כסף אמיתי לכל קריאה (Claude vision) — `/render-page` לא. פרטים מלאים על
-ההתנהגות, כולל למה `certain: false` הוא תשובה תקינה ולא שגיאה:
-`docs/features/notebook-teacher-understanding/architecture.md`.
+— הלקוח מציג תמיד את אותה הודעת שגיאה גנרית לכל השלושה. **חשוב:** `/read-page`
+עולה כסף אמיתי לכל קריאה (Claude vision) — `/render-page` לא. פרטים על למה
+`certain: false` הוא תשובה תקינה ולא שגיאה:
+`docs/features/notebook-teacher-understanding/architecture.md` (עדיין נכון,
+רק שם השדות בפלט השתנה — ראו `docs/features/notebook-default-practice/architecture.md`).
 
 ## הרצה מקומית
 
