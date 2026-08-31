@@ -4,15 +4,15 @@
 כבר נפרס אוטומטית ל-GitHub Pages — במקום פקודת `gcloud` ידנית בכל פעם.
 
 ## Progress
-- [x] Product spec — product-manager — 2026-08-29
-- [x] Design — designer — 2026-08-29
-- [x] Architecture — tech-lead — 2026-08-29
-- [x] Implementation — developer — 2026-08-29
-- [x] Tests — qa — 2026-08-29
+- [x] Product spec — product-manager — 2026-08-29 (סבב תיקון 2026-08-31: חשבון שירות מפין במפורש)
+- [ ] Design — designer — not started (סבב התיקון)
+- [ ] Architecture — tech-lead — not started (סבב התיקון)
+- [ ] Implementation — developer — not started (סבב התיקון)
+- [ ] Tests — qa — not started (סבב התיקון)
 
-**Current phase:** done — מוזג ל-`main` (299/299 בדיקות עברו)
-**Branch:** `feature/server-auto-deploy`
-**PR:** https://github.com/eyalzur/learn-math/pull/56 — מוזג 2026-08-29
+**Current phase:** designer (סבב תיקון — פריסה איפסה בשקט את חשבון השירות)
+**Branch:** `fix/server-auto-deploy`
+**PR:** not opened yet (סבב התיקון; הפיצ'ר המקורי כבר מוזג — https://github.com/eyalzur/learn-math/pull/56)
 
 ## ההגדרה בגוגל קלאוד כבר בוצעה
 המשתמש ביצע את ההגדרה החד-פעמית (`server/README.md`, סעיף "פריסה אוטומטית —
@@ -23,7 +23,10 @@
 → Run workflow.
 
 ## Open questions / blockers
-None.
+None. **הערה (2026-08-31):** באג אמיתי שהמשתמש גילה בבדיקה ידנית — הפריסה
+האוטומטית איפסה בשקט את חשבון השירות של `notebook-server` לברירת המחדל,
+ומנעה קריאה אמיתית ל-Claude ב-`/read-page` (docs/features/notebook-teacher-understanding/)
+עד שהמשתמש תיקן ידנית. ראו הרוויזיה ב-product-spec.md.
 
 ## Docs
 - [Product spec](./product-spec.md)
