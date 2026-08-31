@@ -106,6 +106,25 @@ test("the job can mint the OIDC token its authentication depends on", () => {
   expect(permissions["id-token"]).toBe("write");
 });
 
+test("every deploy pins the runtime service account explicitly, not implicit carry-over", () => {
+  // Regression test for a real production incident (2026-08-31): gcloud run deploy without
+  // --service-account does not reliably carry the previous revision's identity forward — an
+  // automated deploy silently reset notebook-server to the project's default compute
+  // account, breaking its Workload Identity Federation trust with Anthropic until a human
+  // noticed and fixed it by hand. The deploy step succeeded (green run) the whole time, so
+  // nothing short of reading the actual command would have caught it — same reasoning as
+  // "no paths filter" above: the deploy "working" and the deploy doing the right thing are
+  // two different claims.
+  const wf = workflow(DEPLOY_SERVER);
+  const env = wf.env as Record<string, string>;
+  expect(env.RUNTIME_SERVICE_ACCOUNT).toBe("notebook-server-claude@learn-math-506923.iam.gserviceaccount.com");
+
+  const steps = (wf.jobs as any).deploy.steps as { name?: string; run?: string }[];
+  const deploy = steps.find((s) => s.name === "Deploy to Cloud Run")!.run!;
+  expect(deploy).toMatch(/--service-account\b/);
+  expect(deploy).toContain("$RUNTIME_SERVICE_ACCOUNT");
+});
+
 test("concurrent deploys queue rather than cancel each other", () => {
   // Deliberately the opposite of the Pages workflow: a Pages deploy uploads a complete
   // snapshot so cancelling loses nothing, while cancelling a Cloud Run deploy midway can
@@ -177,4 +196,15 @@ test("the manual deploy route is still documented alongside the automatic one", 
   const readme = serverReadme();
   expect(readme).toContain("פריסה מחדש ל-Google Cloud Run");
   expect(readme).toContain("gcloud run deploy notebook-server");
+});
+
+test("the manual deploy example also pins the runtime service account", () => {
+  // Same regression this file's workflow test guards against (2026-08-31 incident), but for
+  // the copy-pasteable command a human runs by hand — the exact command that reset the
+  // service account in the first place was copied from this file without the flag.
+  const readme = serverReadme();
+  const exampleStart = readme.indexOf("gcloud run deploy notebook-server");
+  const exampleEnd = readme.indexOf("```", exampleStart);
+  const example = readme.slice(exampleStart, exampleEnd);
+  expect(example).toContain("--service-account notebook-server-claude@learn-math-506923.iam.gserviceaccount.com");
 });

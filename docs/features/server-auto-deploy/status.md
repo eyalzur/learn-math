@@ -8,9 +8,9 @@
 - [x] Design — designer — 2026-08-31 (אין שינוי עיצובי — תיקון תשתית טהור)
 - [x] Architecture — tech-lead — 2026-08-31 (--service-account מפורש + לוגינג שגיאות)
 - [x] Implementation — developer — 2026-08-31
-- [ ] Tests — qa — not started (סבב התיקון)
+- [x] Tests — qa — 2026-08-31 (307/307, ריצה בודדת ונקייה)
 
-**Current phase:** qa (סבב תיקון — פריסה איפסה בשקט את חשבון השירות)
+**Current phase:** done, ready for PR
 **Branch:** `fix/server-auto-deploy`
 **PR:** not opened yet (סבב התיקון; הפיצ'ר המקורי כבר מוזג — https://github.com/eyalzur/learn-math/pull/56)
 
@@ -26,7 +26,9 @@
 None. **הערה (2026-08-31):** באג אמיתי שהמשתמש גילה בבדיקה ידנית — הפריסה
 האוטומטית איפסה בשקט את חשבון השירות של `notebook-server` לברירת המחדל,
 ומנעה קריאה אמיתית ל-Claude ב-`/read-page` (docs/features/notebook-teacher-understanding/)
-עד שהמשתמש תיקן ידנית. ראו הרוויזיה ב-product-spec.md.
+עד שהמשתמש תיקן ידנית. ראו הרוויזיה ב-product-spec.md. **המצב החי כבר תוקן
+ועובד** (המשתמש דיווח ש"שלח למורה" עובד מול Claude אמיתי) — ה-PR הזה מגן על
+הדיפלוי הבא, לא על המצב הנוכחי.
 
 ## Docs
 - [Product spec](./product-spec.md)
