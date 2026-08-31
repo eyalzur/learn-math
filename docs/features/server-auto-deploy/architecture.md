@@ -233,3 +233,76 @@ None.
 בארכיטקטורה. הסיבה: בלעדיו `gcloud projects add-iam-policy-binding` עוצר ושואל
 אינטראקטיבית על IAM condition — מה שהיה תוקע בלולאה בלוק שכל הרעיון שלו הוא
 הדבקה אחת רצופה בלי התערבות. אותו שיקול בדיוק שהוביל ל-`--quiet` בפקודת הפריסה.
+
+## רוויזיה — 2026-08-31: הפריסה איפסה בשקט את חשבון השירות
+
+### Overview
+`gcloud run deploy` בלי `--service-account` מפורש **אינו** משמר את חשבון
+השירות מהרוויזיה הקודמת — הנחה שגויה שהופיעה גם ב-`architecture.md` של
+`docs/features/notebook-teacher-understanding/` וגם (במשתמע) כאן. המשתמש אימת
+זאת בפועל: אחרי הדיפלוי האוטומטי של PR #60, `notebook-server` רץ עם חשבון
+השירות הדיפולטיבי של הפרויקט, לא עם `notebook-server-claude@...`. התיקון: פין
+מפורש בכל מקום שמריץ `gcloud run deploy`.
+
+### Affected Files / Components
+
+- **`.github/workflows/deploy-server.yml`** — משתנה `env` חדש,
+  `RUNTIME_SERVICE_ACCOUNT: notebook-server-claude@learn-math-506923.iam.gserviceaccount.com`
+  (שם נפרד מ-`SERVICE_ACCOUNT` הקיים בקובץ, שהוא חשבון ה**דיפלוימנט**
+  `github-deployer@...` — שני חשבונות שונים לגמרי, וקריאה לשניהם `SERVICE_ACCOUNT`
+  הייתה יוצרת בלבול מסוכן בדיוק בקובץ הזה). צעד "Deploy to Cloud Run" מקבל
+  `--service-account="$RUNTIME_SERVICE_ACCOUNT"` נוסף לפקודת ה-`gcloud run
+  deploy`.
+- **`server/README.md`** — שני מקומות: (1) דוגמת "פריסה מחדש ל-Google Cloud
+  Run" (השורות שכוללות `gcloud run deploy notebook-server --source server/
+  --region me-west1 --allow-unauthenticated` **בלי** `--service-account`) —
+  מוסיפים את הדגל. (2) קטע חדש קצר שמתעד את התקרית הזו עצמה (מה קרה, איך
+  אובחן, איך תוקן) — כדי שאם זה יקרה שוב ממקור אחר, מי שמחפש כבר ימצא תשובה
+  ולא יגלה מחדש.
+- **`server/src/index.ts`** (שייך ל-`notebook-teacher-understanding`, לא
+  לפיצ'ר הזה — מתועד כאן כי התיקון נתגלה תוך כדי אבחון הבאג הזה) — ה-`catch`
+  הריק ב-`handleReadPage` מקבל `console.error` עם השגיאה האמיתית, לפני
+  ה-`res.status(500)`. שום שינוי בחוזה ה-API — הלקוח ממשיך לקבל את אותה
+  הודעה גנרית.
+- **`docs/features/notebook-teacher-understanding/architecture.md`** — תיקון
+  תיעודי בסעיף Risks: ההנחה "gcloud run deploy משמר service account" מסומנת
+  כשגויה, עם הפניה לרוויזיה הזו. אין שינוי בקוד של הפיצ'ר ההוא.
+
+### Technical Approach
+
+הערך `notebook-server-claude@learn-math-506923.iam.gserviceaccount.com` אינו
+סוד (זהה לטיפול ב-`SERVICE_ACCOUNT`/`WIF_PROVIDER` הקיימים בקובץ) — מוגדר
+כ-`env` ברמת ה-workflow, לא כ-`secrets.*`. אין תלות בסדר צעדים או ב-auth
+נוסף; זה רק ארגומנט נוסף לפקודה שכבר רצה.
+
+לוגינג השגיאה: `console.error` פשוט (לא ספריית לוגים חדשה — הפרויקט לא
+משתמש באחת, ו-Cloud Run כבר אוסף `stdout`/`stderr` אוטומטית ל-Cloud Logging,
+בדיוק כמו שורת "notebook server listening on..." הקיימת). מספיק כדי ש-`gcloud
+run services logs read` יראה את השגיאה האמיתית בפעם הבאה, בלי שינוי בתשתית
+הלוגים.
+
+### Edge Cases
+- **דיפלוי ידני מ-Cloud Shell** (לא דרך ה-workflow) עדיין יכול לפספס את הדגל
+  אם מישהו מריץ פקודה ישנה ששמורה איפשהו אחר (למשל היסטוריית shell) ולא
+  מ-`server/README.md` המעודכן — אין דרך טכנית למנוע את זה לגמרי; התיעוד
+  המעודכן הוא ההגנה.
+- **אם `RUNTIME_SERVICE_ACCOUNT` ישתנה בעתיד** (חשבון שירות חדש) — נקודת
+  עדכון יחידה ב-workflow, ועוד נקודה אחת ב-README; לא מפוזר בקוד.
+
+### Risks / Tradeoffs
+- **אין בדיקה אוטומטית שהחשבון בפועל על השירות תואם למה שה-workflow ביקש** —
+  `gcloud run deploy` יכול תיאורטית "להצליח" (ירוק) גם אם קרה משהו לא צפוי
+  ברמת ה-IAM. זה בדיוק סוג הפער שגרם לתקרית הזו מלכתחילה (ריצה ירוקה, זהות
+  שגויה) — אבל הפעם הסיבה (העדר `--service-account` בפקודה) מתוקנת ישירות,
+  לא רק מנוטרת. הוספת בדיקת post-deploy (`gcloud run services describe`
+  ו-assert על חשבון השירות בתוך ה-workflow עצמו) הייתה מגינה גם מפני מקרה
+  עתידי דומה מסיבה אחרת — נשקלה ונדחתה כרגע: מוסיפה מורכבות לקובץ שכבר
+  מסתמך על "ריצה אדומה = בעיה", ואין עדות שהתקרית הזו תחזור מסיבה שונה. אם
+  זה יקרה שוב, זו התוספת הראשונה לשקול.
+- **`console.error` בלבד, לא מבנה לוגים structured** (JSON, correlation id
+  וכו') — מספיק לשלב הזה (עומס שימוש נמוך, קריאה ידנית של לוגים). לא פתרון
+  שיתאים לניפוי תקלות בקנה מידה גדול יותר, אבל זה לא הסדר גודל של הפרויקט
+  הזה.
+
+## Open Questions
+None.

@@ -252,15 +252,16 @@ ANTHROPIC_WORKSPACE_ID=wrkspc_01Fd13eMa6fpYvRpwdJMpMF3
   --update-env-vars=...`) ב-`server/README.md` באופן שאי-אפשר לפספס, ולהוסיף
   אותו ל-CLAUDE.md תחת "רק המשתמש יכול לעשות" — בדיוק כמו שכבר נעשה
   ל-Workload Identity Federation עצמו.
-- **חשבון השירות המותאם (`notebook-server-claude@...`) חייב עדיין להיות מחובר
-  לשירות אחרי כל דיפלוי אוטומטי.** לפי התנהגות Cloud Run, `gcloud run deploy`
-  בלי `--service-account` משמר את החשבון הקיים מהרוויזיה הקודמת — לא מאפס
-  לברירת המחדל. זו ההנחה שהארכיטקטורה הזו נשענת עליה במלואה (בלעדיה, שום
-  `ANTHROPIC_*` env var לא יעזור — ל-WIF יידרש חשבון השירות הנכון). **מומלץ
-  לאמת בפועל** (`gcloud run services describe notebook-server --format
-  "value(spec.template.spec.serviceAccountName)"`) אחרי המיזוג הראשון שנוגע
-  בשרת, ולא להניח בעיוורון — סומן כאן כי זו בדיוק מהסוג של הנחה ששווה לבדוק
-  פעם אחת ולתעד, לא לגלות מחדש בעוד חודש.
+- ~~**חשבון השירות המותאם (`notebook-server-claude@...`) חייב עדיין להיות
+  מחובר לשירות אחרי כל דיפלוי אוטומטי.** לפי התנהגות Cloud Run, `gcloud run
+  deploy` בלי `--service-account` משמר את החשבון הקיים מהרוויזיה הקודמת —
+  לא מאפס לברירת המחדל.~~ **ההנחה הזו התבררה כשגויה בפועל (2026-08-31).**
+  המשתמש אימת ב-Cloud Shell שאחרי הדיפלוי האוטומטי של ה-PR הזה,
+  `notebook-server` רץ עם חשבון השירות הדיפולטיבי של הפרויקט — לא עם
+  `notebook-server-claude@...` — וכל קריאה ל-`/read-page` נכשלה עד שתוקן
+  ידנית. התיקון (פין מפורש של `--service-account` בכל פקודת `gcloud run
+  deploy`, ב-workflow ובתיעוד הידני כאחד) מתועד ב-
+  `docs/features/server-auto-deploy/architecture.md`, "רוויזיה — 2026-08-31".
 - **מודל `claude-opus-5` (ברירת המחדל הפרויקטלית לקוד Claude, לא נבחר כאן
   משיקולי עלות) מול תקרת `$5`/חודש שמוזכרת ב-CLAUDE.md כטרם-מאומתת.** עלות
   משוערת לקריאה בודדת נמוכה (תמונה קטנה יחסית, `max_tokens: 4096`, `effort:
