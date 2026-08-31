@@ -53,7 +53,11 @@ export async function answerViaNotebook(page: Page, value: number | string) {
   );
   await drawOnCanvas(page);
   await page.getByRole("button", { name: "שלח למורה" }).click();
-  await page.locator(".feedback.correct, .feedback.wrong").first().waitFor({ state: "visible" });
+  // .teacher-reading, not .feedback: a diagnosed wrong answer with a follow-up question
+  // holds .feedback back until that mini-conversation resolves (see Practice.tsx's
+  // `revealed`), but the teacher's panel itself is never gated on that — it is the
+  // earliest reliable sign a confident reading actually landed.
+  await page.locator(".teacher-reading").waitFor({ state: "visible" });
 }
 
 /** Mocks an uncertain reading (the teacher couldn't confidently read the page) for the next
