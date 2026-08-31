@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { answerViaNotebook } from "./helpers/notebookAnswer";
 
 /** Every grade now practises topic by topic, so levels always sit one screen deeper. */
 async function openLevels(page: Page, studentIndex: number, topicIndex = 0) {
@@ -122,8 +123,7 @@ test("picking a topic runs a full practice and ends on a score summary", async (
 
   for (let i = 1; i <= 20; i++) {
     await expect(page.locator(".progress")).toContainText(`שאלה ${i} מתוך 20`);
-    await page.locator(".answer-input").fill("0");
-    await page.getByRole("button", { name: "בדיקה" }).click();
+    await answerViaNotebook(page, 0);
     await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
   }
 

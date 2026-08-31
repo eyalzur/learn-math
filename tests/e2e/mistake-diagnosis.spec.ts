@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { answerViaNotebook } from "./helpers/notebookAnswer";
 import { grades } from "../../src/data/curriculum";
 import { diagnose } from "../../src/data/diagnose";
 import { generateDecimalsQuestion } from "../../src/data/adaptiveDecimals";
@@ -35,16 +36,14 @@ async function startMedium(page: Page) {
 async function walkTo(page: Page, wanted: string) {
   for (let i = 0; i < 10; i++) {
     if ((await page.locator(".problem-text").innerText()).includes(wanted)) return;
-    await page.locator(".answer-input").fill("999999");
-    await page.getByRole("button", { name: "בדיקה" }).first().click();
+    await answerViaNotebook(page, 999999);
     await page.getByRole("button", { name: /הבא|סיום/ }).click();
   }
   throw new Error(`never reached "${wanted}"`);
 }
 
 const answer = async (page: Page, value: string) => {
-  await page.locator(".answer-input").fill(value);
-  await page.getByRole("button", { name: "בדיקה" }).first().click();
+  await answerViaNotebook(page, value);
 };
 
 const answerFollowUp = async (page: Page, value: string) => {

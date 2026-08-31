@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { answerViaNotebook } from "./helpers/notebookAnswer";
 
 /**
  * Acceptance criteria under test
@@ -27,8 +28,7 @@ async function open(page: Page) {
 async function playLevel(page: Page, answerWith: string) {
   const total = Number((await page.locator(".progress").innerText()).match(/מתוך (\d+)/)![1]);
   for (let i = 0; i < total; i++) {
-    await page.locator(".answer-input").fill(answerWith);
-    await page.getByRole("button", { name: "בדיקה" }).click();
+    await answerViaNotebook(page, answerWith);
     await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
   }
   return total;
@@ -139,8 +139,7 @@ test("a level practises only its own topic", async ({ page }) => {
   for (let i = 0; i < 10; i++) {
     const prompt = await page.locator(".problem-text").innerText();
     expect(prompt, `"${prompt}" is not a subtraction`).toContain("−");
-    await page.locator(".answer-input").fill("0");
-    await page.getByRole("button", { name: "בדיקה" }).click();
+    await answerViaNotebook(page, 0);
     await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
   }
 });

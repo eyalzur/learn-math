@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { answerViaNotebook } from "./helpers/notebookAnswer";
 
 /**
  * Acceptance criteria under test
@@ -35,8 +36,7 @@ async function open(page: Page, topicIdx: number, style: string) {
 }
 
 const answer = async (page: Page, value: string) => {
-  await page.locator(".answer-input").fill(value);
-  await page.getByRole("button", { name: "בדיקה" }).first().click();
+  await answerViaNotebook(page, value);
 };
 
 /** Walks the level until the prompt contains `wanted`, then answers it wrong. */

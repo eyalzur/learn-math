@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { test, expect, type Page } from "@playwright/test";
+import { answerViaNotebook } from "./helpers/notebookAnswer";
 
 /**
  * Acceptance criteria under test
@@ -148,14 +149,13 @@ test("the version appears on the first screen only", async ({ page }) => {
 
   // Practice
   await page.locator(".style-card, .level-card").first().click();
-  await expect(page.locator(".answer-input")).toBeVisible();
+  await expect(page.locator("canvas")).toBeVisible();
   await expect(version).toHaveCount(0);
 
   // Result, after working through the lesson — however many questions it holds.
   const total = Number((await page.locator(".progress").innerText()).match(/(\d+)\s*$/)![1]);
   for (let i = 0; i < total; i++) {
-    await page.locator(".answer-input").fill("999999");
-    await page.getByRole("button", { name: "בדיקה" }).click();
+    await answerViaNotebook(page, 999999);
     await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
   }
   await expect(page.locator(".result")).toBeVisible();

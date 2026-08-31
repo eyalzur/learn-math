@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { answerViaNotebook } from "./helpers/notebookAnswer";
 
 /**
  * Acceptance criteria under test (docs/features/mika-adaptive-difficulty/product-spec.md),
@@ -80,8 +81,7 @@ const computeAnswer = (topic: AdaptiveTopic, a: number, b: number) =>
   topic.operator === "+" ? a + b : a - b;
 
 async function answer(page: Page, value: number) {
-  await page.locator(".answer-input").fill(String(value));
-  await page.getByRole("button", { name: "בדיקה" }).click();
+  await answerViaNotebook(page, value);
   await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
 }
 
@@ -146,8 +146,7 @@ for (const topic of TOPICS) {
     await expect(page.locator(".hint-button")).toHaveCount(0);
 
     const [a, b] = await currentOperands(page, topic);
-    await page.locator(".answer-input").fill(String(computeAnswer(topic, a, b) + 1000));
-    await page.getByRole("button", { name: "בדיקה" }).click();
+    await answerViaNotebook(page, computeAnswer(topic, a, b) + 1000);
 
     await expect(page.locator(".feedback.wrong")).toBeVisible();
     await expect(page.locator(".explanation")).toContainText(String(a));

@@ -103,5 +103,5 @@ test("grade 1 keeps working end to end while other grades are blocked", async ({
   await page.locator(".topic-card").first().click();
   await page.locator(".style-card, .level-card").first().click();
 
-  await expect(page.locator(".answer-input")).toBeVisible();
+  await expect(page.locator(".problem-box")).toBeVisible();
 });
