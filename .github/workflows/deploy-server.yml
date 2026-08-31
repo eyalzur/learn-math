@@ -41,6 +41,13 @@ env:
   SERVICE_ACCOUNT: github-deployer@learn-math-506923.iam.gserviceaccount.com
   SERVICE_NAME: notebook-server
   REGION: me-west1
+  # The identity notebook-server itself runs as at runtime — not SERVICE_ACCOUNT above,
+  # which is who *performs* the deploy. Passed explicitly on every deploy below: `gcloud
+  # run deploy` without --service-account does not reliably carry the previous revision's
+  # service account forward, discovered the hard way on 2026-08-31 when an automated
+  # deploy silently reset this service to the project's default compute account, breaking
+  # its Workload Identity Federation trust with Anthropic. See server/README.md.
+  RUNTIME_SERVICE_ACCOUNT: notebook-server-claude@learn-math-506923.iam.gserviceaccount.com
 
 jobs:
   deploy:
@@ -97,6 +104,7 @@ jobs:
           gcloud run deploy "$SERVICE_NAME" \
             --source server/ \
             --region "$REGION" \
+            --service-account "$RUNTIME_SERVICE_ACCOUNT" \
             --allow-unauthenticated \
             --quiet
 

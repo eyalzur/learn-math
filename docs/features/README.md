@@ -6,8 +6,9 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
-| שמות קבועים לדמויות בדימויים | 🟢 done — 305/305, ממתין ל-PR | [status](./analogy-character-names/status.md) |
-| פריסה אוטומטית של השרת | 🟢 done — מוזג ל-main, ההגדרה בגוגל בוצעה | [status](./server-auto-deploy/status.md) |
+| שמות קבועים לדמויות בדימויים | 🟢 done — מוזג ל-main | [status](./analogy-character-names/status.md) |
+| המורה מבינה מה נכתב בדף | 🟢 done — מוזג ל-main, טרם אומת מול Claude אמיתי | [status](./notebook-teacher-understanding/status.md) |
+| פריסה אוטומטית של השרת | 🟢 done — מוזג ל-main (כולל תיקון #61) | [status](./server-auto-deploy/status.md) |
 | שרת המחברת — שלב א׳ (מטריצה → תמונה) | 🟢 done — מוזג וחי, כולל סבב ניסוח | [status](./notebook-server-relay/status.md) |
 | כל כיתה לכל תלמיד/ה | 🟢 done — מוזג ל-main | [status](./any-grade-any-student/status.md) |
 | מחברת תרגול | 🟢 done — מוזג ל-main | [status](./practice-notebook/status.md) |

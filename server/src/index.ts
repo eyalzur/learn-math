@@ -1,6 +1,9 @@
 import cors from "cors";
-import express from "express";
+import express, { type Response } from "express";
+import { ensureFreshIdentityToken } from "./anthropicAuth.js";
+import { readPage } from "./readPage.js";
 import { renderMatrix, type RenderMatrixInput } from "./renderMatrix.js";
+import type { PageReading } from "./pageReading.js";
 
 /**
  * The static client lives on GitHub Pages; this is a real cross-origin call. Kept as an
@@ -9,6 +12,11 @@ import { renderMatrix, type RenderMatrixInput } from "./renderMatrix.js";
 const ALLOWED_ORIGINS = new Set(["https://eyalzur.github.io", "http://localhost:5173"]);
 
 const app = express();
+
+// Cloud Run sits behind a load balancer — without this, req.ip is the balancer's own
+// address for every request, and the /read-page rate limiter below would count all
+// traffic as one caller (or none, depending which way that fails).
+app.set("trust proxy", true);
 
 app.use(
   cors({
@@ -37,6 +45,63 @@ app.post("/render-page", (req, res) => {
     res.status(500).json({ error: "failed to render page" });
   }
 });
+
+// A real cost lands behind this endpoint (a Claude call), unlike /render-page above (local
+// PNG drawing, free). Not distributed and not durable across a restart — a best-effort
+// backstop against gross abuse, sized generously above any real usage by the three actual
+// students this app is for. The real backstop is the org-level spend cap (see
+// server/README.md) — this just keeps a single misbehaving client from running it up alone.
+const READ_PAGE_RATE_LIMIT = 30;
+const READ_PAGE_RATE_WINDOW_MS = 60 * 60 * 1000;
+const readPageHits = new Map<string, number[]>();
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const recent = (readPageHits.get(ip) ?? []).filter((t) => now - t < READ_PAGE_RATE_WINDOW_MS);
+  recent.push(now);
+  readPageHits.set(ip, recent);
+  return recent.length > READ_PAGE_RATE_LIMIT;
+}
+
+app.post("/read-page", (req, res) => {
+  if (isRateLimited(req.ip ?? "unknown")) {
+    res.status(429).json({ error: "rate limit exceeded" });
+    return;
+  }
+
+  const validated = validateRequest(req.body);
+  if (!validated) {
+    res.status(400).json({ error: "invalid request body" });
+    return;
+  }
+
+  void handleReadPage(validated, res);
+});
+
+async function handleReadPage(input: RenderMatrixInput, res: Response): Promise<void> {
+  try {
+    const buffer = renderMatrix(input);
+    const imageDataUrl = `data:image/png;base64,${buffer.toString("base64")}`;
+
+    // Nothing to transcribe on a blank page, and a real Claude call costs real money —
+    // this case is already fully known without asking the model.
+    if (input.filledCells.length === 0) {
+      res.status(200).json({ imageDataUrl, reading: { certain: false } satisfies PageReading });
+      return;
+    }
+
+    await ensureFreshIdentityToken();
+    const reading = await readPage(buffer);
+    res.status(200).json({ imageDataUrl, reading });
+  } catch (error) {
+    // Cloud Run captures stdout/stderr into Cloud Logging automatically — without this,
+    // a live failure here is invisible: the client only ever sees the generic 500 below,
+    // and `gcloud run services logs read` showed nothing but the request line itself
+    // (discovered 2026-08-31 while diagnosing a real production failure).
+    console.error("failed to read page:", error);
+    res.status(500).json({ error: "failed to read page" });
+  }
+}
 
 function validateRequest(body: unknown): RenderMatrixInput | null {
   if (!body || typeof body !== "object") return null;

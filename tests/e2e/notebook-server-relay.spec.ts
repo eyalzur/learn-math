@@ -14,6 +14,12 @@ import { test, expect, type Page } from "@playwright/test";
  *    imageDataUrl proves the client displays whatever the server returns — it cannot prove
  *    the server's own PNG is faithful to the matrix, which is why that half is manual.
  *
+ * The client now calls POST /read-page (docs/features/notebook-teacher-understanding/),
+ * which returns the same imageDataUrl plus a `reading` — but everything this file actually
+ * asserts (the image relay itself, the dialog opening, the toolbar, the error/retry path)
+ * is still exactly what notebook-server-relay's own spec promises, unchanged by that later
+ * feature. The reading content itself has its own coverage: notebook-teacher-understanding.spec.ts.
+ *
  * playwright.config.ts sets VITE_NOTEBOOK_SERVER_URL to a fixed, unresolvable host
  * (https://notebook-server.invalid) for the whole test run, purely so every test below can
  * intercept the request with page.route — no real network call is ever made or attempted
@@ -22,6 +28,10 @@ import { test, expect, type Page } from "@playwright/test";
 
 const MOCK_IMAGE =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
+// notebook-teacher-understanding requires certain:false when nothing was written, but every
+// mocked page here has real drawn content — a fixed, generic reading keeps this file's own
+// assertions unrelated to what the reading actually says.
+const MOCK_READING = { certain: false as const };
 
 /** Same fixed entry point practice-notebook.spec.ts uses. */
 async function openLevel(page: Page) {
@@ -39,7 +49,7 @@ function notebookButton(page: Page) {
 }
 
 function sendButton(page: Page) {
-  return page.getByRole("button", { name: /^שלח למורה$|^שולח\.\.\.$/ });
+  return page.getByRole("button", { name: /^שלח למורה$|^המורה קוראת\.\.\.$/ });
 }
 
 /**
@@ -61,14 +71,18 @@ async function drawOnCanvas(page: Page) {
 }
 
 function mockSuccess(page: Page, delayMs = 0) {
-  return page.route("**/render-page", async (route) => {
+  return page.route("**/read-page", async (route) => {
     if (delayMs) await new Promise((resolve) => setTimeout(resolve, delayMs));
-    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ imageDataUrl: MOCK_IMAGE }) });
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ imageDataUrl: MOCK_IMAGE, reading: MOCK_READING }),
+    });
   });
 }
 
 function mockFailure(page: Page) {
-  return page.route("**/render-page", (route) => route.fulfill({ status: 500, contentType: "application/json", body: JSON.stringify({ error: "boom" }) }));
+  return page.route("**/read-page", (route) => route.fulfill({ status: 500, contentType: "application/json", body: JSON.stringify({ error: "boom" }) }));
 }
 
 test.beforeEach(async ({ page }) => {
@@ -127,7 +141,7 @@ test("while sending, the button shows a loading label and the rest of the notebo
   await mockSuccess(page, 400);
   await sendButton(page).click();
 
-  await expect(page.getByRole("button", { name: "שולח..." })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "המורה קוראת..." })).toBeDisabled();
   // Not blocked: drawing tools and page navigation stay usable while the request is in flight.
   await expect(page.getByRole("button", { name: "עט" })).toBeEnabled();
   await expect(page.getByRole("button", { name: "+ דף חדש" })).toBeEnabled();
@@ -163,14 +177,22 @@ test("leaving the notebook works the same regardless of any of this", async ({ p
   await expect(page.locator(".answer-input")).toBeVisible();
 });
 
-// ------------------------------------------------------- no Claude/Anthropic yet, anywhere
+// ---------------------------------- no Claude/Anthropic dependency in the browser-side code
+//
+// notebook-teacher-understanding added a real Claude call — but only server-side
+// (docs/features/notebook-teacher-understanding/product-spec.md: "הקריאה ל-Claude קורית
+// אך ורק בצד השרת... אין מפתח או סוד Anthropic בקוד הלקוח"). What stays true, and stays
+// worth locking down here, is the client half of that boundary: nothing under src/ imports
+// Anthropic's SDK or talks to their API directly — the "Claude" mentions that remain in
+// client comments/copy (e.g. describing what the teacher persona is) are not the risk this
+// guards against, so this checks for actual SDK/API usage, not the word itself.
 
-const FORBIDDEN = /anthropic|claude/i;
-const CHECKED_FILES = ["server/src/index.ts", "server/src/renderMatrix.ts", "server/package.json", "src/lib/notebookServer.ts"];
+const CLIENT_FILES = ["src/lib/notebookServer.ts", "src/components/PracticeNotebook.tsx"];
+const ANTHROPIC_SDK_USAGE = /@anthropic-ai\/sdk|api\.anthropic\.com|ANTHROPIC_API_KEY/;
 
-test("no Anthropic/Claude dependency exists anywhere in the new server or client code", () => {
-  for (const relativePath of CHECKED_FILES) {
+test("no client-side code imports the Anthropic SDK or calls their API directly — that stays server-only", () => {
+  for (const relativePath of CLIENT_FILES) {
     const content = readFileSync(new URL(`../../${relativePath}`, import.meta.url), "utf8");
-    expect(content, `${relativePath} should not reference anthropic/claude yet`).not.toMatch(FORBIDDEN);
+    expect(content, `${relativePath} should not use the Anthropic SDK/API directly`).not.toMatch(ANTHROPIC_SDK_USAGE);
   }
 });

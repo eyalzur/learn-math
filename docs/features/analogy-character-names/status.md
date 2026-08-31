@@ -10,9 +10,9 @@
 - [x] Implementation — developer — 2026-08-30
 - [x] Tests — qa — 2026-08-30
 
-**Current phase:** done — ready to push and open PR
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `feature/analogy-character-names`
-**PR:** not opened yet
+**PR:** [#59](https://github.com/eyalzur/learn-math/pull/59) — מוזג 2026-08-31
 
 ## Open questions / blockers
 None.
