@@ -13,7 +13,7 @@
 
 **Current phase:** done — מוזג ל-`main`
 **Branch:** `feature/topic-lesson`
-**PR:** [#51](https://github.com/eyalzur/learn-math/pull/51) — מוזג 2026-08-21 — פתוח, עדיין לא מוזג; הסבב הזה מוסיף קומיטים לאותו PR
+**PR:** [#51](https://github.com/eyalzur/learn-math/pull/51) — מוזג 2026-08-21
 
 ## Open questions / blockers
 None. הבלוק "איך פותרים?" הקיים ב-Practice.tsx (method + 11 הדיאגרמות + שלבים +
