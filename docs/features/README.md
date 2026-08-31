@@ -6,7 +6,7 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
-| מחברת כמצב התרגול היחיד | 🟡 in architecture | [status](./notebook-default-practice/status.md) |
+| מחברת כמצב התרגול היחיד | 🟡 ready for implementation | [status](./notebook-default-practice/status.md) |
 | המורה מבינה מה נכתב בדף | 🟢 done — מוזג ל-main, אומת מול Claude אמיתי | [status](./notebook-teacher-understanding/status.md) |
 | פריסה אוטומטית של השרת | 🟢 done — מוזג ל-main (כולל תיקון #61) | [status](./server-auto-deploy/status.md) |
 | שרת המחברת — שלב א׳ (מטריצה → תמונה) | 🟢 done — מוזג וחי, כולל סבב ניסוח | [status](./notebook-server-relay/status.md) |

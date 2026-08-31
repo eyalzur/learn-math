@@ -6,11 +6,11 @@
 ## Progress
 - [x] Product spec — product-manager — 2026-08-31
 - [x] Design — designer — 2026-08-31
-- [ ] Architecture — tech-lead — not started
+- [x] Architecture — tech-lead — 2026-08-31
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** tech-lead
+**Current phase:** developer
 **Branch:** `feature/notebook-default-practice`
 **PR:** not opened yet
 
@@ -22,10 +22,14 @@ None שחוסם. שלוש ההכרעות שהמשתמש סימן כלא-ידוע
 פרצה בכלל "הילד לא ממתין לשרת" (שממשיך לחול על התוכן שכבר זמין תמיד: שיטה,
 רמזים, דימוי).
 
-- **Design → Tech-lead:** מסך התרגול ומסך המחברת (`Practice.tsx`,
-  `PracticeNotebook.tsx`) מתמזגים למסך אחד — ראו design.md. כשעוברים לשאלה
-  הבאה, האם נפתח דף חדש וריק אוטומטית בכל שאלה, או שממשיכים על אותה ערימת
-  דפים? לא משנה AC, אבל קובע התנהגות נראית — כדאי הכרעה מפורשת בארכיטקטורה.
+- **Design → Tech-lead (הוכרע):** דף חדש נפתח אוטומטית לכל שאלה (כמו לחיצה
+  עצמית על "+ דף חדש"); דפים קודמים נשארים לדפדוף. ראו architecture.md,
+  "דף חדש לכל שאלה" ו-Edge Cases (מה קורה ב-`MAX_PAGES`).
+- **Tech-lead → Developer, לתשומת לב:** חוזה `/read-page` משתנה שינוי שובר
+  (לא תוסף) — `PageReading`, הבקשה (`expectedPrompt` חדש), והתשובה
+  (`processReflection`/`errorPointer`/`finalAnswer` במקום `question`/`answer`
+  הישנים; `imageDataUrl` הוסר). ראו architecture.md, Data/State Changes
+  ו-Risks לנימוק המלא.
 
 ## Docs
 - [Product spec](./product-spec.md)
