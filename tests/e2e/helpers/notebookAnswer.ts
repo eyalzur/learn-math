@@ -32,6 +32,13 @@ export async function drawOnCanvas(page: Page) {
  * clicks "שלח למורה" — the single action that used to be "type an answer and press בדיקה".
  * `unroute` first so a test answering several questions in a row (a loop over a whole
  * lesson) mocks a fresh value each time rather than stacking handlers.
+ *
+ * Waits for the resulting feedback to actually appear before returning. Unlike the old
+ * typed answer (checked synchronously, in the same click handler), sending to the teacher
+ * is inherently async — even mocked, the response crosses a real await — so the DOM update
+ * lands a tick after Playwright's `.click()` resolves. Every one of this suite's many
+ * "answer, then immediately assert" call sites depends on this helper closing that gap
+ * itself, rather than each one remembering to wait afterward.
  */
 export async function answerViaNotebook(page: Page, value: number | string) {
   await page.unroute("**/read-page").catch(() => {});
@@ -46,10 +53,12 @@ export async function answerViaNotebook(page: Page, value: number | string) {
   );
   await drawOnCanvas(page);
   await page.getByRole("button", { name: "שלח למורה" }).click();
+  await page.locator(".feedback.correct, .feedback.wrong").first().waitFor({ state: "visible" });
 }
 
 /** Mocks an uncertain reading (the teacher couldn't confidently read the page) for the next
- *  send only — see the "כשהקריאה לא ודאית" acceptance criteria. */
+ *  send only — see the "כשהקריאה לא ודאית" acceptance criteria. Waits for the uncertain
+ *  message itself, for the same reason answerViaNotebook waits for feedback. */
 export async function answerUncertainly(page: Page) {
   await page.unroute("**/read-page").catch(() => {});
   await page.route("**/read-page", (route) =>
@@ -61,6 +70,7 @@ export async function answerUncertainly(page: Page) {
   );
   await drawOnCanvas(page);
   await page.getByRole("button", { name: "שלח למורה" }).click();
+  await page.getByText("לא הצלחתי לקרוא את זה בבירור").waitFor({ state: "visible" });
 }
 
 /** Mocks the /read-page call itself failing (network/server/timeout) for the next send

@@ -142,7 +142,7 @@ test("the questions climb, so the hardest is not the first one met", async ({ pa
     const prompt = await page.locator(".problem-text").innerText();
     seen.push(Number(prompt.match(/\d+/)![0]));
     await answerViaNotebook(page, 999999);
-    const next = page.getByRole("button", { name: /הבא|סיום/ });
+    const next = page.getByRole("button", { name: /^(הבא|סיום)$/ });
     if (!(await next.count())) break;
     await next.click();
   }
@@ -174,7 +174,7 @@ test("history says which style was practised, not just which topic", async ({ pa
 
   for (let i = 0; i < 5; i++) {
     await answerViaNotebook(page, 999999);
-    await page.getByRole("button", { name: /הבא|סיום/ }).click();
+    await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
   }
 
   // A reload would resume inside the style picker just entered, not the topics list

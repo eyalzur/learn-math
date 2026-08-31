@@ -89,7 +89,7 @@ async function failAtDecimalAddition(page: Page, wantCarry: boolean) {
       return parsed!;
     }
     await answerWrong(page);
-    await page.getByRole("button", { name: /הבא|סיום/ }).click();
+    await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
   }
   throw new Error(`never saw a ${wantCarry ? "carrying" : "non-carrying"} decimal addition in 20 tries`);
 }
@@ -165,7 +165,7 @@ test("a subtraction question gets a subtraction sentence, never an addition one"
       const prompt = await currentPrompt(page);
       if (prompt.includes(wanted)) break;
       await answerWrong(page);
-      await page.getByRole("button", { name: /הבא|סיום/ }).click();
+      await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
     }
     await expect(page.locator(".problem-text")).toContainText(wanted);
     await answerWrong(page);
@@ -191,7 +191,7 @@ test("a borrowing question shows the vertical with a borrow mark, and the explan
     const prompt = await currentPrompt(page);
     if (prompt.includes("15 − 8")) break;
     await answerWrong(page);
-    await page.getByRole("button", { name: /הבא|סיום/ }).click();
+    await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
   }
   await expect(page.locator(".problem-text")).toContainText("15 − 8");
   await answerWrong(page);
