@@ -97,15 +97,12 @@ async function stubNoSpeech(page: Page) {
   });
 }
 
-test.beforeEach(async ({ page }) => {
-  await openLevel(page);
-});
-
 // ------------------------------------------------------- the merged screen, default state
 
 test("the notebook is ready to write in the moment a question loads — no separate open step, and no typed answer field anywhere", async ({
   page,
 }) => {
+  await openLevel(page);
   await expect(page.locator(".problem-box")).toBeVisible();
   await expect(page.locator("canvas")).toBeVisible();
   await expect(page.locator(".answer-input")).toHaveCount(0);
@@ -116,12 +113,14 @@ test("the notebook is ready to write in the moment a question loads — no separ
 });
 
 test("the send button is disabled on an empty page, and enables once something is written", async ({ page }) => {
+  await openLevel(page);
   await expect(sendButton(page)).toBeDisabled();
   await drawOnCanvas(page);
   await expect(sendButton(page)).toBeEnabled();
 });
 
 test("sending only happens on an explicit click — drawing on the page never triggers it on its own", async ({ page }) => {
+  await openLevel(page);
   let requests = 0;
   await page.route("**/read-page", (route) => {
     requests++;
@@ -150,6 +149,7 @@ test("a correct final answer shows the teacher's reflection and the existing cor
   // restart the level fresh and answer it right — same harvesting technique
   // mistake-explanation.spec.ts and teaching-explanations.spec.ts already use, more robust
   // than guessing the operator from the prompt text.
+  await openLevel(page);
   await answerViaNotebook(page, 999999);
   const feedback = await page.locator(".feedback.wrong").innerText();
   const correct = feedback.match(/(-?\d+(?:\.\d+)?)\s*$/)![1];
@@ -172,6 +172,7 @@ test("a correct final answer shows the teacher's reflection and the existing cor
 test("a wrong final answer still runs the existing diagnosis/explanation flow, unchanged, alongside the teacher's reflection", async ({
   page,
 }) => {
+  await openLevel(page);
   await answerViaNotebook(page, 999999);
 
   await expect(page.locator(".feedback.wrong")).toBeVisible();
@@ -182,6 +183,7 @@ test("a wrong final answer still runs the existing diagnosis/explanation flow, u
 });
 
 test("an error pointer from the teacher appears as a second, separate line after the process reflection", async ({ page }) => {
+  await openLevel(page);
   await page.route("**/read-page", (route) =>
     route.fulfill({
       status: 200,
@@ -210,6 +212,7 @@ test("an error pointer from the teacher appears as a second, separate line after
 test("an uncertain reading says so plainly, gives no verdict, and lets the student write again with no limit", async ({
   page,
 }) => {
+  await openLevel(page);
   await answerUncertainly(page);
 
   await expect(page.getByText("לא הצלחתי לקרוא את זה בבירור. אפשר לכתוב שוב, קצת יותר גדול או ברור?")).toBeVisible();
@@ -227,6 +230,7 @@ test("an uncertain reading says so plainly, gives no verdict, and lets the stude
 test("a failed call to the teacher shows a clear, non-technical error and lets you try again — the rest of the notebook keeps working", async ({
   page,
 }) => {
+  await openLevel(page);
   await mockTeacherCommunicationFailure(page);
   await drawOnCanvas(page);
   await sendButton(page).click();
@@ -248,6 +252,7 @@ test("reading the teacher's note aloud speaks the reflection and error pointer, 
   page,
 }) => {
   await stubSpeech(page);
+  await openLevel(page);
   await page.route("**/read-page", (route) =>
     route.fulfill({
       status: 200,
@@ -274,9 +279,11 @@ test("reading the teacher's note aloud speaks the reflection and error pointer, 
 
   const spokenText = () =>
     page.evaluate(() => (window as unknown as { __spoken: { text: string }[] }).__spoken.map((s) => s.text).join(" "));
+  // The reflection and the error pointer are spoken as separate parts with a real pause
+  // between them (data/speech.ts) — poll for the second part rather than reading once right
+  // after the first appears, so the assertion doesn't race that pause.
   await expect.poll(spokenText).toContain("12");
-  const said = await spokenText();
-  expect(said).toContain("שמתי לב לטעות קטנה");
+  await expect.poll(spokenText).toContain("שמתי לב לטעות קטנה");
 
   await speakButton.click();
   await expect(speakButton).toHaveAttribute("aria-label", "הקראת מה שהמורה הבינה");
@@ -284,6 +291,7 @@ test("reading the teacher's note aloud speaks the reflection and error pointer, 
 
 test("with no speech engine, the teacher panel has no read-aloud button at all", async ({ page }) => {
   await stubNoSpeech(page);
+  await openLevel(page);
   await answerViaNotebook(page, 7);
   await expect(page.locator(".teacher-reading .speak-button")).toHaveCount(0);
 });
@@ -291,6 +299,7 @@ test("with no speech engine, the teacher panel has no read-aloud button at all",
 // --------------------------------------------------------------- locked after an answer
 
 test("once answered, the notebook's primary action becomes moving on, not sending again", async ({ page }) => {
+  await openLevel(page);
   await answerViaNotebook(page, 7);
   await expect(sendButton(page)).toHaveCount(0);
   await expect(page.getByRole("button", { name: /^(הבא|סיום)$/ })).toBeEnabled();
@@ -299,6 +308,7 @@ test("once answered, the notebook's primary action becomes moving on, not sendin
 });
 
 test("moving to the next question opens a fresh, empty page", async ({ page }) => {
+  await openLevel(page);
   await expect(page.getByText("דף 1 מתוך 1")).toBeVisible();
   await answerViaNotebook(page, 7);
   await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
@@ -309,6 +319,7 @@ test("moving to the next question opens a fresh, empty page", async ({ page }) =
 // ------------------------------------------------------------- the notebook itself, ported
 
 test("a new page can be added, an existing one removed (never the last), and pages can be navigated", async ({ page }) => {
+  await openLevel(page);
   await expect(page.getByText("דף 1 מתוך 1")).toBeVisible();
 
   await page.getByRole("button", { name: "+ דף חדש" }).click();

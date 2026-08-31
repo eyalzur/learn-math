@@ -165,7 +165,14 @@ export function PracticeNotebook({
 
     if (stageRef.current) {
       const rect = stageRef.current.getBoundingClientRect();
-      panZoomRef.current = { zoom: 1, panX: (rect.width - PAGE_WIDTH) / 2, panY: 20 };
+      // Fit-to-screen, not a fixed zoom of 1: the stage used to be the full viewport
+      // (practice-notebook's original full-screen overlay, wide enough that the 1200px-wide
+      // page roughly fit at zoom 1), but notebook-default-practice embedded it as a bounded
+      // panel below the question — often much narrower than the page itself. A fixed zoom
+      // would center most of the page off both edges, invisible and undrawable; fitting to
+      // whatever space is actually there keeps the whole page visible on load regardless of
+      // how wide that turns out to be.
+      panZoomRef.current = computeFitTransform(rect.width, rect.height);
     }
     applyTransform();
     // eslint-disable-next-line react-hooks/exhaustive-deps
