@@ -165,11 +165,42 @@ cd learn-math
 gcloud run deploy notebook-server \
   --source server/ \
   --region me-west1 \
+  --service-account notebook-server-claude@learn-math-506923.iam.gserviceaccount.com \
   --allow-unauthenticated
 ```
 
+**אל תריצו את הפקודה הזו בלי `--service-account`.** בלעדיו, השירות עובר
+לחשבון השירות הדיפולטיבי של הפרויקט — לא נשאר על הקיים — ו-`/read-page`
+מפסיק לעבוד עד שמישהו מבחין ומתקן ידנית. ראו "תקרית: הפריסה איפסה בשקט את
+חשבון השירות" למטה.
+
 בסיום, הפקודה מדפיסה את כתובת השירות. **אם הכתובת משתנה** (שם שירות אחר, region
 אחר), צריך לעדכן אותה גם ב-`.github/workflows/deploy.yml`.
+
+### תקרית: הפריסה איפסה בשקט את חשבון השירות (2026-08-31)
+
+אחרי שהדיפלוי האוטומטי הראשון שכלל את `/read-page` (`POST /read-page`, ראו
+`docs/features/notebook-teacher-understanding/`) הגיע ל-Cloud Run, כל קריאה
+אליו נכשלה. `gcloud run services describe notebook-server --format
+"value(spec.template.spec.serviceAccountName)"` הראה
+`864901299725-compute@developer.gserviceaccount.com` — חשבון השירות
+הדיפולטיבי — במקום `notebook-server-claude@...` שהוגדר ידנית ב-2026-08-30
+בדיוק כדי לאפשר את חיבור ה-WIF מול Anthropic. Anthropic סומכת רק על הזהות
+הייעודית, כך שכל קריאה מהזהות הדיפולטיבית נכשלת.
+
+**הסיבה:** `.github/workflows/deploy-server.yml` הריץ `gcloud run deploy` בלי
+`--service-account` מפורש, מתוך הנחה (שגויה) שהפקודה משמרת את חשבון השירות
+מהרוויזיה הקודמת. היא לא. **תוקן** — הן ב-workflow (משתנה `RUNTIME_SERVICE_ACCOUNT`)
+והן בדוגמת הפריסה הידנית למעלה — אבל אם אתם רואים כשל דומה שוב אחרי דיפלוי
+(כל דיפלוי, ידני או אוטומטי), זה המקום הראשון לבדוק:
+```bash
+gcloud run services describe notebook-server --region me-west1 \
+  --format "value(spec.template.spec.serviceAccountName)"
+```
+אמור להחזיר `notebook-server-claude@learn-math-506923.iam.gserviceaccount.com`.
+אם לא — תקנו עם `gcloud run services update notebook-server --region me-west1
+--service-account=notebook-server-claude@learn-math-506923.iam.gserviceaccount.com`
+כתיקון מיידי, ובדקו למה הדיפלוי שגרם לזה לא כלל את הדגל.
 
 ### מכשולים חד-פעמיים שנתקלנו בהם (מתועדים כדי לא לגלות אותם מחדש)
 

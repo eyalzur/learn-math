@@ -7,10 +7,10 @@
 - [x] Product spec — product-manager — 2026-08-29 (סבב תיקון 2026-08-31: חשבון שירות מפין במפורש)
 - [x] Design — designer — 2026-08-31 (אין שינוי עיצובי — תיקון תשתית טהור)
 - [x] Architecture — tech-lead — 2026-08-31 (--service-account מפורש + לוגינג שגיאות)
-- [ ] Implementation — developer — not started (סבב התיקון)
+- [x] Implementation — developer — 2026-08-31
 - [ ] Tests — qa — not started (סבב התיקון)
 
-**Current phase:** developer (סבב תיקון — פריסה איפסה בשקט את חשבון השירות)
+**Current phase:** qa (סבב תיקון — פריסה איפסה בשקט את חשבון השירות)
 **Branch:** `fix/server-auto-deploy`
 **PR:** not opened yet (סבב התיקון; הפיצ'ר המקורי כבר מוזג — https://github.com/eyalzur/learn-math/pull/56)
 

@@ -93,7 +93,12 @@ async function handleReadPage(input: RenderMatrixInput, res: Response): Promise<
     await ensureFreshIdentityToken();
     const reading = await readPage(buffer);
     res.status(200).json({ imageDataUrl, reading });
-  } catch {
+  } catch (error) {
+    // Cloud Run captures stdout/stderr into Cloud Logging automatically — without this,
+    // a live failure here is invisible: the client only ever sees the generic 500 below,
+    // and `gcloud run services logs read` showed nothing but the request line itself
+    // (discovered 2026-08-31 while diagnosing a real production failure).
+    console.error("failed to read page:", error);
     res.status(500).json({ error: "failed to read page" });
   }
 }

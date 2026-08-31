@@ -306,3 +306,32 @@ run services logs read` יראה את השגיאה האמיתית בפעם הב�
 
 ## Open Questions
 None.
+
+## Implementation Notes — רוויזיה 2026-08-31
+
+נבנה בדיוק לפי התוכנית, ללא סטיות.
+
+**`.github/workflows/deploy-server.yml`:** נוסף `RUNTIME_SERVICE_ACCOUNT` תחת
+`env` (שם נפרד מ-`SERVICE_ACCOUNT` הקיים, שהוא חשבון ה-deployer — לא אותו
+דבר), ו-`--service-account "$RUNTIME_SERVICE_ACCOUNT"` נוסף לפקודת `gcloud
+run deploy`. אומת עם `python3 -c "import yaml; yaml.safe_load(...)"` — YAML
+תקין.
+
+**`server/README.md`:** דוגמת "פריסה מחדש" קיבלה את הדגל; נוסף קטע "תקרית:
+הפריסה איפסה בשקט את חשבון השירות (2026-08-31)" עם תיאור מה קרה, איך אובחן,
+ואיך לתקן אם זה יקרה שוב.
+
+**`server/src/index.ts`:** ה-`catch` ב-`handleReadPage` מקבל `console.error("failed
+to read page:", error)` לפני ה-`res.status(500)`. `npm run build` (`tsc -b`)
+בתוך `server/` נקי.
+
+**אין bump גרסה** — לא נגעו ב-`src/`/`public/`/`index.html`; `npm run build`
+ו-`npm run lint` בשורש הריפו נשארו נקיים (לא היה צפוי שינוי שם, ואומת).
+
+**אומת בפועל, לא רק בתיאוריה — לפני שהקוד הזה אפילו נדחף:** המשתמש תיקן את
+השירות החי ידנית (`gcloud run services update --service-account=...` ואחר כך
+`--update-env-vars` לארבעת משתני ה-Anthropic) ודיווח (2026-08-31) ש-"שלח
+למורה" עובד בפועל מול Claude אמיתי באתר החי. זו ההוכחה הראשונה בפרויקט
+שהזרימה השלמה — ציור → שרת → Claude → תשובה בעברית — עובדת מקצה לקצה. התיקון
+כאן (workflow + תיעוד + לוגינג) מגן על המצב התקין הזה מפני הדיפלוי האוטומטי
+**הבא**, לא על המצב הנוכחי (שכבר תוקן ידנית ועובד).
