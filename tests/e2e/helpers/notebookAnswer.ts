@@ -47,7 +47,9 @@ export async function answerViaNotebook(page: Page, value: number | string) {
       status: 200,
       contentType: "application/json",
       body: JSON.stringify({
-        reading: { certain: true, processReflection: `כתבתי \`${value}\`.`, finalAnswer: Number(value) },
+        // The teacher describes what the *student* did, in her own voice ("I saw that
+        // you wrote..."), never "I wrote" — she isn't the one answering.
+        reading: { certain: true, processReflection: `ראיתי שכתבת \`${value}\`.`, finalAnswer: Number(value) },
       }),
     }),
   );
