@@ -48,6 +48,14 @@ import {
   WORD_PROBLEMS_INITIAL_DIFFICULTY,
   WORD_PROBLEMS_QUESTION_COUNT,
 } from "./adaptiveWordProblems";
+import {
+  generateAnglesQuestion,
+  nextAnglesDifficulty,
+  ANGLES_MIN_DIFFICULTY,
+  ANGLES_MAX_DIFFICULTY,
+  ANGLES_INITIAL_DIFFICULTY,
+  ANGLES_QUESTION_COUNT,
+} from "./adaptiveAngles";
 
 /**
  * Grade 8, organised topic by topic.
@@ -268,6 +276,14 @@ export const grade8Topics: Topic[] = [
     id: "angles",
     title: "זוויות וחפיפת משולשים",
     reviewed: true,
+    adaptive: {
+      generate: generateAnglesQuestion,
+      minDifficulty: ANGLES_MIN_DIFFICULTY,
+      maxDifficulty: ANGLES_MAX_DIFFICULTY,
+      initialDifficulty: ANGLES_INITIAL_DIFFICULTY,
+      nextDifficulty: nextAnglesDifficulty,
+      questionCount: ANGLES_QUESTION_COUNT,
+    },
     levels: [
       level("easy", [
         { id: "g8-angles-e1", topic: "זוויות וחפיפת משולשים", prompt: "על קו ישר, שתי זוויות סמוכות. אחת מהן `130°`. מה גודל הזווית השנייה?", answer: 50, hints: ["קו ישר שלם הוא תמיד `180°`", "מורידים את הזווית הידועה מ-`180`"] as const, steps: [{ label: "קו ישר שלם הוא `180°`" }, { label: "", math: "180 − 130 = 50" }], analogy: "גג משופע שנפגש עם קיר ישר, וזווית אחת בפגישה כבר ידועה" },
