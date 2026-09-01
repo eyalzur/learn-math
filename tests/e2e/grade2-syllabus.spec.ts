@@ -21,6 +21,9 @@ import { answerViaNotebook } from "./helpers/notebookAnswer";
  *     shown after a wrong answer, the notebook-based answer flow, and a lesson (📖)
  *     button alongside practice.
  *  7. A full practice session of either new topic still ends on a score summary.
+ *  8. A streak of correct answers on כפל וחילוק eventually reaches a basic division
+ *     question (product-spec.md: "לפחות בדרגות הקושי הגבוהות... חלק מהשאלות עוסקות
+ *     במושג בסיסי של חילוק").
  */
 
 const MIKA = 0;
@@ -186,4 +189,28 @@ test("a streak of correct answers on חיסור עד 1000 eventually reaches a t
     await answerCorrectly(page, "−");
   }
   expect(sawThreeDigits, "a full streak of correct answers never reached a 3-digit problem").toBe(true);
+});
+
+test("a streak of correct answers on כפל וחילוק eventually reaches a basic division question", async ({
+  page,
+}) => {
+  await openTopic(page, "כפל וחילוק");
+  let sawDivision = false;
+  for (let i = 0; i < 20; i++) {
+    const prompt = (await page.locator(".problem-text").innerText()).trim();
+    const mult = prompt.match(/^(\d+)\s*×\s*(\d+)\s*=?$/);
+    const div = prompt.match(/^(\d+)\s*÷\s*(\d+)\s*=?$/);
+    if (div) {
+      sawDivision = true;
+      const [n, k] = [Number(div[1]), Number(div[2])];
+      await answerViaNotebook(page, n / k);
+    } else if (mult) {
+      const [a, b] = [Number(mult[1]), Number(mult[2])];
+      await answerViaNotebook(page, a * b);
+    } else {
+      throw new Error(`not a bare multiplication or division: "${prompt}"`);
+    }
+    await nextOrFinish(page);
+  }
+  expect(sawDivision, "a full streak of correct answers never reached a division question").toBe(true);
 });
