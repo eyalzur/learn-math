@@ -10,9 +10,9 @@
 - [x] Implementation — developer — 2026-08-31
 - [x] Tests — qa — 2026-08-31 (300/300, ריצה בודדת ונקייה)
 
-**Current phase:** done — ממתין ל-PR ולריוויו
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `feature/notebook-default-practice`
-**PR:** not opened yet
+**PR:** [#62](https://github.com/eyalzur/learn-math/pull/62) — מוזג 2026-09-01
 
 ## Open questions / blockers
 None שחוסם. שלוש ההכרעות שהמשתמש סימן כלא-ידועות (מיקה, קריאה לא-ודאית, נתיב
