@@ -8,21 +8,22 @@
 - [x] Product spec — product-manager — 2026-09-01 (תוקן שוב 2026-09-01)
 - [x] Design — designer — 2026-09-01 (תוקן שוב 2026-09-01)
 - [x] Architecture — tech-lead — 2026-09-01 (תוקן שוב 2026-09-01)
-- [ ] Implementation — developer — יעודכן בהתאם
-- [ ] Tests — qa — יעודכן בהתאם
+- [x] Implementation — developer — 2026-09-01 (תוקן שוב 2026-09-01)
+- [ ] Tests — qa — לבדוק אם צריך עדכון נוסף (הבדיקות כבר עודכנו כחלק מהתיקון)
 
-**Current phase:** developer
+**Current phase:** qa
 **Branch:** `feature/grade2-syllabus`
 **PR:** [#64](https://github.com/eyalzur/learn-math/pull/64) — פתוח, לא מוזג
 
 ## Open questions / blockers
-**תיקון בתהליך (2026-09-01):** המשתמש תיקן אחרי שה-PR כבר נפתח - "כפל וחילוק" ו"צורות
-וגופים" נבנו בטעות עם שלוש רמות קושי קבועות, בעוד שכבר הוחלט מראש (לפני שהפיצ'ר הזה
-נכתב) ששני הנושאים האלה אמורים להיות **אדפטיביים**, בדיוק כמו "חיבור עד 1000"/"חיסור
-עד 1000" - קושי שמשתנה בזמן אמת, בלי מסך רמות. product-spec.md, design.md, ו-
-architecture.md כבר עודכנו (שני גנרטורים חדשים מתוכננים: `adaptiveMulDiv.ts`,
-`adaptiveShapes.ts` - ראו architecture.md, "Technical Approach"). הקוד והבדיקות
-צריכים לעבור את אותו תיקון ולהידחף כקומיטים נוספים לאותו PR - לא PR חדש.
+None. התיקון (2026-09-01) הושלם: "כפל וחילוק" ו"צורות וגופים" הם עכשיו אדפטיביים
+(שני גנרטורים חדשים - `adaptiveMulDiv.ts`, `adaptiveShapes.ts`), בדיוק כמו "חיבור עד
+1000"/"חיסור עד 1000". `npm run build && npm run lint && npm run test:e2e` כולם
+ירוקים, **`325/325`** (עלה מ-`323/323`). פרטי התיקון המלאים ב-`architecture.md`,
+"Implementation Notes — סבב 2" - כולל שני באגים אמיתיים (רמז לא-מסומן, רמז שחושף
+תשובה) שנתפסו על ידי הבדיקות החדשות עצמן לפני קומיט. `tests/e2e/grade2-syllabus.spec.ts`
+כבר עודכן במסגרת התיקון (לא ממתין לשלב QA נפרד) - QA צריך רק לוודא שאין עוד קריטריון
+מה-product-spec המתוקן שלא מכוסה.
 
 ## Docs
 - [Product spec](./product-spec.md)

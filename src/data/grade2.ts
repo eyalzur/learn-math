@@ -16,6 +16,22 @@ import {
   SUB100_INITIAL_DIFFICULTY,
   SUB100_QUESTION_COUNT,
 } from "./adaptiveSub100";
+import {
+  generateMulDivQuestion,
+  nextMulDivDifficulty,
+  MULDIV_MIN_DIFFICULTY,
+  MULDIV_MAX_DIFFICULTY,
+  MULDIV_INITIAL_DIFFICULTY,
+  MULDIV_QUESTION_COUNT,
+} from "./adaptiveMulDiv";
+import {
+  generateShapesQuestion,
+  nextShapesDifficulty,
+  SHAPES_MIN_DIFFICULTY,
+  SHAPES_MAX_DIFFICULTY,
+  SHAPES_INITIAL_DIFFICULTY,
+  SHAPES_QUESTION_COUNT,
+} from "./adaptiveShapes";
 
 /**
  * Grade 2 — Mika's step up from grade 1, which topped out at 20 with no number above it
@@ -148,6 +164,17 @@ export const grade2Topics: Topic[] = [
     id: "muldiv",
     title: "כפל וחילוק",
     reviewed: true,
+    // Adaptive (תוקן 2026-09-01 - נבנה בטעות כנושא מבוסס-רמה בסבב הראשון). השאלות
+    // הכתובות למטה נשארות בתור "מה שהיה קורה אם הנושא עדיין עבד לפי בחירת רמה" - אותה
+    // סיבה בדיוק ש-add100/sub100 שומרות על שלהן. ראו docs/features/grade2-syllabus/.
+    adaptive: {
+      generate: generateMulDivQuestion,
+      minDifficulty: MULDIV_MIN_DIFFICULTY,
+      maxDifficulty: MULDIV_MAX_DIFFICULTY,
+      initialDifficulty: MULDIV_INITIAL_DIFFICULTY,
+      nextDifficulty: nextMulDivDifficulty,
+      questionCount: MULDIV_QUESTION_COUNT,
+    },
     levels: [
       level("easy", [
         { id: "g2-muldiv-e1", topic: "כפל וחילוק", style: "muldiv", prompt: "2 × 3", answer: 6, hints: ["אפשר לחשוב על כפל כחיבור של אותו מספר כמה פעמים", "יש `2` קבוצות של `3` — זה כמו `3+3`"] as const, steps: [{ label: "אפשר לחשוב על זה כחיבור חוזר:", math: "2 × 3 = 3 + 3" }, { label: "וזה יוצא:", math: "3 + 3 = 6" }], analogy: "יש 2 קופסאות, ובכל קופסה 3 עוגיות" },
@@ -191,6 +218,15 @@ export const grade2Topics: Topic[] = [
     id: "shapes",
     title: "צורות וגופים",
     reviewed: true,
+    // Adaptive (תוקן 2026-09-01 - ראו ההערה על "muldiv" למעלה, אותה סיבה בדיוק).
+    adaptive: {
+      generate: generateShapesQuestion,
+      minDifficulty: SHAPES_MIN_DIFFICULTY,
+      maxDifficulty: SHAPES_MAX_DIFFICULTY,
+      initialDifficulty: SHAPES_INITIAL_DIFFICULTY,
+      nextDifficulty: nextShapesDifficulty,
+      questionCount: SHAPES_QUESTION_COUNT,
+    },
     levels: [
       level("easy", [
         { id: "g2-shapes-e1", topic: "צורות וגופים", style: "shapes", prompt: "כמה צלעות יש למשולש?", answer: 3, hints: ["סופרים כמה קווים ישרים בונים את הצורה", "תחשוב/י על הצורה של גג בית"] as const, steps: [{ label: "משולש הוא צורה עם שלוש פינות ושלוש צלעות ישרות" }], analogy: "תסתכל/י על פרוסת פיצה — הקצוות שלה בונים משולש" },

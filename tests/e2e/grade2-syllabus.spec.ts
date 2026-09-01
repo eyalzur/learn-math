@@ -9,8 +9,10 @@ import { answerViaNotebook } from "./helpers/notebookAnswer";
  *     problems — not just carrying/borrowing under 100 — when answered correctly enough.
  *  2. Grade ב׳ shows four topic cards, including the two new ones: כפל וחילוק and
  *     צורות וגופים.
- *  3. כפל וחילוק and צורות וגופים are both level-based (three levels, like every other
- *     new-topic shape in the app), not adaptive.
+ *  3. כפל וחילוק and צורות וגופים are both **adaptive** — no level to pick, straight into
+ *     a 20-question practice session — the same mechanism חיבור/חיסור עד 1000 already
+ *     use (corrected 2026-09-01: an earlier pass built them as three fixed levels, which
+ *     was wrong).
  *  4. A כפל וחילוק question is a bare expression, rendered left-to-right inside the RTL
  *     page — the same rule that already applies everywhere else.
  *  5. A צורות וגופים question is a plain Hebrew sentence with a numeric answer — no
@@ -18,7 +20,7 @@ import { answerViaNotebook } from "./helpers/notebookAnswer";
  *  6. Both new topics keep working with the existing mechanics: hints, the explanation
  *     shown after a wrong answer, the notebook-based answer flow, and a lesson (📖)
  *     button alongside practice.
- *  7. A full level of either new topic still ends on a score summary.
+ *  7. A full practice session of either new topic still ends on a score summary.
  */
 
 const MIKA = 0;
@@ -68,15 +70,15 @@ test("both new topics still offer a lesson (📖) alongside practice, like every
 });
 
 for (const title of ["כפל וחילוק", "צורות וגופים"]) {
-  test(`${title} is level-based, not adaptive`, async ({ page }) => {
+  test(`${title} is adaptive, entered directly with no level to pick`, async ({ page }) => {
     await openTopic(page, title);
-    await expect(page.locator(".level-card")).toHaveCount(3);
+    await expect(page.locator(".level-card")).toHaveCount(0);
+    await expect(page.locator(".progress")).toContainText("מתוך 20");
   });
 }
 
 test("a כפל וחילוק question is a bare expression, shown left-to-right", async ({ page }) => {
   await openTopic(page, "כפל וחילוק");
-  await page.locator(".level-card").first().click(); // easy
 
   const box = page.locator(".problem-box");
   await expect(box).toBeVisible();
@@ -89,7 +91,6 @@ test("a צורות וגופים question is a plain Hebrew sentence, with no ari
   page,
 }) => {
   await openTopic(page, "צורות וגופים");
-  await page.locator(".level-card").first().click(); // easy
 
   const box = page.locator(".problem-box");
   await expect(box).toBeVisible();
@@ -100,7 +101,6 @@ test("a צורות וגופים question is a plain Hebrew sentence, with no ari
 
 test("a wrong answer in כפל וחילוק still shows two hints and a real explanation", async ({ page }) => {
   await openTopic(page, "כפל וחילוק");
-  await page.locator(".level-card").first().click(); // easy
 
   await expect(page.locator(".hint")).toHaveCount(0);
   await page.locator(".hint-button").click();
@@ -125,7 +125,6 @@ test("a numeric answer to a צורות וגופים question still runs through 
   // in through the notebook, and real feedback (right or wrong) comes back — not a blank
   // or broken screen.
   await openTopic(page, "צורות וגופים");
-  await page.locator(".level-card").first().click(); // easy
 
   await expect(page.locator(".problem-text")).not.toBeEmpty();
   await answerViaNotebook(page, 4);
@@ -134,9 +133,8 @@ test("a numeric answer to a צורות וגופים question still runs through 
   expect(await feedback.getAttribute("class")).toMatch(/\b(correct|wrong)\b/);
 });
 
-test("a full level of כפל וחילוק ends on a score summary", async ({ page }) => {
+test("a full practice session of כפל וחילוק ends on a score summary", async ({ page }) => {
   await openTopic(page, "כפל וחילוק");
-  await page.locator(".level-card").first().click(); // easy, ten questions
 
   const total = Number((await page.locator(".progress").innerText()).match(/מתוך (\d+)/)![1]);
   for (let i = 0; i < total; i++) {
