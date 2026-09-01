@@ -7,10 +7,10 @@
 - [x] Product spec — product-manager — 2026-08-31 (עודכן 2026-09-01, סבב רוויזיה א׳ — גודל משטח הכתיבה)
 - [x] Design — designer — 2026-09-01 (סבב רוויזיה א׳ — מצב A מעודכן, מצב F חדש "מסך מלא")
 - [x] Architecture — tech-lead — 2026-09-01 (סבב רוויזיה א׳ — flexbox למילוי גובה, `position:fixed;inset:0` למסך מלא)
-- [ ] Implementation — developer — not started
+- [x] Implementation — developer — 2026-09-01 (סבב רוויזיה א׳ — ממומש ואומת ידנית)
 - [ ] Tests — qa — not started
 
-**Current phase:** developer
+**Current phase:** qa
 **Branch:** `fix/notebook-fullscreen`
 **PR:** not opened yet
 
@@ -37,6 +37,21 @@ None שחוסם על הסבב הנוכחי. שלוש ההכרעות שהמשתמ
 - **Design → Tech-lead (הוכרע):** דף חדש נפתח אוטומטית לכל שאלה (כמו לחיצה
   עצמית על "+ דף חדש"); דפים קודמים נשארים לדפדוף. ראו architecture.md,
   "דף חדש לכל שאלה" ו-Edge Cases (מה קורה ב-`MAX_PAGES`).
+- **Developer → QA (סבב רוויזיה א׳, 2026-09-01):** ממומש במלואו לפי הארכיטקטורה
+  — `.practice` הפך ל-flex container (`flex:1`, לא `min-height:100vh/100dvh`
+  כמו שתועד ראשונית, כי `#root` כבר `flex` מתחילת הפרויקט — ראו architecture.md
+  Implementation Notes לנימוק). `.notebook-screen` עובר ל-`flex:1 1 auto;
+  min-height:360px`, וכש-`fullscreen` פעיל מקבל `.fullscreen`
+  (`position:fixed;inset:0;z-index:30`, אותו z-index שהיה במנגנון המקורי של
+  `practice-notebook`). כפתור "⤢" קורא ל-`onToggleFullscreen` בלבד (לא עוד
+  ל-`fitToScreen` הישן, שהוסר) — טוגל `fullscreen` state ב-`Practice.tsx`,
+  שיוצא אוטומטית כש-`feedback !== null`. `topSlot` (שאלה+✕+הקראה) ו-`statusSlot`
+  (הודעות אי-ודאות/כישלון שליחה) הם props חדשים ל-`PracticeNotebook`, מורכבים
+  ב-`Practice.tsx` ומוצגים רק בתוך מסך מלא. אומת ידנית (לא אוטומטית — זו עבודת
+  QA) עם dev server + Playwright חד-פעמי: מילוי גובה כברירת מחדל, כניסה/יציאה
+  ממסך מלא, יציאה אוטומטית בקריאה ודאית, השארות במסך מלא בקריאה לא-ודאית —
+  כל חמשת הבדיקות עברו. `npm run build`/`lint` נקיים, `npm run bump:fix`
+  (1.25.0 → 1.25.1). לא הורצה סוויטת ה-e2e המלאה.
 - **Tech-lead → Developer (סבב רוויזיה א׳, 2026-09-01):** שני שינויים ב-CSS/state
   בלבד, בלי לגעת בחוזה `/read-page`/`diagnose`/זרימת נכון-שגוי. (1) `.practice`
   הופך ל-`display:flex;flex-direction:column` (עם `100vh`/`100dvh` fallback),

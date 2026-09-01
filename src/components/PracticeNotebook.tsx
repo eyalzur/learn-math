@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import type { DrawTool, NotebookPage, PanZoom } from "../data/notebook";
 import {
@@ -36,6 +37,19 @@ interface PracticeNotebookProps {
    *  can still look back at it. */
   locked: boolean;
   primaryAction: PrimaryAction;
+  /** The writing box expanded to (almost) the whole screen — a toggle, not a mode this
+   *  component decides on its own. See docs/features/notebook-default-practice/architecture.md. */
+  fullscreen: boolean;
+  onToggleFullscreen: () => void;
+  /** What to show above the writing surface while fullscreen is on, in place of the
+   *  regular header Practice.tsx hides then (the question, plus a way out) — composed by
+   *  the caller, rendered here without this component knowing what it is. Ignored outside
+   *  fullscreen. */
+  topSlot: ReactNode;
+  /** Small status messages (an uncertain reading, a failed send) that stay reachable next
+   *  to the toolbar while fullscreen is on, instead of in the hidden regular header.
+   *  Ignored outside fullscreen. */
+  statusSlot: ReactNode;
 }
 
 /**
@@ -55,6 +69,10 @@ export function PracticeNotebook({
   onCurrentPageIndexChange,
   locked,
   primaryAction,
+  fullscreen,
+  onToggleFullscreen,
+  topSlot,
+  statusSlot,
 }: PracticeNotebookProps) {
   const [tool, setTool] = useState<DrawTool | "pan">("pen");
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -84,6 +102,9 @@ export function PracticeNotebook({
   const panZoomRef = useRef<PanZoom>({ panX: 0, panY: 0, zoom: 1 });
   const toolRef = useRef<DrawTool | "pan">("pen");
   const lockedRef = useRef(locked);
+  // Mirrors the fullscreen prop for the resize listener below, which is registered once
+  // ([] deps) and would otherwise close over the fullscreen value from its first render.
+  const fullscreenRef = useRef(fullscreen);
   const activePointers = useRef(new Map<number, { x: number; y: number }>());
   const drawing = useRef(false);
   const lastPoint = useRef<{ x: number; y: number } | null>(null);
@@ -105,6 +126,10 @@ export function PracticeNotebook({
   useEffect(() => {
     lockedRef.current = locked;
   }, [locked]);
+
+  useEffect(() => {
+    fullscreenRef.current = fullscreen;
+  }, [fullscreen]);
 
   function inkColor() {
     return getComputedStyle(document.documentElement).getPropertyValue("--text-h").trim() || "#08060d";
@@ -187,11 +212,33 @@ export function PracticeNotebook({
 
   useEffect(() => {
     function handleResize() {
+      // Only while fullscreen: position:fixed;inset:0 means a resize (most commonly a
+      // phone rotating) changes the box's actual pixel size, so the fit has to be
+      // recomputed, not just reapplied. Outside fullscreen the box's size is driven by the
+      // page layout, not the viewport, and a fixed embedded panel resizing under an
+      // otherwise-unrelated window resize should keep the zoom the student chose, not reset
+      // it — same as before this revision.
+      if (fullscreenRef.current) {
+        const rect = stageRef.current?.getBoundingClientRect();
+        if (rect) panZoomRef.current = computeFitTransform(rect.width, rect.height);
+      }
       applyTransform();
     }
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // Re-fit whenever fullscreen toggles: entering or leaving it changes .notebook-stage's
+  // actual pixel size dramatically (embedded panel <-> full viewport), so the scale that
+  // fit the old size is wrong for the new one. Runs once on mount too (fullscreen starts
+  // false), which repeats the mount effect's own fit harmlessly — same rect, same result.
+  useEffect(() => {
+    const rect = stageRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    panZoomRef.current = computeFitTransform(rect.width, rect.height);
+    applyTransform();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fullscreen]);
 
   function localPoint(clientX: number, clientY: number) {
     const rect = stackRef.current?.getBoundingClientRect();
@@ -381,13 +428,6 @@ export function PracticeNotebook({
     applyTransform();
   }
 
-  function fitToScreen() {
-    const rect = stageRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    panZoomRef.current = computeFitTransform(rect.width, rect.height);
-    applyTransform();
-  }
-
   function clearCurrentPage() {
     if (!currentPage) return;
     currentPage.filledCells.clear();
@@ -421,7 +461,8 @@ export function PracticeNotebook({
   const atMaxPages = pages.length >= MAX_PAGES;
 
   return (
-    <div className="notebook-screen">
+    <div className={`notebook-screen${fullscreen ? " fullscreen" : ""}`}>
+      {fullscreen && topSlot}
       <div className="notebook-topbar">
         <span className="notebook-page-indicator">
           דף {currentPageIndex + 1} מתוך {pages.length}
@@ -451,11 +492,17 @@ export function PracticeNotebook({
           <button type="button" onClick={() => zoomButton(1 / 1.3)} aria-label="הקטן">
             −
           </button>
-          <button type="button" onClick={fitToScreen} aria-label="הצג את כל הדף במסך אחד">
-            ⤢
+          <button
+            type="button"
+            onClick={onToggleFullscreen}
+            aria-label={fullscreen ? "צאו ממסך מלא" : "הגדילו את המחברת למסך מלא"}
+          >
+            {fullscreen ? "✕" : "⤢"}
           </button>
         </div>
       </div>
+
+      {fullscreen && statusSlot}
 
       <div className="notebook-toolbar">
         <div className="tool-group" role="group" aria-label="כלי כתיבה">
