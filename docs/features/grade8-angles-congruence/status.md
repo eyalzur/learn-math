@@ -8,9 +8,9 @@
 - [x] Design — designer — 2026-09-01
 - [x] Architecture — tech-lead — 2026-09-01
 - [x] Implementation — developer — 2026-09-01
-- [ ] Tests — qa — not started
+- [x] Tests — qa — 2026-09-01
 
-**Current phase:** qa
+**Current phase:** — all five done
 **Branch:** `feature/grade8-angles-congruence`
 **PR:** not opened yet
 
@@ -22,9 +22,9 @@ None. **החלטת סדר-עבודה מוצהרת (Architecture, ראו Risks/Tr
 כמו `#48` שבא אחרי `#43`-ו). מחולל אדפטיבי לזוויות/חפיפה הוא follow-up מוצע, לא
 משהו שנשכח.
 
-- **Developer, ל-QA:** `tests/e2e/topics-all-grades.spec.ts` מחזיק רשימת נושאי כיתה
-  ח׳ כפולה וקבועה בקוד, ובודק את מספר כרטיסי הנושא מולה. הוספת הנושא הזה **תפיל**
-  את הבדיקה עד שהרשימה שם תתעדכן גם היא. ראו architecture.md, Implementation Notes.
+- **טופל (QA, 2026-09-01):** `tests/e2e/topics-all-grades.spec.ts` עודכן עם שבעת
+  הנושאים. `319/319` בדיקות עוברות בריצה בודדת ונקייה, כולל שבע הבדיקות החדשות
+  שנכתבו לפיצ'ר הזה. `npm run build` ו-`npm run lint` ירוקים. ראו tests.md.
 
 ## Docs
 - [Product spec](./product-spec.md)
