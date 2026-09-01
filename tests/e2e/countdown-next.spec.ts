@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { answerViaNotebook } from "./helpers/notebookAnswer";
 
 /**
  * Acceptance criteria under test (docs/features/countdown-next/product-spec.md).
@@ -43,8 +44,7 @@ async function harvestAnswers(page: Page): Promise<string[]> {
   const total = Number((await page.locator(".progress").innerText()).match(/(\d+)\s*$/)![1]);
   const answers: string[] = [];
   for (let i = 0; i < total; i++) {
-    await page.locator(".answer-input").fill(ALWAYS_WRONG);
-    await page.getByRole("button", { name: "בדיקה" }).first().click();
+    await answerViaNotebook(page, ALWAYS_WRONG);
     const feedback = await page.locator(".feedback.wrong").innerText();
     answers.push(feedback.match(/(-?\d+(?:\.\d+)?)\s*$/)![1]);
     await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
@@ -54,8 +54,7 @@ async function harvestAnswers(page: Page): Promise<string[]> {
 }
 
 const answerWith = async (page: Page, value: string) => {
-  await page.locator(".answer-input").fill(value);
-  await page.getByRole("button", { name: "בדיקה" }).first().click();
+  await answerViaNotebook(page, value);
 };
 
 const questionNumber = async (page: Page) =>

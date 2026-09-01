@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { answerViaNotebook } from "./helpers/notebookAnswer";
 
 /**
  * Acceptance criteria under test
@@ -77,8 +78,7 @@ test("hints stay on screen after the answer is checked", async ({ page }) => {
   await page.getByRole("button", { name: HINT }).click();
   await page.getByRole("button", { name: MORE_HINT }).click();
 
-  await page.locator(".answer-input").fill("999999");
-  await page.getByRole("button", { name: "בדיקה" }).click();
+  await answerViaNotebook(page, 999999);
 
   // The mistake does not erase what the student tried with.
   await expect(page.locator(".hint")).toHaveCount(2);
@@ -87,8 +87,7 @@ test("hints stay on screen after the answer is checked", async ({ page }) => {
 test("no more hints can be asked for once an answer is checked", async ({ page }) => {
   await openHinted(page);
 
-  await page.locator(".answer-input").fill("999999");
-  await page.getByRole("button", { name: "בדיקה" }).click();
+  await answerViaNotebook(page, 999999);
 
   await expect(page.locator(".hint-button")).toHaveCount(0);
 });
@@ -99,8 +98,7 @@ test("the next question starts over with no hints shown", async ({ page }) => {
   await page.getByRole("button", { name: HINT }).click();
   await expect(page.locator(".hint")).toHaveCount(1);
 
-  await page.locator(".answer-input").fill("999999");
-  await page.getByRole("button", { name: "בדיקה" }).click();
+  await answerViaNotebook(page, 999999);
   await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
 
   await expect(page.locator(".hint")).toHaveCount(0);
@@ -123,8 +121,7 @@ test("taking a hint does not cost anything in the score", async ({ page }) => {
     const [, a, op, b] = prompt.match(/(\d+)\s*([+−])\s*(\d+)/)!;
     const answer = op === "+" ? Number(a) + Number(b) : Number(a) - Number(b);
 
-    await page.locator(".answer-input").fill(String(answer));
-    await page.getByRole("button", { name: "בדיקה" }).click();
+    await answerViaNotebook(page, answer);
     await expect(page.locator(".feedback.correct")).toBeVisible();
     await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
   }
@@ -142,7 +139,7 @@ test("every topic offers hints, not just the one they were written for first", a
   // topic that was never part of the original hint work offers them all the same.
   await openTopic(page, "חיבור עד 10");
 
-  await expect(page.locator(".answer-input")).toBeVisible();
+  await expect(page.locator(".problem-box")).toBeVisible();
   await expect(page.locator(".hint-button")).toBeVisible();
 
   await page.locator(".hint-button").click();

@@ -46,19 +46,21 @@ test("a topic card still enters practice directly, unchanged, with a separate le
   await expect(row.locator(".lesson-link")).toBeVisible();
 
   // The card itself — not the lesson button — goes straight into practice, exactly like
-  // before this feature existed: a question with an answer input and a "בדיקה" button.
+  // before this feature existed: a question with a notebook to write the answer in and a
+  // "שלח למורה" button (docs/features/notebook-default-practice replaced the typed answer
+  // field/"בדיקה" button this test used to check for with exactly these).
   await row.locator(".topic-card").click();
-  await expect(page.locator(".answer-input")).toBeVisible();
-  await expect(page.getByRole("button", { name: "בדיקה" })).toBeVisible();
+  await expect(page.locator("canvas")).toBeVisible();
+  await expect(page.getByRole("button", { name: "שלח למורה" })).toBeVisible();
 });
 
-test("the lesson screen has no answer input and no check button", async ({ page }) => {
+test("the lesson screen has no notebook and no send-to-teacher button", async ({ page }) => {
   await page.locator(".student-card").nth(OMER).click();
   await page.locator(".grade-card").nth(3).click(); // grade ח׳ (docs/features/any-grade-any-student)
   await page.locator(".lesson-link").first().click();
 
-  await expect(page.locator(".answer-input")).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "בדיקה" })).toHaveCount(0);
+  await expect(page.locator("canvas")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "שלח למורה" })).toHaveCount(0);
 });
 
 test("the lesson screen shows real learning content, not a blank screen", async ({ page }) => {
@@ -91,7 +93,7 @@ test("the last page's '→ לתרגול' enters practice for the same topic", as
   // Practice for the same topic — the header names it, just like every other entry into
   // practice for a topic does.
   await expect(page.locator("h2")).toHaveText(topicTitle);
-  await expect(page.locator(".answer-input")).toBeVisible();
+  await expect(page.locator("canvas")).toBeVisible();
 });
 
 test("'← חזרה' from the lesson screen returns to the same student's topic list", async ({

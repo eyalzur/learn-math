@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { answerViaNotebook } from "./helpers/notebookAnswer";
 
 /** Grade 1 practises topic-by-topic, so its levels sit one screen deeper. */
 async function openLevels(page: Page, studentIndex: number, topicIndex = 0) {
@@ -34,8 +35,7 @@ const ALWAYS_WRONG = 999999;
 async function harvestAnswers(page: Page, count: number): Promise<number[]> {
   const answers: number[] = [];
   for (let i = 0; i < count; i++) {
-    await page.locator(".answer-input").fill(String(ALWAYS_WRONG));
-    await page.getByRole("button", { name: "בדיקה" }).click();
+    await answerViaNotebook(page, ALWAYS_WRONG);
     const feedback = await page.locator(".feedback.wrong").innerText();
     const match = feedback.match(/(-?\d+(?:\.\d+)?)\s*$/);
     if (!match) throw new Error(`Could not read the answer out of "${feedback}"`);
@@ -69,8 +69,7 @@ async function startLesson(page: Page, studentIndex: number, index: number): Pro
 async function completeLevel(page: Page, answers: number[], { missOne }: { missOne: boolean }) {
   for (let i = 0; i < answers.length; i++) {
     const value = missOne && i === 0 ? answers[i] + 1000 : answers[i];
-    await page.locator(".answer-input").fill(String(value));
-    await page.getByRole("button", { name: "בדיקה" }).click();
+    await answerViaNotebook(page, value);
     await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
   }
 }

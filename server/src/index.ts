@@ -69,7 +69,7 @@ app.post("/read-page", (req, res) => {
     return;
   }
 
-  const validated = validateRequest(req.body);
+  const validated = validateReadPageRequest(req.body);
   if (!validated) {
     res.status(400).json({ error: "invalid request body" });
     return;
@@ -78,21 +78,20 @@ app.post("/read-page", (req, res) => {
   void handleReadPage(validated, res);
 });
 
-async function handleReadPage(input: RenderMatrixInput, res: Response): Promise<void> {
+async function handleReadPage(input: RenderMatrixInput & { expectedPrompt: string }, res: Response): Promise<void> {
   try {
     const buffer = renderMatrix(input);
-    const imageDataUrl = `data:image/png;base64,${buffer.toString("base64")}`;
 
     // Nothing to transcribe on a blank page, and a real Claude call costs real money —
     // this case is already fully known without asking the model.
     if (input.filledCells.length === 0) {
-      res.status(200).json({ imageDataUrl, reading: { certain: false } satisfies PageReading });
+      res.status(200).json({ reading: { certain: false } satisfies PageReading });
       return;
     }
 
     await ensureFreshIdentityToken();
-    const reading = await readPage(buffer);
-    res.status(200).json({ imageDataUrl, reading });
+    const reading = await readPage(buffer, input.expectedPrompt);
+    res.status(200).json({ reading });
   } catch (error) {
     // Cloud Run captures stdout/stderr into Cloud Logging automatically — without this,
     // a live failure here is invisible: the client only ever sees the generic 500 below,
@@ -111,6 +110,18 @@ function validateRequest(body: unknown): RenderMatrixInput | null {
   if (typeof cell !== "number" || !(cell > 0)) return null;
   if (!Array.isArray(filledCells) || !filledCells.every((key) => typeof key === "string")) return null;
   return { cols, rows, cell, filledCells };
+}
+
+// The exercise the student was given — never the correct answer — grounds the teacher's
+// reading (see readPage.ts). Required and non-empty: without it the model would be back to
+// guessing what exercise this even is from handwriting alone, the exact unreliability this
+// feature is meant to remove.
+function validateReadPageRequest(body: unknown): (RenderMatrixInput & { expectedPrompt: string }) | null {
+  const validated = validateRequest(body);
+  if (!validated) return null;
+  const { expectedPrompt } = body as Record<string, unknown>;
+  if (typeof expectedPrompt !== "string" || expectedPrompt.trim() === "") return null;
+  return { ...validated, expectedPrompt };
 }
 
 // Cloud Run injects the port to listen on via $PORT — it is not a fixed value.

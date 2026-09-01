@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { answerViaNotebook } from "./helpers/notebookAnswer";
 
 /**
  * Acceptance criteria under test
@@ -223,8 +224,7 @@ test("checking an answer silences a reading in progress", async ({ page }) => {
   await startHintedLevel(page);
   await expect.poll(() => spokenText(page)).not.toHaveLength(0);
 
-  await page.locator(".answer-input").fill("17");
-  await page.getByRole("button", { name: "בדיקה" }).click();
+  await answerViaNotebook(page, 17);
 
   // The button is back to its idle state, which is the visible half of "stopped".
   await expect(speakButton(page)).toBeVisible();
@@ -258,5 +258,5 @@ test("a browser with no speech engine shows no setting and no button", async ({ 
   await expect(page.locator(".speak-button")).toHaveCount(0);
   // And the rest of the screen is untouched.
   await expect(page.locator(".problem-text")).toBeVisible();
-  await expect(page.locator(".answer-input")).toBeVisible();
+  await expect(page.locator("canvas")).toBeVisible();
 });

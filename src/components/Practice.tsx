@@ -4,7 +4,9 @@ import { isHebrewPrompt, promptSegments } from "../data/curriculum";
 import type { Diagnosis } from "../data/diagnose";
 import { diagnose } from "../data/diagnose";
 import type { NotebookPage } from "../data/notebook";
-import { createBlankPage } from "../data/notebook";
+import { createBlankPage, MAX_PAGES, pageHasContent } from "../data/notebook";
+import type { PageReading } from "../lib/notebookServer";
+import { readPageWithTeacher } from "../lib/notebookServer";
 import { buildExplanation, explanationSpeechParts } from "../data/questionExplanation";
 import { PracticeNotebook } from "./PracticeNotebook";
 import { QuestionExplanation } from "./QuestionExplanation";
@@ -12,10 +14,10 @@ import { segmented } from "./segmented";
 import { primeVoices, speak, speechParts, speechSupported, stopSpeaking } from "../data/speech";
 
 /**
- * Which box is talking. One engine, three speak buttons — a boolean would light up "stop"
+ * Which box is talking. One engine, four speak buttons — a boolean would light up "stop"
  * on all of them while only one is being read.
  */
-type SpeakingBox = "question" | "diagnosis" | "explanation" | null;
+type SpeakingBox = "question" | "diagnosis" | "explanation" | "teacher" | null;
 
 /** How long a correct answer rests on screen before the next question opens itself. */
 const COUNTDOWN_SECONDS = 5;
@@ -38,7 +40,6 @@ interface PracticeProps {
 
 export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: PracticeProps) {
   const [index, setIndex] = useState(0);
-  const [input, setInput] = useState("");
   const [feedback, setFeedback] = useState<"correct" | "wrong" | null>(null);
   const [correctCount, setCorrectCount] = useState(0);
   const [speakingBox, setSpeakingBox] = useState<SpeakingBox>(null);
@@ -59,15 +60,24 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
   const [countdownStopped, setCountdownStopped] = useState(false);
 
   /**
-   * The notebook's pages, and whether it's open. Deliberately state on *this* component,
-   * not a screen of its own in App.tsx: that's what lets it survive across questions
-   * (nothing here resets when `index` changes) while still disappearing the moment the
-   * child leaves practice — the same lifecycle every other piece of state above already
-   * has, not a new one built for this.
+   * The notebook's pages. Deliberately state on *this* component, not a screen of its own
+   * in App.tsx: that's what lets it survive across questions (nothing here resets when
+   * `index` changes — see `next()`, which appends a fresh page rather than clearing this)
+   * while still disappearing the moment the child leaves practice.
    */
-  const [notebookOpen, setNotebookOpen] = useState(false);
   const [pages, setPages] = useState<NotebookPage[]>(() => [createBlankPage()]);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
+
+  /** Talking to the teacher: idle (nothing sent yet, or a previous reading is showing),
+   *  sending (waiting on the server), or error (the call itself failed — network/server,
+   *  distinct from a reading that came back but wasn't confident, see `uncertain` below). */
+  const [sendState, setSendState] = useState<"idle" | "sending" | "error">("idle");
+  /** The teacher read the page but wasn't confident what was written — an invitation to
+   *  write again, not a verdict. Never set alongside `feedback`: an uncertain reading has
+   *  no answer to check. */
+  const [uncertain, setUncertain] = useState(false);
+  /** What the teacher understood, once a reading comes back confident. */
+  const [teacherNote, setTeacherNote] = useState<{ reflection: string; errorPointer?: string } | null>(null);
 
   // Voices load asynchronously, so warm the list before the first press.
   useEffect(primeVoices, []);
@@ -183,12 +193,20 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
     return speechParts([prompt, ...question.hints.slice(0, hintsShown)]);
   }
 
-  function checkAnswer() {
-    // Pressing "check" means she is done listening.
-    stopSpeaking();
-    setSpeakingBox(null);
-    if (input.trim() === "" || feedback !== null) return;
-    const isCorrect = Number(input) === question.answer;
+  /**
+   * What the teacher's reading means for this question — the direct replacement for the
+   * old `checkAnswer`, driven by `reading.finalAnswer` instead of a typed number. An
+   * uncertain reading carries no answer at all, so it never touches feedback/diagnosis —
+   * it is an invitation to write again, not a wrong answer.
+   */
+  function handleTeacherReading(reading: PageReading) {
+    if (!reading.certain) {
+      setUncertain(true);
+      return;
+    }
+    setUncertain(false);
+    setTeacherNote({ reflection: reading.processReflection, errorPointer: reading.errorPointer });
+    const isCorrect = reading.finalAnswer === question.answer;
     setFeedback(isCorrect ? "correct" : "wrong");
     onAnswered?.(isCorrect);
     if (isCorrect) {
@@ -202,7 +220,28 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
     }
     // The score is closed on this line, before the conversation can begin. Nothing that
     // happens in it moves the number.
-    else setDiagnosis(diagnose(question, Number(input)));
+    else setDiagnosis(diagnose(question, reading.finalAnswer));
+  }
+
+  async function sendToTeacher() {
+    const currentPage = pages[currentPageIndex];
+    if (!currentPage || !pageHasContent(currentPage) || sendState === "sending" || feedback !== null) return;
+    // Pressing "send" means she is done listening, and a fresh attempt clears the last
+    // "couldn't read that" message so it doesn't linger next to a new reading.
+    stopSpeaking();
+    setSpeakingBox(null);
+    setUncertain(false);
+    setSendState("sending");
+    try {
+      // Never the correct answer — only the exercise text already on screen. Judging
+      // correct/incorrect stays entirely with the local check above, never with the model.
+      const expectedPrompt = question.prompt.replace(/`/g, "");
+      const { reading } = await readPageWithTeacher(currentPage, expectedPrompt);
+      setSendState("idle");
+      handleTeacherReading(reading);
+    } catch {
+      setSendState("error");
+    }
   }
 
   function checkFollowUp() {
@@ -220,7 +259,6 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
       return;
     }
     setIndex((i) => i + 1);
-    setInput("");
     setFeedback(null);
     setHintsShown(0);
     setDiagnosis(null);
@@ -229,6 +267,25 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
     setAskedToSee(false);
     setSecondsLeft(null);
     setCountdownStopped(false);
+    setSendState("idle");
+    setUncertain(false);
+    setTeacherNote(null);
+
+    // One fresh page per question — "one page = one exercise", like a real notebook, and
+    // it means a locked, already-checked page can never end up being "the current page"
+    // when a new question loads. At the page cap, reuse the last page instead of growing
+    // past it (see docs/features/notebook-default-practice/architecture.md, Edge Cases).
+    if (pages.length >= MAX_PAGES) {
+      setPages((prev) => {
+        const updated = [...prev];
+        updated[updated.length - 1] = createBlankPage();
+        return updated;
+      });
+      setCurrentPageIndex(pages.length - 1);
+    } else {
+      setPages((prev) => [...prev, createBlankPage()]);
+      setCurrentPageIndex(pages.length);
+    }
   }
 
   /** The child asked for a moment. It does not start again on this question. */
@@ -250,45 +307,30 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
         ? questionParts()
         : box === "diagnosis"
           ? diagnosis?.followUp && speechParts([diagnosis.headline, diagnosis.followUp.question])
-          : explanation && [
-            // No conversation box exists to read the headline for an off-by-one
-            // diagnosis, so this button says it instead — an unreadable diagnosis is
-            // exactly as good as one that was never said (see design.md, Accessibility).
-            ...(diagnosis && diagnosis.followUp === undefined ? speechParts([diagnosis.headline]) : []),
-            ...explanationSpeechParts(bundle),
-          ];
+          : box === "teacher"
+            ? teacherNote &&
+              speechParts([teacherNote.reflection, ...(teacherNote.errorPointer ? [teacherNote.errorPointer] : [])])
+            : explanation && [
+              // No conversation box exists to read the headline for an off-by-one
+              // diagnosis, so this button says it instead — an unreadable diagnosis is
+              // exactly as good as one that was never said (see design.md, Accessibility).
+              ...(diagnosis && diagnosis.followUp === undefined ? speechParts([diagnosis.headline]) : []),
+              ...explanationSpeechParts(bundle),
+            ];
     if (!parts?.length) return;
     setSpeakingBox(box);
     speak(parts, () => setSpeakingBox(null));
   }
 
-  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key !== "Enter") return;
-    if (feedback === null) checkAnswer();
-    else next();
-  }
-
-  // Opening the notebook must not let the countdown or a read-aloud sentence carry on
-  // somewhere the child isn't looking at — same stop calls a real navigation away from
-  // this question would trigger.
-  function openNotebook() {
-    stopCountdown();
-    stopSpeaking();
-    setSpeakingBox(null);
-    setNotebookOpen(true);
-  }
-
-  if (notebookOpen) {
-    return (
-      <PracticeNotebook
-        pages={pages}
-        currentPageIndex={currentPageIndex}
-        onPagesChange={setPages}
-        onCurrentPageIndexChange={setCurrentPageIndex}
-        onClose={() => setNotebookOpen(false)}
-      />
-    );
-  }
+  const currentPage = pages[currentPageIndex];
+  /** The single action rendered in the notebook's toolbar — see PracticeNotebook.tsx and
+   *  docs/features/notebook-default-practice/architecture.md, "primaryAction בכל שלב". */
+  const primaryAction =
+    feedback !== null
+      ? { label: isLast ? "סיום" : "הבא", onClick: next, disabled: false }
+      : sendState === "sending"
+        ? { label: "המורה קוראת...", onClick: () => {}, disabled: true }
+        : { label: "שלח למורה", onClick: sendToTeacher, disabled: !currentPage || !pageHasContent(currentPage) };
 
   return (
     <div className="practice">
@@ -305,9 +347,6 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
         <span className="progress">
           שאלה {index + 1} מתוך {lesson.questions.length}
         </span>
-        <button type="button" className="link-button notebook-open-button" onClick={openNotebook}>
-          📝 מחברת
-        </button>
       </div>
       <h2>{lesson.title}</h2>
       {/* Outside .problem-box on purpose: that box forces a direction, and a button
@@ -340,18 +379,31 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
             <>{`${question.prompt} =`}</>
           )}
         </span>
-        <input
-          type="number"
-          inputMode="decimal"
-          step="any"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          disabled={feedback !== null}
-          autoFocus
-          className="answer-input"
-        />
       </div>
+      {uncertain && (
+        <p className="teacher-uncertain" aria-live="polite">
+          לא הצלחתי לקרוא את זה בבירור. אפשר לכתוב שוב, קצת יותר גדול או ברור?
+        </p>
+      )}
+      {teacherNote && (
+        <div className="teacher-reading">
+          <div className="teacher-reading-header">
+            <h3>מה המורה הבינה</h3>
+            {speechSupported() && (
+              <button
+                type="button"
+                className="speak-button"
+                onClick={() => toggleSpeech("teacher")}
+                aria-label={speakingBox === "teacher" ? "עצרו את ההקראה" : "הקראת מה שהמורה הבינה"}
+              >
+                {speakingBox === "teacher" ? "⏹" : "🔊"}
+              </button>
+            )}
+          </div>
+          <p className="teacher-reading-line">{segmented(teacherNote.reflection)}</p>
+          {teacherNote.errorPointer && <p className="teacher-reading-line">{segmented(teacherNote.errorPointer)}</p>}
+        </div>
+      )}
       {feedback === "wrong" && diagnosis !== null && (
         <p className="diagnosis" aria-live="polite">
           {segmented(diagnosis.headline)}
@@ -446,15 +498,19 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
           }
         />
       )}
-      <div className="actions">
-        {feedback === null ? (
-          <button onClick={checkAnswer} disabled={input.trim() === ""}>
-            בדיקה
-          </button>
-        ) : (
-          <button onClick={next}>{isLast ? "סיום" : "הבא"}</button>
-        )}
-      </div>
+      <PracticeNotebook
+        pages={pages}
+        currentPageIndex={currentPageIndex}
+        onPagesChange={setPages}
+        onCurrentPageIndexChange={setCurrentPageIndex}
+        locked={feedback !== null}
+        primaryAction={primaryAction}
+      />
+      {sendState === "error" && (
+        <p className="notebook-send-error" aria-live="polite">
+          לא הצלחנו לשלוח את הדף. נסו שוב.
+        </p>
+      )}
       {hintsShown > 0 && (
         <div className="hints">
           {question.hints.slice(0, hintsShown).map((hint, i) => (

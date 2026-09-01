@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { answerViaNotebook } from "./helpers/notebookAnswer";
 
 /**
  * Acceptance criteria under test (docs/features/heading-wrap-balance/product-spec.md).
@@ -72,8 +73,7 @@ test("the result screen's heading balances", async ({ page }) => {
   await page.locator(".topic-card", { hasText: "חיבור עד 10" }).click();
   const total = Number((await page.locator(".progress").innerText()).match(/מתוך (\d+)/)![1]);
   for (let i = 0; i < total; i++) {
-    await page.locator(".answer-input").fill("999999");
-    await page.getByRole("button", { name: "בדיקה" }).first().click();
+    await answerViaNotebook(page, 999999);
     await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
   }
   await expect(page.locator(".result")).toBeVisible();
