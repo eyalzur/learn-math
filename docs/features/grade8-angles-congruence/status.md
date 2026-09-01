@@ -12,11 +12,11 @@
 
 - [x] Product spec — product-manager — 2026-09-01 (סבב ב׳: קריטריון ההסתגלות עודכן)
 - [x] Design — designer — 2026-09-01 (סבב ב׳: אין LevelPicker, אין מחוון קושי, 20 שאלות)
-- [ ] Architecture — tech-lead — not started (סבב ב׳)
+- [x] Architecture — tech-lead — 2026-09-01 (סבב ב׳: adaptiveAngles.ts, 6 tiers, טווחי מספרים מובטחים)
 - [ ] Implementation — developer — not started (סבב ב׳)
 - [ ] Tests — qa — not started (סבב ב׳)
 
-**Current phase:** tech-lead
+**Current phase:** developer
 **Branch:** `feature/grade8-angles-congruence`
 **PR:** https://github.com/eyalzur/learn-math/pull/65
 

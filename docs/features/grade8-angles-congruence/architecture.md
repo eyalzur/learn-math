@@ -1,6 +1,12 @@
 # זוויות וחפיפת משולשים — Architecture
 
 ## Overview
+**עדכון סבב ב׳ (2026-09-01):** המשתמש ראה את התצוגה המקדימה של סבב א׳ וביקש מחולל
+אדפטיבי, בלי מסך רמות — ראו "עדכון ארכיטקטורה — סבב ב׳" בהמשך המסמך לתכנון המלא.
+הסעיפים הבאים מתעדים את סבב א׳ כפי שהוא, ונשארים נכונים ברובם (הדיאגרמה, החילוץ
+מה-`prompt`, מיקום הנושא) — רק ה"בלי מחולל אדפטיבי" בטקסט הבא ובב-Risks/Tradeoffs
+**בוטל**, לא בתוקף יותר.
+
 נושא נוסף ב-`GRADE_8_TOPICS`/`grade8Topics`, בנוי מ-`levels` כתובים בלבד (בלי מחולל
 אדפטיבי בסבב הזה — ראו Risks/Tradeoffs). חמש הצורות מה-design.md מתממשות כ**מודול
 נתונים אחד** ו**רכיב SVG אחד**, לא חמישה זוגות קבצים — union מסוג מבחין, באותה תבנית
@@ -147,7 +153,9 @@ isolate` על **כל** מקטע כזה, בלי הבחנה בין ספרה לאו
   כלל חדש לנושא הזה, אלא אם QA ימצא דפוס חדש שדורש אחד.
 
 ## Risks / Tradeoffs
-- **בלי מחולל אדפטיבי (`adaptive`) בסבב הזה — מוצהר, לא שכחה.** design.md מניח
+- **בוטל בסבב ב׳ — הבולט הבא מתאר החלטה מסבב א׳ שהמשתמש ביטל אחרי שראה תצוגה
+  מקדימה.** נשאר לתיעוד היסטורי; ראו "עדכון ארכיטקטורה — סבב ב׳" בהמשך המסמך.
+- ~~**בלי מחולל אדפטיבי (`adaptive`) בסבב הזה — מוצהר, לא שכחה.** design.md מניח
   "לוחצים ונכנסים ישר לתרגול" כמו ששת הנושאים האחרים של עומר, אבל זה נכון להם רק כי
   `difficulty-number-scaling`/`levels-as-practice` (`#48`) הוסיפו מחולל **בנפרד**,
   אחרי שהתוכן המקורי שלהם כבר היה קיים כ-`levels` סטטיים בלבד — בדיוק המצב שהנושא
@@ -157,7 +165,7 @@ isolate` על **כל** מקטע כזה, בלי הבחנה בין ספרה לאו
   ישר לתרגול — שונה מהתיאור ב-design.md Overview. כתיבת מחולל אמיתי לזוויות/חפיפה
   (המצאת שאלות אקראיות שעדיין גיאומטריות תקינות — סכום זוויות `180°`, אי-שוויון
   משולש) היא עבודה משמעותית בפני עצמה ולא הגיוני לדחוס אותה לתוך פיצ'ר שכבר מוסיף
-  תוכן חדש שלם; מומלץ כ-follow-up נפרד, בדיוק כמו `#48` היה ל-`#43`-ו הלאה.
+  תוכן חדש שלם; מומלץ כ-follow-up נפרד, בדיוק כמו `#48` היה ל-`#43`-ו הלאה.~~
 - **קובץ נתונים/רכיב אחד לחמש הצורות, לא חמישה** — סטייה מתבנית `more-diagrams`
   (מודול לכל צורה), אבל תואמת תבנית קיימת אחרת ומדויקת יותר לכאן: `geometryShape.ts`
   (ריבוע/מלבן/משולש/מעגל באיחוד אחד, כי הן "אותה משפחה" — צורה עם מידה). חמש הצורות
@@ -166,6 +174,96 @@ isolate` על **כל** מקטע כזה, בלי הבחנה בין ספרה לאו
   שנשאר קריא כי כל `kind` הוא ענף עצמאי.
 - **מה לא נוגעים בו:** אין שינוי ב-`promptSegments`, ב-`.prompt-math`, או במנגנון
   ההקראה הכללי (`speech.ts`) — כל אלה כבר תומכים בתוכן הזה כמו שהם.
+
+## עדכון ארכיטקטורה — סבב ב׳: מחולל אדפטיבי (2026-09-01)
+
+### Overview (סבב ב׳)
+`generateAnglesQuestion(difficulty, rng)` חדש ב-`src/data/adaptiveAngles.ts`, בדיוק
+בתבנית `adaptivePythagoras.ts` (הכי קרוב מבין 11 המחוללים הקיימים — נושא גיאומטרי,
+כמה תבניות לפי tier). הנושא ב-`grade8.ts` מקבל שדה `adaptive` (כמו ששת האחרים),
+ו-`levels` **נשאר בקוד כפי שהוא** — לא נמחק, לא בשימוש בתרגול בפועל (בדיוק כמו
+שכל 11 הנושאים המסתגלים האחרים משאירים את ה-`levels` הכתובים שלהם). **אין שינוי
+ב-`src/data/angleShape.ts`, `AngleShape.tsx`, `questionExplanation.ts`, או
+`QuestionExplanation.tsx`** — המחולל רק צריך להזין את `angleShape.ts` הקיים
+בפרומפטים שכבר תואמים את שנים-עשר תבניות ה-regex שלו; הדיאגרמה ממשיכה לעבוד בלי
+לגעת בה.
+
+### Affected Files / Components (סבב ב׳)
+
+| קובץ | מה משתנה |
+|---|---|
+| `src/data/adaptiveAngles.ts` | **חדש.** `generateAnglesQuestion`, `nextAnglesDifficulty`, `ANGLES_MIN/MAX/INITIAL_DIFFICULTY`, `ANGLES_QUESTION_COUNT = 20`. שתים-עשרה פונקציות pattern (אחת לכל `kind`/וריאנט), מקובצות בשישה tiers. |
+| `src/data/grade8.ts` | טופיק `angles` מקבל `adaptive: { generate: generateAnglesQuestion, minDifficulty: ANGLES_MIN_DIFFICULTY, maxDifficulty: ANGLES_MAX_DIFFICULTY, initialDifficulty: ANGLES_INITIAL_DIFFICULTY, nextDifficulty: nextAnglesDifficulty, questionCount: ANGLES_QUESTION_COUNT }`, בדיוק כמו `equations`/`pythagoras`/וכו׳. ה-`levels` הקיימים (`30` שאלות מסבב א׳) נשארים במקום, ללא שינוי. |
+| `tests/e2e/grade8-angles-congruence.spec.ts` | נכתב ב-QA מול `LevelPicker` — כל הבדיקות שם שמניחות מסך רמות (`has three difficulty levels...`) צריכות עדכון ל-QA (סבב ב׳): כניסה ישירה לתרגול, `20` שאלות, בלי `.level-card`. זה תיקון של QA, לא של developer — ראו הפניה גם ב-status.md. |
+
+### Technical Approach (סבב ב׳)
+
+#### מיפוי שנים-עשר התבניות לשישה tiers
+כל tier מכיל תבנית/וריאנט אחד או יותר; `pick()` (מ-`adaptiveHelpers.ts`) בוחר וריאנט
+בתוך ה-tier בכל קריאה. הקיבוץ הוא לפי דמיון מושגי (כמו שכל tier ב-Pythagoras הוא
+עוד רמת מורכבות באותה משפחת חישוב):
+
+| Tier | וריאנטים | תיאור |
+|---|---|---|
+| 1 | `straightAngle-line`, `straightAngle-right` | חיסור פשוט מ-`180`/`90` |
+| 2 | `triangleAngles-sum`, `triangleAngles-exterior` | עובדות זוויות במשולש |
+| 3 | `parallelLines-corresponding`, `parallelLines-alternate`, `parallelLines-coInterior` | זוויות בין ישרים מקבילים |
+| 4 | `isosceles-apexFromBase`, `isosceles-baseFromApex` | שווה-שוקיים, זוויות בסיס/ראש |
+| 5 | `congruentTriangles-side`, `congruentTriangles-angle` | חפיפה — צלע/זווית מתאימה |
+| 6 | `isosceles-medianRightAngle` | שווה-שוקיים + תיכון=גובה (הכי מורכב — משלב שתי עובדות) |
+
+`ANGLES_MIN_DIFFICULTY = 1`, `ANGLES_MAX_DIFFICULTY = 6`, `ANGLES_INITIAL_DIFFICULTY = 1`,
+`ANGLES_QUESTION_COUNT = 20`. `nextAnglesDifficulty` — אותו כלל בכל 12 המחוללים
+הקיימים: `2` תשובות נכונות ברצף מעלות tier אחד, תשובה שגויה אחת מורידה tier אחד
+מיד (`Math.max`/`Math.min` לגבולות, בדיוק כמו `nextPythagorasDifficulty`).
+
+#### טווחי מספרים שמבטיחים תקינות גיאומטרית **בבנייה**, לא בבדיקה בדיעבד
+לכל pattern, הטווחים נבחרים כך שהתוצאה **תמיד** בטווח `[10, 170]` מעלות (לא רק
+`1..179` הגבול הטכני של `angleShape.ts` — שוליים נוספים כדי שלא ייצא זווית קיצונית
+כמו `2°` שנראית מוזר בציור):
+
+- **Tier 1:** `straightAngle-line`: `known = randInt(20, 160, rng)`. `straightAngle-right`:
+  `known = randInt(10, 80, rng)`.
+- **Tier 2:** `angleA = randInt(20, 80, rng)`; `remaining = 180 - angleA` (`100..160`);
+  `angleB = randInt(20, remaining - 20, rng)`; `angleC = remaining - angleB`.
+  **בבנייה הזו `angleA, angleB, angleC` תמיד ב-`[20, 160]` וסכומם תמיד `180`** — אין
+  צורך לבדוק ולדחות, זה מובטח מתמטית מהטווחים עצמם. `triangleAngles-exterior` משתמש
+  באותה בנייה בדיוק (הזווית החיצונית `angleA + angleB`, שתמיד `≤ 160` מאותה סיבה).
+- **Tier 3:** `known = randInt(20, 160, rng)` לכל שלוש היחסים (`corresponding`/
+  `alternate`/`coInterior`) — התשובה (`known` או `180 - known`) יוצאת אוטומטית
+  באותו טווח.
+- **Tier 4:** `apexFromBase`: `given (baseAngle) = randInt(10, 80, rng)` → `apex = 180 - 2×given` תמיד ב-`[20, 160]`. `baseFromApex`: `given (apexAngle) = 2 × randInt(5, 80, rng)` (**זוגי בבנייה**, כדי ש-`(180-given)/2` תמיד שלם) → `base = (180-given)/2` תמיד ב-`[10, 85]`.
+- **Tier 5:** `side`: `value = randInt(4, 20, rng)` (טווח אורכי צלע כמו בשאלות הכתובות). `angle`: `value = randInt(15, 150, rng)`.
+- **Tier 6:** `given (baseAngle) = randInt(10, 80, rng)` → `∡BAD = 90 - given` תמיד
+  ב-`[10, 80]`.
+
+זו בדיוק הגישה שכבר קיימת ב-`adaptivePythagoras.ts` (טריפלות פיתגורס מוכנות מראש,
+לא בדיקת אי-שוויון משולש בדיעבד) — כאן במקום טבלת קבועים, טווחי `randInt` שהבנייה
+המתמטית שלהם מבטיחה תוצאה חוקית בלי ענף "נסה שוב".
+
+#### hints/steps/analogy — הופכים לפונקציות תבנית, לא נכתבים מחדש
+לכל אחד משנים-עשר ה-patterns כבר קיים בפועל hint/step/analogy אחד ב-`grade8.ts`
+מסבב א׳ (השאלה הראשונה מכל bucket, למשל `g8-angles-e1` ל-`straightAngle-line`).
+developer הופך כל אחד למחרוזת תבנית עם `${...}` על המספרים שנבחרו ב-runtime, בדיוק
+כמו ש-`findHypotenuse`/`findLeg`/וכו׳ ב-`adaptivePythagoras.ts` עושות היום — לא
+כתיבה מאפס. ה-`analogy` לכל pattern נשאר **אחד קבוע** (לא בריכה של כמה), בדיוק כמו
+בכל 11 המחוללים הקיימים (`findHypotenuse` תמיד "מדרגות...", לעולם לא שתי אנלוגיות
+שונות) — הסיכון התיאורטי של התנגשות עם שאלה כתובה שיצאה עם אותם מספרים בדיוק כבר
+קיים בכל מחולל אחר בפרויקט ומקובל; אין סיבה להמציא כאן הגנה שלא קיימת בשום מקום
+אחר. כל שאלה בנויה עם `makeQuestion`/`freshId` (`makeFreshId("g8-angles-adaptive")`)
+ועטופה ב-`withoutLeakingHints` (מ-`adaptiveHelpers.ts`) — אותה עטיפה שכל מחולל אחר
+כבר משתמש בה נגד הדלפת תשובה מקרית ברמז.
+
+### Edge Cases (סבב ב׳)
+- **`isosceles-baseFromApex` דורש `given` זוגי** — אם developer ישכח את הבחירה
+  הזוגית (`2 × randInt(...)`) ויבחר `given` אקראי כלשהו, `(180-given)/2` ייצא לפעמים
+  לא שלם, ו-`angleShape()` יחזיר `null` בשקט (התשובה עדיין תקינה כמספר לא-שלם, אבל
+  בלי ציור) — **צריך להיות שלם תמיד**, כי גם `question.answer` עצמו חייב להיות שלם
+  (בדיוק כמו כל שאלה אחרת באפליקציה — אין תמיכה בתשובה עשרונית בנושא הזה).
+- **`makeFreshId` מחזיר מזהה אקראי בכל קריאה** — לא בעיה כאן (בניגוד לבדיקות
+  שמניחות `id` קבוע), אבל `tests/e2e/content.spec.ts` לא רץ על שאלות שנוצרו
+  ב-runtime בכלל (רק על ה-`levels`/`topicSets` הסטטיים) — כלל תוכן חדש שרוצים
+  להחיל גם על שאלות מסתגלות צריך בדיקה נפרדת, בדיוק כמו לכל 11 המחוללים האחרים.
 
 ## Open Questions
 None.
