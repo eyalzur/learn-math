@@ -546,21 +546,33 @@ export function PracticeNotebook({
           {primaryAction.label}
         </button>
         <div className="notebook-page-nav">
-          <button type="button" onClick={() => onCurrentPageIndexChange(currentPageIndex - 1)} disabled={currentPageIndex === 0}>
-            ◀ דף קודם
+          <button
+            type="button"
+            onClick={() => onCurrentPageIndexChange(currentPageIndex - 1)}
+            disabled={currentPageIndex === 0}
+            aria-label="דף קודם"
+          >
+            ◀
           </button>
-          <button type="button" onClick={addPage} disabled={atMaxPages}>
-            + דף חדש
+          <button type="button" onClick={addPage} disabled={atMaxPages} aria-label="דף חדש">
+            +
           </button>
-          <button type="button" className="notebook-remove-btn" onClick={requestRemovePage} disabled={pages.length <= 1}>
-            🗑 הסר דף
+          <button
+            type="button"
+            className="notebook-remove-btn"
+            onClick={requestRemovePage}
+            disabled={pages.length <= 1}
+            aria-label="הסר דף"
+          >
+            🗑
           </button>
           <button
             type="button"
             onClick={() => onCurrentPageIndexChange(currentPageIndex + 1)}
             disabled={currentPageIndex === pages.length - 1}
+            aria-label="דף הבא"
           >
-            דף הבא ▶
+            ▶
           </button>
         </div>
       </div>

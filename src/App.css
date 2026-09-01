@@ -1467,19 +1467,24 @@ button.secondary {
   color: var(--text-h);
 }
 
+/* Icon-only (◀ + 🗑 ▶, aria-label carries the meaning) so the four of them fit on one row
+   even at phone width — with text ("◀ דף קודם" etc.) this row wrapped onto its own lines
+   under the toolbar and ate into the writing area below it, which is exactly the space this
+   revision is trying to give back. The 44px minimum square keeps the same tap-target size
+   as every other toolbar button; only the width shrinks. */
 .notebook-page-nav {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
   margin-inline-start: auto;
 }
 
 .notebook-page-nav button {
+  min-width: 44px;
   min-height: 44px;
+  padding: 0;
   background: var(--code-bg);
   color: var(--text-h);
-  font-size: 14px;
-  padding: 0 14px;
+  font-size: 15px;
 }
 
 .notebook-remove-btn {

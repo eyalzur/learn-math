@@ -322,15 +322,15 @@ test("a new page can be added, an existing one removed (never the last), and pag
   await openLevel(page);
   await expect(page.getByText("דף 1 מתוך 1")).toBeVisible();
 
-  await page.getByRole("button", { name: "+ דף חדש" }).click();
+  await page.getByRole("button", { name: "דף חדש" }).click();
   await expect(page.getByText("דף 2 מתוך 2")).toBeVisible();
 
-  await page.getByRole("button", { name: "◀ דף קודם" }).click();
+  await page.getByRole("button", { name: "דף קודם" }).click();
   await expect(page.getByText("דף 1 מתוך 2")).toBeVisible();
-  await page.getByRole("button", { name: "דף הבא ▶" }).click();
+  await page.getByRole("button", { name: "דף הבא" }).click();
   await expect(page.getByText("דף 2 מתוך 2")).toBeVisible();
 
-  const removeButton = page.getByRole("button", { name: "🗑 הסר דף" });
+  const removeButton = page.getByRole("button", { name: "הסר דף" });
   await removeButton.click();
   await expect(page.getByText("דף 1 מתוך 1")).toBeVisible();
   await expect(removeButton).toBeDisabled();
