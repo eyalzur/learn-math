@@ -14,9 +14,9 @@
 - [x] Design — designer — 2026-09-01 (סבב ב׳: אין LevelPicker, אין מחוון קושי, 20 שאלות)
 - [x] Architecture — tech-lead — 2026-09-01 (סבב ב׳: adaptiveAngles.ts, 6 tiers, טווחי מספרים מובטחים)
 - [x] Implementation — developer — 2026-09-01 (סבב ב׳: 1,800 שאלות שנוצרו אומתו, אפס כשלים)
-- [ ] Tests — qa — not started (סבב ב׳)
+- [x] Tests — qa — 2026-09-01 (סבב ב׳: 320/320, כולל בדיקת "קושי בזמן אמת" חדשה)
 
-**Current phase:** qa
+**Current phase:** — all five done (סבב ב׳)
 **Branch:** `feature/grade8-angles-congruence`
 **PR:** https://github.com/eyalzur/learn-math/pull/65
 
@@ -33,9 +33,10 @@ None.
 - **הוחלף (סבב ב׳, 2026-09-01):** ההחלטה המקורית ("levels סטטיים בלבד, בלי מחולל
   אדפטיבי בסבב הזה") בוטלה על ידי המשתמש אחרי שראה את התצוגה המקדימה. ראו
   product-spec.md, Open Questions, לניסוח המדויק.
-- **טופל (QA, סבב א׳, 2026-09-01):** `tests/e2e/topics-all-grades.spec.ts` עודכן
-  עם שבעת הנושאים. `319/319` בדיקות עברו בריצה בודדת ונקייה באותו סבב. ראו tests.md
-  — יתעדכן שוב בסוף סבב ב׳.
+- **הושלם (סבב ב׳, 2026-09-01):** מחולל אדפטיבי (`adaptiveAngles.ts`) נבנה, אומת
+  עצמאית על `1,800` שאלות שנוצרו (אפס כשלים), ובדיקות ה-e2e עודכנו לזרימה החדשה
+  (בלי מסך רמות). `320/320` בדיקות עוברות בריצה בודדת ונקייה, `build`/`lint`
+  ירוקים. ראו tests.md לפירוט מלא, כולל שני כשלים אמיתיים שנתפסו ותוקנו בדרך.
 
 ## Docs
 - [Product spec](./product-spec.md)
