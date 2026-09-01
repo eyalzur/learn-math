@@ -6,11 +6,11 @@
 ## Progress
 - [x] Product spec — product-manager — 2026-08-31 (עודכן 2026-09-01, סבב רוויזיה א׳ — גודל משטח הכתיבה)
 - [x] Design — designer — 2026-09-01 (סבב רוויזיה א׳ — מצב A מעודכן, מצב F חדש "מסך מלא")
-- [ ] Architecture — tech-lead — not started
+- [x] Architecture — tech-lead — 2026-09-01 (סבב רוויזיה א׳ — flexbox למילוי גובה, `position:fixed;inset:0` למסך מלא)
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** tech-lead
+**Current phase:** developer
 **Branch:** `fix/notebook-fullscreen`
 **PR:** not opened yet
 
@@ -37,6 +37,20 @@ None שחוסם על הסבב הנוכחי. שלוש ההכרעות שהמשתמ
 - **Design → Tech-lead (הוכרע):** דף חדש נפתח אוטומטית לכל שאלה (כמו לחיצה
   עצמית על "+ דף חדש"); דפים קודמים נשארים לדפדוף. ראו architecture.md,
   "דף חדש לכל שאלה" ו-Edge Cases (מה קורה ב-`MAX_PAGES`).
+- **Tech-lead → Developer (סבב רוויזיה א׳, 2026-09-01):** שני שינויים ב-CSS/state
+  בלבד, בלי לגעת בחוזה `/read-page`/`diagnose`/זרימת נכון-שגוי. (1) `.practice`
+  הופך ל-`display:flex;flex-direction:column` (עם `100vh`/`100dvh` fallback),
+  ו-`.notebook-screen` עובר מ-`height: min(60vh, 620px)` ל-`flex: 1 1 auto;
+  min-height: 360px` — ממלא את כל הגובה הפנוי, עם רצפה כדי לא להידחק במצב D.
+  (2) כפתור "⤢" הופך לטוגל `fullscreen: boolean` (state ב-`Practice.tsx`,
+  props חדשים `fullscreen`/`onToggleFullscreen`/`topSlot` ב-`PracticeNotebookProps`):
+  מוסיף class `.notebook-screen.fullscreen` עם `position:fixed;inset:0` — **אותו
+  מנגנון בדיוק** שכבר היה קיים ונבדק בפיצ'ר `practice-notebook` המקורי, לא
+  Fullscreen API של הדפדפן (נימוק מלא ב-architecture.md: iOS Safari, user
+  gesture, `:fullscreen` pseudo-class מול קוד קיים ומוכר). `computeFitTransform`
+  רץ מחדש בכל טוגל (לא רק ב-mount) כי גודל התיבה בפועל משתנה. פרטים מלאים
+  ב-architecture.md, כולל Edge Cases (סיבוב טלפון, viewport קטן במיוחד) ו-Risks
+  (flex container חדש על `.practice`).
 - **Tech-lead → Developer (בוצע):** חוזה `/read-page` השתנה שינוי שובר (לא
   תוסף) — `PageReading`, הבקשה (`expectedPrompt` חדש), והתשובה
   (`processReflection`/`errorPointer`/`finalAnswer` במקום `question`/`answer`

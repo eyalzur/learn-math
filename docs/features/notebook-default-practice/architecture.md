@@ -11,6 +11,13 @@
 סופית **מספרית** מוכנה להזנה ישירה ל-`Number(x) === question.answer` /
 `diagnose()` הקיימים, בלי שינוי בהם.
 
+**עודכן בסבב רוויזיה א׳ (2026-09-01):** משטח הכתיבה עובר מגובה קבוע
+(`height: min(60vh, 620px)`) למילוי הגובה הפנוי בפועל (flexbox, לא JS
+שמודד גבהים), וכפתור "⤢" הופך מהתאמת-זום-בתוך-תיבה לטוגל מסך-מלא אמיתי
+שמגדיל את `.notebook-screen` עצמו ל-`position:fixed;inset:0` — בדיוק המנגנון
+שכבר היה קיים ונבדק בפיצ'ר `practice-notebook` המקורי, לפני שהתמזג לגובה קבוע
+בפיצ'ר הזה. ראו הרחבה בכל סעיף למטה.
+
 ## Affected Files / Components
 
 **לקוח — משתנה:**
@@ -82,6 +89,22 @@
   ללא שינוי; נעשה בהם שימוש נוסף (ראו Technical Approach) אבל לא משתנה
   ההגדרה שלהם.
 
+**עודכן בסבב רוויזיה א׳ (2026-09-01):**
+- `src/App.css` — `.notebook-screen` עובר מ-`height: min(60vh, 620px)` למילוי
+  הגובה הפנוי דרך flexbox (ראו Technical Approach); class חדש (למשל
+  `.notebook-screen.fullscreen`) שהופך אותו ל-`position:fixed;inset:0` כשמצב
+  מסך-מלא פעיל; class/style חדשים לפס העליון המצומצם (יציאה + שאלה) שמוצג רק
+  במסך מלא.
+- `src/components/Practice.tsx` — state חדש `fullscreen: boolean`; `useEffect`
+  שיוצא ממסך מלא אוטומטית כש-`feedback` הופך ל-not-null; מרנדר את הפס העליון
+  הרגיל **או** את הפס המצומצם (תלוי ב-`fullscreen`), ומעביר `fullscreen`
+  ו-`onToggleFullscreen` ל-`PracticeNotebook`.
+- `src/components/PracticeNotebook.tsx` — `fitToScreen()` (כבר קיים) הופך
+  להיקרא גם ב-toggle של מסך מלא (לא רק בלחיצה על ⤢ כמו היום), כדי שהזום יתאים
+  את עצמו לגודל התיבה **החדש**; מקבל שני props חדשים (`fullscreen`,
+  `onToggleFullscreen`) ומקבל `topSlot: ReactNode` חדש (ראו Technical Approach)
+  להצגת תוכן הפס המצומצם בלי לדעת מה זה.
+
 ## Data / State Changes
 
 **חוזה `/read-page` — בקשה (משתנה):**
@@ -138,7 +161,22 @@ interface PracticeNotebookProps {
 }
 ```
 
-## Technical Approach
+**עודכן בסבב רוויזיה א׳ — `PracticeNotebookProps` מתרחב:**
+```ts
+interface PracticeNotebookProps {
+  pages, currentPageIndex, onPagesChange, onCurrentPageIndexChange, locked, primaryAction; // ללא שינוי
+  fullscreen: boolean;
+  onToggleFullscreen: () => void;
+  /** מה שמוצג בפס העליון המצומצם כשמסך מלא פעיל — Practice.tsx מרכיב את זה
+   *  (שאלה + כפתור הקראה), PracticeNotebook רק מרנדר את מה שקיבל, בלי לדעת
+   *  מה זה — אותה הפרדה שכבר קיימת בין primaryAction לבין מי שמפרש אותו. */
+  topSlot: ReactNode;
+}
+```
+**State חדש ב-`Practice.tsx`:**
+```ts
+const [fullscreen, setFullscreen] = useState(false);
+```
 
 **מיזוג המסכים.** `Practice.tsx` מרנדר תמיד (לא מותנה) את הפס העליון (כותרת,
 התקדמות, השאלה עם 🔊, כפתור רמז/רמזים) ומתחתיו `<PracticeNotebook>`. אין יותר
@@ -225,6 +263,46 @@ function handleTeacherReading(reading: PageReading) {
 שופטת/פותרת": יש הבדל בין "השלב הזה לא נובע מהקודם" (תצפית על מה שנכתב) לבין
 "התשובה הסופית שגויה" (שיפוט מול תשובה נכונה) — רק הראשון נמצא כאן.
 
+**עודכן בסבב רוויזיה א׳ — מילוי גובה כברירת מחדל.** `.practice` הופך
+ל-flex container אנכי: `display: flex; flex-direction: column; min-height: 100vh;
+min-height: 100dvh;` (ה-`100vh` הרגיל נשאר כ-fallback לדפדפנים בלי תמיכה ב-`dvh`,
+לא מוסר — הכלל בפרויקט הוא progressive enhancement, לא replacement). בתוכו,
+`.notebook-screen` עובר מ-`height: min(60vh, 620px)` ל-`flex: 1 1 auto; min-height:
+360px;`. משמעות ה-`flex: 1 1 auto`: התיבה גדלה ומתכווצת כדי למלא כל מה שנשאר
+מתחת ל-`.practice-header`/כותרת/שאלה/רמז (שנשארים בגודלם הטבעי, לא flex), בלי
+צורך במדידת גבהים ב-JS. ה-`min-height: 360px` הוא רצפה: במצב D (אחרי מענה),
+כשמתווספות פסקת המורה/feedback/הסבר מתחת לתיבה, יכול לא להישאר מספיק גובה
+פנוי לתיבה בלי לדחוק אותה מתחת לרצפה הזו — במקרה כזה `.practice` עצמו גדל
+מעבר לגובה ה-viewport והעמוד נגלל כרגיל (בדיוק כמו היום; אין כאן שינוי
+התנהגות, `.practice` כבר לא היה גובה-קבוע). ברגע שמענה חדש נשלח ל"דף חדש" ומצב
+D נעלם (`next()`), `.notebook-screen` חוזר לתפוס את כל הפנוי, ללא קפיצה
+מיוחדת — flexbox מחשב את זה מחדש בכל רינדור.
+
+**עודכן בסבב רוויזיה א׳ — מנגנון מסך מלא: `position:fixed;inset:0`, לא
+Fullscreen API.** כש-`fullscreen === true`, `.notebook-screen` מקבל class נוסף
+(`.notebook-screen.fullscreen`) שמגדיר `position: fixed; inset: 0; z-index: <מעל
+שאר העמוד>; min-height: 0;` (ה-`min-height: 360px` הרגיל לא רלוונטי כאן — הקופסה
+כבר תופסת את כל המסך). זו **בדיוק** אותה טכניקה שהמנגנון `position:fixed;inset:0`
+כבר השתמש בו בפיצ'ר `practice-notebook` המקורי (לפני שהתמזג להטמעה בתוך
+`.practice` בפיצ'ר הזה) — קוד ידוע, נבדק, לא ניסוי חדש. **הכרעה מפורשת נגד**
+Fullscreen API האמיתי של הדפדפן (`element.requestFullscreen()`): (1) התנהגות לא
+אחידה ב-iOS Safari, כולל מקרים שבהם הוא נכשל בשקט; (2) דורש user gesture חדש בכל
+קריאה, מה שמסבך auto-exit תכנותי (המפרט דורש יציאה אוטומטית ממסך מלא כש-`feedback`
+הופך ל-not-null — פעולה שאינה gesture של המשתמש, ו-Fullscreen API לא מבטיח
+שתצליח לצאת בלי אינטראקציה נוספת בכל דפדפן); (3) `:fullscreen` pseudo-class ו-
+`fullscreenchange` events מוסיפים משטח קוד/בדיקות חדש לגמרי, מול הרחבה של מנגנון
+קיים. `position:fixed;inset:0` גם פותר בחינם את מקרה סיבוב הטלפון לרוחב (ראו
+Edge Cases) — `inset:0` תמיד ממלא את ה-viewport הנוכחי, איזה כיוון שלא יהיה,
+בלי קוד ייעודי.
+
+**רענון ה-fit-transform בכל טוגל.** `PracticeNotebook` קורא `computeFitTransform`
+(לא רק `applyTransform`) גם בכניסה למסך מלא וגם ביציאה ממנו — לא רק ב-mount
+הראשוני כמו היום. הסיבה: הכניסה/יציאה משנה את גודל הפיקסלים בפועל של
+`.notebook-stage` (מ-`min-height:360px`-ish לכל המסך ובחזרה), אז קנה המידה
+שהתאים לגודל הקודם כבר שגוי לגודל החדש. הרצה מתבצעת אחרי הרינדור (ב-`useEffect`
+שתלוי ב-`fullscreen`, קורא `getBoundingClientRect()` על ה-stage אחרי שה-CSS
+class כבר הוחל) — אותו דפוס בדיוק כמו ה-`useEffect` הקיים שרץ ב-mount.
+
 **דף חדש לכל שאלה.** `next()` מוסיף `createBlankPage()` ומקדם את `currentPageIndex`
 אליו — בדיוק כאילו התלמיד/ה לחצ/ה בעצמו/ה "+ דף חדש". דפים קודמים (כולל
 הבדוקים) נשארים בערימה ונגישים לדפדוף, לא נמחקים. זו הכרעה טכנית (design.md
@@ -255,6 +333,20 @@ function handleTeacherReading(reading: PageReading) {
   (`promptSegments` הקיים) — לפני שליחה כ-`expectedPrompt`, הגרשיים האחוריים
   מוסרים (מוחלפים ברווח/כלום) כי הם מוסכמה של הלקוח, לא רלוונטיים לטקסט
   שנשלח כהקשר חופשי למודל.
+- **עודכן בסבב רוויזיה א׳ — מסך צר וגבוה מאוד (למשל נייד ב-portrait עם מקלדת
+  מסך פתוחה, אם אי פעם רלוונטי).** `min-height: 360px` על `.notebook-screen`
+  הוא רצפה מוחלטת, לא יחסית ל-viewport — גם ב-viewport קטן מ-360px גובה (נדיר
+  מאוד, אבל אפשרי בתיאוריה), התיבה לא תיעלם, רק תדחוף גלילה. אין טיפול מיוחד
+  מעבר לכך — זו התנהגות "רשת ביטחון" סבירה, לא UX אידיאלי לגודל קיצוני כזה.
+- **עודכן בסבב רוויזיה א׳ — סיבוב הטלפון לרוחב בזמן מסך מלא.** אין קוד ייעודי
+  נדרש: `position:fixed;inset:0` נצמד מחדש ל-viewport החדש (כולל `100dvh`)
+  אוטומטית ברגע שהדפדפן מעדכן את מידות ה-viewport אחרי סיבוב — זו בדיוק הסיבה
+  שנבחר על פני Fullscreen API (ראו Technical Approach). ה-`useEffect` שמריץ
+  מחדש `computeFitTransform` צריך לרוץ גם על אירוע `resize`/`orientationchange`,
+  לא רק על טוגל של `fullscreen` עצמו — אחרת קנה המידה נשאר מותאם לכיוון הקודם
+  עד הטוגל הבא. זה כבר תבנית קיימת בקוד (ה-`useEffect` המקורי שרץ ב-mount
+  כנראה כבר מאזין ל-`resize` מסיבה דומה; developer לוודא ולהשתמש באותו listener
+  גם לכיוון הזה, לא להוסיף שני מאזינים נפרדים).
 
 ## Risks / Tradeoffs
 - **שינוי שובר בחוזה `/read-page`, לא תוסף.** `PR #60` הוגדר כ"שלב א'" מפורש
@@ -288,6 +380,14 @@ function handleTeacherReading(reading: PageReading) {
   **כל** תרגול נעצר מבחינת קבלת משוב, לא רק "שלח למורה" האופציונלי כמו
   ב-`PR #60`. זו תוצאה ישירה של הבקשה, לא תקלה בתכנון — מוזכר כאן כי זו נקודת
   כשל יחידה (SPOF) חדשה שלא הייתה קיימת קודם באפליקציה.
+- **עודכן בסבב רוויזיה א׳ — `.practice` הופך ל-flex container.** זה משנה איך
+  ילדים ישירים אחרים של `.practice` מתפרסים (למשל אם יש מרווחים/`margin`
+  שהסתמכו על זרימת בלוק רגילה). הסיכון מוגבל: `.practice` כבר לא מכיל הרבה
+  ילדים ישירים (header, כותרת, שאלה, notebook-screen, hints — כולם כבר בעמודה
+  אחת חזותית), ו-`flex-direction: column` על container שכל הילדים שלו כבר
+  מסודרים אנכית אמור להיות שקוף כמעט לגמרי; developer לוודא ויזואלית (לא רק
+  ב-CI) שאין רגרסיה במרווחים אחרי השינוי, בפרט אצל מיקה (הכי פחות תוכן על
+  המסך, הכי רגיש להבדל).
 
 ## Open Questions
 None.
@@ -295,6 +395,12 @@ None.
 ## Implementation Notes
 
 נבנה בעיקרו בדיוק לפי התוכנית. סטיות/פרטים שהתבררו רק בכתיבה:
+
+**הוחלף בסבב רוויזיה א׳ — הפסקה הבאה מתעדת החלטה היסטורית שכבר אינה בתוקף.**
+`height: min(60vh, 620px)` הוחלף ב-`flex: 1 1 auto; min-height: 360px` (ראו
+Technical Approach למעלה) בדיוק בגלל התקלה שהפסקה הזו מסבירה את הרקע לה —
+גובה קבוע קטן מדי בנייד. נשארת כאן להסביר את ההיגיון המקורי (למה הפכה למסך
+מוטמע ולא נשארה overlay), לא כתיאור המצב הנוכחי.
 
 **`.notebook-screen` הפך מ-overlay למסך-מלא לפאנל מוטמע בגובה חסום.**
 architecture.md לא פירט CSS, אבל design.md דורש שהשאלה תישאר גלויה מעל המחברת
