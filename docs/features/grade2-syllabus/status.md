@@ -6,18 +6,19 @@
 
 ## Progress
 - [x] Product spec — product-manager — 2026-09-01
-- [ ] Design — designer — not started
+- [x] Design — designer — 2026-09-01
 - [ ] Architecture — tech-lead — not started
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** designer
+**Current phase:** tech-lead
 **Branch:** `feature/grade2-syllabus`
 **PR:** not opened yet
 
 ## Open questions / blockers
 None. שתי ההחלטות שהיו חוסמות (אילו נושאים להוסיף, הרחבת טווח ל-1000) הוכרעו במפורש
-על ידי המשתמש (2026-09-01) לפני כתיבת ה-product-spec.
+על ידי המשתמש (2026-09-01) לפני כתיבת ה-product-spec. העיצוב קבע גם את שינוי הכותרות
+("עד 1000") ואת שמות שני הנושאים החדשים ("כפל וחילוק", "צורות וגופים").
 
 ## Docs
 - [Product spec](./product-spec.md)
