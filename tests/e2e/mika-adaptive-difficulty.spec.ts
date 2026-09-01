@@ -3,9 +3,9 @@ import { answerViaNotebook } from "./helpers/notebookAnswer";
 
 /**
  * Acceptance criteria under test (docs/features/mika-adaptive-difficulty/product-spec.md),
- * mirroring tests/e2e/adaptive-difficulty.spec.ts's own coverage of חיבור עד 100 — this is
+ * mirroring tests/e2e/adaptive-difficulty.spec.ts's own coverage of חיבור עד 1000 — this is
  * the same mechanism, applied to three more of Mika's topics: חיבור עד 10, חיסור עד 10
- * (grade א׳) and חיסור עד 100 (grade ב׳).
+ * (grade א׳) and חיסור עד 1000 (grade ב׳).
  *
  *  1. Each topic skips the level picker entirely and lands straight on a 20-question
  *     practice session.
@@ -43,7 +43,7 @@ const TOPICS: AdaptiveTopic[] = [
   },
   {
     gradeIndex: 1,
-    name: "חיסור עד 100",
+    name: "חיסור עד 1000",
     operator: "−",
     // Needs borrowing — the topic's hardest mechanic, mirroring add100's carrying check.
     atHardestTier: (a, b) => a % 10 < b % 10,
