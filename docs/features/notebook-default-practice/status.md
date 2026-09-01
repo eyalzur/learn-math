@@ -10,9 +10,9 @@
 - [x] Implementation — developer — 2026-09-01 (סבב רוויזיה א׳ — ממומש ואומת ידנית)
 - [x] Tests — qa — 2026-09-01 (סבב רוויזיה א׳ — 306/306 עוברות, ריצה נקייה)
 
-**Current phase:** done — ממתין לריוויו ולמיזוג
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `fix/notebook-fullscreen`
-**PR:** [#63](https://github.com/eyalzur/learn-math/pull/63)
+**PR:** [#63](https://github.com/eyalzur/learn-math/pull/63) — מוזג 2026-09-01
 
 **היסטוריה:** הפיצ'ר המקורי מוזג ל-`main` ב-2026-09-01 (`PR #62`, ראו למטה).
 הסבב הנוכחי הוא תיקון על סמך בדיקה באתר החי.
