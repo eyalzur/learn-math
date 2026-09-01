@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { DrawTool, NotebookPage, PanZoom } from "../data/notebook";
 import {
   CELL,
@@ -15,15 +15,27 @@ import {
   pageHasContent,
   zoomAroundPoint,
 } from "../data/notebook";
-import { readPageWithTeacher, type TeacherReading } from "../lib/notebookServer";
-import { speak, speechParts, speechSupported, stopSpeaking } from "../data/speech";
+
+/** The single action Practice.tsx wants rendered in the toolbar's action slot — this
+ *  component has no idea whether that means "send to the teacher", "still waiting", or
+ *  "move to the next question": it just renders whatever button its caller asks for. That
+ *  split is deliberate — see docs/features/notebook-default-practice/architecture.md. */
+interface PrimaryAction {
+  label: string;
+  onClick: () => void;
+  disabled: boolean;
+}
 
 interface PracticeNotebookProps {
   pages: NotebookPage[];
   currentPageIndex: number;
   onPagesChange: (pages: NotebookPage[]) => void;
   onCurrentPageIndexChange: (index: number) => void;
-  onClose: () => void;
+  /** True once the current question has been answered — blocks further drawing/erasing on
+   *  the page that was just checked, but zoom/pan/page navigation stay live so the student
+   *  can still look back at it. */
+  locked: boolean;
+  primaryAction: PrimaryAction;
 }
 
 /**
@@ -41,21 +53,23 @@ export function PracticeNotebook({
   currentPageIndex,
   onPagesChange,
   onCurrentPageIndexChange,
-  onClose,
+  locked,
+  primaryAction,
 }: PracticeNotebookProps) {
   const [tool, setTool] = useState<DrawTool | "pan">("pen");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [zoomPercent, setZoomPercent] = useState(100);
-  const [sendState, setSendState] = useState<"idle" | "sending" | "error">("idle");
-  const [teacherResult, setTeacherResult] = useState<TeacherReading | null>(null);
-  const [teacherSpeaking, setTeacherSpeaking] = useState(false);
 
   // Drawing mutates currentPage.filledCells directly through refs, on purpose (see the
   // comment on panZoomRef above) — a pointermove can fire dozens of times a second, and
   // re-rendering React for each one would defeat that. But "does the page have content"
-  // (canSendToTeacher below) is read at render time, so something still has to tell React
-  // a render is due once a stroke actually finishes — this is that something.
-  const [, notifyContentChanged] = useReducer((c: number) => c + 1, 0);
+  // is now read at render time in the *parent* (Practice.tsx computes primaryAction.disabled
+  // from it), so a stroke finishing has to make the parent re-render, not just this
+  // component — passing a new array reference through the pages prop it already owns does
+  // that without a reducer or an extra callback prop of its own.
+  function notifyContentChanged() {
+    onPagesChange([...pages]);
+  }
 
   const stageRef = useRef<HTMLDivElement>(null);
   const stackRef = useRef<HTMLDivElement>(null);
@@ -69,6 +83,7 @@ export function PracticeNotebook({
   // cost the original prototype avoided by mutating the DOM directly (see applyTransform).
   const panZoomRef = useRef<PanZoom>({ panX: 0, panY: 0, zoom: 1 });
   const toolRef = useRef<DrawTool | "pan">("pen");
+  const lockedRef = useRef(locked);
   const activePointers = useRef(new Map<number, { x: number; y: number }>());
   const drawing = useRef(false);
   const lastPoint = useRef<{ x: number; y: number } | null>(null);
@@ -87,9 +102,9 @@ export function PracticeNotebook({
     toolRef.current = tool;
   }, [tool]);
 
-  // Leaving the notebook mid-reading must not leave a voice talking over whatever screen
-  // comes next — same reasoning as Practice.tsx's identical cleanup.
-  useEffect(() => stopSpeaking, []);
+  useEffect(() => {
+    lockedRef.current = locked;
+  }, [locked]);
 
   function inkColor() {
     return getComputedStyle(document.documentElement).getPropertyValue("--text-h").trim() || "#08060d";
@@ -150,7 +165,14 @@ export function PracticeNotebook({
 
     if (stageRef.current) {
       const rect = stageRef.current.getBoundingClientRect();
-      panZoomRef.current = { zoom: 1, panX: (rect.width - PAGE_WIDTH) / 2, panY: 20 };
+      // Fit-to-screen, not a fixed zoom of 1: the stage used to be the full viewport
+      // (practice-notebook's original full-screen overlay, wide enough that the 1200px-wide
+      // page roughly fit at zoom 1), but notebook-default-practice embedded it as a bounded
+      // panel below the question — often much narrower than the page itself. A fixed zoom
+      // would center most of the page off both edges, invisible and undrawable; fitting to
+      // whatever space is actually there keeps the whole page visible on load regardless of
+      // how wide that turns out to be.
+      panZoomRef.current = computeFitTransform(rect.width, rect.height);
     }
     applyTransform();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -264,7 +286,9 @@ export function PracticeNotebook({
           panX0: panZoomRef.current.panX,
           panY0: panZoomRef.current.panY,
         };
-      } else {
+      } else if (!lockedRef.current) {
+        // Once the page has been checked, pen/eraser stop marking it — but panning and
+        // pinch-zoom (below) stay live so the student can still look the page over.
         drawing.current = true;
         lastPoint.current = null;
         startRecording();
@@ -394,45 +418,11 @@ export function PracticeNotebook({
     }
   }
 
-  async function sendToTeacher() {
-    if (!currentPage) return;
-    setSendState("sending");
-    try {
-      const result = await readPageWithTeacher(currentPage);
-      setTeacherResult(result);
-      setSendState("idle");
-    } catch {
-      setSendState("error");
-    }
-  }
-
-  function closeTeacherResult() {
-    stopSpeaking();
-    setTeacherSpeaking(false);
-    setTeacherResult(null);
-  }
-
-  function toggleTeacherSpeech() {
-    if (teacherSpeaking) {
-      stopSpeaking();
-      setTeacherSpeaking(false);
-      return;
-    }
-    if (!teacherResult || !teacherResult.reading.certain) return;
-    const { question, answer } = teacherResult.reading;
-    setTeacherSpeaking(true);
-    speak(speechParts([`מה שכתבת: \`${question}\`.`, `התשובה שרשמת: \`${answer}\`.`]), () => setTeacherSpeaking(false));
-  }
-
   const atMaxPages = pages.length >= MAX_PAGES;
-  const canSendToTeacher = !!currentPage && pageHasContent(currentPage) && sendState !== "sending";
 
   return (
     <div className="notebook-screen">
       <div className="notebook-topbar">
-        <button type="button" className="link-button" onClick={onClose}>
-          ← חזרה לתרגול
-        </button>
         <span className="notebook-page-indicator">
           דף {currentPageIndex + 1} מתוך {pages.length}
         </span>
@@ -500,8 +490,13 @@ export function PracticeNotebook({
         <button type="button" className="notebook-clear-btn" onClick={clearCurrentPage}>
           נקה דף
         </button>
-        <button type="button" className="notebook-send-btn" onClick={sendToTeacher} disabled={!canSendToTeacher}>
-          {sendState === "sending" ? "המורה קוראת..." : "שלח למורה"}
+        <button
+          type="button"
+          className="notebook-send-btn"
+          onClick={primaryAction.onClick}
+          disabled={primaryAction.disabled}
+        >
+          {primaryAction.label}
         </button>
         <div className="notebook-page-nav">
           <button type="button" onClick={() => onCurrentPageIndexChange(currentPageIndex - 1)} disabled={currentPageIndex === 0}>
@@ -523,58 +518,6 @@ export function PracticeNotebook({
         </div>
       </div>
       {atMaxPages && <p className="notebook-max-pages-note">הגעתם למספר המרבי של דפים במחברת הזאת.</p>}
-      {sendState === "error" && (
-        <p className="notebook-send-error" aria-live="polite">
-          לא הצלחנו לשלוח את הדף. נסו שוב.
-        </p>
-      )}
-
-      {teacherResult && (
-        <div className="notebook-confirm-backdrop">
-          <div className="notebook-confirm-dialog notebook-image-dialog" role="alertdialog" aria-modal="true">
-            <h2>זה הדף שהמורה מסתכל עליו</h2>
-            <img
-              src={teacherResult.imageDataUrl}
-              alt="הדף שכתבתם, כפי שהמורה רואה אותו"
-              className="notebook-server-image"
-            />
-            <div className="teacher-reading">
-              <div className="teacher-reading-header">
-                <h3>מה המורה הבינה</h3>
-                {teacherResult.reading.certain && speechSupported() && (
-                  <button
-                    type="button"
-                    className="speak-button"
-                    onClick={toggleTeacherSpeech}
-                    aria-label={teacherSpeaking ? "עצרו את ההקראה" : "הקריאו לי את מה שהמורה הבינה"}
-                  >
-                    {teacherSpeaking ? "⏹" : "🔊"}
-                  </button>
-                )}
-              </div>
-              {teacherResult.reading.certain ? (
-                <>
-                  <p className="teacher-reading-line">
-                    <span>מה שכתבת: </span>
-                    <span className="prompt-math">{teacherResult.reading.question}</span>
-                  </p>
-                  <p className="teacher-reading-line">
-                    <span>התשובה שרשמת: </span>
-                    <span className="prompt-math">{teacherResult.reading.answer}</span>
-                  </p>
-                </>
-              ) : (
-                <p className="teacher-reading-line">לא הצלחתי לקרוא את זה בבירור. אפשר לכתוב שוב, קצת יותר גדול או ברור?</p>
-              )}
-            </div>
-            <div className="notebook-confirm-actions">
-              <button type="button" className="secondary" onClick={closeTeacherResult}>
-                סגירה
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {confirmDelete && (
         <div className="notebook-confirm-backdrop">

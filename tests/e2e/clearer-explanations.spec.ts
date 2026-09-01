@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { answerViaNotebook } from "./helpers/notebookAnswer";
 
 /**
  * Acceptance criteria under test
@@ -57,8 +58,7 @@ async function enterDecimals(page: Page) {
 }
 
 const answerWrong = async (page: Page) => {
-  await page.locator(".answer-input").fill("999999");
-  await page.getByRole("button", { name: "בדיקה" }).first().click();
+  await answerViaNotebook(page, 999999);
 };
 
 async function currentPrompt(page: Page): Promise<string> {
@@ -89,7 +89,7 @@ async function failAtDecimalAddition(page: Page, wantCarry: boolean) {
       return parsed!;
     }
     await answerWrong(page);
-    await page.getByRole("button", { name: /הבא|סיום/ }).click();
+    await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
   }
   throw new Error(`never saw a ${wantCarry ? "carrying" : "non-carrying"} decimal addition in 20 tries`);
 }
@@ -165,7 +165,7 @@ test("a subtraction question gets a subtraction sentence, never an addition one"
       const prompt = await currentPrompt(page);
       if (prompt.includes(wanted)) break;
       await answerWrong(page);
-      await page.getByRole("button", { name: /הבא|סיום/ }).click();
+      await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
     }
     await expect(page.locator(".problem-text")).toContainText(wanted);
     await answerWrong(page);
@@ -191,7 +191,7 @@ test("a borrowing question shows the vertical with a borrow mark, and the explan
     const prompt = await currentPrompt(page);
     if (prompt.includes("15 − 8")) break;
     await answerWrong(page);
-    await page.getByRole("button", { name: /הבא|סיום/ }).click();
+    await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
   }
   await expect(page.locator(".problem-text")).toContainText("15 − 8");
   await answerWrong(page);
@@ -310,14 +310,13 @@ test("the explanation is spoken in layer order: method first, the caption before
 
 // ------------------------------------------------------------------- the phone keyboard
 
-test("numeric answer fields ask for a decimal keyboard", async ({ page }) => {
-  await enterDecimals(page);
-  await expect(page.locator(".answer-input")).toHaveAttribute("inputmode", "decimal");
-
+test("the follow-up field asks for a decimal keyboard", async ({ page }) => {
   // The follow-up field appears only inside a diagnosed conversation: 12 + 5 answered 7
-  // is 17 with its ten dropped, which the tens pattern picks up.
+  // is 17 with its ten dropped, which the tens pattern picks up. The main answer field this
+  // test used to check is gone entirely (docs/features/notebook-default-practice) — writing
+  // is the only way to answer now, so there is no keyboard-mode attribute left to assert on
+  // the main answer itself.
   await start(page, 0, 3, "חיבור");
-  await page.locator(".answer-input").fill("7");
-  await page.getByRole("button", { name: "בדיקה" }).first().click();
+  await answerViaNotebook(page, 7);
   await expect(page.locator(".followup-input")).toHaveAttribute("inputmode", "decimal");
 });

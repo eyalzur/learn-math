@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { answerViaNotebook } from "./helpers/notebookAnswer";
 
 /**
  * Acceptance criteria under test (docs/features/style-lessons/product-spec.md).
@@ -140,9 +141,8 @@ test("the questions climb, so the hardest is not the first one met", async ({ pa
   for (let i = 0; i < 7; i++) {
     const prompt = await page.locator(".problem-text").innerText();
     seen.push(Number(prompt.match(/\d+/)![0]));
-    await page.locator(".answer-input").fill("999999");
-    await page.getByRole("button", { name: "בדיקה" }).first().click();
-    const next = page.getByRole("button", { name: /הבא|סיום/ });
+    await answerViaNotebook(page, 999999);
+    const next = page.getByRole("button", { name: /^(הבא|סיום)$/ });
     if (!(await next.count())) break;
     await next.click();
   }
@@ -173,9 +173,8 @@ test("history says which style was practised, not just which topic", async ({ pa
   await page.locator(".style-card").filter({ hasText: "כמה עשרות" }).click();
 
   for (let i = 0; i < 5; i++) {
-    await page.locator(".answer-input").fill("999999");
-    await page.getByRole("button", { name: "בדיקה" }).first().click();
-    await page.getByRole("button", { name: /הבא|סיום/ }).click();
+    await answerViaNotebook(page, 999999);
+    await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
   }
 
   // A reload would resume inside the style picker just entered, not the topics list

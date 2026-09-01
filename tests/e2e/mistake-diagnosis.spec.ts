@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { answerViaNotebook } from "./helpers/notebookAnswer";
 import { grades } from "../../src/data/curriculum";
 import { diagnose } from "../../src/data/diagnose";
 import { generateDecimalsQuestion } from "../../src/data/adaptiveDecimals";
@@ -35,16 +36,14 @@ async function startMedium(page: Page) {
 async function walkTo(page: Page, wanted: string) {
   for (let i = 0; i < 10; i++) {
     if ((await page.locator(".problem-text").innerText()).includes(wanted)) return;
-    await page.locator(".answer-input").fill("999999");
-    await page.getByRole("button", { name: "בדיקה" }).first().click();
-    await page.getByRole("button", { name: /הבא|סיום/ }).click();
+    await answerViaNotebook(page, 999999);
+    await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
   }
   throw new Error(`never reached "${wanted}"`);
 }
 
 const answer = async (page: Page, value: string) => {
-  await page.locator(".answer-input").fill(value);
-  await page.getByRole("button", { name: "בדיקה" }).first().click();
+  await answerViaNotebook(page, value);
 };
 
 const answerFollowUp = async (page: Page, value: string) => {
@@ -147,7 +146,7 @@ test("the next question is reachable mid-conversation, without answering", async
   // Which question this is depends on where the lesson opened, so read the counter
   // rather than name a number — what matters is that it advanced by exactly one.
   const before = Number((await page.locator(".progress").innerText()).match(/\d+/)![0]);
-  await page.getByRole("button", { name: "הבא" }).click();
+  await page.getByRole("button", { name: "הבא", exact: true }).click();
   await expect(page.locator(".progress")).toContainText(`שאלה ${before + 1}`);
   // Nothing carried over from the abandoned conversation.
   await expect(page.locator(".followup")).toHaveCount(0);
@@ -161,10 +160,10 @@ test("the conversation does not change the score", async ({ page }) => {
   // one is failed, discussed and corrected.
   await answer(page, "3");
   await answerFollowUp(page, "12");
-  await page.getByRole("button", { name: "הבא" }).click();
+  await page.getByRole("button", { name: "הבא", exact: true }).click();
   for (let i = 0; i < 3; i++) {
     await answer(page, "999999");
-    await page.getByRole("button", { name: /הבא|סיום/ }).click();
+    await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
   }
 
   // A corrected answer is still a wrong answer in the tally — the spec is explicit that

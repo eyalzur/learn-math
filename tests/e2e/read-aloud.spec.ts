@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { answerViaNotebook } from "./helpers/notebookAnswer";
 
 /**
  * Acceptance criteria under test
@@ -120,10 +121,9 @@ async function failUntilMultiStep(page: Page) {
     if ((await page.locator(".explanation-step").count()) >= 2) return true;
     await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
     // The last question leads to the result screen, not another question — stop rather
-    // than hanging on an input that is no longer there.
-    if ((await page.locator(".answer-input").count()) === 0) return false;
-    await page.locator(".answer-input").fill("999999");
-    await page.getByRole("button", { name: "בדיקה" }).click();
+    // than hanging on a question screen that is no longer there.
+    if ((await page.locator(".problem-box").count()) === 0) return false;
+    await answerViaNotebook(page, 999999);
   }
   return false;
 }
@@ -151,8 +151,7 @@ async function failFirstQuestion(page: Page, topicIndex = 1) {
   const byLevel = page.locator(".level-card");
   if (await byStyle.count()) await byStyle.first().click();
   else if (await byLevel.count()) await byLevel.first().click();
-  await page.locator(".answer-input").fill("999999");
-  await page.getByRole("button", { name: "בדיקה" }).click();
+  await answerViaNotebook(page, 999999);
 }
 
 const spokenText = (page: Page) =>
@@ -294,8 +293,7 @@ test("arithmetic is spoken as Hebrew words rather than symbols", async ({ page }
       break;
     }
     await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
-    await page.locator(".answer-input").fill("999999");
-    await page.getByRole("button", { name: "בדיקה" }).click();
+    await answerViaNotebook(page, 999999);
   }
   expect(checked, "no explanation in this level contained an expression").toBe(true);
 });

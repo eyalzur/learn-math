@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { answerViaNotebook } from "./helpers/notebookAnswer";
 
 /**
  * Acceptance criteria under test
@@ -35,8 +36,7 @@ async function open(page: Page, topicIdx: number, style: string) {
 }
 
 const answer = async (page: Page, value: string) => {
-  await page.locator(".answer-input").fill(value);
-  await page.getByRole("button", { name: "בדיקה" }).first().click();
+  await answerViaNotebook(page, value);
 };
 
 /** Walks the level until the prompt contains `wanted`, then answers it wrong. */
@@ -45,7 +45,7 @@ async function failAt(page: Page, wanted: string) {
     const prompt = await page.locator(".problem-text").innerText();
     if (prompt.includes(wanted)) break;
     await answer(page, "999999");
-    await page.getByRole("button", { name: /הבא|סיום/ }).click();
+    await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
   }
   await expect(page.locator(".problem-text")).toContainText(wanted);
   await answer(page, "999999");
@@ -297,7 +297,7 @@ test("the hard place-value questions get no frame, and still explain themselves"
     // Absence must not look like breakage.
     await expect(page.locator(".explanation")).toBeVisible();
     await expect(page.locator(".explanation-step").first()).toBeVisible();
-    await page.getByRole("button", { name: /הבא|סיום/ }).click();
+    await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
   }
 });
 

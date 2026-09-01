@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { answerViaNotebook } from "./helpers/notebookAnswer";
 
 /**
  * Acceptance criteria under test
@@ -64,8 +65,7 @@ async function currentPrompt(page: Page): Promise<string> {
 }
 
 async function submit(page: Page, value: number) {
-  await page.locator(".answer-input").fill(String(value));
-  await page.getByRole("button", { name: "בדיקה" }).click();
+  await answerViaNotebook(page, value);
 }
 
 const answerWrong = (page: Page) => submit(page, 999999);

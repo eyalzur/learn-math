@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { answerViaNotebook } from "./helpers/notebookAnswer";
 
 /**
  * Acceptance criteria under test (docs/features/adaptive-difficulty/product-spec.md),
@@ -54,8 +55,7 @@ async function currentPrompt(page: Page): Promise<[number, number]> {
 }
 
 async function answer(page: Page, value: number) {
-  await page.locator(".answer-input").fill(String(value));
-  await page.getByRole("button", { name: "בדיקה" }).click();
+  await answerViaNotebook(page, value);
   await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
 }
 
@@ -114,8 +114,7 @@ test("a generated question still has two hints and shows a real explanation afte
   await expect(page.locator(".hint-button")).toHaveCount(0);
 
   const [a, b] = await currentPrompt(page);
-  await page.locator(".answer-input").fill(String(a + b + 1000));
-  await page.getByRole("button", { name: "בדיקה" }).click();
+  await answerViaNotebook(page, a + b + 1000);
 
   await expect(page.locator(".feedback.wrong")).toBeVisible();
   await expect(page.locator(".explanation")).toContainText(String(a));
