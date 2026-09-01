@@ -11,12 +11,12 @@
 בראנץ׳/PR (לא נפתח PR חדש).
 
 - [x] Product spec — product-manager — 2026-09-01 (סבב ב׳: קריטריון ההסתגלות עודכן)
-- [ ] Design — designer — not started (סבב ב׳)
+- [x] Design — designer — 2026-09-01 (סבב ב׳: אין LevelPicker, אין מחוון קושי, 20 שאלות)
 - [ ] Architecture — tech-lead — not started (סבב ב׳)
 - [ ] Implementation — developer — not started (סבב ב׳)
 - [ ] Tests — qa — not started (סבב ב׳)
 
-**Current phase:** designer
+**Current phase:** tech-lead
 **Branch:** `feature/grade8-angles-congruence`
 **PR:** https://github.com/eyalzur/learn-math/pull/65
 
