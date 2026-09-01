@@ -11,6 +11,7 @@ import { pythagorasTriangle } from "./pythagorasTriangle";
 import { percentStrip } from "./percentStrip";
 import { ratioStrips } from "./ratioStrips";
 import { linearGraph } from "./linearGraph";
+import { angleShape } from "./angleShape";
 import { explanationToSpeechParts, speechParts } from "./speech";
 
 /**
@@ -34,6 +35,7 @@ export interface ExplanationBundle {
   percent: ReturnType<typeof percentStrip>;
   ratio: ReturnType<typeof ratioStrips>;
   linear: ReturnType<typeof linearGraph>;
+  angle: ReturnType<typeof angleShape>;
 }
 
 export function buildExplanation(question: Question): ExplanationBundle {
@@ -50,6 +52,7 @@ export function buildExplanation(question: Question): ExplanationBundle {
     percent: percentStrip(question),
     ratio: ratioStrips(question),
     linear: linearGraph(question),
+    angle: angleShape(question),
   };
 }
 
@@ -75,6 +78,7 @@ export function explanationSpeechParts(bundle: ExplanationBundle): string[] {
     ...(bundle.percent ? speechParts([bundle.percent.caption]) : []),
     ...(bundle.ratio ? speechParts(bundle.ratio.caption) : []),
     ...(bundle.linear ? speechParts([bundle.linear.caption]) : []),
+    ...(bundle.angle ? speechParts([bundle.angle.caption]) : []),
     ...explanationToSpeechParts(bundle.explanation),
   ];
 }

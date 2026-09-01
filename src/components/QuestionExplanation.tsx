@@ -9,6 +9,7 @@ import { PythagorasTriangle } from "./PythagorasTriangle";
 import { PercentStrip } from "./PercentStrip";
 import { RatioStrips } from "./RatioStrips";
 import { LinearGraph } from "./LinearGraph";
+import { AngleShape } from "./AngleShape";
 
 interface QuestionExplanationProps {
   bundle: ExplanationBundle;
@@ -24,8 +25,21 @@ interface QuestionExplanationProps {
  * having happened, and so a diagram wired into one screen can't be forgotten in the other.
  */
 export function QuestionExplanation({ bundle, speak }: QuestionExplanationProps) {
-  const { explanation, method, diagram, frame, strip, vertical, line, geometry, pythagoras, percent, ratio, linear } =
-    bundle;
+  const {
+    explanation,
+    method,
+    diagram,
+    frame,
+    strip,
+    vertical,
+    line,
+    geometry,
+    pythagoras,
+    percent,
+    ratio,
+    linear,
+    angle,
+  } = bundle;
   if (explanation === null) return null;
 
   return (
@@ -136,6 +150,12 @@ export function QuestionExplanation({ bundle, speak }: QuestionExplanationProps)
         <figure className="linear-figure">
           <LinearGraph graph={linear} label={linear.caption.replace(/`/g, "")} />
           <figcaption className="figure-caption">{segmented(linear.caption)}</figcaption>
+        </figure>
+      )}
+      {angle && (
+        <figure className="angle-figure">
+          <AngleShape shape={angle} label={angle.caption.replace(/`/g, "")} />
+          <figcaption className="figure-caption">{segmented(angle.caption)}</figcaption>
         </figure>
       )}
       {explanation.steps.map((step, i) => (

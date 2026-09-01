@@ -1014,7 +1014,8 @@ button.secondary {
 .pythagoras-figure,
 .percent-figure,
 .ratio-figure,
-.linear-figure {
+.linear-figure,
+.angle-figure {
   margin: 0 0 16px;
   display: flex;
   flex-direction: column;
@@ -1028,7 +1029,8 @@ button.secondary {
 .pythagoras-triangle,
 .percent-strip,
 .ratio-strips,
-.linear-graph {
+.linear-graph,
+.angle-shape {
   direction: ltr;
   max-width: 100%;
   height: auto;
@@ -1080,6 +1082,50 @@ button.secondary {
   stroke: var(--text-h);
   stroke-width: 1.5;
   fill: none;
+}
+
+/* ---- angles and triangle congruence (grade8-angles-congruence) ---- */
+
+.as-line {
+  stroke: var(--text-h);
+  stroke-width: 1.5;
+  fill: none;
+}
+
+.as-dashed {
+  stroke: var(--text-h);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+  fill: none;
+}
+
+/* The arc that marks a known angle and the arc that marks the asked-for one are the same
+   stroke — the "?" beside it is what tells them apart, never colour alone. */
+.as-arc {
+  stroke: var(--text-h);
+  stroke-width: 1.5;
+  fill: none;
+}
+
+/* Matching tick marks on two sides is the standard "these are equal/corresponding" sign —
+   congruent triangles and the isosceles legs both read it the same way. */
+.as-tick {
+  stroke: var(--text-h);
+  stroke-width: 1.5;
+}
+
+.as-right-angle {
+  stroke: var(--text-h);
+  stroke-width: 1.5;
+  fill: none;
+}
+
+.as-label {
+  font-size: 15px;
+  font-weight: 600;
+  fill: var(--text);
+  direction: ltr;
+  unicode-bidi: isolate;
 }
 
 .ps-track {

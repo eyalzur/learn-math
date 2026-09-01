@@ -7,10 +7,10 @@
 - [x] Product spec — product-manager — 2026-09-01
 - [x] Design — designer — 2026-09-01
 - [x] Architecture — tech-lead — 2026-09-01
-- [ ] Implementation — developer — not started
+- [x] Implementation — developer — 2026-09-01
 - [ ] Tests — qa — not started
 
-**Current phase:** developer
+**Current phase:** qa
 **Branch:** `feature/grade8-angles-congruence`
 **PR:** not opened yet
 
@@ -21,6 +21,10 @@ None. **החלטת סדר-עבודה מוצהרת (Architecture, ראו Risks/Tr
 המדויק של שאר ששת נושאי כיתה ח׳ (תוכן קודם, מחולל אדפטיבי כפיצ'ר נפרד אחר כך —
 כמו `#48` שבא אחרי `#43`-ו). מחולל אדפטיבי לזוויות/חפיפה הוא follow-up מוצע, לא
 משהו שנשכח.
+
+- **Developer, ל-QA:** `tests/e2e/topics-all-grades.spec.ts` מחזיק רשימת נושאי כיתה
+  ח׳ כפולה וקבועה בקוד, ובודק את מספר כרטיסי הנושא מולה. הוספת הנושא הזה **תפיל**
+  את הבדיקה עד שהרשימה שם תתעדכן גם היא. ראו architecture.md, Implementation Notes.
 
 ## Docs
 - [Product spec](./product-spec.md)

@@ -169,3 +169,28 @@ isolate` על **כל** מקטע כזה, בלי הבחנה בין ספרה לאו
 
 ## Open Questions
 None.
+
+## Implementation Notes
+
+נבנה כמתוכנן: `src/data/angleShape.ts` (union מסוג מבחין עם 5 `kind`, שנים-עשר תבניות
+`readShape`), `src/components/AngleShape.tsx` (SVG, `switch` על `kind`), חיווט מלא
+ל-`questionExplanation.ts` ול-`QuestionExplanation.tsx`, `GRADE_8_TOPICS` ו-`grade8Topics`
+עם `30` שאלות (`10` לכל רמה), וסגנון ב-`App.css`. `npm run build && npm run lint`
+ירוקים. הועלתה גרסה (`bump:feature`, `1.26.1 → 1.27.0`).
+
+**אימות ידני של כל 30 השאלות מול חוקי התוכן, לפני מסירה ל-QA** — לא רק build/lint:
+כתבתי סקריפט חד-פעמי (Python/Node, לא נשמר בריפו) ששיחזר את הלוגיקה המדויקת של
+`angleShape.readShape`/`expectedAnswer` ושל חמשת חוקי `tests/e2e/content.spec.ts`
+הרלוונטיים (שני רמזים בדיוק בלי ספרה לא-מסומנת ובלי הדלפת תשובה, אלגברה מסומנת
+בפרומפט, חשבון לא בשדה הפרוזה, וחשבון שכתוב ידנית שבאמת מסתכם נכון) — והרצתי אותם על
+כל `30` השאלות. כולן עברו, כולל שהדיאגרמה (`angleShape`) אכן מחזירה ערך לא-`null`
+ותואם את `answer` בכל אחת מהן (אין אף שאלה בלי ציור, בניגוד לחלק מ-`more-diagrams`
+במכוון — ראו architecture.md, Edge Cases). זה חשוב כי `content.spec.ts` עצמו לא רץ
+כחלק מ-`build`/`lint`, ורק QA ירים אותו בפועל.
+
+**ממצא ל-QA, לא תוקן כאן (מחוץ ל-lane של developer):** `tests/e2e/topics-all-grades.spec.ts`
+מחזיק רשימת `GRADE_8_TOPICS` **כפולה**, קבועה בקוד (שורה `33`), ובודק
+`.topic-card` מול האורך שלה. הוספת הנושא כאן **תפיל** את הבדיקה הזו עד שהרשימה שם
+תתעדכן גם היא (הוספת `"זוויות וחפיפת משולשים"` באותו מיקום). לא נגעתי בקובץ
+`tests/e2e/` — זה לא בתחום הסקיל הזה (`qa` כותב/מתקן בדיקות) — אבל זו לא הפתעה
+שכדאי ש-QA יגלה בעצמו; ציון מפורש כאן.
