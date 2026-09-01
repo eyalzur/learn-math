@@ -11,9 +11,9 @@
 - [x] Implementation — developer — 2026-09-01 (תוקן שוב 2026-09-01)
 - [x] Tests — qa — 2026-09-01 (תוקן שוב 2026-09-01)
 
-**Current phase:** done — ממתין לריוויו (PR קיים כבר, לא PR חדש)
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `feature/grade2-syllabus`
-**PR:** [#64](https://github.com/eyalzur/learn-math/pull/64) — פתוח, לא מוזג
+**PR:** [#64](https://github.com/eyalzur/learn-math/pull/64) — מוזג 2026-09-01
 
 ## Open questions / blockers
 None. התיקון (2026-09-01) הושלם בכל חמשת השלבים: "כפל וחילוק" ו"צורות וגופים" הם
