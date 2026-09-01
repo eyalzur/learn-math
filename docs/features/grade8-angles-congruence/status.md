@@ -12,7 +12,7 @@
 
 **Current phase:** — all five done
 **Branch:** `feature/grade8-angles-congruence`
-**PR:** not opened yet
+**PR:** https://github.com/eyalzur/learn-math/pull/65
 
 ## Open questions / blockers
 None. **החלטת סדר-עבודה מוצהרת (Architecture, ראו Risks/Tradeoffs):** הנושא יוצא
