@@ -534,8 +534,8 @@ export function PracticeNotebook({
             ✋
           </button>
         </div>
-        <button type="button" className="notebook-clear-btn" onClick={clearCurrentPage}>
-          נקה דף
+        <button type="button" className="notebook-clear-btn" onClick={clearCurrentPage} aria-label="נקה דף">
+          🧹
         </button>
         <button
           type="button"
@@ -545,6 +545,9 @@ export function PracticeNotebook({
         >
           {primaryAction.label}
         </button>
+        {/* Prev/next stay right after "שלח למורה" — the page-nav actions actually used while
+            solving. Add/remove page (below) come last: used far less often, so they're the
+            ones that scroll out of view first if the row doesn't fully fit. */}
         <div className="notebook-page-nav">
           <button
             type="button"
@@ -554,6 +557,16 @@ export function PracticeNotebook({
           >
             ◀
           </button>
+          <button
+            type="button"
+            onClick={() => onCurrentPageIndexChange(currentPageIndex + 1)}
+            disabled={currentPageIndex === pages.length - 1}
+            aria-label="דף הבא"
+          >
+            ▶
+          </button>
+        </div>
+        <div className="notebook-page-nav">
           <button type="button" onClick={addPage} disabled={atMaxPages} aria-label="דף חדש">
             +
           </button>
@@ -565,14 +578,6 @@ export function PracticeNotebook({
             aria-label="הסר דף"
           >
             🗑
-          </button>
-          <button
-            type="button"
-            onClick={() => onCurrentPageIndexChange(currentPageIndex + 1)}
-            disabled={currentPageIndex === pages.length - 1}
-            aria-label="דף הבא"
-          >
-            ▶
           </button>
         </div>
       </div>

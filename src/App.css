@@ -1428,32 +1428,45 @@ button.secondary {
   font-size: 20px;
 }
 
+/* One row, always — never wraps into a second line that eats into the writing area above
+   it. Every button here is icon-only except "שלח למורה" (the one action worth spelling
+   out). Sized as tight as a still-tappable button reasonably goes; draw tools, "נקה דף",
+   "שלח למורה" and prev/next page (the controls actually used while solving a question) are
+   ordered first so they fit without scrolling on a phone-width screen — see the JSX
+   comment above the page-nav markup. Add/remove page (used far less often) come last, so
+   they're the ones a screen too narrow for all nine controls scrolls to reach (nowrap +
+   overflow-x, not a second row) — this app already needs no separate scrollbar affordance,
+   since the buttons scroll into view a nudge at a time. */
 .notebook-toolbar {
   flex-shrink: 0;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   align-items: center;
-  gap: 10px;
-  padding: 10px 16px;
+  gap: 4px;
+  padding: 6px 10px;
   border-top: 1px solid var(--border);
 }
 
 .tool-group {
+  flex-shrink: 0;
   display: flex;
-  gap: 6px;
+  gap: 3px;
   background: var(--code-bg);
-  border-radius: 14px;
-  padding: 4px;
+  border-radius: 11px;
+  padding: 2px;
 }
 
 .tool-btn {
-  min-width: 44px;
-  min-height: 44px;
-  padding: 0 12px;
-  border-radius: 10px;
+  flex-shrink: 0;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 0 4px;
+  border-radius: 8px;
   background: transparent;
   color: var(--text);
-  font-size: 16px;
+  font-size: 14px;
 }
 
 .tool-btn[aria-pressed="true"] {
@@ -1462,29 +1475,33 @@ button.secondary {
 }
 
 .notebook-clear-btn {
-  min-height: 44px;
+  flex-shrink: 0;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 0;
   background: var(--code-bg);
   color: var(--text-h);
+  font-size: 14px;
 }
 
-/* Icon-only (◀ + 🗑 ▶, aria-label carries the meaning) so the four of them fit on one row
-   even at phone width — with text ("◀ דף קודם" etc.) this row wrapped onto its own lines
-   under the toolbar and ate into the writing area below it, which is exactly the space this
-   revision is trying to give back. The 44px minimum square keeps the same tap-target size
-   as every other toolbar button; only the width shrinks. */
 .notebook-page-nav {
+  flex-shrink: 0;
   display: flex;
-  gap: 6px;
+  gap: 3px;
+}
+
+.notebook-page-nav:last-of-type {
   margin-inline-start: auto;
 }
 
 .notebook-page-nav button {
-  min-width: 44px;
-  min-height: 44px;
+  flex-shrink: 0;
+  min-width: 36px;
+  min-height: 36px;
   padding: 0;
   background: var(--code-bg);
   color: var(--text-h);
-  font-size: 15px;
+  font-size: 13px;
 }
 
 .notebook-remove-btn {
@@ -1492,7 +1509,11 @@ button.secondary {
 }
 
 .notebook-send-btn {
-  min-height: 44px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  min-height: 36px;
+  padding: 0 10px;
+  font-size: 14px;
   background: var(--code-bg);
   color: var(--text-h);
 }
