@@ -322,18 +322,112 @@ test("a new page can be added, an existing one removed (never the last), and pag
   await openLevel(page);
   await expect(page.getByText("דף 1 מתוך 1")).toBeVisible();
 
-  await page.getByRole("button", { name: "+ דף חדש" }).click();
+  await page.getByRole("button", { name: "דף חדש" }).click();
   await expect(page.getByText("דף 2 מתוך 2")).toBeVisible();
 
-  await page.getByRole("button", { name: "◀ דף קודם" }).click();
+  await page.getByRole("button", { name: "דף קודם" }).click();
   await expect(page.getByText("דף 1 מתוך 2")).toBeVisible();
-  await page.getByRole("button", { name: "דף הבא ▶" }).click();
+  await page.getByRole("button", { name: "דף הבא" }).click();
   await expect(page.getByText("דף 2 מתוך 2")).toBeVisible();
 
-  const removeButton = page.getByRole("button", { name: "🗑 הסר דף" });
+  const removeButton = page.getByRole("button", { name: "הסר דף" });
   await removeButton.click();
   await expect(page.getByText("דף 1 מתוך 1")).toBeVisible();
   await expect(removeButton).toBeDisabled();
+});
+
+// ------------------------ default writing-surface height and real fullscreen (סבב רוויזיה א׳)
+// docs/features/notebook-default-practice/product-spec.md, "Acceptance Criteria — עדכון
+// (סבב רוויזיה א׳)". A mobile-sized viewport on purpose — the live-site bug report this
+// revision fixes was specifically about a phone screen.
+
+test("the writing surface fills most of the free screen height by default, with no scrolling needed to reach the hint button below it", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 700 });
+  await openLevel(page);
+
+  const viewport = page.viewportSize()!;
+  const box = (await page.locator(".notebook-screen").boundingBox())!;
+  // Not a small fixed box: comfortably above what a capped 60vh/620px box (the previous,
+  // reported-as-too-small behaviour) would ever give this question on this viewport.
+  expect(box.height / viewport.height).toBeGreaterThan(0.4);
+
+  const hint = (await page.locator(".hint-button").boundingBox())!;
+  expect(hint.y + hint.height).toBeLessThanOrEqual(viewport.height + 2);
+});
+
+test('the "⤢" button expands the notebook box itself to cover (almost) the whole screen, not just the zoom inside it', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 700 });
+  await openLevel(page);
+  const before = (await page.locator(".notebook-screen").boundingBox())!;
+
+  await page.getByRole("button", { name: "הגדילו את המחברת למסך מלא" }).click();
+
+  const viewport = page.viewportSize()!;
+  const after = (await page.locator(".notebook-screen").boundingBox())!;
+  expect(after.height).toBeGreaterThan(before.height);
+  expect(after.width).toBeGreaterThanOrEqual(viewport.width - 2);
+  expect(after.height).toBeGreaterThanOrEqual(viewport.height - 2);
+});
+
+test("in fullscreen, the regular header and hint button disappear, and the question stays visible through a compact strip instead", async ({
+  page,
+}) => {
+  await openLevel(page);
+  await expect(page.locator(".practice-header")).toBeVisible();
+  const questionText = await page.locator(".problem-box").innerText();
+
+  await page.getByRole("button", { name: "הגדילו את המחברת למסך מלא" }).click();
+
+  await expect(page.locator(".practice-header")).toHaveCount(0);
+  await expect(page.locator(".hint-button")).toHaveCount(0);
+  const strip = page.locator(".notebook-fullscreen-topbar");
+  await expect(strip).toBeVisible();
+  await expect(strip.locator(".problem-box")).toHaveText(questionText);
+});
+
+test("a confident reading that arrives while fullscreen is on exits it automatically — fullscreen is a writing mode, not a result screen", async ({
+  page,
+}) => {
+  await openLevel(page);
+  await page.getByRole("button", { name: "הגדילו את המחברת למסך מלא" }).click();
+  await expect(page.locator(".notebook-fullscreen-topbar")).toBeVisible();
+
+  await answerViaNotebook(page, 7);
+
+  await expect(page.locator(".notebook-screen.fullscreen")).toHaveCount(0);
+  await expect(page.locator(".practice-header")).toBeVisible();
+  await expect(page.locator(".teacher-reading")).toBeVisible();
+});
+
+test("an uncertain reading that arrives while fullscreen is on does not exit it — the message shows beside the toolbar instead", async ({
+  page,
+}) => {
+  await openLevel(page);
+  await page.getByRole("button", { name: "הגדילו את המחברת למסך מלא" }).click();
+
+  await answerUncertainly(page);
+
+  const fullscreenBox = page.locator(".notebook-screen.fullscreen");
+  await expect(fullscreenBox).toBeVisible();
+  await expect(fullscreenBox.getByText("לא הצלחתי לקרוא את זה בבירור")).toBeVisible();
+});
+
+test("the exit button on the compact strip returns to the regular layout — a reversible toggle, not a one-way trip", async ({
+  page,
+}) => {
+  await openLevel(page);
+  await page.getByRole("button", { name: "הגדילו את המחברת למסך מלא" }).click();
+  await expect(page.locator(".notebook-screen.fullscreen")).toBeVisible();
+
+  await page.locator(".notebook-fullscreen-exit").click();
+
+  await expect(page.locator(".notebook-screen.fullscreen")).toHaveCount(0);
+  await expect(page.locator(".practice-header")).toBeVisible();
+  await expect(page.getByRole("button", { name: "הגדילו את המחברת למסך מלא" })).toBeVisible();
 });
 
 // The "no Claude/Anthropic dependency in client code" check stays in

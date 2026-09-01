@@ -222,7 +222,16 @@
   color: #dc2626;
 }
 
+/* A flex column, not a plain block: #root is already display:flex;flex-direction:column
+   (see index.css), but a plain-block child never stretches to fill it on its own. Turning
+   .practice into a flex item (flex: 1) makes it grow to fill whatever height #root has
+   free, and turning it into a flex container of its own lets .notebook-screen (flex: 1 1
+   auto below) claim all of that space that the header/question/hints above it don't need
+   — see docs/features/notebook-default-practice/architecture.md, "עודכן בסבב רוויזיה א׳". */
 .practice {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
   padding: 32px 24px;
 }
 
@@ -1256,19 +1265,73 @@ button.secondary {
 
 /* An embedded panel in the normal practice screen flow, not a full-screen takeover —
    since notebook-default-practice, the question header stays visible above it at all
-   times (see docs/features/notebook-default-practice/design.md). A bounded height (rather
-   than flex:1 on a fixed-height ancestor) keeps this simple: the surrounding .practice
-   block stays a normal, top-to-bottom scrollable page exactly like it always has been. */
+   times (see docs/features/notebook-default-practice/design.md). flex: 1 1 auto (rather
+   than a fixed height) lets it fill whatever .practice has left over after its other
+   children (header/question/hints) — on a normal question screen (state A) that's nearly
+   the whole free viewport, not a small fixed box. min-height is a floor, not a target: if
+   state D's extra content (teacher paragraph/feedback/explanation) needs more room than
+   that leaves, .practice grows past the viewport and the page scrolls, exactly as it
+   already could before this box existed. See
+   docs/features/notebook-default-practice/architecture.md, "עודכן בסבב רוויזיה א׳". */
 .notebook-screen {
   display: flex;
   flex-direction: column;
-  height: min(60vh, 620px);
+  flex: 1 1 auto;
+  min-height: 360px;
   margin: 0 0 16px;
   border: 1px solid var(--border);
   border-radius: 12px;
   overflow: hidden;
   background: var(--bg);
   direction: rtl;
+}
+
+/* Real fullscreen, not a bigger embedded box: the "⤢" toggle expands .notebook-screen to
+   cover the viewport instead of merely re-fitting the zoom inside its existing size. This
+   is the exact position:fixed;inset:0 mechanism practice-notebook used before this
+   feature embedded the notebook in the page flow (same z-index:30, chosen so
+   .notebook-confirm-backdrop's z-index:31 still layers above it if a delete is confirmed
+   while in fullscreen) — reused rather than the browser's Fullscreen API; see
+   architecture.md for why. */
+.notebook-screen.fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  min-height: 0;
+  margin: 0;
+  border-radius: 0;
+}
+
+.notebook-fullscreen-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.notebook-fullscreen-topbar .problem-box {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+}
+
+.notebook-fullscreen-topbar .prompt-ltr {
+  font-size: 26px;
+}
+
+.notebook-fullscreen-exit {
+  flex-shrink: 0;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--text-h);
 }
 
 .notebook-topbar {
@@ -1365,32 +1428,45 @@ button.secondary {
   font-size: 20px;
 }
 
+/* One row, always — never wraps into a second line that eats into the writing area above
+   it. Every button here is icon-only except "שלח למורה" (the one action worth spelling
+   out). Sized as tight as a still-tappable button reasonably goes; draw tools, "נקה דף",
+   "שלח למורה" and prev/next page (the controls actually used while solving a question) are
+   ordered first so they fit without scrolling on a phone-width screen — see the JSX
+   comment above the page-nav markup. Add/remove page (used far less often) come last, so
+   they're the ones a screen too narrow for all nine controls scrolls to reach (nowrap +
+   overflow-x, not a second row) — this app already needs no separate scrollbar affordance,
+   since the buttons scroll into view a nudge at a time. */
 .notebook-toolbar {
   flex-shrink: 0;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   align-items: center;
-  gap: 10px;
-  padding: 10px 16px;
+  gap: 4px;
+  padding: 6px 10px;
   border-top: 1px solid var(--border);
 }
 
 .tool-group {
+  flex-shrink: 0;
   display: flex;
-  gap: 6px;
+  gap: 3px;
   background: var(--code-bg);
-  border-radius: 14px;
-  padding: 4px;
+  border-radius: 11px;
+  padding: 2px;
 }
 
 .tool-btn {
-  min-width: 44px;
-  min-height: 44px;
-  padding: 0 12px;
-  border-radius: 10px;
+  flex-shrink: 0;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 0 4px;
+  border-radius: 8px;
   background: transparent;
   color: var(--text);
-  font-size: 16px;
+  font-size: 14px;
 }
 
 .tool-btn[aria-pressed="true"] {
@@ -1399,24 +1475,33 @@ button.secondary {
 }
 
 .notebook-clear-btn {
-  min-height: 44px;
+  flex-shrink: 0;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 0;
   background: var(--code-bg);
   color: var(--text-h);
+  font-size: 14px;
 }
 
 .notebook-page-nav {
+  flex-shrink: 0;
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  gap: 3px;
+}
+
+.notebook-page-nav:last-of-type {
   margin-inline-start: auto;
 }
 
 .notebook-page-nav button {
-  min-height: 44px;
+  flex-shrink: 0;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 0;
   background: var(--code-bg);
   color: var(--text-h);
-  font-size: 14px;
-  padding: 0 14px;
+  font-size: 13px;
 }
 
 .notebook-remove-btn {
@@ -1424,7 +1509,11 @@ button.secondary {
 }
 
 .notebook-send-btn {
-  min-height: 44px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  min-height: 36px;
+  padding: 0 10px;
+  font-size: 14px;
   background: var(--code-bg);
   color: var(--text-h);
 }

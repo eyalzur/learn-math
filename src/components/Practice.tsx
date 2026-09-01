@@ -79,10 +79,22 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
   /** What the teacher understood, once a reading comes back confident. */
   const [teacherNote, setTeacherNote] = useState<{ reflection: string; errorPointer?: string } | null>(null);
 
+  /** The notebook box expanded to (almost) the whole screen — a writing-mode toggle, not a
+   *  result mode: see the effect below, which drops it the moment a reading comes back
+   *  confident (design.md, מצב F). */
+  const [fullscreen, setFullscreen] = useState(false);
+
   // Voices load asynchronously, so warm the list before the first press.
   useEffect(primeVoices, []);
   // Leaving mid-sentence must not leave a voice talking over the next screen.
   useEffect(() => stopSpeaking, []);
+  // A confident reading means the page is locked and the result is showing — the whole
+  // reason to expand the notebook (room to write) is gone, and the result needs the normal
+  // full-width layout, not the compact strip. See design.md, מצב F: "מסך מלא הוא
+  // מצב-כתיבה, לא מצב-תוצאה".
+  useEffect(() => {
+    if (feedback !== null) setFullscreen(false);
+  }, [feedback]);
 
   const question = lesson.questions[index];
   const isLast = index === lesson.questions.length - 1;
@@ -332,55 +344,106 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
         ? { label: "המורה קוראת...", onClick: () => {}, disabled: true }
         : { label: "שלח למורה", onClick: sendToTeacher, disabled: !currentPage || !pageHasContent(currentPage) };
 
+  // Shared between the regular header and the fullscreen strip below, so the two never
+  // drift apart — same markup, same RTL/LTR isolation, rendered in two different places.
+  const questionSpeakButton = (
+    <button
+      type="button"
+      className="speak-button"
+      onClick={() => toggleSpeech("question")}
+      aria-label={speakingBox === "question" ? "עצרו את ההקראה" : "הקריאו לי את השאלה"}
+    >
+      {speakingBox === "question" ? "⏹" : "🔊"}
+    </button>
+  );
+  const questionBox = (
+    <div className={`problem-box ${isWordProblem ? "box-rtl" : "box-ltr"}`}>
+      <span className={`problem-text ${isWordProblem ? "prompt-rtl" : "prompt-ltr"}`}>
+        {isWordProblem ? (
+          promptSegments(question.prompt).map((segment, i) =>
+            segment.kind === "math" ? (
+              <span key={i} className="prompt-math">
+                {segment.value}
+              </span>
+            ) : (
+              <span key={i}>{segment.value}</span>
+            ),
+          )
+        ) : (
+          <>{`${question.prompt} =`}</>
+        )}
+      </span>
+    </div>
+  );
+
+  /** What the notebook shows above the writing surface while it fills the screen: the
+   *  question (so writing it down never means forgetting what's being solved) plus a way
+   *  back out, replacing the regular header/title/hint-button that fullscreen hides — see
+   *  design.md, מצב F. Rendered by PracticeNotebook, which has no idea what it is (same
+   *  split as primaryAction). Null outside fullscreen: the regular header below covers it. */
+  const topSlot = fullscreen ? (
+    <div className="notebook-fullscreen-topbar">
+      <button
+        type="button"
+        className="notebook-fullscreen-exit"
+        onClick={() => setFullscreen(false)}
+        aria-label="צאו ממסך מלא"
+      >
+        ✕
+      </button>
+      {questionBox}
+      {speechSupported() && questionSpeakButton}
+    </div>
+  ) : null;
+
+  /** States C (uncertain reading) and E (send failed) stay reachable in fullscreen — they
+   *  are small, sit beside the toolbar, and don't need the full header back (design.md,
+   *  "מצב C/E בתוך מסך מלא"). Outside fullscreen these render in their usual spot below
+   *  instead, unchanged from before this revision. */
+  const statusSlot = fullscreen ? (
+    <>
+      {uncertain && (
+        <p className="teacher-uncertain" aria-live="polite">
+          לא הצלחתי לקרוא את זה בבירור. אפשר לכתוב שוב, קצת יותר גדול או ברור?
+        </p>
+      )}
+      {sendState === "error" && (
+        <p className="notebook-send-error" aria-live="polite">
+          לא הצלחנו לשלוח את הדף. נסו שוב.
+        </p>
+      )}
+    </>
+  ) : null;
+
   return (
     <div className="practice">
-      <div className="practice-header">
-        <button
-          className="link-button"
-          onClick={() => {
-            stopSpeaking();
-            onExit();
-          }}
-        >
-          ← חזרה
-        </button>
-        <span className="progress">
-          שאלה {index + 1} מתוך {lesson.questions.length}
-        </span>
-      </div>
-      <h2>{lesson.title}</h2>
-      {/* Outside .problem-box on purpose: that box forces a direction, and a button
-          inside it would join the isolated context and shift the expression's alignment. */}
-      {speechSupported() && (
-        <div className="question-speech">
-          <button
-            type="button"
-            className="speak-button"
-            onClick={() => toggleSpeech("question")}
-            aria-label={speakingBox === "question" ? "עצרו את ההקראה" : "הקריאו לי את השאלה"}
-          >
-            {speakingBox === "question" ? "⏹" : "🔊"}
-          </button>
-        </div>
+      {/* The regular header/title/hint-button hide while the notebook fills the screen —
+          fullscreen's topSlot above carries a compact replacement for the one part of this
+          (the question) that still has to stay visible. See design.md, מצב F. */}
+      {!fullscreen && (
+        <>
+          <div className="practice-header">
+            <button
+              className="link-button"
+              onClick={() => {
+                stopSpeaking();
+                onExit();
+              }}
+            >
+              ← חזרה
+            </button>
+            <span className="progress">
+              שאלה {index + 1} מתוך {lesson.questions.length}
+            </span>
+          </div>
+          <h2>{lesson.title}</h2>
+          {/* Outside .problem-box on purpose: that box forces a direction, and a button
+              inside it would join the isolated context and shift the expression's alignment. */}
+          {speechSupported() && <div className="question-speech">{questionSpeakButton}</div>}
+          {questionBox}
+        </>
       )}
-      <div className={`problem-box ${isWordProblem ? "box-rtl" : "box-ltr"}`}>
-        <span className={`problem-text ${isWordProblem ? "prompt-rtl" : "prompt-ltr"}`}>
-          {isWordProblem ? (
-            promptSegments(question.prompt).map((segment, i) =>
-              segment.kind === "math" ? (
-                <span key={i} className="prompt-math">
-                  {segment.value}
-                </span>
-              ) : (
-                <span key={i}>{segment.value}</span>
-              ),
-            )
-          ) : (
-            <>{`${question.prompt} =`}</>
-          )}
-        </span>
-      </div>
-      {uncertain && (
+      {!fullscreen && uncertain && (
         <p className="teacher-uncertain" aria-live="polite">
           לא הצלחתי לקרוא את זה בבירור. אפשר לכתוב שוב, קצת יותר גדול או ברור?
         </p>
@@ -505,13 +568,17 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
         onCurrentPageIndexChange={setCurrentPageIndex}
         locked={feedback !== null}
         primaryAction={primaryAction}
+        fullscreen={fullscreen}
+        onToggleFullscreen={() => setFullscreen((f) => !f)}
+        topSlot={topSlot}
+        statusSlot={statusSlot}
       />
-      {sendState === "error" && (
+      {!fullscreen && sendState === "error" && (
         <p className="notebook-send-error" aria-live="polite">
           לא הצלחנו לשלוח את הדף. נסו שוב.
         </p>
       )}
-      {hintsShown > 0 && (
+      {!fullscreen && hintsShown > 0 && (
         <div className="hints">
           {question.hints.slice(0, hintsShown).map((hint, i) => (
             <p key={i} className="hint">
@@ -523,7 +590,7 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
           ))}
         </div>
       )}
-      {feedback === null && hintsShown < 2 && (
+      {!fullscreen && feedback === null && hintsShown < 2 && (
         <button
           type="button"
           className="hint-button"
