@@ -18,9 +18,11 @@ import { answerViaNotebook } from "./helpers/notebookAnswer";
  *
  * Criterion 6 used to live here: "חיסור עד 1000, the topic not in the pilot, still shows
  * three levels exactly like before" (this feature's own product-spec.md explicitly left
- * it Out of Scope). docs/features/mika-adaptive-difficulty converted חיסור עד 1000 too —
- * grade ב׳ now has zero level-based topics — so that criterion is superseded, not broken;
- * see tests/e2e/mika-adaptive-difficulty.spec.ts for its replacement coverage.
+ * it Out of Scope). docs/features/mika-adaptive-difficulty converted חיסור עד 1000 too,
+ * so that criterion is superseded, not broken; see tests/e2e/mika-adaptive-difficulty.spec.ts
+ * for its replacement coverage. docs/features/grade2-syllabus later added two more, unrelated
+ * topics to grade ב׳ (כפל וחילוק, צורות וגופים) that are level-based like grade א׳'s — this
+ * file's own two topics are still the only adaptive ones.
  */
 
 const MIKA = 0;

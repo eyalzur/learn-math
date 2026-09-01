@@ -67,14 +67,15 @@ test("grade א׳ keeps its original five topics, unchanged by the new grade", as
   }
 });
 
-test("grade ב׳'s topics are both adaptive, entered directly with no level to pick", async ({
+test("חיבור עד 1000 and חיסור עד 1000 are both adaptive, entered directly with no level to pick", async ({
   page,
 }) => {
   // This test used to describe the opposite: three written levels of ten questions, the
   // same shape as grade א׳'s topics. חיבור עד 1000 became adaptive first (see
   // docs/features/adaptive-difficulty), and חיסור עד 1000 — its "untouched twin" at the
-  // time — followed later (docs/features/mika-adaptive-difficulty). Grade ב׳ now has no
-  // level-based topic left at all; both enter straight into a 20-question practice.
+  // time — followed later (docs/features/mika-adaptive-difficulty). Grade ב׳ has two more
+  // topics today (docs/features/grade2-syllabus, כפל וחילוק וצורות וגופים), and those are
+  // level-based like grade א׳'s — this test is only about these original two.
   await page.locator(".student-card").nth(MIKA).click();
   await page.locator(".grade-card").nth(1).click();
 

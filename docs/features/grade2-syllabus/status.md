@@ -9,20 +9,18 @@
 - [x] Design — designer — 2026-09-01
 - [x] Architecture — tech-lead — 2026-09-01
 - [x] Implementation — developer — 2026-09-01
-- [ ] Tests — qa — not started
+- [x] Tests — qa — 2026-09-01
 
-**Current phase:** qa
+**Current phase:** done — ממתין ל-PR ולריוויו
 **Branch:** `feature/grade2-syllabus`
 **PR:** not opened yet
 
 ## Open questions / blockers
 None. שתי ההחלטות שהיו חוסמות (אילו נושאים להוסיף, הרחבת טווח ל-1000) הוכרעו במפורש
-על ידי המשתמש (2026-09-01) לפני כתיבת ה-product-spec. הקוד כתוב ומאומת:
-`npm run build && npm run lint && npm run test:e2e` כולם ירוקים, `312/312` (עלה מ-
-`305/305`), ריצה בודדת ונקייה. פרטי המימוש המלאים ב-`architecture.md`, "Implementation
-Notes" — כולל תיקון מחרוזות בשלוש בדיקות e2e קיימות שהתייחסו לכותרות/מספר הנושאים
-הישנים של כיתה ב׳, ותיקון באג אמיתי בשלב הסבר אחד (מעבר מאה בחיבור) שנתפס באימות ידני
-לפני קומיט.
+על ידי המשתמש (2026-09-01) לפני כתיבת ה-product-spec. `npm run build && npm run lint &&
+npm run test:e2e` כולם ירוקים, **`323/323`** (עלה מ-`305/305` לפני הפיצ'ר), ריצה בודדת
+ונקייה. פרטי המימוש המלאים ב-`architecture.md`, "Implementation Notes"; מפת הבדיקות
+ב-`tests.md`.
 
 ## Docs
 - [Product spec](./product-spec.md)
