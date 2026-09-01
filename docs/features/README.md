@@ -6,7 +6,7 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
-| זוויות וחפיפת משולשים (כיתה ח׳) | 🟡 in architecture | [status](./grade8-angles-congruence/status.md) |
+| זוויות וחפיפת משולשים (כיתה ח׳) | 🟡 in development | [status](./grade8-angles-congruence/status.md) |
 | שמות קבועים לדמויות בדימויים | 🟢 done — מוזג ל-main | [status](./analogy-character-names/status.md) |
 | מחברת כמצב התרגול היחיד | 🟢 done — מוזג ל-main (כולל סבב רוויזיה א׳, גודל משטח הכתיבה) | [status](./notebook-default-practice/status.md) |
 | המורה מבינה מה נכתב בדף | 🟢 done — מוזג ל-main, אומת מול Claude אמיתי | [status](./notebook-teacher-understanding/status.md) |
