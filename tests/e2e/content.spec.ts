@@ -937,7 +937,7 @@ function seededRng(seed: number): () => number {
   };
 }
 
-test("every generated חיבור עד 100 question passes every content rule, across the whole difficulty range", () => {
+test("every generated חיבור עד 1000 question passes every content rule, across the whole difficulty range", () => {
   const rng = seededRng(42);
   const samplesPerDifficulty = 200;
   const violations: string[] = [];
@@ -945,7 +945,7 @@ test("every generated חיבור עד 100 question passes every content rule, ac
   const wrongAnswer: string[] = [];
   const badPrompt: string[] = [];
 
-  for (let difficulty = 1; difficulty <= 5; difficulty++) {
+  for (let difficulty = 1; difficulty <= 8; difficulty++) {
     for (let i = 0; i < samplesPerDifficulty; i++) {
       const q = generateAdd100Question(difficulty, rng);
 
@@ -961,7 +961,7 @@ test("every generated חיבור עד 100 question passes every content rule, ac
       }
       const [a, b] = [Number(m[1]), Number(m[2])];
       if (a + b !== q.answer) wrongAnswer.push(`${q.id} — "${q.prompt}" answer is ${q.answer}, not ${a + b}`);
-      if (q.answer > 100 || q.answer < 0) outOfRange.push(`${q.id} — "${q.prompt}" = ${q.answer} is outside 0-100`);
+      if (q.answer > 999 || q.answer < 0) outOfRange.push(`${q.id} — "${q.prompt}" = ${q.answer} is outside 0-999`);
     }
   }
 
@@ -975,7 +975,7 @@ test("every generated חיבור עד 100 question passes every content rule, ac
  * The same gap, for Mika's own three topics that moved to adaptive difficulty (see
  * docs/features/mika-adaptive-difficulty) — `חיבור עד 10` and `חיסור עד 10` (grade 1,
  * three difficulty tiers, not five: the 1–10 range is too small to support five distinct
- * tiers) and `חיסור עד 100` (grade 2, a direct subtraction mirror of `חיבור עד 100`'s
+ * tiers) and `חיסור עד 1000` (grade 2, a direct subtraction mirror of `חיבור עד 1000`'s
  * own five tiers).
  */
 test("every generated חיבור עד 10 question passes every content rule, across the whole difficulty range", () => {
@@ -1047,7 +1047,7 @@ test("every generated חיסור עד 10 question passes every content rule, acr
   expect(violations, `\n${violations.join("\n")}\n`).toEqual([]);
 });
 
-test("every generated חיסור עד 100 question passes every content rule, across the whole difficulty range", () => {
+test("every generated חיסור עד 1000 question passes every content rule, across the whole difficulty range", () => {
   const rng = seededRng(100);
   const samplesPerDifficulty = 200;
   const violations: string[] = [];
@@ -1055,7 +1055,7 @@ test("every generated חיסור עד 100 question passes every content rule, ac
   const wrongAnswer: string[] = [];
   const badPrompt: string[] = [];
 
-  for (let difficulty = 1; difficulty <= 5; difficulty++) {
+  for (let difficulty = 1; difficulty <= 8; difficulty++) {
     for (let i = 0; i < samplesPerDifficulty; i++) {
       const q = generateSub100Question(difficulty, rng);
 
@@ -1071,8 +1071,8 @@ test("every generated חיסור עד 100 question passes every content rule, ac
       }
       const [a, b] = [Number(m[1]), Number(m[2])];
       if (a - b !== q.answer) wrongAnswer.push(`${q.id} — "${q.prompt}" answer is ${q.answer}, not ${a - b}`);
-      if (q.answer > 99 || q.answer < 0) outOfRange.push(`${q.id} — "${q.prompt}" = ${q.answer} is outside 0-99`);
-      if (a > 99) outOfRange.push(`${q.id} — "${q.prompt}" minuend ${a} is outside 0-99`);
+      if (q.answer > 999 || q.answer < 0) outOfRange.push(`${q.id} — "${q.prompt}" = ${q.answer} is outside 0-999`);
+      if (a > 999) outOfRange.push(`${q.id} — "${q.prompt}" minuend ${a} is outside 0-999`);
     }
   }
 

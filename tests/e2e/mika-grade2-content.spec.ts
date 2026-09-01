@@ -52,9 +52,9 @@ test("both grades stay reachable in the same visit — picking one does not lose
 
   // The other grade is right there, still offering its own topics.
   await page.locator(".grade-card").nth(1).click(); // כיתה ב׳
-  await expect(page.locator(".topic-card")).toHaveCount(2);
-  await expect(page.locator(".topic-card", { hasText: "חיבור עד 100" })).toHaveCount(1);
-  await expect(page.locator(".topic-card", { hasText: "חיסור עד 100" })).toHaveCount(1);
+  await expect(page.locator(".topic-card")).toHaveCount(4);
+  await expect(page.locator(".topic-card", { hasText: "חיבור עד 1000" })).toHaveCount(1);
+  await expect(page.locator(".topic-card", { hasText: "חיסור עד 1000" })).toHaveCount(1);
 });
 
 test("grade א׳ keeps its original five topics, unchanged by the new grade", async ({ page }) => {
@@ -71,14 +71,14 @@ test("grade ב׳'s topics are both adaptive, entered directly with no level to p
   page,
 }) => {
   // This test used to describe the opposite: three written levels of ten questions, the
-  // same shape as grade א׳'s topics. חיבור עד 100 became adaptive first (see
-  // docs/features/adaptive-difficulty), and חיסור עד 100 — its "untouched twin" at the
+  // same shape as grade א׳'s topics. חיבור עד 1000 became adaptive first (see
+  // docs/features/adaptive-difficulty), and חיסור עד 1000 — its "untouched twin" at the
   // time — followed later (docs/features/mika-adaptive-difficulty). Grade ב׳ now has no
   // level-based topic left at all; both enter straight into a 20-question practice.
   await page.locator(".student-card").nth(MIKA).click();
   await page.locator(".grade-card").nth(1).click();
 
-  for (const title of ["חיבור עד 100", "חיסור עד 100"]) {
+  for (const title of ["חיבור עד 1000", "חיסור עד 1000"]) {
     await page.locator(".topic-card", { hasText: title }).click();
     await expect(page.locator(".level-card")).toHaveCount(0);
     await expect(page.locator(".progress")).toContainText("מתוך 20");
@@ -93,7 +93,7 @@ test("a grade ב׳ arithmetic problem still renders left-to-right inside the RTL
   // to the browser's bidi algorithm can render its operands in the wrong order.
   await page.locator(".student-card").nth(MIKA).click();
   await page.locator(".grade-card").nth(1).click();
-  await page.locator(".topic-card", { hasText: "חיסור עד 100" }).click();
+  await page.locator(".topic-card", { hasText: "חיסור עד 1000" }).click();
 
   const box = page.locator(".problem-box, .problem-text").first();
   await expect(box).toBeVisible();
@@ -106,7 +106,7 @@ test("you can walk back from the topics screen to the grade choice, and from the
 }) => {
   await page.locator(".student-card").nth(MIKA).click();
   await page.locator(".grade-card").nth(1).click();
-  await expect(page.locator(".topic-card")).toHaveCount(2);
+  await expect(page.locator(".topic-card")).toHaveCount(4);
 
   await page.locator(".link-button").first().click();
   await expect(page.locator(".grade-card")).toHaveCount(4);
@@ -130,7 +130,7 @@ function grade2Topic(id: string) {
   return topic;
 }
 
-test("every hard חיבור עד 100 question requires carrying past a ten, not just bigger numbers", () => {
+test("every hard חיבור עד 1000 question requires carrying past a ten, not just bigger numbers", () => {
   const hard = grade2Topic("add100").levels.find((l) => l.id === "hard")!;
   const notCarrying = hard.questions
     .map((q) => ({ id: q.id, ops: operands(q.prompt) }))
@@ -139,7 +139,7 @@ test("every hard חיבור עד 100 question requires carrying past a ten, not 
   expect(notCarrying, `\n${notCarrying.join("\n")}\n`).toEqual([]);
 });
 
-test("every hard חיסור עד 100 question requires borrowing, not just bigger numbers", () => {
+test("every hard חיסור עד 1000 question requires borrowing, not just bigger numbers", () => {
   const hard = grade2Topic("sub100").levels.find((l) => l.id === "hard")!;
   const notBorrowing = hard.questions
     .map((q) => ({ id: q.id, ops: operands(q.prompt) }))
