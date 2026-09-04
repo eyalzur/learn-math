@@ -5,8 +5,8 @@ import { answerViaNotebook } from "./helpers/notebookAnswer";
  * Acceptance criteria under test (docs/features/adaptive-difficulty/product-spec.md),
  * and the flow they were built against (docs/features/adaptive-difficulty/design.md).
  *
- *  1. חיבור עד 100 is built from a template — entering it skips the level picker
- *     entirely and lands straight on practice (design.md, "לחיצה על 'חיבור עד 100'").
+ *  1. חיבור עד 1000 is built from a template — entering it skips the level picker
+ *     entirely and lands straight on practice (design.md, "לחיצה על 'חיבור עד 1000'").
  *  2. The difficulty responds to real-time success: a run of correct answers should
  *     eventually need carrying past a ten (a wider range), a run of wrong answers should
  *     not (product-spec.md, "מעברי עשרה/שאילה שכיחים יותר").
@@ -16,11 +16,13 @@ import { answerViaNotebook } from "./helpers/notebookAnswer";
  *  5. History keeps recording the topic, without inventing a level label that no longer
  *     exists (design.md, "היסטוריה").
  *
- * Criterion 6 used to live here: "חיסור עד 100, the topic not in the pilot, still shows
+ * Criterion 6 used to live here: "חיסור עד 1000, the topic not in the pilot, still shows
  * three levels exactly like before" (this feature's own product-spec.md explicitly left
- * it Out of Scope). docs/features/mika-adaptive-difficulty converted חיסור עד 100 too —
- * grade ב׳ now has zero level-based topics — so that criterion is superseded, not broken;
- * see tests/e2e/mika-adaptive-difficulty.spec.ts for its replacement coverage.
+ * it Out of Scope). docs/features/mika-adaptive-difficulty converted חיסור עד 1000 too,
+ * so that criterion is superseded, not broken; see tests/e2e/mika-adaptive-difficulty.spec.ts
+ * for its replacement coverage. docs/features/grade2-syllabus later added two more, unrelated
+ * topics to grade ב׳ (כפל וחילוק, צורות וגופים) that are level-based like grade א׳'s — this
+ * file's own two topics are still the only adaptive ones.
  */
 
 const MIKA = 0;
@@ -38,7 +40,7 @@ async function toGradeB(page: Page) {
 
 async function enterAdd100(page: Page) {
   await toGradeB(page);
-  await page.locator(".topic-card", { hasText: "חיבור עד 100" }).click();
+  await page.locator(".topic-card", { hasText: "חיבור עד 1000" }).click();
 }
 
 /** `"47 + 8 ="` → `[47, 8]`. Every add100 question, written or generated, is this shape. */
@@ -63,9 +65,9 @@ test.beforeEach(async ({ page }) => {
   await open(page);
 });
 
-test("חיבור עד 100 skips the level picker and lands straight on practice", async ({ page }) => {
+test("חיבור עד 1000 skips the level picker and lands straight on practice", async ({ page }) => {
   await toGradeB(page);
-  await page.locator(".topic-card", { hasText: "חיבור עד 100" }).click();
+  await page.locator(".topic-card", { hasText: "חיבור עד 1000" }).click();
 
   await expect(page.locator(".level-card")).toHaveCount(0);
   await expect(page.locator(".problem-text")).toBeVisible();
@@ -91,7 +93,7 @@ test("a streak of correct answers climbs to needing carrying, a streak of wrong 
   // Run B: always answer correctly. The difficulty should climb over ten questions, so by
   // the end of the run at least one question should require carrying.
   await page.getByRole("button", { name: "חזרה לתפריט" }).click(); // back to the topics screen
-  await page.locator(".topic-card", { hasText: "חיבור עד 100" }).click();
+  await page.locator(".topic-card", { hasText: "חיבור עד 1000" }).click();
   const correctRunCarries: boolean[] = [];
   for (let i = 0; i < 10; i++) {
     const ops = await currentPrompt(page);
@@ -125,7 +127,7 @@ test("questions vary between sessions, even at the same starting difficulty", as
 
   const seen = new Set<string>();
   for (let i = 0; i < 6; i++) {
-    await page.locator(".topic-card", { hasText: "חיבור עד 100" }).click();
+    await page.locator(".topic-card", { hasText: "חיבור עד 1000" }).click();
     seen.add((await page.locator(".problem-text").innerText()).trim());
     await page.locator(".link-button").first().click(); // ← חזרה
   }
@@ -146,6 +148,6 @@ test("history records the topic without a level suffix", async ({ page }) => {
 
   const row = page.locator(".history-row").first();
   await expect(row).toBeVisible();
-  await expect(row.locator(".history-what")).toHaveText("חיבור עד 100");
+  await expect(row.locator(".history-what")).toHaveText("חיבור עד 1000");
   await expect(row.locator(".history-score")).toHaveText("20/20");
 });

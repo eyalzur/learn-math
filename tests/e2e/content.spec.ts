@@ -17,6 +17,8 @@ import { generateAdd100Question } from "../../src/data/adaptiveAdd100";
 import { generateAdd10Question } from "../../src/data/adaptiveAdd10";
 import { generateSub10Question } from "../../src/data/adaptiveSub10";
 import { generateSub100Question } from "../../src/data/adaptiveSub100";
+import { generateMulDivQuestion } from "../../src/data/adaptiveMulDiv";
+import { generateShapesQuestion } from "../../src/data/adaptiveShapes";
 import { generateFractionsQuestion } from "../../src/data/adaptiveFractions";
 import { generateDecimalsQuestion } from "../../src/data/adaptiveDecimals";
 import { generatePercentQuestion } from "../../src/data/adaptivePercent";
@@ -937,7 +939,7 @@ function seededRng(seed: number): () => number {
   };
 }
 
-test("every generated חיבור עד 100 question passes every content rule, across the whole difficulty range", () => {
+test("every generated חיבור עד 1000 question passes every content rule, across the whole difficulty range", () => {
   const rng = seededRng(42);
   const samplesPerDifficulty = 200;
   const violations: string[] = [];
@@ -945,7 +947,7 @@ test("every generated חיבור עד 100 question passes every content rule, ac
   const wrongAnswer: string[] = [];
   const badPrompt: string[] = [];
 
-  for (let difficulty = 1; difficulty <= 5; difficulty++) {
+  for (let difficulty = 1; difficulty <= 8; difficulty++) {
     for (let i = 0; i < samplesPerDifficulty; i++) {
       const q = generateAdd100Question(difficulty, rng);
 
@@ -961,7 +963,7 @@ test("every generated חיבור עד 100 question passes every content rule, ac
       }
       const [a, b] = [Number(m[1]), Number(m[2])];
       if (a + b !== q.answer) wrongAnswer.push(`${q.id} — "${q.prompt}" answer is ${q.answer}, not ${a + b}`);
-      if (q.answer > 100 || q.answer < 0) outOfRange.push(`${q.id} — "${q.prompt}" = ${q.answer} is outside 0-100`);
+      if (q.answer > 999 || q.answer < 0) outOfRange.push(`${q.id} — "${q.prompt}" = ${q.answer} is outside 0-999`);
     }
   }
 
@@ -975,7 +977,7 @@ test("every generated חיבור עד 100 question passes every content rule, ac
  * The same gap, for Mika's own three topics that moved to adaptive difficulty (see
  * docs/features/mika-adaptive-difficulty) — `חיבור עד 10` and `חיסור עד 10` (grade 1,
  * three difficulty tiers, not five: the 1–10 range is too small to support five distinct
- * tiers) and `חיסור עד 100` (grade 2, a direct subtraction mirror of `חיבור עד 100`'s
+ * tiers) and `חיסור עד 1000` (grade 2, a direct subtraction mirror of `חיבור עד 1000`'s
  * own five tiers).
  */
 test("every generated חיבור עד 10 question passes every content rule, across the whole difficulty range", () => {
@@ -1047,7 +1049,7 @@ test("every generated חיסור עד 10 question passes every content rule, acr
   expect(violations, `\n${violations.join("\n")}\n`).toEqual([]);
 });
 
-test("every generated חיסור עד 100 question passes every content rule, across the whole difficulty range", () => {
+test("every generated חיסור עד 1000 question passes every content rule, across the whole difficulty range", () => {
   const rng = seededRng(100);
   const samplesPerDifficulty = 200;
   const violations: string[] = [];
@@ -1055,7 +1057,7 @@ test("every generated חיסור עד 100 question passes every content rule, ac
   const wrongAnswer: string[] = [];
   const badPrompt: string[] = [];
 
-  for (let difficulty = 1; difficulty <= 5; difficulty++) {
+  for (let difficulty = 1; difficulty <= 8; difficulty++) {
     for (let i = 0; i < samplesPerDifficulty; i++) {
       const q = generateSub100Question(difficulty, rng);
 
@@ -1071,14 +1073,140 @@ test("every generated חיסור עד 100 question passes every content rule, ac
       }
       const [a, b] = [Number(m[1]), Number(m[2])];
       if (a - b !== q.answer) wrongAnswer.push(`${q.id} — "${q.prompt}" answer is ${q.answer}, not ${a - b}`);
-      if (q.answer > 99 || q.answer < 0) outOfRange.push(`${q.id} — "${q.prompt}" = ${q.answer} is outside 0-99`);
-      if (a > 99) outOfRange.push(`${q.id} — "${q.prompt}" minuend ${a} is outside 0-99`);
+      if (q.answer > 999 || q.answer < 0) outOfRange.push(`${q.id} — "${q.prompt}" = ${q.answer} is outside 0-999`);
+      if (a > 999) outOfRange.push(`${q.id} — "${q.prompt}" minuend ${a} is outside 0-999`);
     }
   }
 
   expect(badPrompt, `\n${badPrompt.join("\n")}\n`).toEqual([]);
   expect(wrongAnswer, `\n${wrongAnswer.join("\n")}\n`).toEqual([]);
   expect(outOfRange, `\n${outOfRange.join("\n")}\n`).toEqual([]);
+  expect(violations, `\n${violations.join("\n")}\n`).toEqual([]);
+});
+
+test("every generated כפל וחילוק question passes every content rule, across the whole difficulty range", () => {
+  const rng = seededRng(300);
+  const samplesPerDifficulty = 200;
+  const violations: string[] = [];
+  const wrongAnswer: string[] = [];
+  const badPrompt: string[] = [];
+
+  for (let difficulty = 1; difficulty <= 3; difficulty++) {
+    for (let i = 0; i < samplesPerDifficulty; i++) {
+      const q = generateMulDivQuestion(difficulty, rng);
+
+      for (const rule of RULES) {
+        const problem = rule.check(q, "2");
+        if (problem) violations.push(`${q.id} (difficulty ${difficulty}) — ${rule.name}: ${problem}`);
+      }
+
+      const mult = q.prompt.trim().match(/^(\d+)\s*×\s*(\d+)$/);
+      const div = q.prompt.trim().match(/^(\d+)\s*÷\s*(\d+)$/);
+      if (mult) {
+        const [a, b] = [Number(mult[1]), Number(mult[2])];
+        if (a * b !== q.answer) wrongAnswer.push(`${q.id} — "${q.prompt}" answer is ${q.answer}, not ${a * b}`);
+      } else if (div) {
+        const [n, k] = [Number(div[1]), Number(div[2])];
+        if (n % k !== 0 || n / k !== q.answer) {
+          wrongAnswer.push(`${q.id} — "${q.prompt}" answer is ${q.answer}, but ${n} ÷ ${k} is ${n / k}`);
+        }
+      } else {
+        badPrompt.push(`${q.id} — "${q.prompt}" is not a bare multiplication or division`);
+      }
+    }
+  }
+
+  expect(badPrompt, `\n${badPrompt.join("\n")}\n`).toEqual([]);
+  expect(wrongAnswer, `\n${wrongAnswer.join("\n")}\n`).toEqual([]);
+  expect(violations, `\n${violations.join("\n")}\n`).toEqual([]);
+});
+
+test("every generated צורות וגופים question passes every content rule, across the whole difficulty range", () => {
+  // An oracle independent of src/data/adaptiveShapes.ts's own lookup table — written
+  // fresh from the same reviewed facts the 30 written questions already state, not
+  // imported from the generator. A test that checked the generator's table against
+  // itself could never catch the table being wrong in the first place.
+  const PLANE_FACTS: Record<string, { צלעות: number; קדקודים: number }> = {
+    משולש: { צלעות: 3, קדקודים: 3 },
+    ריבוע: { צלעות: 4, קדקודים: 4 },
+    מלבן: { צלעות: 4, קדקודים: 4 },
+    עיגול: { צלעות: 0, קדקודים: 0 },
+    מחומש: { צלעות: 5, קדקודים: 5 },
+    משושה: { צלעות: 6, קדקודים: 6 },
+  };
+  const SOLID_FACTS: Record<string, Partial<Record<"פאות" | "קדקודים" | "מקצועות", number>>> = {
+    קוביה: { פאות: 6, קדקודים: 8, מקצועות: 12 },
+    כדור: { פאות: 0, קדקודים: 0 },
+    גליל: { פאות: 2, קדקודים: 0 },
+  };
+  const SOLID_PAIR_TO_NAME: Record<string, string> = {
+    "שתי קוביות": "קוביה",
+    "שני כדורים": "כדור",
+    "שני גלילים": "גליל",
+  };
+
+  const rng = seededRng(301);
+  const samplesPerDifficulty = 200;
+  const violations: string[] = [];
+  const wrongAnswer: string[] = [];
+  const badPrompt: string[] = [];
+
+  for (let difficulty = 1; difficulty <= 3; difficulty++) {
+    for (let i = 0; i < samplesPerDifficulty; i++) {
+      const q = generateShapesQuestion(difficulty, rng);
+
+      for (const rule of RULES) {
+        const problem = rule.check(q, "2");
+        if (problem) violations.push(`${q.id} (difficulty ${difficulty}) — ${rule.name}: ${problem}`);
+      }
+
+      const numbers = (q.prompt.match(/\d+/g) ?? []).map(Number);
+
+      if (q.prompt.includes("בסך הכל")) {
+        // Two facts summed — both operands are printed in the prompt itself.
+        if (numbers.length !== 2) badPrompt.push(`${q.id} — "${q.prompt}" doesn't show exactly two numbers`);
+        else if (numbers[0] + numbers[1] !== q.answer) {
+          wrongAnswer.push(`${q.id} — "${q.prompt}" answer is ${q.answer}, not ${numbers[0] + numbers[1]}`);
+        }
+      } else if (q.prompt.includes("בכמה יותר")) {
+        // Two facts subtracted — the larger is always stated first.
+        if (numbers.length !== 2) badPrompt.push(`${q.id} — "${q.prompt}" doesn't show exactly two numbers`);
+        else if (numbers[0] - numbers[1] !== q.answer) {
+          wrongAnswer.push(`${q.id} — "${q.prompt}" answer is ${q.answer}, not ${numbers[0] - numbers[1]}`);
+        }
+      } else {
+        const m = q.prompt.match(/^כמה (.+?) יש ל(.+)\?$/);
+        if (!m) {
+          badPrompt.push(`${q.id} — "${q.prompt}" matches no known shape/solid question form`);
+          continue;
+        }
+        const [, rawAttr, subject] = m;
+        if (subject.endsWith(" יחד")) {
+          const pairName = subject.replace(/ יחד$/, "");
+          const solid = SOLID_PAIR_TO_NAME[pairName];
+          const attr = (rawAttr === "פאות שטוחות" ? "פאות" : rawAttr) as "פאות" | "קדקודים" | "מקצועות";
+          const single = solid ? SOLID_FACTS[solid]?.[attr] : undefined;
+          if (single === undefined) badPrompt.push(`${q.id} — "${q.prompt}" doesn't match a known doubled solid`);
+          else if (single * 2 !== q.answer) {
+            wrongAnswer.push(`${q.id} — "${q.prompt}" answer is ${q.answer}, not ${single * 2}`);
+          }
+        } else if (subject in PLANE_FACTS && (rawAttr === "צלעות" || rawAttr === "קדקודים")) {
+          const expected = PLANE_FACTS[subject][rawAttr];
+          if (expected !== q.answer) wrongAnswer.push(`${q.id} — "${q.prompt}" answer is ${q.answer}, not ${expected}`);
+        } else if (subject in SOLID_FACTS) {
+          const attr = (rawAttr === "פאות שטוחות" ? "פאות" : rawAttr) as "פאות" | "קדקודים" | "מקצועות";
+          const expected = SOLID_FACTS[subject][attr];
+          if (expected === undefined) badPrompt.push(`${q.id} — "${q.prompt}" — no such fact for ${subject}`);
+          else if (expected !== q.answer) wrongAnswer.push(`${q.id} — "${q.prompt}" answer is ${q.answer}, not ${expected}`);
+        } else {
+          badPrompt.push(`${q.id} — "${q.prompt}" matches no known shape/solid`);
+        }
+      }
+    }
+  }
+
+  expect(badPrompt, `\n${badPrompt.join("\n")}\n`).toEqual([]);
+  expect(wrongAnswer, `\n${wrongAnswer.join("\n")}\n`).toEqual([]);
   expect(violations, `\n${violations.join("\n")}\n`).toEqual([]);
 });
 

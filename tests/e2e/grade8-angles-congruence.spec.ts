@@ -216,7 +216,7 @@ test("covers angle questions — straight-angle completion, triangle angle sum, 
   page,
 }) => {
   await openTopic(page);
-  const prompts = await playSessions(page, 3);
+  const prompts = await playSessions(page, 4);
 
   expect(prompts.some((p) => p.includes("קו ישר"))).toBeTruthy();
   expect(prompts.some((p) => p.includes("משלימות"))).toBeTruthy();
