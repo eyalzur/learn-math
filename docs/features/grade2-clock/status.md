@@ -9,9 +9,9 @@
 - [x] Implementation — developer — 2026-09-04
 - [x] Tests — qa — 2026-09-04
 
-**Current phase:** done — ready for review
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `feature/grade2-clock`
-**PR:** [#66](https://github.com/eyalzur/learn-math/pull/66)
+**PR:** [#66](https://github.com/eyalzur/learn-math/pull/66) — מוזג 2026-09-04
 
 ## Open questions / blockers
 None. הנושא ו"אדפטיבי" הוכרעו במפורש על ידי המשתמש (2026-09-04). הארכיטקטורה פתרה
