@@ -16,9 +16,9 @@
 - [x] Implementation — developer — 2026-09-01 (סבב ב׳: 1,800 שאלות שנוצרו אומתו, אפס כשלים)
 - [x] Tests — qa — 2026-09-01 (סבב ב׳: 320/320, כולל בדיקת "קושי בזמן אמת" חדשה)
 
-**Current phase:** — all five done (סבב ב׳)
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `feature/grade8-angles-congruence`
-**PR:** https://github.com/eyalzur/learn-math/pull/65
+**PR:** https://github.com/eyalzur/learn-math/pull/65 — מוזג 2026-09-04
 
 ### סבב א׳ — הושלם 2026-09-01, לפני הבקשה למחולל
 - [x] Product spec — product-manager — 2026-09-01
