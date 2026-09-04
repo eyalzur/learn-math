@@ -13,7 +13,7 @@
 
 **Current phase:** done — ממתין ל-PR ולריוויו
 **Branch:** `fix/notebook-usability-fixes`
-**PR:** יתעדכן כשייפתח
+**PR:** [#67](https://github.com/eyalzur/learn-math/pull/67)
 
 ## Open questions / blockers
 None. שני תיקונים לניסוח לא מדויק ב-design.md נעשו בשלב הארכיטקטורה בלי לחזור
