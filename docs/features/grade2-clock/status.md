@@ -6,10 +6,10 @@
 - [x] Product spec — product-manager — 2026-09-04
 - [x] Design — designer — 2026-09-04
 - [x] Architecture — tech-lead — 2026-09-04
-- [ ] Implementation — developer — not started
-- [ ] Tests — qa — not started
+- [x] Implementation — developer — 2026-09-04
+- [x] Tests — qa — 2026-09-04
 
-**Current phase:** developer
+**Current phase:** done — ready for review
 **Branch:** `feature/grade2-clock`
 **PR:** not opened yet
 
@@ -20,7 +20,13 @@ None. הנושא ו"אדפטיבי" הוכרעו במפורש על ידי המש
 `QuestionExplanation`; (2) איך השעה מיוצגת בלי שדה חדש על `Question` - מקודדת
 ב-`id` ומפוענחת/מאומתת משם, כי `prompt` חייב להישאר נקי ממספרים (אחרת זו לא באמת
 שאלת קריאת-שעון). ראו architecture.md, "Edge Cases" לגבי הדרישה ש-`clockFace()`
-לעולם לא יחזיר `null` על שאלה בנושא הזה.
+לעולם לא יחזיר `null` על שאלה בנושא הזה - נבדק בפועל (`content.spec.ts`, 200 דגימות
+× 3 דרגות) ואף פעם לא מחזיר `null`.
+
+מומש במלואו: 30 שאלות כתובות, גנרטור אדפטיבי, רכיב `ClockFace`, שילוב ב-3 מקומות
+רינדור (Practice רגיל/fullscreen, TopicLesson), ו-8 בדיקות e2e ייעודיות. 335/335
+בדיקות עוברות. ראו architecture.md "Implementation Notes" לבאג תוכן אמיתי (ספרה
+`6` לא מסומנת) שנתפס ותוקן בדרך.
 
 ## Docs
 - [Product spec](./product-spec.md)
