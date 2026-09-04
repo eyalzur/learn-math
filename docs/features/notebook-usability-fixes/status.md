@@ -6,12 +6,12 @@
 
 ## Progress
 - [x] Product spec — product-manager — 2026-09-04
-- [ ] Design — designer — not started
+- [x] Design — designer — 2026-09-04
 - [ ] Architecture — tech-lead — not started
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** designer
+**Current phase:** tech-lead
 **Branch:** `fix/notebook-usability-fixes`
 **PR:** not opened yet
 
