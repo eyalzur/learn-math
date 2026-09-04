@@ -11,6 +11,7 @@ import { pythagorasTriangle } from "./pythagorasTriangle";
 import { percentStrip } from "./percentStrip";
 import { ratioStrips } from "./ratioStrips";
 import { linearGraph } from "./linearGraph";
+import { clockFace } from "./clockFace";
 import { explanationToSpeechParts, speechParts } from "./speech";
 
 /**
@@ -34,6 +35,11 @@ export interface ExplanationBundle {
   percent: ReturnType<typeof percentStrip>;
   ratio: ReturnType<typeof ratioStrips>;
   linear: ReturnType<typeof linearGraph>;
+  /** Unlike every other field here, rendered next to the question itself, not only
+   *  inside `QuestionExplanation` — see docs/features/grade2-clock/design.md. Computed
+   *  here anyway so `Practice.tsx` and `TopicLesson.tsx` share one lookup, the same
+   *  reason this whole bundle exists. */
+  clock: ReturnType<typeof clockFace>;
 }
 
 export function buildExplanation(question: Question): ExplanationBundle {
@@ -50,6 +56,7 @@ export function buildExplanation(question: Question): ExplanationBundle {
     percent: percentStrip(question),
     ratio: ratioStrips(question),
     linear: linearGraph(question),
+    clock: clockFace(question),
   };
 }
 
