@@ -15,6 +15,10 @@ export const ERASER_CELLS = 5;
 export const MAX_PAGES = 20;
 export const MIN_ZOOM = 0.15;
 export const MAX_ZOOM = 2.5;
+/** The zoom the notebook opens at, once per practice session — not a fit-to-viewport
+ *  calculation, which on a phone could come out small enough to be unusable (16% was
+ *  observed in review). Manual zoom/pan after that is unaffected. */
+export const INITIAL_ZOOM = 0.7;
 
 export interface NotebookPage {
   id: string;
@@ -90,9 +94,25 @@ export function zoomAroundPoint(current: PanZoom, screenX: number, screenY: numb
   };
 }
 
-/** The transform that fits the whole page inside a viewport of the given size, centered. */
+/** The transform that fits the whole page inside a viewport of the given size, centered.
+ *  Used for fullscreen's dynamic re-fit (entering/leaving, and resize while fullscreen) —
+ *  not for the session's opening zoom, see `computeInitialTransform` below. */
 export function computeFitTransform(viewportWidth: number, viewportHeight: number): PanZoom {
   const zoom = clampZoom(Math.min(viewportWidth / PAGE_WIDTH, viewportHeight / PAGE_HEIGHT) * 0.96);
+  return {
+    zoom,
+    panX: (viewportWidth - PAGE_WIDTH * zoom) / 2,
+    panY: (viewportHeight - PAGE_HEIGHT * zoom) / 2,
+  };
+}
+
+/** The transform the notebook opens with, once per practice session: `INITIAL_ZOOM`
+ *  regardless of viewport size, centered the same way `computeFitTransform` centers its
+ *  own (viewport-derived) zoom. Deliberately a separate function rather than a fixed-zoom
+ *  branch inside `computeFitTransform` — that one is also used to re-fit fullscreen to
+ *  whatever size the viewport actually is, which still needs to be dynamic. */
+export function computeInitialTransform(viewportWidth: number, viewportHeight: number): PanZoom {
+  const zoom = INITIAL_ZOOM;
   return {
     zoom,
     panX: (viewportWidth - PAGE_WIDTH * zoom) / 2,

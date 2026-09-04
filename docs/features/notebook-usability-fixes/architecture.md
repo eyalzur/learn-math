@@ -192,3 +192,58 @@ pendingConfirm === "remove"
 
 ## Open Questions
 None.
+
+## Implementation Notes
+
+בוצע בדיוק לפי התוכנית למעלה, כולל שני התיקונים ל-design.md (זום פתיחה נשאר
+"נשמר בין שאלות", פונט מסך מלא יורד ל-`18px` ולא עולה ל-`40px`).
+
+- **`src/data/notebook.ts`:** נוסף `INITIAL_ZOOM = 0.7` ופונקציה חדשה
+  `computeInitialTransform(viewportWidth, viewportHeight)` — אותו מיקוד/מירכוז
+  כמו `computeFitTransform`, רק עם זום קבוע. `computeFitTransform` עצמו לא נגעו
+  בו כלל (עדיין משמש את מסך מלא, דינמי כמו היום).
+- **`src/components/PracticeNotebook.tsx`:**
+  - ה-import מוסיף `computeInitialTransform` לצד `computeFitTransform` הקיים.
+  - ה-`useEffect` של ה-mount הראשוני (טעינת ה-canvas) קורא עכשיו ל-
+    `computeInitialTransform` במקום `computeFitTransform`; שני מקומות ה-resize/
+    fullscreen-toggle ממשיכים לקרוא ל-`computeFitTransform` בלי שינוי.
+  - `confirmDelete: boolean` הוחלף ב-`pendingConfirm: "remove" | "clear" |
+    null`. `clearCurrentPage` שונה שם ל-`clearCurrentPageNow` (סימטרי ל-
+    `removeCurrentPageNow`) ומוסיף `setPendingConfirm(null)` בסופו. נוספה
+    `requestClearPage()` שמדלגת על האישור כשהדף כבר ריק, בדיוק כמו
+    `requestRemovePage()` הקיימת.
+  - כפתור "נקה דף" (🧹) עבר ב-JSX להיות הילד האחרון של `.notebook-toolbar`
+    (אחרי שתי קבוצות `.notebook-page-nav`) — שינוי מיקום טהור, אין שינוי CSS
+    (ה-`:last-of-type` הקיים ממשיך לדחוף רק את קבוצת ◀▶/+/🗑 שלפניו, וכל מה
+    שאחריה נשאר צמוד לאותו קצה).
+  - בלוק דיאלוג האישור הפך לבלוק אחד עם טקסט וכפתור-פעולה מותנים לפי
+    `pendingConfirm`.
+- **`src/components/Practice.tsx`:**
+  - `COUNTDOWN_SECONDS`, `secondsLeft`/`setSecondsLeft`,
+    `countdownStopped`/`setCountdownStopped`, שני ה-`useEffect` של הטיימר,
+    `stopCountdown()`, והרינדור של כפתור הספירה — כולם נמחקו. `next()` איבד
+    את שתי השורות `setSecondsLeft(null)`/`setCountdownStopped(false)`.
+    `handleTeacherReading` איבד את `if (!isLast) setSecondsLeft(COUNTDOWN_SECONDS)`
+    בלי שום תחליף.
+  - שורת ה-`errorPointer` בפסקת "מה המורה הבינה" מקבלת class נוסף
+    `teacher-reading-flag` כש-`feedback === "correct"`.
+  - שורת הפסוק: כש-`feedback === "correct" && teacherNote?.errorPointer` —
+    class הופך ל-`feedback correct-flagged` והטקסט ל-"התשובה נכונה"; אחרת
+    (נכון בלי errorPointer, או שגוי) בדיוק כמו היום.
+  - שני תיקוני תיעוד פנימיים (docstrings שהתייחסו ל"countdown") עודכנו כדי
+    לא להשאיר הפניה למנגנון שנמחק.
+- **`src/App.css`:** בלוק `.countdown`/`.countdown-digit`/`.countdown-text`
+  נמחק במלואו. `.notebook-fullscreen-topbar .prompt-ltr` ירד מ-`26px` ל-`18px`,
+  עם הערה שמסבירה למה זה לא `40px`. נוספו `.feedback.correct-flagged` ו-
+  `.teacher-reading-flag`, שניהם `#b45309` — אותו צבע בדיוק כמו `.diagnosis`,
+  לא צבע חדש.
+- **`docs/features/countdown-next/status.md`:** נוספה פסקת "הוסר (2026-09-04)"
+  שמפנה לתיעוד הזה.
+
+**בדיקות ידניות שבוצעו (build+lint בלבד, כנדרש משלב זה — לא `test:e2e`):**
+`npm run build` ו-`npm run lint` נקיים. גרסה עלתה ל-`1.27.1` (`npm run
+bump:fix`, כי זה בראנץ' `fix/`).
+
+**מה נשאר ל-QA:** מחיקת `tests/e2e/countdown-next.spec.ts` (הפיצ'ר שהוא בודק
+הוסר), ובדיקות e2e חדשות לחמשת התיקונים — ראו architecture.md, Affected
+Files/Edge Cases למעלה.

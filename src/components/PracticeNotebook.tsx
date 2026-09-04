@@ -10,6 +10,7 @@ import {
   PEN_CELLS,
   clampZoom,
   computeFitTransform,
+  computeInitialTransform,
   createBlankPage,
   fillCellBlock,
   minimapViewRect,
@@ -75,7 +76,10 @@ export function PracticeNotebook({
   statusSlot,
 }: PracticeNotebookProps) {
   const [tool, setTool] = useState<DrawTool | "pan">("pen");
-  const [confirmDelete, setConfirmDelete] = useState(false);
+  /** Which destructive action, if any, is waiting on confirmation — "remove" (a whole page)
+   *  or "clear" (everything drawn on the current page). One dialog, two copies of the
+   *  question, never both pending at once. */
+  const [pendingConfirm, setPendingConfirm] = useState<"remove" | "clear" | null>(null);
   const [zoomPercent, setZoomPercent] = useState(100);
 
   // Drawing mutates currentPage.filledCells directly through refs, on purpose (see the
@@ -190,14 +194,12 @@ export function PracticeNotebook({
 
     if (stageRef.current) {
       const rect = stageRef.current.getBoundingClientRect();
-      // Fit-to-screen, not a fixed zoom of 1: the stage used to be the full viewport
-      // (practice-notebook's original full-screen overlay, wide enough that the 1200px-wide
-      // page roughly fit at zoom 1), but notebook-default-practice embedded it as a bounded
-      // panel below the question — often much narrower than the page itself. A fixed zoom
-      // would center most of the page off both edges, invisible and undrawable; fitting to
-      // whatever space is actually there keeps the whole page visible on load regardless of
-      // how wide that turns out to be.
-      panZoomRef.current = computeFitTransform(rect.width, rect.height);
+      // A fixed opening zoom (INITIAL_ZOOM), not a fit-to-viewport calculation: fitting the
+      // whole page into a narrow embedded panel could come out small enough to be unusable
+      // for writing (16% was observed on a phone, see docs/features/notebook-usability-fixes/).
+      // Fullscreen's own re-fit (entering/leaving, resize while fullscreen, below) still uses
+      // the dynamic computeFitTransform — only this session-opening zoom is fixed.
+      panZoomRef.current = computeInitialTransform(rect.width, rect.height);
     }
     applyTransform();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -428,11 +430,20 @@ export function PracticeNotebook({
     applyTransform();
   }
 
-  function clearCurrentPage() {
+  function clearCurrentPageNow() {
     if (!currentPage) return;
     currentPage.filledCells.clear();
     notifyContentChanged();
     redrawFromPage(currentPage);
+    setPendingConfirm(null);
+  }
+
+  function requestClearPage() {
+    if (currentPage && pageHasContent(currentPage)) {
+      setPendingConfirm("clear");
+    } else {
+      clearCurrentPageNow();
+    }
   }
 
   function addPage() {
@@ -446,13 +457,13 @@ export function PracticeNotebook({
     const next = pages.filter((_, i) => i !== currentPageIndex);
     onPagesChange(next);
     onCurrentPageIndexChange(Math.min(currentPageIndex, next.length - 1));
-    setConfirmDelete(false);
+    setPendingConfirm(null);
   }
 
   function requestRemovePage() {
     if (pages.length <= 1) return;
     if (currentPage && pageHasContent(currentPage)) {
-      setConfirmDelete(true);
+      setPendingConfirm("remove");
     } else {
       removeCurrentPageNow();
     }
@@ -534,9 +545,6 @@ export function PracticeNotebook({
             ✋
           </button>
         </div>
-        <button type="button" className="notebook-clear-btn" onClick={clearCurrentPage} aria-label="נקה דף">
-          🧹
-        </button>
         <button
           type="button"
           className="notebook-send-btn"
@@ -580,18 +588,34 @@ export function PracticeNotebook({
             🗑
           </button>
         </div>
+        {/* Furthest from the pen/eraser/pan tool-group on purpose — a destructive action
+            least likely to be hit by accident while reaching for the writing tools. The
+            page-nav groups above already sit at this same far edge (see
+            .notebook-page-nav:last-of-type's margin-inline-start:auto), so placing this
+            after them keeps it at that same edge with no extra CSS. */}
+        <button type="button" className="notebook-clear-btn" onClick={requestClearPage} aria-label="נקה דף">
+          🧹
+        </button>
       </div>
       {atMaxPages && <p className="notebook-max-pages-note">הגעתם למספר המרבי של דפים במחברת הזאת.</p>}
 
-      {confirmDelete && (
+      {pendingConfirm && (
         <div className="notebook-confirm-backdrop">
           <div className="notebook-confirm-dialog" role="alertdialog" aria-modal="true">
-            <p>למחוק את הדף? מה שכתוב עליו יימחק ולא ניתן יהיה לשחזר אותו.</p>
+            <p>
+              {pendingConfirm === "remove"
+                ? "למחוק את הדף? מה שכתוב עליו יימחק ולא ניתן יהיה לשחזר אותו."
+                : "למחוק את מה שכתוב בדף? לא ניתן יהיה לשחזר."}
+            </p>
             <div className="notebook-confirm-actions">
-              <button type="button" className="notebook-confirm-delete" onClick={removeCurrentPageNow}>
+              <button
+                type="button"
+                className="notebook-confirm-delete"
+                onClick={pendingConfirm === "remove" ? removeCurrentPageNow : clearCurrentPageNow}
+              >
                 מחיקה
               </button>
-              <button type="button" className="secondary" onClick={() => setConfirmDelete(false)}>
+              <button type="button" className="secondary" onClick={() => setPendingConfirm(null)}>
                 ביטול
               </button>
             </div>
