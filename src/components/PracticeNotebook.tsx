@@ -230,11 +230,23 @@ export function PracticeNotebook({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Re-fit whenever fullscreen toggles: entering or leaving it changes .notebook-stage's
-  // actual pixel size dramatically (embedded panel <-> full viewport), so the scale that
-  // fit the old size is wrong for the new one. Runs once on mount too (fullscreen starts
-  // false), which repeats the mount effect's own fit harmlessly — same rect, same result.
+  // Re-fit whenever fullscreen actually toggles: entering or leaving it changes
+  // .notebook-stage's actual pixel size dramatically (embedded panel <-> full viewport), so
+  // the scale that fit the old size is wrong for the new one. This effect also fires once on
+  // mount (fullscreen starts false, so the dependency "changes" from nothing to false) — that
+  // first firing used to be harmless because the mount effect above used this same dynamic
+  // computeFitTransform too, but now that the mount effect sets a fixed INITIAL_ZOOM instead,
+  // letting this one run unconditionally on mount would immediately overwrite it.
+  //
+  // Guarded by comparing against the *previous actual value*, not a "have I run yet" flag —
+  // a boolean flag gets consumed by StrictMode's dev-only double-invoke of mount effects
+  // (mount → cleanup → mount again, same `fullscreen` both times), so the guard would already
+  // be spent by the phantom first pass and let the real one fall through. Comparing values is
+  // idempotent: both passes see `prevFullscreen.current === fullscreen` and skip identically.
+  const prevFullscreen = useRef(fullscreen);
   useEffect(() => {
+    if (prevFullscreen.current === fullscreen) return;
+    prevFullscreen.current = fullscreen;
     const rect = stageRef.current?.getBoundingClientRect();
     if (!rect) return;
     panZoomRef.current = computeFitTransform(rect.width, rect.height);
