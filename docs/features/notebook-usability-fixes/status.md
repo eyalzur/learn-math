@@ -9,11 +9,11 @@
 - [x] Design — designer — 2026-09-04
 - [x] Architecture — tech-lead — 2026-09-04
 - [x] Implementation — developer — 2026-09-04
-- [ ] Tests — qa — not started
+- [x] Tests — qa — 2026-09-04
 
-**Current phase:** qa
+**Current phase:** done — ממתין ל-PR ולריוויו
 **Branch:** `fix/notebook-usability-fixes`
-**PR:** not opened yet
+**PR:** יתעדכן כשייפתח
 
 ## Open questions / blockers
 None. שני תיקונים לניסוח לא מדויק ב-design.md נעשו בשלב הארכיטקטורה בלי לחזור
@@ -21,9 +21,12 @@ None. שני תיקונים לניסוח לא מדויק ב-design.md נעשו �
 זום פתיחה נשאר "נשמר בין שאלות" כמו היום (רק ה-fit הראשוני קבוע), ופונט מסך
 מלא יורד ל-18px, לא עולה ל-40px.
 
-בנוסף: `npm run build && npm run lint` נקיים, גרסה עלתה ל-`1.27.1`. QA צריך
-למחוק את `tests/e2e/countdown-next.spec.ts` (הפיצ'ר שהוא בודק הוסר) — ראו
-architecture.md, Implementation Notes.
+**שני באגים אמיתיים נתפסו ותוקנו ב-QA** (לא רק תיעוד — ראו architecture.md,
+"עדכון — שני באגים אמיתיים שנתפסו ב-QA"): זום ה-70% נדרס בחזרה לדינמי בגלל
+הכפלת ה-mount של React StrictMode, ו-`drawOnCanvas` (עזר בדיקות משותף) הפסיק
+לעבוד על מסכים לא-צרים בגלל אותו זום קבוע. שניהם תוקנו ואומתו מול הסוויטה
+המלאה. `328/328` בדיקות עוברות בריצה בודדת ונקייה, `build`/`lint` ירוקים,
+גרסה `1.27.1`.
 
 ## Docs
 - [Product spec](./product-spec.md)
