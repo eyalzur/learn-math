@@ -11,7 +11,7 @@
 
 **Current phase:** done — ready for review
 **Branch:** `feature/grade2-clock`
-**PR:** not opened yet
+**PR:** [#66](https://github.com/eyalzur/learn-math/pull/66)
 
 ## Open questions / blockers
 None. הנושא ו"אדפטיבי" הוכרעו במפורש על ידי המשתמש (2026-09-04). הארכיטקטורה פתרה
