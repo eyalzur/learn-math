@@ -1624,3 +1624,65 @@ button.secondary {
 .notebook-confirm-delete {
   background: #dc2626;
 }
+
+/* ---- clock face — the one diagram that renders next to the question itself, not only
+   inside the explanation. See docs/features/grade2-clock/design.md. ---- */
+
+.clock-face {
+  margin: 0 0 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.clock-pair {
+  gap: 24px;
+}
+
+.clock-pair-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.clock-pair-caption {
+  font-size: 13px;
+  color: var(--text-h);
+  font-weight: 600;
+}
+
+/* An SVG does not inherit the page's direction habits — the same trap every shape in
+   this app has to guard against. */
+.clock-svg {
+  direction: ltr;
+  max-width: 100%;
+  height: auto;
+}
+
+.clock-rim {
+  fill: var(--bg);
+  stroke: var(--text-h);
+  stroke-width: 3;
+}
+
+.clock-tick {
+  stroke: var(--text-h);
+  stroke-width: 2;
+}
+
+.clock-hand {
+  stroke: var(--text-h);
+  stroke-linecap: round;
+}
+
+.clock-hand-hour {
+  stroke-width: 4;
+}
+
+.clock-hand-minute {
+  stroke-width: 3;
+}
+
+.clock-pivot {
+  fill: var(--accent);
+}

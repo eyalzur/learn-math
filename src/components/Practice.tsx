@@ -8,6 +8,7 @@ import { createBlankPage, MAX_PAGES, pageHasContent } from "../data/notebook";
 import type { PageReading } from "../lib/notebookServer";
 import { readPageWithTeacher } from "../lib/notebookServer";
 import { buildExplanation, explanationSpeechParts } from "../data/questionExplanation";
+import { ClockFace } from "./ClockFace";
 import { PracticeNotebook } from "./PracticeNotebook";
 import { QuestionExplanation } from "./QuestionExplanation";
 import { segmented } from "./segmented";
@@ -376,6 +377,11 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
     </div>
   );
 
+  /** The one diagram in the app that renders next to the question itself instead of only
+   *  inside `QuestionExplanation` — see docs/features/grade2-clock/design.md. `bundle.clock`
+   *  is `null` for every other topic, so this is a no-op everywhere else. */
+  const clockSlot = bundle.clock ? <ClockFace data={bundle.clock} label={bundle.clock.caption} /> : null;
+
   /** What the notebook shows above the writing surface while it fills the screen: the
    *  question (so writing it down never means forgetting what's being solved) plus a way
    *  back out, replacing the regular header/title/hint-button that fullscreen hides — see
@@ -392,6 +398,7 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
         ✕
       </button>
       {questionBox}
+      {clockSlot}
       {speechSupported() && questionSpeakButton}
     </div>
   ) : null;
@@ -441,6 +448,7 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
               inside it would join the isolated context and shift the expression's alignment. */}
           {speechSupported() && <div className="question-speech">{questionSpeakButton}</div>}
           {questionBox}
+          {clockSlot}
         </>
       )}
       {!fullscreen && uncertain && (
