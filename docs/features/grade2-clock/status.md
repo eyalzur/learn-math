@@ -4,19 +4,21 @@
 
 ## Progress
 - [x] Product spec — product-manager — 2026-09-04
-- [ ] Design — designer — not started
+- [x] Design — designer — 2026-09-04
 - [ ] Architecture — tech-lead — not started
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** designer
+**Current phase:** tech-lead
 **Branch:** `feature/grade2-clock`
 **PR:** not opened yet
 
 ## Open questions / blockers
 None. הנושא ו"אדפטיבי" הוכרעו במפורש על ידי המשתמש (2026-09-04). עיצוב שלוש דרגות
-הקושי כך שכל תשובה היא מספר (לא ייצוג שעה) הוכרע ב-product-spec עצמו, כדי לעמוד
-באילוץ הטכני הקיים (`Question.answer: number`) בלי לשנות את מנגנון התשובה.
+הקושי כך שכל תשובה היא מספר (לא ייצוג שעה) הוכרע ב-product-spec עצמו. העיצוב קבע
+הכרעה חשובה: **ציור השעון מופיע בשאלה עצמה, לא רק בהסבר** - שונה מכל דיאגרמה קיימת
+באפליקציה (שמופיעות רק בקופסת "איך פותרים?") - כי כאן הציור הוא הנתון של השאלה, לא
+תוספת. tech-lead צריך לתת דעתו לזה במפורש - זה משנה איפה ברכיבי React הציור מתרנדר.
 
 ## Docs
 - [Product spec](./product-spec.md)
