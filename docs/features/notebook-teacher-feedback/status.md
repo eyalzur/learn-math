@@ -12,7 +12,7 @@
 
 **Current phase:** done — ממתין לריוויו ולמיזוג
 **Branch:** `feature/notebook-teacher-feedback`
-**PR:** not opened yet
+**PR:** [#68](https://github.com/eyalzur/learn-math/pull/68)
 
 ## Open questions / blockers
 None. שתי הכרעות מוצריות שהתבקשו מהמשתמש (2026-09-04) כבר הוכרעו ומשוקפות בספק:
