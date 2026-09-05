@@ -53,11 +53,14 @@ test.beforeEach(async ({ page }) => {
   await open(page);
 });
 
-test("grade ב׳ shows four topics, including כפל וחילוק and צורות וגופים", async ({ page }) => {
+test("grade ב׳ shows five topics, including כפל וחילוק and צורות וגופים", async ({ page }) => {
+  // Five, not the four this feature originally shipped with — grade2-clock added a fifth
+  // topic (שעון וזמן) afterwards. This assertion tracks the current syllabus, not the
+  // count at the time this test was written.
   await toGradeB(page);
   const topics = page.locator(".topic-card");
-  await expect(topics).toHaveCount(4);
-  for (const title of ["חיבור עד 1000", "חיסור עד 1000", "כפל וחילוק", "צורות וגופים"]) {
+  await expect(topics).toHaveCount(5);
+  for (const title of ["חיבור עד 1000", "חיסור עד 1000", "כפל וחילוק", "צורות וגופים", "שעון וזמן"]) {
     await expect(page.locator(".topic-card", { hasText: title })).toHaveCount(1);
   }
 });

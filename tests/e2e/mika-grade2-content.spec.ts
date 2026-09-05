@@ -52,7 +52,7 @@ test("both grades stay reachable in the same visit — picking one does not lose
 
   // The other grade is right there, still offering its own topics.
   await page.locator(".grade-card").nth(1).click(); // כיתה ב׳
-  await expect(page.locator(".topic-card")).toHaveCount(4);
+  await expect(page.locator(".topic-card")).toHaveCount(5);
   await expect(page.locator(".topic-card", { hasText: "חיבור עד 1000" })).toHaveCount(1);
   await expect(page.locator(".topic-card", { hasText: "חיסור עד 1000" })).toHaveCount(1);
 });
@@ -73,9 +73,10 @@ test("חיבור עד 1000 and חיסור עד 1000 are both adaptive, entered d
   // This test used to describe the opposite: three written levels of ten questions, the
   // same shape as grade א׳'s topics. חיבור עד 1000 became adaptive first (see
   // docs/features/adaptive-difficulty), and חיסור עד 1000 — its "untouched twin" at the
-  // time — followed later (docs/features/mika-adaptive-difficulty). Grade ב׳ has two more
-  // topics today (docs/features/grade2-syllabus, כפל וחילוק וצורות וגופים), and those are
-  // level-based like grade א׳'s — this test is only about these original two.
+  // time — followed later (docs/features/mika-adaptive-difficulty). Grade ב׳ has three
+  // more topics today (כפל וחילוק וצורות וגופים from docs/features/grade2-syllabus, שעון
+  // וזמן from docs/features/grade2-clock) — all three adaptive too — this test is only
+  // about these original two.
   await page.locator(".student-card").nth(MIKA).click();
   await page.locator(".grade-card").nth(1).click();
 
@@ -107,7 +108,7 @@ test("you can walk back from the topics screen to the grade choice, and from the
 }) => {
   await page.locator(".student-card").nth(MIKA).click();
   await page.locator(".grade-card").nth(1).click();
-  await expect(page.locator(".topic-card")).toHaveCount(4);
+  await expect(page.locator(".topic-card")).toHaveCount(5);
 
   await page.locator(".link-button").first().click();
   await expect(page.locator(".grade-card")).toHaveCount(4);

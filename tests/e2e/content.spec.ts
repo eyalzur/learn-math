@@ -19,6 +19,8 @@ import { generateSub10Question } from "../../src/data/adaptiveSub10";
 import { generateSub100Question } from "../../src/data/adaptiveSub100";
 import { generateMulDivQuestion } from "../../src/data/adaptiveMulDiv";
 import { generateShapesQuestion } from "../../src/data/adaptiveShapes";
+import { generateClockQuestion } from "../../src/data/adaptiveClock";
+import { clockFace } from "../../src/data/clockFace";
 import { generateFractionsQuestion } from "../../src/data/adaptiveFractions";
 import { generateDecimalsQuestion } from "../../src/data/adaptiveDecimals";
 import { generatePercentQuestion } from "../../src/data/adaptivePercent";
@@ -1205,6 +1207,60 @@ test("every generated צורות וגופים question passes every content rule
     }
   }
 
+  expect(badPrompt, `\n${badPrompt.join("\n")}\n`).toEqual([]);
+  expect(wrongAnswer, `\n${wrongAnswer.join("\n")}\n`).toEqual([]);
+  expect(violations, `\n${violations.join("\n")}\n`).toEqual([]);
+});
+
+test("every generated שעון וזמן question passes every content rule, and clockFace() always draws it", () => {
+  // The edge case docs/features/grade2-clock/architecture.md flags by name: unlike every
+  // other diagram extractor, a clock question with no picture isn't a missing nice-to-have
+  // — the prompt states no time at all ("איזו שעה מראה השעון?"), so a `null` here would
+  // leave the student answering a question the screen never actually asked. `noPicture`
+  // below is therefore checked as strictly as `wrongAnswer`, not folded into `violations`.
+  const rng = seededRng(302);
+  const samplesPerDifficulty = 200;
+  const violations: string[] = [];
+  const wrongAnswer: string[] = [];
+  const badPrompt: string[] = [];
+  const noPicture: string[] = [];
+
+  for (let difficulty = 1; difficulty <= 3; difficulty++) {
+    for (let i = 0; i < samplesPerDifficulty; i++) {
+      const q = generateClockQuestion(difficulty, rng);
+
+      for (const rule of RULES) {
+        const problem = rule.check(q, "2");
+        if (problem) violations.push(`${q.id} (difficulty ${difficulty}) — ${rule.name}: ${problem}`);
+      }
+
+      const face = clockFace(q);
+      if (!face) {
+        noPicture.push(`${q.id} (difficulty ${difficulty}) — clockFace() returned null for "${q.prompt}"`);
+        continue;
+      }
+
+      if (difficulty === 1 || difficulty === 2) {
+        if (q.prompt !== "איזו שעה מראה השעון?" && q.prompt !== "השעון מראה חצי שעה אחרי איזו שעה?") {
+          badPrompt.push(`${q.id} — "${q.prompt}" is not a known easy/medium clock prompt`);
+        }
+        if (q.answer < 1 || q.answer > 12) {
+          wrongAnswer.push(`${q.id} — "${q.prompt}" = ${q.answer} is outside 1-12`);
+        }
+        if (face.kind !== "single") badPrompt.push(`${q.id} — difficulty ${difficulty} drew a "${face.kind}" face, not "single"`);
+      } else {
+        if (q.prompt !== "כמה דקות עברו מההתחלה עד הסיום?") {
+          badPrompt.push(`${q.id} — "${q.prompt}" is not the known duration prompt`);
+        }
+        if (q.answer < 30 || q.answer > 120 || q.answer % 30 !== 0) {
+          wrongAnswer.push(`${q.id} — "${q.prompt}" = ${q.answer} is not a 30-120 multiple of 30`);
+        }
+        if (face.kind !== "duration") badPrompt.push(`${q.id} — difficulty 3 drew a "${face.kind}" face, not "duration"`);
+      }
+    }
+  }
+
+  expect(noPicture, `\n${noPicture.join("\n")}\n`).toEqual([]);
   expect(badPrompt, `\n${badPrompt.join("\n")}\n`).toEqual([]);
   expect(wrongAnswer, `\n${wrongAnswer.join("\n")}\n`).toEqual([]);
   expect(violations, `\n${violations.join("\n")}\n`).toEqual([]);
