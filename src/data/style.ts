@@ -62,9 +62,10 @@ export const STYLE_META: Record<string, { title: string }> = {
   add100: { title: "חיבור" },
   sub100: { title: "חיסור" },
 
-  // כפל וחילוק · צורות וגופים — one style each, same reason
+  // כפל וחילוק · צורות וגופים · שעון וזמן — one style each, same reason
   muldiv: { title: "כפל וחילוק" },
   shapes: { title: "צורות וגופים" },
+  clock: { title: "שעון וזמן" },
 };
 
 /**

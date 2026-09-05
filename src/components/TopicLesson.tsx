@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { Question } from "../data/curriculum";
 import { isHebrewPrompt, promptSegments } from "../data/curriculum";
 import { buildExplanation, explanationSpeechParts } from "../data/questionExplanation";
+import { ClockFace } from "./ClockFace";
 import { QuestionExplanation } from "./QuestionExplanation";
 import { segmented } from "./segmented";
 import { speak, speechParts, speechSupported, stopSpeaking } from "../data/speech";
@@ -105,6 +106,7 @@ export function TopicLesson({ topicTitle, gradeLabel, questions, onBack, onPract
           {isWordProblem ? segmented(question.prompt) : <>{`${question.prompt} =`}</>}
         </span>
       </div>
+      {bundle.clock && <ClockFace data={bundle.clock} label={bundle.clock.caption} />}
       <div className="hints">
         {question.hints.map((hint, j) => (
           <p key={j} className="hint">
