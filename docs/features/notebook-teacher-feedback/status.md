@@ -10,9 +10,9 @@
 - [x] Implementation — developer — 2026-09-05
 - [x] Tests — qa — 2026-09-05
 
-**Current phase:** done — ממתין לריוויו ולמיזוג
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `feature/notebook-teacher-feedback`
-**PR:** [#68](https://github.com/eyalzur/learn-math/pull/68)
+**PR:** [#68](https://github.com/eyalzur/learn-math/pull/68) — מוזג 2026-09-05
 
 ## Open questions / blockers
 None. שתי הכרעות מוצריות שהתבקשו מהמשתמש (2026-09-04) כבר הוכרעו ומשוקפות בספק:
