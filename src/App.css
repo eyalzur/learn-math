@@ -1014,13 +1014,23 @@ button.secondary {
 .pythagoras-figure,
 .percent-figure,
 .ratio-figure,
-.linear-figure,
-.angle-figure {
+.linear-figure {
   margin: 0 0 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
+}
+
+/* The angle/triangle picture's caption — shown only after a wrong answer, inside
+   QuestionExplanation. The picture itself no longer lives here; see .angle-figure-inline
+   below, next to .clock-face, for where it actually renders now (round ג׳). */
+.angle-caption {
+  font-size: 14px;
+  line-height: 160%;
+  color: var(--text);
+  text-align: center;
+  margin: 0 0 16px;
 }
 
 /* An SVG does not inherit the page's direction habits — the same trap every shape in
@@ -1678,6 +1688,40 @@ button.secondary {
   margin: 0 0 16px;
   display: flex;
   justify-content: center;
+}
+
+/* ---- angle/triangle picture — the second diagram that renders next to the question
+   itself, added in docs/features/grade8-angles-congruence/design.md's round ג׳ revision.
+   Same placement principle as .clock-face just above. ---- */
+
+.angle-figure-inline {
+  margin: 0 0 16px;
+  display: flex;
+  justify-content: center;
+}
+
+/* The topic-lesson screen's short "why is this true" paragraph — shown only for the two
+   patterns that carry one (angleShape.ts's `proof` field). See TopicLesson.tsx. */
+.lesson-proof {
+  max-width: 420px;
+  margin: 0 auto 16px;
+  padding: 12px 18px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--code-bg);
+  text-align: right;
+}
+
+.lesson-proof h4 {
+  margin: 0 0 6px;
+  font-size: 14px;
+}
+
+.lesson-proof p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 160%;
+  color: var(--text);
 }
 
 .clock-pair {

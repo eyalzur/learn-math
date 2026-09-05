@@ -9,7 +9,6 @@ import { PythagorasTriangle } from "./PythagorasTriangle";
 import { PercentStrip } from "./PercentStrip";
 import { RatioStrips } from "./RatioStrips";
 import { LinearGraph } from "./LinearGraph";
-import { AngleShape } from "./AngleShape";
 
 interface QuestionExplanationProps {
   bundle: ExplanationBundle;
@@ -152,12 +151,11 @@ export function QuestionExplanation({ bundle, speak }: QuestionExplanationProps)
           <figcaption className="figure-caption">{segmented(linear.caption)}</figcaption>
         </figure>
       )}
-      {angle && (
-        <figure className="angle-figure">
-          <AngleShape shape={angle} label={angle.caption.replace(/`/g, "")} />
-          <figcaption className="figure-caption">{segmented(angle.caption)}</figcaption>
-        </figure>
-      )}
+      {/* No <AngleShape> here — the picture already sits next to the question itself
+          (Practice.tsx's `angleSlot`/TopicLesson.tsx's equivalent), so this would be a
+          second, duplicate copy of it. Only the sentence that states the rule/method is
+          gated behind a wrong answer, same as the two hints already are. */}
+      {angle && <p className="angle-caption">{segmented(angle.caption)}</p>}
       {explanation.steps.map((step, i) => (
         <p key={i} className="explanation-step">
           {/* Same isolation every other text field gets — a step label can carry a

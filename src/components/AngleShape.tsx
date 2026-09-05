@@ -47,15 +47,30 @@ function midDeg(fromDeg: number, toDeg: number): number {
   return fromDeg + shortDelta(fromDeg, toDeg) / 2;
 }
 
-/** A short perpendicular hash mark at the midpoint of a segment — the standard "these two
- *  sides are equal/corresponding" tick, shared by the congruent-triangles and
- *  isosceles-triangle drawings. */
-function tickMark(p1: Pt, p2: Pt, length = 9): string {
+/** `count` short perpendicular hash marks at the midpoint of a segment — the standard
+ *  "these sides are equal/corresponding" tick(s), shared by the congruent-triangles and
+ *  isosceles-triangle drawings. `count` distinguishes which pair a mark belongs to (one
+ *  tick, two ticks, three ticks — the same convention a teacher draws on a board), not how
+ *  many marks are needed to prove anything; a single call with `count = 1` (every existing
+ *  caller before this) draws exactly the one tick it always did. */
+function tickMark(p1: Pt, p2: Pt, count = 1, length = 9): string {
+  const dir = angleOfDeg(p1, p2);
+  const perpDeg = dir + 90;
   const mid = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
-  const perpDeg = angleOfDeg(p1, p2) + 90;
-  const a = pointAt(mid, length / 2, perpDeg);
-  const b = pointAt(mid, length / 2, perpDeg + 180);
-  return `M ${a.x} ${a.y} L ${b.x} ${b.y}`;
+  const spacing = 5;
+  return Array.from({ length: count }, (_, i) => {
+    const along = (i - (count - 1) / 2) * spacing;
+    const center = pointAt(mid, along, dir);
+    const a = pointAt(center, length / 2, perpDeg);
+    const b = pointAt(center, length / 2, perpDeg + 180);
+    return `M ${a.x} ${a.y} L ${b.x} ${b.y}`;
+  }).join(" ");
+}
+
+/** `count` concentric arcs at the same vertex/span — the angle equivalent of `tickMark`'s
+ *  multiple hash marks: one arc, two arcs, three arcs marking which angles correspond. */
+function arcMark(c: Pt, r: number, fromDeg: number, toDeg: number, count = 1, spacing = 5): string {
+  return Array.from({ length: count }, (_, i) => arcPath(c, r + i * spacing, fromDeg, toDeg)).join(" ");
 }
 
 interface AngleShapeProps {
@@ -185,17 +200,30 @@ export function AngleShape({ shape, label }: AngleShapeProps) {
         <text {...labelAt({ x: E.x, y: E.y - 8 })}>E</text>
         <text {...labelAt({ x: D.x - 10, y: D.y + 4 })}>D</text>
         <text {...labelAt({ x: C2.x + 8, y: C2.y + 4 })}>C</text>
+        {/* Six correspondences between ABC and EDC (three sides, three angles), per the
+            congruence's own lettering (A↔E, B↔D, C↔C) — one/two/three tick or arc marks
+            per pair, the standard convention for "these go together" without reading the
+            correspondence off the letters. Only the pair the question is actually about
+            also gets a number/"?" label; the rest just show they're equal. */}
+        <path className="as-tick" d={tickMark(A, B, 1)} />
+        <path className="as-tick" d={tickMark(E, D, 1)} />
+        <path className="as-tick" d={tickMark(B, C1, 2)} />
+        <path className="as-tick" d={tickMark(D, C2, 2)} />
+        <path className="as-tick" d={tickMark(C1, A, 3)} />
+        <path className="as-tick" d={tickMark(C2, E, 3)} />
+        <path className="as-arc" d={arcMark(A, 18, angleOfDeg(A, B), angleOfDeg(A, C1), 1)} />
+        <path className="as-arc" d={arcMark(E, 18, angleOfDeg(E, D), angleOfDeg(E, C2), 1)} />
+        <path className="as-arc" d={arcMark(B, 14, angleOfDeg(B, A), angleOfDeg(B, C1), 2)} />
+        <path className="as-arc" d={arcMark(D, 14, angleOfDeg(D, E), angleOfDeg(D, C2), 2)} />
+        <path className="as-arc" d={arcMark(C1, 14, angleOfDeg(C1, A), angleOfDeg(C1, B), 3)} />
+        <path className="as-arc" d={arcMark(C2, 14, angleOfDeg(C2, E), angleOfDeg(C2, D), 3)} />
         {shape.valueKind === "side" ? (
           <>
-            <path className="as-tick" d={tickMark(A, B)} />
-            <path className="as-tick" d={tickMark(E, D)} />
             <text {...labelAt(midpoint(A, B), -8)}>{`${shape.value}`}</text>
             <text {...labelAt(midpoint(E, D), -8)}>?</text>
           </>
         ) : (
           <>
-            <path className="as-arc" d={arcPath(A, 18, angleOfDeg(A, B), angleOfDeg(A, C1))} />
-            <path className="as-arc" d={arcPath(E, 18, angleOfDeg(E, D), angleOfDeg(E, C2))} />
             <text {...labelAt(pointAt(A, 30, midDeg(angleOfDeg(A, B), angleOfDeg(A, C1))))}>{`${shape.value}°`}</text>
             <text {...labelAt(pointAt(E, 30, midDeg(angleOfDeg(E, D), angleOfDeg(E, C2))))}>?</text>
           </>
@@ -240,9 +268,11 @@ export function AngleShape({ shape, label }: AngleShapeProps) {
   }
 
   return (
-    <svg className="angle-shape" width={WIDTH} height={HEIGHT} viewBox={`0 0 ${WIDTH} ${HEIGHT}`} role="img" aria-label={label}>
-      {body}
-    </svg>
+    <div className="angle-figure-inline" role="img" aria-label={label}>
+      <svg className="angle-shape" width={WIDTH} height={HEIGHT} viewBox={`0 0 ${WIDTH} ${HEIGHT}`}>
+        {body}
+      </svg>
+    </div>
   );
 }
 

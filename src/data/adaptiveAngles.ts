@@ -46,9 +46,9 @@ function straightAngleRight(rng: Rng): Question {
   const known = randInt(10, 80, rng);
   const answer = 90 - known;
   return makeQuestion(
-    `שתי זוויות משלימות זו לזו, וסכומן \`90°\`. אחת מהן \`${known}°\`. מה גודל השנייה?`,
+    `בין שני ישרים נצבים (זווית ישרה, \`90°\`), שתי זוויות סמוכות. אחת מהן \`${known}°\`. מה גודל השנייה?`,
     answer,
-    ["שתי הזוויות יחד שוות `90°`", "מורידים את הזווית הידועה מ-`90`"],
+    ["שני ישרים נצבים יוצרים ביניהם זווית ישרה — `90°`", "מורידים את הזווית הידועה מ-`90`"],
     [{ label: "שתי הזוויות יחד הן `90°`" }, { label: "", math: `90 − ${known} = ${answer}` }],
     `פינת חדר ישרה שמחולקת לשני חלקים, ואחד מהם — \`${known}\` מעלות — כבר ידוע`,
     rng,
@@ -76,8 +76,8 @@ function triangleAnglesSum(rng: Rng): Question {
     ["סכום שלוש הזוויות במשולש הוא תמיד `180°`", "מחברים את שתי הזוויות הידועות, ומורידים מ-`180`"],
     [
       { label: "סכום הזוויות במשולש הוא `180°`" },
-      { label: "", math: `${angleA} + ${angleB} = ${sum}` },
-      { label: "", math: `180 − ${sum} = ${angleC}` },
+      { label: "מחברים את שתי הזוויות הידועות בתוך סוגריים, ואז מורידים מ-`180`" },
+      { label: "", math: `180 − (${angleA} + ${angleB}) = 180 − ${sum} = ${angleC}` },
     ],
     `מתלה תמונה משולש שתלוי על שני מסמרים בקיר, בזוויות \`${angleA}\` ו-\`${angleB}\` מעלות`,
     rng,
@@ -242,6 +242,21 @@ const TIERS: ((rng: Rng) => Question)[][] = [
 export function generateAnglesQuestion(difficulty: number, rng: Rng = Math.random): Question {
   const tier = TIERS[Math.min(TIERS.length, Math.max(1, Math.round(difficulty))) - 1];
   return withoutLeakingHints(() => pick(tier, rng)(rng));
+}
+
+/**
+ * Same as `generateAnglesQuestion`, except for the topic-lesson screen's one worked
+ * example per tier (see `Topic.adaptive.lessonExample` in curriculum.ts): tier 2 always
+ * shows the exterior-angle pattern and tier 3 always shows the corresponding-angles
+ * pattern, instead of `pick()`ing a random sibling — those two are the only patterns
+ * carrying a `proof` (see angleShape.ts), and a random sibling would often show the
+ * lesson without one. Every other tier behaves identically to `generateAnglesQuestion`.
+ */
+export function generateAnglesLessonExample(difficulty: number, rng: Rng = Math.random): Question {
+  const tier = Math.min(TIERS.length, Math.max(1, Math.round(difficulty)));
+  if (tier === 2) return withoutLeakingHints(() => triangleAnglesExterior(rng));
+  if (tier === 3) return withoutLeakingHints(() => parallelLinesCorresponding(rng));
+  return generateAnglesQuestion(difficulty, rng);
 }
 
 export const ANGLES_MIN_DIFFICULTY = 1;

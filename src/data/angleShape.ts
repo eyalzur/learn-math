@@ -25,6 +25,14 @@ export type AngleShape =
       total: 90 | 180;
       known: number;
       caption: string;
+      /** Structural description only — read by a screen reader while the diagram sits
+       *  next to the question, before an answer. Never states the rule/method the way
+       *  `caption` does (that stays gated behind a wrong answer, same as the two hints). */
+      srLabel: string;
+      /** Present on every variant (even where always `undefined`) so callers like
+       *  `TopicLesson.tsx` can read `bundle.angle?.proof` without narrowing by `kind` —
+       *  see `triangleAngles.proof` below for what actually populates it. */
+      proof?: string;
     }
   | {
       kind: "triangleAngles";
@@ -35,18 +43,29 @@ export type AngleShape =
       angleC: number;
       exterior: boolean;
       caption: string;
+      srLabel: string;
+      /** Short "why is this true" paragraph for the topic-lesson screen only — set only
+       *  for the exterior-angle variant. `TopicLesson.tsx` just renders this if present;
+       *  it has no idea what an exterior angle is. See docs/features/
+       *  grade8-angles-congruence/design.md, "שיעור קצר 'למה זה נכון'". */
+      proof?: string;
     }
   | {
       kind: "parallelLines";
       known: number;
       relation: "corresponding" | "alternate" | "coInterior";
       caption: string;
+      srLabel: string;
+      /** Set only for the `corresponding` relation — see `triangleAngles.proof` above. */
+      proof?: string;
     }
   | {
       kind: "congruentTriangles";
       value: number;
       valueKind: "side" | "angle";
       caption: string;
+      srLabel: string;
+      proof?: string;
     }
   | {
       kind: "isoscelesTriangle";
@@ -55,7 +74,19 @@ export type AngleShape =
        *  median variant) `∡BAD`, are what the "?" marks and what gets verified. */
       given: number;
       caption: string;
+      srLabel: string;
+      proof?: string;
     };
+
+/** The exterior-angle theorem, in a sentence a כיתה ח׳ student can follow without formal
+ *  proof machinery — see design.md, "שיעור קצר 'למה זה נכון'". */
+const EXTERIOR_ANGLE_PROOF =
+  "הזווית החיצונית וזווית המשולש הסמוכה לה (הזווית הפנימית שלידה) יחד יוצרות קו ישר, שהוא `180°`. גם סכום שלוש זוויות המשולש הוא `180°`. משתי העובדות האלה יוצא שהזווית החיצונית שווה בדיוק לסכום שתי הזוויות הרחוקות ממנה — כל אחת מהעובדות, בדרכה שלה, 'משלימה' את אותה זווית פנימית סמוכה ל-`180°`.";
+
+/** Corresponding angles between two parallel lines cut by a transversal — same "intuitive,
+ *  not formal" register as the exterior-angle proof above. */
+const CORRESPONDING_ANGLES_PROOF =
+  "ישרים מקבילים שומרים על אותו כיוון לאורך כל הדרך. אם מזיזים את הישר `a` לאורך הישר החותך `c`, עד שהוא נופל בדיוק על הישר `b` (אפשר בדיוק כי הם מקבילים), הזווית שהוא יוצר עם `c` לא משתנה בדרך — ולכן הזווית המתאימה, באותו מקום ביחס לישר `b`, שווה לזווית המקורית.";
 
 function num(s: string): number {
   return Number(s);
@@ -72,12 +103,13 @@ function readShape(prompt: string): AngleShape | null {
       total: 180,
       known,
       caption: `קו ישר הוא \`180°\` שלם. \`${known}°\` ממנו כבר ידועים, והשאר הוא הזווית המבוקשת`,
+      srLabel: `איור: קו ישר שמחולק לשתי זוויות — אחת מסומנת \`${known}°\`, השנייה בסימן שאלה`,
     };
   }
 
   if (
     (m = prompt.match(
-      /^שתי זוויות משלימות זו לזו, וסכומן `90°`\. אחת מהן `(\d+)°`\. מה גודל השנייה\?$/,
+      /^בין שני ישרים נצבים \(זווית ישרה, `90°`\), שתי זוויות סמוכות\. אחת מהן `(\d+)°`\. מה גודל השנייה\?$/,
     ))
   ) {
     const known = num(m[1]);
@@ -86,6 +118,7 @@ function readShape(prompt: string): AngleShape | null {
       total: 90,
       known,
       caption: `שתי הזוויות יחד הן \`90°\`. \`${known}°\` מהן כבר ידועים, והשאר הוא הזווית המבוקשת`,
+      srLabel: `איור: זווית ישרה (\`90°\`) שמחולקת לשתי זוויות — אחת מסומנת \`${known}°\`, השנייה בסימן שאלה`,
     };
   }
 
@@ -100,6 +133,7 @@ function readShape(prompt: string): AngleShape | null {
       angleC: 180 - angleA - angleB,
       exterior: false,
       caption: "סכום הזוויות במשולש הוא תמיד `180°`",
+      srLabel: `איור: משולש עם שתי זוויות מסומנות (\`${angleA}°\`, \`${angleB}°\`), והשלישית בסימן שאלה`,
     };
   }
 
@@ -116,6 +150,8 @@ function readShape(prompt: string): AngleShape | null {
       angleC: 180 - angleA - angleB,
       exterior: true,
       caption: "הזווית החיצונית שווה לסכום שתי הזוויות הפנימיות הרחוקות ממנה",
+      srLabel: `איור: משולש עם שתי זוויות מסומנות (\`${angleA}°\`, \`${angleB}°\`), והזווית החיצונית בסימן שאלה`,
+      proof: EXTERIOR_ANGLE_PROOF,
     };
   }
 
@@ -130,6 +166,8 @@ function readShape(prompt: string): AngleShape | null {
       known,
       relation: "corresponding",
       caption: "שני ישרים מקבילים וישר חותך — הזוויות המתאימות שוות זו לזו",
+      srLabel: `איור: שני ישרים מקבילים וישר חותך, עם זווית מסומנת \`${known}°\` וזווית מתאימה לה בסימן שאלה`,
+      proof: CORRESPONDING_ANGLES_PROOF,
     };
   }
 
@@ -144,6 +182,7 @@ function readShape(prompt: string): AngleShape | null {
       known,
       relation: "alternate",
       caption: "שני ישרים מקבילים וישר חותך — הזוויות המתחלפות שוות זו לזו",
+      srLabel: `איור: שני ישרים מקבילים וישר חותך, עם זווית מסומנת \`${known}°\` וזווית מתחלפת לה בסימן שאלה`,
     };
   }
 
@@ -158,6 +197,7 @@ function readShape(prompt: string): AngleShape | null {
       known,
       relation: "coInterior",
       caption: "שני ישרים מקבילים וישר חותך — הזוויות החד-צדדיות משלימות זו את זו ל-`180°`",
+      srLabel: `איור: שני ישרים מקבילים וישר חותך, עם זווית מסומנת \`${known}°\` וזווית חד-צדדית לה בסימן שאלה`,
     };
   }
 
@@ -169,6 +209,7 @@ function readShape(prompt: string): AngleShape | null {
       value: num(m[1]),
       valueKind: "side",
       caption: "שני משולשים חופפים — הצלעות המתאימות (לפי סדר האותיות בחפיפה) שוות באורכן",
+      srLabel: `איור: שני משולשים חופפים, עם צלע אחת מסומנת \`${num(m[1])}\` והצלע המתאימה לה בסימן שאלה`,
     };
   }
 
@@ -180,6 +221,7 @@ function readShape(prompt: string): AngleShape | null {
       value: num(m[1]),
       valueKind: "angle",
       caption: "שני משולשים חופפים — הזוויות המתאימות (לפי סדר האותיות בחפיפה) שוות בגודלן",
+      srLabel: `איור: שני משולשים חופפים, עם זווית אחת מסומנת \`${num(m[1])}°\` והזווית המתאימה לה בסימן שאלה`,
     };
   }
 
@@ -193,6 +235,7 @@ function readShape(prompt: string): AngleShape | null {
       variant: "apexFromBase",
       given: num(m[1]),
       caption: "במשולש שווה-שוקיים זוויות הבסיס שוות זו לזו",
+      srLabel: `איור: משולש שווה-שוקיים עם זווית בסיס מסומנת \`${num(m[1])}°\` וזווית הראש בסימן שאלה`,
     };
   }
 
@@ -206,6 +249,7 @@ function readShape(prompt: string): AngleShape | null {
       variant: "baseFromApex",
       given: num(m[1]),
       caption: "במשולש שווה-שוקיים זוויות הבסיס שוות זו לזו",
+      srLabel: `איור: משולש שווה-שוקיים עם זווית ראש מסומנת \`${num(m[1])}°\` וזווית בסיס בסימן שאלה`,
     };
   }
 
@@ -219,6 +263,7 @@ function readShape(prompt: string): AngleShape | null {
       variant: "medianRightAngle",
       given: num(m[1]),
       caption: "במשולש שווה-שוקיים, התיכון מקודקוד הראש הוא גם גובה — הוא יוצר זווית ישרה בבסיס",
+      srLabel: `איור: משולש שווה-שוקיים עם התיכון מהראש לבסיס, זווית בסיס מסומנת \`${num(m[1])}°\`, וזווית בין התיכון לשוק בסימן שאלה`,
     };
   }
 
