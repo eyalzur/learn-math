@@ -6,7 +6,7 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
-| תיקוני שימושיות במחברת התרגול | 🟡 סבב רוויזיה על PR #67 | [status](./notebook-usability-fixes/status.md) |
+| תיקוני שימושיות במחברת התרגול | 🟢 done — ממתין לריוויו על PR #67 | [status](./notebook-usability-fixes/status.md) |
 | סילבוס מלא לכיתה ב׳ (כפל, צורות, טווח 1000) | 🟢 done — מוזג ל-main | [status](./grade2-syllabus/status.md) |
 | שמות קבועים לדמויות בדימויים | 🟢 done — מוזג ל-main | [status](./analogy-character-names/status.md) |
 | מחברת כמצב התרגול היחיד | 🟢 done — מוזג ל-main (כולל סבב רוויזיה א׳, גודל משטח הכתיבה) | [status](./notebook-default-practice/status.md) |

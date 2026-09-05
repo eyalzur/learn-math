@@ -264,3 +264,94 @@ test("a flagged-but-correct answer still counts as correct in the final score", 
   await expect(page.locator(".result")).toBeVisible();
   await expect(page.locator(".score")).toContainText("100%");
 });
+
+// ------------------------------------------------- סבב רוויזיה א׳ (2026-09-05)
+// Acceptance criteria under test: product-spec.md, "Acceptance Criteria — עדכון (סבב
+// רוויזיה א׳)".
+
+test('"הסר דף" sits at the very far edge of the toolbar, past "נקה דף"', async ({ page }) => {
+  await openLevel(page);
+  const removeBox = await page.getByRole("button", { name: "הסר דף" }).boundingBox();
+  const clearBox = await page.getByRole("button", { name: "נקה דף" }).boundingBox();
+  const penBox = await page.getByRole("button", { name: "עט" }).boundingBox();
+  if (!removeBox || !clearBox || !penBox) throw new Error("toolbar button not found");
+  // RTL row: the pen/eraser/pan group sits at the row's start (largest x), and each button
+  // further from it is further along in reading order (smaller x) — "הסר דף" is the very
+  // last one, "נקה דף" the second-to-last.
+  expect(clearBox.x).toBeLessThan(penBox.x);
+  expect(removeBox.x).toBeLessThan(clearBox.x);
+});
+
+test("the page opens at a fixed 70% zoom with its top-left corner aligned to the stage's top-left corner, not centered", async ({
+  page,
+}) => {
+  await openLevel(page);
+  await expect(page.locator(".notebook-zoom-readout")).toHaveText("70%");
+
+  const [tx, ty] = await page.locator(".notebook-stack").evaluate((el) => {
+    const matrix = getComputedStyle(el).transform;
+    const m = matrix.match(/matrix\(([^)]+)\)/);
+    if (!m) return [NaN, NaN];
+    const values = m[1].split(",").map(Number);
+    return [values[4], values[5]];
+  });
+  expect(Math.abs(tx)).toBeLessThan(1);
+  expect(Math.abs(ty)).toBeLessThan(1);
+});
+
+test("zoom and position are preserved across entering and leaving fullscreen", async ({ page }) => {
+  await openLevel(page);
+  // Zoom in once so the level is distinguishable from the 70% every question opens at —
+  // otherwise "preserved" and "recomputed to the same default" would look identical.
+  await page.getByRole("button", { name: "הגדל" }).click();
+  const before = await page.locator(".notebook-zoom-readout").innerText();
+  expect(before).not.toBe("70%");
+
+  await page.getByRole("button", { name: "הגדילו את המחברת למסך מלא" }).click();
+  await expect(page.locator(".notebook-zoom-readout")).toHaveText(before);
+
+  // Not `getByRole(..., { name: "צאו ממסך מלא" })`: the zoom-controls fullscreen toggle
+  // carries that same aria-label once fullscreen is on, alongside the compact strip's own
+  // exit button — the class picks the strip's button specifically, unambiguously.
+  await page.locator(".notebook-fullscreen-exit").click();
+  await expect(page.locator(".notebook-zoom-readout")).toHaveText(before);
+});
+
+test('"הצג את כל הדף" zooms out to fit the whole page, and a second press restores the exact previous zoom', async ({
+  page,
+}) => {
+  await openLevel(page);
+  await page.getByRole("button", { name: "הגדל" }).click();
+  const before = await page.locator(".notebook-zoom-readout").innerText();
+
+  // Located by position, not by its own accessible name: that name flips between "הצגת כל
+  // הדף" and "חזרה לזום הקודם" depending on state, so a locator built from one of those
+  // names stops matching the moment the state (and the name) changes.
+  const wholePageButton = page.locator(".notebook-zoom-controls button").nth(2);
+  await expect(wholePageButton).toHaveAccessibleName("הצגת כל הדף");
+  await wholePageButton.click();
+  await expect(wholePageButton).toHaveAttribute("aria-pressed", "true");
+  await expect(wholePageButton).toHaveAccessibleName("חזרה לזום הקודם");
+  await expect(page.locator(".notebook-zoom-readout")).not.toHaveText(before);
+
+  await wholePageButton.click();
+  await expect(page.locator(".notebook-zoom-readout")).toHaveText(before);
+  await expect(wholePageButton).toHaveAttribute("aria-pressed", "false");
+  await expect(wholePageButton).toHaveAccessibleName("הצגת כל הדף");
+});
+
+test('"הצג את כל הדף" resets its own toggle state when the visible page changes, instead of carrying a stale restore point', async ({
+  page,
+}) => {
+  // Whatever zoom the button leaves behind on the new page is not asserted here — a manual
+  // zoom already persists across pages today (unrelated to this button), so the toggle's own
+  // pressed/unpressed state is what must not lie about which page it's describing.
+  await openLevel(page);
+  await page.getByRole("button", { name: "הצגת כל הדף" }).click();
+  await expect(page.getByRole("button", { name: "חזרה לזום הקודם" })).toBeVisible();
+
+  await page.getByRole("button", { name: "דף חדש" }).click();
+
+  await expect(page.getByRole("button", { name: "הצגת כל הדף" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "הצגת כל הדף" })).toHaveAttribute("aria-pressed", "false");
+});

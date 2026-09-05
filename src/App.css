@@ -1400,6 +1400,12 @@ button.secondary {
   font-size: 20px;
 }
 
+/* "הצג את כל הדף" while active — same treatment as a pressed drawing tool (.tool-btn),
+   not a new color: it's a toggle exactly like pen/eraser/pan, just living in this group. */
+.notebook-zoom-controls button[aria-pressed="true"] {
+  background: var(--accent-bg);
+}
+
 /* One row, always — never wraps into a second line that eats into the writing area above
    it. Every button here is icon-only except "שלח למורה" (the one action worth spelling
    out). Sized as tight as a still-tappable button reasonably goes; draw tools, "נקה דף",

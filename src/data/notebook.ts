@@ -107,17 +107,14 @@ export function computeFitTransform(viewportWidth: number, viewportHeight: numbe
 }
 
 /** The transform the notebook opens with, once per practice session: `INITIAL_ZOOM`
- *  regardless of viewport size, centered the same way `computeFitTransform` centers its
- *  own (viewport-derived) zoom. Deliberately a separate function rather than a fixed-zoom
- *  branch inside `computeFitTransform` — that one is also used to re-fit fullscreen to
- *  whatever size the viewport actually is, which still needs to be dynamic. */
-export function computeInitialTransform(viewportWidth: number, viewportHeight: number): PanZoom {
-  const zoom = INITIAL_ZOOM;
-  return {
-    zoom,
-    panX: (viewportWidth - PAGE_WIDTH * zoom) / 2,
-    panY: (viewportHeight - PAGE_HEIGHT * zoom) / 2,
-  };
+ *  regardless of viewport size — deliberately a separate function rather than a fixed-zoom
+ *  branch inside `computeFitTransform`, which is also used to fit the whole page on demand
+ *  (see `computeFitTransform`'s own doc) and still needs to center. This one anchors the
+ *  page's own top-left corner to the viewport's top-left corner instead: a student starts
+ *  writing at the top of the page, like a real notebook, not in the middle of a canvas they
+ *  have to scroll to orient themselves on. */
+export function computeInitialTransform(): PanZoom {
+  return { zoom: INITIAL_ZOOM, panX: 0, panY: 0 };
 }
 
 /** The highlighted rectangle in the minimap, in the minimap's own pixel space. */

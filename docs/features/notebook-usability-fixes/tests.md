@@ -22,6 +22,16 @@
 - **המספר `70%` המדויק** — בסופו של דבר **כן** נבדק ישירות: `.notebook-zoom-readout` מרנדר
   את האחוז כטקסט מילולי, אז הבדיקה הראשונה בטבלה שמה עליו `toHaveText("70%")` ממש.
 
+## Coverage — עדכון (סבב רוויזיה א׳, 2026-09-05)
+
+| קריטריון קבלה (product-spec.md, עדכון) | בדיקה |
+|---|---|
+| "הסר דף" קיצוני יותר מ"נקה דף" | `› "הסר דף" sits at the very far edge of the toolbar, past "נקה דף"` |
+| פתיחה מהפינה השמאלית-עליונה (לא ממורכזת), עדיין `70%` | `› the page opens at a fixed 70% zoom with its top-left corner aligned to the stage's top-left corner, not centered` |
+| זום/מיקום נשמרים במעבר למסך מלא ובחזרה | `› zoom and position are preserved across entering and leaving fullscreen` |
+| כפתור "הצג את כל הדף" — זום-אאוט ושחזור מדויק | `› "הצג את כל הדף" zooms out to fit the whole page, and a second press restores the exact previous zoom` |
+| הכפתור לא נשאר "תקוע" פעיל על עמוד שכבר לא רלוונטי | `› "הצג את כל הדף" resets its own toggle state when the visible page changes, instead of carrying a stale restore point` |
+
 ## שינוי תשתית בדיקות שהתגלה כהכרחי
 
 תיקון הזום (סעיף למעלה) חשף באג אמיתי בעזר המשותף `tests/e2e/helpers/notebookAnswer.ts`
@@ -64,6 +74,19 @@ npm run build && npm run lint && npm run test:e2e
    כולו נראה) במקום נקודה יחסית לקנבס. השפעה: כל קובץ שמשתמש ב-`drawOnCanvas`
    (רוב בדיקות המחברת בסוויטה), לא רק זה — אומת מול `notebook-default-practice.spec.ts`
    (19/19) ומול הסוויטה המלאה (328/328) לפני שנחשב גמור.
+
+### רוויזיה — סבב רוויזיה א׳ (2026-09-05)
+
+`333/333 עוברות, בריצה בודדת ונקייה` (328 + 5 חדשות). שתי בדיקות מתוך החמש
+נכתבו לא נכון בפעם הראשונה ותוקנו תוך כדי הכתיבה, לא אחרי שנתגלו כבאג אמיתי
+באפליקציה — שני לקחים ל-locator-ים ב-Playwright, לא לקוד המוצר:
+- `getByRole(..., { name: "צאו ממסך מלא" })` דו-משמעי במסך מלא: גם כפתור
+  היציאה בפס המצומצם (`.notebook-fullscreen-exit`) וגם כפתור ה-toggle
+  בבקרות הזום נושאים את אותו `aria-label` באותו רגע. נפתר עם לוקטור לפי class.
+- לוקטור לכפתור "הצג את כל הדף" **לפי השם הנגיש שלו** נשבר ברגע שהלחיצה
+  משנה את השם (`aria-label` מתחלף בין "הצגת כל הדף" ל"חזרה לזום הקודם") —
+  לוקטור שנבנה מהשם הישן פשוט לא תואם יותר אחרי הקליק. נפתר עם לוקטור לפי
+  מיקום בתוך `.notebook-zoom-controls` (`nth(2)`), לא לפי שם.
 
 ## Docs
 - [Product spec](./product-spec.md)

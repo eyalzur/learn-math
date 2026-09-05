@@ -283,3 +283,142 @@ Files/Edge Cases למעלה.
 
 שני הבאגים תוקנו בקבצי המקור/הבדיקות הקיימים (`PracticeNotebook.tsx`,
 `tests/e2e/helpers/notebookAnswer.ts`) — אין להם קובץ נפרד משלהם.
+
+## עדכון ארכיטקטורה — סבב רוויזיה א׳ (2026-09-05)
+
+לפי design.md, "עדכון עיצוב — סבב רוויזיה א׳". הכל בתוך `PracticeNotebook.tsx`
+ו-`src/data/notebook.ts` — אין קובץ חדש.
+
+### 1 — סדר "נקה דף"/"הסר דף"
+שינוי JSX טהור: כפתור `notebook-remove-btn` (🗑) עובר להיות **אחרי** כפתור
+`notebook-clear-btn` (🧹) ב-DOM, במקום בתוך קבוצת `.notebook-page-nav` השנייה
+(שנשארת עם "+" בלבד). ה-`:last-of-type` הקיים על `.notebook-page-nav` ממשיך
+לדחוף את קבוצת ה-"+" (עכשיו לבד) לקצה, ו-🧹/🗑 שאחריה נשארים צמודים לאותו קצה
+בסדר הנכון — אין צורך לגעת ב-CSS.
+
+### 2 — זום נשמר במעבר למסך מלא
+מוחקים את הקריאה ל-`computeFitTransform` בתוך ה-effect שמגיב לשינוי
+`fullscreen` (השורות שנוספו בסבב הקודם בדיוק כדי לפתור בעיה אחרת — הן היו
+פתרון-יתר). ה-effect **נשאר**, אבל רק כדי לקרוא ל-`applyTransform()` בלי לגעת
+ב-`panZoomRef.current` — כי `.notebook-stage` משנה גודל בפועל (תיבה קטנה ↔
+כמעט-כל-המסך) וה-minimap צריך להתעדכן לגודל החדש, גם אם הזום עצמו לא זז.
+`prevFullscreen` (ה-ref שמשווה ערך קודם/נוכחי, מהסבב הקודם) נשאר בדיוק כפי
+שהוא — עדיין צריך למנוע הרצה על ה-mount הראשוני, רק שעכשיו "מה שהוא מונע"
+הוא `applyTransform()` מיותר ולא דריסת זום.
+
+**איחוד עם ה-resize handler:** כדי שההתנהגות תהיה עקבית (זום לא מתאפס משום
+שינוי גודל, לא רק ממעבר מסך-מלא), גם ה-`handleResize` (מגיב ל-resize אמיתי
+של החלון) מפסיק לקרוא ל-`computeFitTransform` — פשוט קורא ל-`applyTransform()`
+תמיד, בלי בדיקת `fullscreenRef`. `fullscreenRef` עצמו (ה-ref שהיה קיים רק בשביל
+הבדיקה הזו) נמחק לגמרי — אין לו עוד שימוש.
+
+### 3 — כפתור "הצג את כל הדף"
+מצב חדש: `const [viewingWholePage, setViewingWholePage] = useState(false);`
+ו-ref חדש: `const savedTransform = useRef<PanZoom | null>(null);`
+
+```
+function toggleWholePage() {
+  const rect = stageRef.current?.getBoundingClientRect();
+  if (!rect) return;
+  if (viewingWholePage) {
+    if (savedTransform.current) panZoomRef.current = savedTransform.current;
+    savedTransform.current = null;
+    setViewingWholePage(false);
+  } else {
+    savedTransform.current = panZoomRef.current;
+    panZoomRef.current = computeFitTransform(rect.width, rect.height);
+    setViewingWholePage(true);
+  }
+  applyTransform();
+}
+```
+משתמש ב-`computeFitTransform` הקיים (בדיוק הפונקציה שכבר יודעת "להראות את כל
+הדף בתוך תיבה נתונה") — לא לוגיקה חדשה, רק שימוש חוזר כפעולה יזומה. הכפתור
+מתווסף ל-`.notebook-zoom-controls` (ליד `+`/`−`, לפני "⤢"), עם `aria-pressed=
+{viewingWholePage}` (אותו דפוס כמו כלי הכתיבה) ו-`aria-label` מותנה: `הצגת כל
+הדף` / `חזרה לזום הקודם`. אייקון: `⛶`, קבוע בשני המצבים — ה-`aria-pressed`
+לבדו מסמן את המצב (עיצוב, ראו design.md).
+
+**יציאה ממצב "הצג הכל" בדרכים אחרות:** אם התלמיד/ה מזז/ת/מזום/ת ידנית תוך
+כדי שהמצב פעיל (`handleWheel`, `zoomButton`, גרירה), `viewingWholePage`
+**לא** מתאפס אוטומטית — הכפתור עצמו הוא הדרך היחידה לצאת מהמצב ולשחזר את
+המצב השמור. זה עקבי עם איך שהמשתמש ניסח את הבקשה ("לחיצה נוספת... מחזירה
+בדיוק"), ולא מוסיף היגיון ניחוש ("האם התלמיד/ה 'התכוון/ה' לצאת").
+
+### 4 — פתיחה מהפינה השמאלית-עליונה
+ב-`src/data/notebook.ts`, `computeInitialTransform`: `panX`/`panY` עוברים
+מהנוסחה הממרכזת (`(viewportWidth - PAGE_WIDTH*zoom)/2`) ל-`0`/`0` — הפינה
+השמאלית-העליונה של הדף מיושרת בדיוק לפינה השמאלית-העליונה של התיבה. אין שינוי
+ב-`zoom` (`INITIAL_ZOOM` נשאר `0.7`) ואין שינוי ב-`computeFitTransform` (עדיין
+ממרכז, כי הוא משרת גם את "הצג את כל הדף" ומסך-מלא-דינמי-לשעבר, ששניהם כן
+אמורים למרכז).
+
+## Edge Cases (עדכון)
+
+- **"הצג את כל הדף" נלחץ, ואז נכנסים/יוצאים ממסך מלא:** `savedTransform`
+  נשאר ללא שינוי (מסך מלא לא נוגע בזום כלל, ראו סעיף 2 למעלה) — לחיצה חוזרת
+  על "הצג הכל" עדיין משחזרת נכון, בכל תיבה שהיא נמצאת בה כרגע.
+- **עמוד חדש נטען (שאלה הבאה) בזמן שהמצב "הצג הכל" פעיל על העמוד הקודם:**
+  `viewingWholePage`/`savedTransform` הם state/ref של `PracticeNotebook`,
+  שלא נטען מחדש בין שאלות (ראו architecture.md המקורי) — צריך לוודא
+  ב-implementation שהמעבר לדף/שאלה חדשים (`next()` ב-`Practice.tsx`) לא
+  משאיר את הכפתור "תקוע" במצב פעיל עם `savedTransform` של עמוד שכבר לא
+  קיים. **הכרעה:** ה-mount effect הקיים (שמפעיל `computeInitialTransform`)
+  רץ פעם אחת בלבד לכל חיי הקומפוננטה, לא לכל שאלה — ולכן `viewingWholePage`
+  היה נשאר `true` דרך כל התרגול לו לא היה מטופל. **מטפלים בזה על ידי איפוס
+  `viewingWholePage`/`savedTransform` בתוך `redrawFromPage`'s effect (התלוי
+  ב-`[currentPage]`)** — בכל פעם שהעמוד הנראה משתנה (כולל מעבר לשאלה חדשה,
+  שמוסיפה עמוד חדש ומחליפה את `currentPageIndex`), חוזרים למצב "לא בהצגת-הכל"
+  בלי זיכרון תלוי-הקשר מהעמוד הקודם. זה עקבי עם ההתנהגות הקיימת של נעילת
+  משטח הכתיבה בין שאלות.
+  **מה שכן ממשיך:** הזום עצמו (`panZoomRef.current`) לא מתאפס בחזרה ל-`70%`
+  באיפוס הזה — רק ה-toggle (`viewingWholePage`/`savedTransform`) מתאפס. זה
+  עקבי עם ההתנהגות הקיימת (לפני הפיצ'ר הזה): זום שהתלמיד/ה שינה/תה ידנית
+  כבר נשמר בין עמודים/שאלות היום (architecture.md המקורי, סעיף 2) — זום
+  שהגיע מ"הצג את כל הדף" מתנהג בדיוק כמו זום שהגיע מכפתורי `+`/`−`, לא
+  שונה. הכפתור עצמו (מצב לחוץ/לא-לחוץ) הוא היחיד שחייב לא לשקר לגבי העמוד
+  הנוכחי.
+
+## Open Questions
+None.
+
+## Implementation Notes — סבב רוויזיה א׳ (2026-09-05)
+
+בוצע בדיוק לפי התוכנית למעלה.
+
+- **`src/data/notebook.ts`:** `computeInitialTransform` איבד את שני הפרמטרים
+  שלו (`viewportWidth`/`viewportHeight`) — כבר לא צריך אותם, כי `panX`/`panY`
+  קבועים `0`. חתימת הפונקציה השתנתה ל-`()`, וקריאת היחיד לה ב-
+  `PracticeNotebook.tsx` עודכנה בהתאם.
+- **`src/components/PracticeNotebook.tsx`:**
+  - `fullscreenRef` (ה-ref וה-effect שסנכרן אותו) נמחקו לגמרי — לא נשאר להם
+    שימוש אחרי שה-resize handler הפסיק להבחין בין מסך-מלא לרגיל.
+  - `handleResize` הפשוט: תמיד `applyTransform()`, בלי שום `computeFitTransform`.
+  - effect ה-fullscreen-toggle: נשאר (עם ה-`prevFullscreen` guard מהסבב
+    הקודם), אבל איבד את שתי השורות שחישבו/הציבו זום חדש — נשאר רק
+    `applyTransform()`.
+  - state/ref חדשים: `viewingWholePage`/`savedTransform`, ופונקציה חדשה
+    `toggleWholePage()`, בדיוק כמתואר למעלה.
+  - ה-effect שתלוי ב-`[currentPage]` (שכבר קורא ל-`redrawFromPage`) מוסיף
+    שתי שורות איפוס (`setViewingWholePage(false)`, `savedTransform.current =
+    null`).
+  - JSX: כפתור חדש בין `−` ל-`⤢` בתוך `.notebook-zoom-controls`
+    (`aria-pressed`/`aria-label` מותנים, אייקון `⛶` קבוע). כפתור `🗑` (הסר דף)
+    עבר להיות אחרי `🧹` (נקה דף) בסוף `.notebook-toolbar`, מחוץ ל-`.notebook-page-nav`
+    השנייה (שנשארה עם "+" בלבד).
+- **`src/App.css`:** כלל חדש `.notebook-zoom-controls button[aria-pressed="true"]`
+  — אותו `var(--accent-bg)` בדיוק כמו `.tool-btn[aria-pressed="true"]`, לא צבע
+  חדש.
+- **`tests/e2e/notebook-usability-fixes.spec.ts`:** חמש בדיקות חדשות (ראו
+  tests.md לפירוט המלא) — כולל תיקון תוך-כדי-כתיבה לשתי בדיקות ראשוניות
+  שהניחו הנחות שגויות: (א) `getByRole(..., {name: "צאו ממסך מלא"})` דו-משמעי
+  בזמן מסך מלא (גם כפתור היציאה בפס המצומצם וגם כפתור ה-toggle בבקרות הזום
+  נושאים את אותו `aria-label`) — נפתר עם לוקטור לפי class. (ב) לוקטור לכפתור
+  "הצג את כל הדף" לפי השם הנגיש שלו נשבר ברגע שהשם משתנה (`aria-label` מתחלף
+  בין שני המצבים) — נפתר עם לוקטור לפי מיקום (`nth(2)` בתוך קבוצת בקרות הזום),
+  לא לפי שם.
+
+**בדיקה:** `npm run build && npm run lint && npm run test:e2e` — הרצה בודדת
+ונקייה: **333/333 עוברות** (328 + 5 חדשות), `build`/`lint` ירוקים. אין העלאת
+גרסה נוספת בסבב הזה — `1.27.1` כבר גבוה מה-`main` הנוכחי (`1.27.0`), וה-PR
+עדיין לא מוזג, אז בדיקת ה-version-bump כבר מרוצה מהסבב הקודם.
