@@ -80,6 +80,22 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
   /** What the teacher understood, once a reading comes back confident. */
   const [teacherNote, setTeacherNote] = useState<{ reflection: string; errorPointer?: string } | null>(null);
 
+  /** Telling the teacher she got it wrong (docs/features/notebook-teacher-feedback/):
+   *  whether the free-text correction form is open, its content, and whether the reading
+   *  currently on screen is the result of one (so the heading can say "...עכשיו"). */
+  const [correctionOpen, setCorrectionOpen] = useState(false);
+  const [correctionText, setCorrectionText] = useState("");
+  const [isCorrectedReading, setIsCorrectedReading] = useState(false);
+  /** Whether *this* question is currently included in `correctCount` — lets a corrected
+   *  reading that flips right/wrong adjust the score by exactly one instead of guessing
+   *  from the reading alone (see architecture.md, "מונה כפול"). Reset in `next()`. */
+  const questionCountedRef = useRef(false);
+  /** Whether `onAnswered` has already fired for this question. It drives adaptive
+   *  difficulty (docs/features/adaptive-difficulty/), which assumes exactly one call per
+   *  question — a corrected reading updates everything else on screen but deliberately
+   *  never fires this a second time (see architecture.md, Risks). Reset in `next()`. */
+  const onAnsweredFiredRef = useRef(false);
+
   /** The notebook box expanded to (almost) the whole screen — a writing-mode toggle, not a
    *  result mode: see the effect below, which drops it the moment a reading comes back
    *  confident (design.md, מצב F). */
@@ -206,34 +222,71 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
     return speechParts([prompt, ...question.hints.slice(0, hintsShown)]);
   }
 
+  /** Never the correct answer — only the exercise text already on screen. Judging
+   *  correct/incorrect stays entirely with the local check below, never with the model. */
+  function currentExpectedPrompt(): string {
+    return question.prompt.replace(/`/g, "");
+  }
+
   /**
    * What the teacher's reading means for this question — the direct replacement for the
-   * old `checkAnswer`, driven by `reading.finalAnswer` instead of a typed number. An
-   * uncertain reading carries no answer at all, so it never touches feedback/diagnosis —
-   * it is an invitation to write again, not a wrong answer.
+   * old `checkAnswer`, driven by `reading.finalAnswer` instead of a typed number.
+   *
+   * Reentrant by design (docs/features/notebook-teacher-feedback/architecture.md): a
+   * corrected reading calls this again for the same question, so it always resets what the
+   * *previous* reading derived before applying the new one, rather than assuming it's the
+   * first and only call. `questionCountedRef`/`onAnsweredFiredRef` start `false`, so the
+   * very first call behaves exactly as before this feature existed.
    */
-  function handleTeacherReading(reading: PageReading) {
+  function handleTeacherReading(reading: PageReading, corrected: boolean) {
+    setIsCorrectedReading(corrected);
+    setFollowUpInput("");
+    setFollowUpResult(null);
+    setAskedToSee(false);
+    setDiagnosis(null);
+    setSecondsLeft(null);
+    setCountdownStopped(false);
+
     if (!reading.certain) {
       setUncertain(true);
+      setTeacherNote(null);
+      setFeedback(null);
+      if (questionCountedRef.current) {
+        setCorrectCount((c) => c - 1);
+        questionCountedRef.current = false;
+      }
       return;
     }
     setUncertain(false);
     setTeacherNote({ reflection: reading.processReflection, errorPointer: reading.errorPointer });
     const isCorrect = reading.finalAnswer === question.answer;
     setFeedback(isCorrect ? "correct" : "wrong");
-    onAnswered?.(isCorrect);
-    if (isCorrect) {
+
+    if (isCorrect && !questionCountedRef.current) {
       setCorrectCount((c) => c + 1);
-      // The whole of starting the countdown; the effect above waits for silence and ticks.
+      questionCountedRef.current = true;
+    } else if (!isCorrect && questionCountedRef.current) {
+      setCorrectCount((c) => c - 1);
+      questionCountedRef.current = false;
+    }
+
+    // Adaptive difficulty assumes exactly one call per question — firing it again on a
+    // corrected reading could double-count a question it already reacted to. See
+    // architecture.md, Risks: a deliberate choice, not an oversight.
+    if (!onAnsweredFiredRef.current) {
+      onAnswered?.(isCorrect);
+      onAnsweredFiredRef.current = true;
+    }
+
+    if (isCorrect) {
       // Not on the last question: there is no next one to open, and finishing a practice
       // is a moment to arrive at rather than be delivered to. Guarded here rather than
       // only in the effect, because the effect governs the *ticking* and this governs
       // whether the row exists at all — without it the row appears and sits at five.
       if (!isLast) setSecondsLeft(COUNTDOWN_SECONDS);
+    } else {
+      setDiagnosis(diagnose(question, reading.finalAnswer));
     }
-    // The score is closed on this line, before the conversation can begin. Nothing that
-    // happens in it moves the number.
-    else setDiagnosis(diagnose(question, reading.finalAnswer));
   }
 
   async function sendToTeacher() {
@@ -246,12 +299,39 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
     setUncertain(false);
     setSendState("sending");
     try {
-      // Never the correct answer — only the exercise text already on screen. Judging
-      // correct/incorrect stays entirely with the local check above, never with the model.
-      const expectedPrompt = question.prompt.replace(/`/g, "");
-      const { reading } = await readPageWithTeacher(currentPage, expectedPrompt);
+      const { reading } = await readPageWithTeacher(currentPage, currentExpectedPrompt());
       setSendState("idle");
-      handleTeacherReading(reading);
+      handleTeacherReading(reading, false);
+    } catch {
+      setSendState("error");
+    }
+  }
+
+  function openCorrection() {
+    if (secondsLeft !== null) stopCountdown();
+    // The form needs the regular width, not the compact fullscreen strip — same reason a
+    // confident reading already drops out of fullscreen on its own (design.md, מצב F). A
+    // no-op when we're not in fullscreen already.
+    setFullscreen(false);
+    setCorrectionOpen(true);
+  }
+
+  function cancelCorrection() {
+    setCorrectionOpen(false);
+    setCorrectionText("");
+    if (sendState === "error") setSendState("idle");
+  }
+
+  async function sendCorrection() {
+    const currentPage = pages[currentPageIndex];
+    if (!currentPage || sendState === "sending" || correctionText.trim() === "") return;
+    setSendState("sending");
+    try {
+      const { reading } = await readPageWithTeacher(currentPage, currentExpectedPrompt(), correctionText.trim());
+      setSendState("idle");
+      handleTeacherReading(reading, true);
+      setCorrectionOpen(false);
+      setCorrectionText("");
     } catch {
       setSendState("error");
     }
@@ -283,6 +363,11 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
     setSendState("idle");
     setUncertain(false);
     setTeacherNote(null);
+    setCorrectionOpen(false);
+    setCorrectionText("");
+    setIsCorrectedReading(false);
+    questionCountedRef.current = false;
+    onAnsweredFiredRef.current = false;
 
     // One fresh page per question — "one page = one exercise", like a real notebook, and
     // it means a locked, already-checked page can never end up being "the current page"
@@ -410,9 +495,17 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
   const statusSlot = fullscreen ? (
     <>
       {uncertain && (
-        <p className="teacher-uncertain" aria-live="polite">
-          לא הצלחתי לקרוא את זה בבירור. אפשר לכתוב שוב, קצת יותר גדול או ברור?
-        </p>
+        <>
+          <p className="teacher-uncertain" aria-live="polite">
+            לא הצלחתי לקרוא את זה בבירור. אפשר לכתוב שוב, קצת יותר גדול או ברור?
+          </p>
+          {/* Only the link, never the form: opening it exits fullscreen (openCorrection),
+              so the form itself always renders in the regular layout below — see
+              docs/features/notebook-teacher-feedback/design.md, מצב C. */}
+          <button type="button" className="link-button teacher-correction-link" onClick={openCorrection}>
+            ספרו למורה מה כתבתם
+          </button>
+        </>
       )}
       {sendState === "error" && (
         <p className="notebook-send-error" aria-live="polite">
@@ -421,6 +514,40 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
       )}
     </>
   ) : null;
+
+  /** The free-text correction form (מצב G/H/I) — the same form regardless of which trigger
+   *  opened it (an uncertain reading, or a confident-but-wrong one), since only one of
+   *  `uncertain`/`teacherNote` is ever set at a time. See design.md, מצב G–I. */
+  const correctionForm = (
+    <div className="teacher-correction-form">
+      <textarea
+        className="teacher-correction-input"
+        value={correctionText}
+        onChange={(e) => setCorrectionText(e.target.value)}
+        placeholder="מה באמת כתבתם?"
+        aria-label="מה באמת כתבתם?"
+        disabled={sendState === "sending"}
+        autoFocus
+      />
+      <div className="teacher-correction-actions">
+        <button
+          type="button"
+          onClick={sendCorrection}
+          disabled={sendState === "sending" || correctionText.trim() === ""}
+        >
+          {sendState === "sending" ? "המורה קוראת..." : "שליחה למורה"}
+        </button>
+        <button type="button" className="link-button" onClick={cancelCorrection} disabled={sendState === "sending"}>
+          ביטול
+        </button>
+      </div>
+      {sendState === "error" && (
+        <p className="teacher-correction-error" aria-live="polite">
+          לא הצלחנו לשלוח את התיקון. נסו שוב.
+        </p>
+      )}
+    </div>
+  );
 
   return (
     <div className="practice">
@@ -452,14 +579,23 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
         </>
       )}
       {!fullscreen && uncertain && (
-        <p className="teacher-uncertain" aria-live="polite">
-          לא הצלחתי לקרוא את זה בבירור. אפשר לכתוב שוב, קצת יותר גדול או ברור?
-        </p>
+        <>
+          <p className="teacher-uncertain" aria-live="polite">
+            לא הצלחתי לקרוא את זה בבירור. אפשר לכתוב שוב, קצת יותר גדול או ברור?
+          </p>
+          {correctionOpen ? (
+            correctionForm
+          ) : (
+            <button type="button" className="link-button teacher-correction-link" onClick={openCorrection}>
+              ספרו למורה מה כתבתם
+            </button>
+          )}
+        </>
       )}
       {teacherNote && (
         <div className="teacher-reading">
           <div className="teacher-reading-header">
-            <h3>מה המורה הבינה</h3>
+            <h3>{isCorrectedReading ? "מה המורה הבינה עכשיו" : "מה המורה הבינה"}</h3>
             {speechSupported() && (
               <button
                 type="button"
@@ -473,6 +609,16 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
           </div>
           <p className="teacher-reading-line">{segmented(teacherNote.reflection)}</p>
           {teacherNote.errorPointer && <p className="teacher-reading-line">{segmented(teacherNote.errorPointer)}</p>}
+          {/* Corrects the reading, not the correct/wrong verdict below it — always visible
+              here regardless of feedback, including a reading that already came out
+              correct (design.md, מצב D: "מופיע תמיד כשיש teacherNote"). */}
+          {correctionOpen ? (
+            correctionForm
+          ) : (
+            <button type="button" className="link-button teacher-correction-link" onClick={openCorrection}>
+              המורה טעתה? ספרו לה מה קרה
+            </button>
+          )}
         </div>
       )}
       {feedback === "wrong" && diagnosis !== null && (

@@ -78,19 +78,23 @@ app.post("/read-page", (req, res) => {
   void handleReadPage(validated, res);
 });
 
-async function handleReadPage(input: RenderMatrixInput & { expectedPrompt: string }, res: Response): Promise<void> {
+async function handleReadPage(
+  input: RenderMatrixInput & { expectedPrompt: string; studentCorrection?: string },
+  res: Response,
+): Promise<void> {
   try {
     const buffer = renderMatrix(input);
 
     // Nothing to transcribe on a blank page, and a real Claude call costs real money —
-    // this case is already fully known without asking the model.
+    // this case is already fully known without asking the model, correction text or not:
+    // a text-only claim with nothing drawn is exactly the "don't guess" case.
     if (input.filledCells.length === 0) {
       res.status(200).json({ reading: { certain: false } satisfies PageReading });
       return;
     }
 
     await ensureFreshIdentityToken();
-    const reading = await readPage(buffer, input.expectedPrompt);
+    const reading = await readPage(buffer, input.expectedPrompt, input.studentCorrection);
     res.status(200).json({ reading });
   } catch (error) {
     // Cloud Run captures stdout/stderr into Cloud Logging automatically — without this,
@@ -112,16 +116,30 @@ function validateRequest(body: unknown): RenderMatrixInput | null {
   return { cols, rows, cell, filledCells };
 }
 
+// A student's free-text correction of a previous reading (see readPage.ts,
+// docs/features/notebook-teacher-feedback/). Optional — most calls are a first read, not a
+// correction. Capped rather than rejected: a student who types a bit too much should still
+// get their correction through, just trimmed, not an error that looks like the send failed.
+const STUDENT_CORRECTION_MAX_LENGTH = 500;
+
 // The exercise the student was given — never the correct answer — grounds the teacher's
 // reading (see readPage.ts). Required and non-empty: without it the model would be back to
 // guessing what exercise this even is from handwriting alone, the exact unreliability this
 // feature is meant to remove.
-function validateReadPageRequest(body: unknown): (RenderMatrixInput & { expectedPrompt: string }) | null {
+function validateReadPageRequest(
+  body: unknown,
+): (RenderMatrixInput & { expectedPrompt: string; studentCorrection?: string }) | null {
   const validated = validateRequest(body);
   if (!validated) return null;
-  const { expectedPrompt } = body as Record<string, unknown>;
+  const { expectedPrompt, studentCorrection } = body as Record<string, unknown>;
   if (typeof expectedPrompt !== "string" || expectedPrompt.trim() === "") return null;
-  return { ...validated, expectedPrompt };
+  if (studentCorrection !== undefined && typeof studentCorrection !== "string") return null;
+  const trimmedCorrection = typeof studentCorrection === "string" ? studentCorrection.trim() : "";
+  return {
+    ...validated,
+    expectedPrompt,
+    ...(trimmedCorrection ? { studentCorrection: trimmedCorrection.slice(0, STUDENT_CORRECTION_MAX_LENGTH) } : {}),
+  };
 }
 
 // Cloud Run injects the port to listen on via $PORT — it is not a fixed value.
