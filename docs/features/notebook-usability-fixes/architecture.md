@@ -1,0 +1,424 @@
+# תיקוני שימושיות במחברת התרגול — Architecture
+
+## Overview
+חמישה תיקונים עצמאיים, כולם בתוך שני קבצי קומפוננטה קיימים
+(`src/components/Practice.tsx`, `src/components/PracticeNotebook.tsx`) ועזר
+אחד (`src/data/notebook.ts`), פלוס CSS. אין קומפוננטה חדשה, אין שדה שרת חדש
+(`errorPointer` כבר קיים). התיקון המשמעותי מבחינת קוד הוא הסרה (כל מנגנון
+הספירה האוטומטית ב-Practice.tsx) ולא הוספה.
+
+## Affected Files / Components
+
+- **`src/components/PracticeNotebook.tsx`** — כפתור "נקה דף" (🧹): מיקום מחדש
+  בתוך ה-JSX, אישור לפני מחיקה (state חדש, מוחלף עם ה-state הקיים של אישור
+  "הסר דף"), ודילוג על האישור כשהדף כבר ריק (כמו ב"הסר דף" היום).
+- **`src/data/notebook.ts`** — קבוע חדש `INITIAL_ZOOM = 0.7`. `computeFitTransform`
+  עצמו **לא משתנה** (ראו Technical Approach — משמש גם למסך מלא, שם הוא נשאר
+  דינמי).
+- **`src/components/Practice.tsx`** — הסרת מנגנון הספירה לאחור לגמרי: הקבוע
+  `COUNTDOWN_SECONDS`, ה-state `secondsLeft`/`countdownStopped`, שני ה-effects
+  שמריצים אותה, הקריאה `setSecondsLeft(COUNTDOWN_SECONDS)` בתוך
+  `handleTeacherReading`, הפונקציה `stopCountdown`, והרינדור של כפתור הספירה.
+  גם: לוגיקת רינדור חדשה (לא state חדש) ב"מה המורה הבינה" ובשורת הפסוק, לפי
+  `feedback === "correct" && teacherNote?.errorPointer`.
+- **`src/App.css`** — מחיקת בלוק ה-`countdown`/`countdown-digit`/`countdown-text`
+  (מת לגמרי). הקטנת `.notebook-fullscreen-topbar .prompt-ltr`. מחלקות CSS
+  חדשות לשורת ה-`errorPointer`/פסוק "התשובה נכונה" בענברי. שכפול קל של
+  `.notebook-confirm-dialog p` הקיים לטקסט השני (ראו Technical Approach).
+- **`tests/e2e/countdown-next.spec.ts`** — **נמחק במלואו** ב-QA (לא ב-developer,
+  ראו Edge Cases): הפיצ'ר שהוא בודק כבר לא קיים.
+- **`docs/features/countdown-next/status.md`** — developer מעדכן לשקף שההתנהגות
+  הוחלפה/בוטלה לגמרי על ידי `notebook-usability-fixes` (לא משאיר את זה כ"done"
+  סתמי כשהקוד שהוא מתעד כבר לא קיים).
+
+## Data / State Changes
+
+- **`PracticeNotebook.tsx`:** ה-state `confirmDelete: boolean` הופך ל-
+  `pendingConfirm: "remove" | "clear" | null`. שני handlers חדשים/מתוקנים:
+  - `requestClearPage()` — אם `!currentPage || !pageHasContent(currentPage)`,
+    קורא ל-`clearCurrentPage()` ישירות (דף כבר ריק, אין מה לאשר — בדיוק העיקרון
+    שכבר קיים ב-`requestRemovePage`); אחרת `setPendingConfirm("clear")`.
+  - `requestRemovePage()` — זהה להיום, רק `setConfirmDelete(true)` הופך ל-
+    `setPendingConfirm("remove")`.
+  - `clearCurrentPage()` — הלוגיקה הפנימית לא משתנה; רק נקרא גם מהדיאלוג (כפתור
+    "מחיקה") כשהיה תוכן, לא רק מהנתיב המהיר.
+  - `removeCurrentPageNow()` — זהה להיום, `setConfirmDelete(false)` →
+    `setPendingConfirm(null)`.
+  - דיאלוג האישור ברינדור הופך מ-`{confirmDelete && (...)}` יחיד ל-
+    `{pendingConfirm && (...)}` עם טקסט/handler-של-אישור שנבחרים לפי
+    `pendingConfirm === "remove" ? ... : ...` (ראו Copy ב-design.md).
+- **`Practice.tsx`:** `secondsLeft`, `countdownStopped`, `COUNTDOWN_SECONDS`
+  נמחקים — **לא מוחלפים בשום state חדש**. שום state חדש לא נוסף לתיקון 5:
+  `feedback` ו-`teacherNote` כבר מתעדכנים יחד ב-`handleTeacherReading` ומתאפסים
+  יחד ב-`next()` (`setFeedback(null)`, `setTeacherNote(null)`), כך שהביטוי
+  `feedback === "correct" && teacherNote?.errorPointer` בזמן הרינדור מספיק ולא
+  יכול "לדלוף" בין שאלות.
+- **`src/data/notebook.ts`:** קבוע חדש מיוצא, `INITIAL_ZOOM = 0.7` (או שם דומה),
+  ליד `MIN_ZOOM`/`MAX_ZOOM`. אין שינוי בטיפוסים (`PanZoom` וכו').
+
+## Technical Approach
+
+### 1 — "נקה דף": אישור + מיקום
+מיקום: ה-`<button className="notebook-clear-btn">` עובר ב-JSX מהמקום הנוכחי
+(מיד אחרי `.tool-group`) להיות **הילד האחרון** של `.notebook-toolbar`, אחרי שני
+ה-`.notebook-page-nav` (כולל אחרי קבוצת ◀▶ ואחרי קבוצת +/🗑). זו הזזה בקוד
+בלבד — `.notebook-page-nav:last-of-type { margin-inline-start: auto }` כבר דוחפת
+את קבוצת +/🗑 לקצה הרחוק (שם ה-🗑 כבר יושב היום, כפי שהמשתמש ציין), וכל מה
+שמגיע **אחריה** ב-DOM נשאר צמוד לאותו קצה — אין צורך לגעת בכלל ה-CSS הזה או
+להוסיף עטיפה חדשה. שינוי JSX טהור.
+
+אישור: `pendingConfirm` (ראו למעלה) מחליף את `confirmDelete`. בלוק הדיאלוג
+ברינדור (סביב שורה 586 היום) הופך לבלוק אחד עם טקסט מותנה:
+```
+pendingConfirm === "remove"
+  ? "למחוק את הדף? מה שכתוב עליו יימחק ולא ניתן יהיה לשחזר אותו."
+  : "למחוק את מה שכתוב בדף? לא ניתן יהיה לשחזר."
+```
+וכפתור "מחיקה" קורא ל-`removeCurrentPageNow` או ל-`clearCurrentPage` (+
+`setPendingConfirm(null)`) בהתאם. אותו `notebook-confirm-backdrop`/
+`notebook-confirm-dialog`/`notebook-confirm-actions` בדיוק — אין CSS חדש לדיאלוג
+עצמו.
+
+### 2 — זום פתיחה קבוע: **לא** לגעת ב-`computeFitTransform`
+נקודה טכנית חשובה שה-design לא הבחין בה: `computeFitTransform` משמש **שלוש**
+פעמים ב-`PracticeNotebook.tsx` — בטעינה הראשונית (mount), בכל resize כשנמצאים
+במסך מלא, ובכל טוגל של מסך מלא (כניסה/יציאה). שני השימושים האחרונים הם ההתאמה
+הדינמית שמצב F (`notebook-default-practice/design.md`) **תלוי בה במפורש** —
+"מרחיבה את תיבת המחברת עצמה לכסות כמעט את כל המסך". אם `computeFitTransform`
+עצמו היה הופך להחזיר `0.7` קבוע, מסך מלא היה נשבר (זום קבוע במקום התאמה לגודל
+המסך שהשתנה).
+
+**הכרעה:** רק קריאת ה-mount הראשונית (סביב שורה 200 היום) מוחלפת בזום קבוע —
+לא בקריאה ל-`computeFitTransform` בכלל, אלא בערך `INITIAL_ZOOM` (`0.7`) ישירות,
+עם אותו מיקום ממורכז (`panX`/`panY` מחושבים כמו ב-`computeFitTransform`, רק עם
+`zoom = INITIAL_ZOOM` קבוע במקום החישוב הדינמי — הכי פשוט כתוספת קטנה שמייצרת
+`PanZoom` ידנית, לא שינוי בחתימה של `computeFitTransform`). קריאות ה-resize
+וה-fullscreen-toggle **ממשיכות לקרוא ל-`computeFitTransform` הדינמי בדיוק כמו
+היום** — לא נוגעים בהן.
+
+**הבהרה לגבי "כל שאלה" מול "פתיחת המחברת":** `PracticeNotebook` לא נטען מחדש
+בין שאלות (`Practice.tsx` לא מעביר לו `key`, וה-`useEffect` שמפעיל את ה-fit
+הראשוני רץ פעם אחת בלבד ל-`[]`) — כלומר גם היום, זום שהתלמיד/ה שינה/תה ידנית
+נשמר בין שאלות באותו תרגול, לא מתאפס בכל שאלה. `design.md` ניסח את הדרישה
+כאילו הזום מתאפס "בכל פעם שנטענת שאלה חדשה" — זו לא ההתנהגות בפועל היום, וגם
+לא מה שהמשתמש ביקש בפועל (הוא דיווח על זום פתיחה גרוע **פעם אחת**, לא על זום
+שמתאפס לו). **ההכרעה כאן: משאירים את התנהגות "הזום נשמר בין שאלות באותו
+תרגול" בדיוק כפי שהיא היום — רק ה-fit ה*ראשוני* (פתיחת המחברת, שאלה 1) עובר
+מדינמי לקבוע `70%`.** זו לא סטייה שחוזרת ל-designer: זו תיקון של תיאור לא
+מדויק בתוך design.md, לא שינוי בכוונת המוצר.
+
+### 3 — הסרת המעבר האוטומטי
+מחיקה נטו, בלי תחליף:
+- מחוק: `COUNTDOWN_SECONDS`, `secondsLeft`/`setSecondsLeft`,
+  `countdownStopped`/`setCountdownStopped`, שני ה-`useEffect` של הטיימר
+  (השעון והבדיקה `if (secondsLeft === 0) next()`), `stopCountdown()`, ובלוק
+  הרינדור של `<button className="countdown">`.
+- ב-`next()`: מוחקים את השורות `setSecondsLeft(null)` ו-`setCountdownStopped(false)`
+  (אין להן עוד משמעות).
+- ב-`handleTeacherReading()`: מוחקים את `if (!isLast) setSecondsLeft(COUNTDOWN_SECONDS)`
+  לגמרי — אין שום קריאה חלופית. `primaryAction` (שורות 340-345) כבר לא תלוי
+  ב-`secondsLeft` ולא צריך שינוי: הוא כבר הופך ל-`{ label: isLast ? "סיום" :
+  "הבא", onClick: next }` בכל פעם ש-`feedback !== null`, ללא תנאי על
+  correct/wrong.
+
+### 4 — פונט תרגיל במסך מלא
+**תיקון להנחיה לא מדויקת ב-design.md:** design.md ביקש "קרוב לגודל התרגיל
+הרגיל מחוץ למסך מלא" — אבל הגודל הרגיל (`.prompt-ltr`, שורה 286) הוא `40px`,
+**גדול יותר** מה-`26px` הנוכחי במסך מלא, לא קטן ממנו. הפס המצומצם של מסך מלא
+הוא בכוונה קומפקטי יותר מהכותרת הרגילה (ראו `notebook-default-practice/design.md`,
+מצב F) — הכוונה בפועל (`product-spec.md`: "התרגיל למעלה צריך להיות כתוב קטן
+יותר") היא להקטין את ה-`26px` עצמו, לא להגדיל אותו ל-`40px`. פותרים את
+`.notebook-fullscreen-topbar .prompt-ltr` ל-`18px` (ירידה מתונה, עדיין קריא,
+משאירה את משטח הכתיבה עם יותר גובה בפועל). אין שינוי ב-`.notebook-fullscreen-topbar
+.prompt-rtl` (בעיות מילוליות לא נדונו על ידי המשתמש, ואין להן override היום
+בכלל — משאירים כך).
+
+### 5 — עיצוב ענברי לתשובה נכונה עם `errorPointer`
+בלי state חדש. שני שינויי רינדור בלבד ב-`Practice.tsx`:
+- בבלוק `.teacher-reading` (סביב שורה 451-469): השורה שמציגה
+  `teacherNote.errorPointer` מקבלת class נוסף כשמדובר בתשובה נכונה:
+  `className={feedback === "correct" ? "teacher-reading-line teacher-reading-flag" : "teacher-reading-line"}`.
+  (בתשובה שגויה עם `errorPointer`, השורה נשארת בדיוק כמו היום — `design.md` לא
+  ביקש שינוי שם, רק בצירוף "נכון + `errorPointer`".)
+- בשורת הפסוק (סביב שורה 526-529): התנאי `feedback === "correct"` מתפצל לשני
+  מקרים —
+  ```
+  feedback === "correct" && teacherNote?.errorPointer
+    ? <p className="feedback correct-flagged">התשובה נכונה</p>
+    : feedback === "correct"
+      ? <p className="feedback correct">נכון מאוד! 🎉</p>
+      : revealed && <p className="feedback wrong">{`לא נכון. התשובה היא ${question.answer}`}</p>
+  ```
+  (מבנה לוגי, לא קוד סופי — developer יתאים לצורת ה-JSX הקיימת בפועל, שהיא כבר
+  תנאי אחד עם `feedback && (feedback === "correct" || revealed)`.)
+- CSS חדש ב-`App.css`: `.teacher-reading-flag` ו-`.feedback.correct-flagged`
+  משתמשים ב**אותו** `color: #b45309; font-weight: 600` שכבר מוגדר ל-`.diagnosis`
+  — לא צבע/גוון חדש. `.teacher-reading-flag` בנוסף עם `font-weight` מודגש יחסית
+  ל-`.teacher-reading-line` הרגילה (שאין לה `font-weight` מוצהר, יורשת רגיל).
+
+## Edge Cases
+
+- **דף כבר ריק, לוחצים "נקה דף":** כמו ב-"הסר דף" היום — מדלגים על האישור
+  ומנקים ישירות (`requestClearPage`, ראו Data/State Changes). אין דיאלוג על
+  "כלום למחוק".
+- **`errorPointer` קיים אבל התשובה שגויה:** אין שינוי מהיום — הזרימה הרגילה
+  של אבחון+הסבר, ושורת ה-`errorPointer` נשארת `.teacher-reading-line` רגילה
+  (לא ענברית). הענברי מוגבל במפורש לצירוף "נכון + יש errorPointer".
+  **חשוב:** זה שונה מ-`.diagnosis` (שמופיע רק בתשובה שגויה) — שני המצבים לא
+  יכולים לקרות יחד, אין התנגשות ויזואלית.
+- **שאלה אחרונה בתרגול, תשובה נכונה עם `errorPointer`:** כפתור "הבא" הופך
+  ל"סיום" כרגיל (`isLast`) — לא שונה מהיום, לא קשור לספירה שהוסרה.
+- **`tests/e2e/countdown-next.spec.ts` אחרי המחיקה בקוד:** יכשל מיידית (הכפתור
+  `.countdown` פשוט לא קיים יותר) אם מישהו מריץ `test:e2e` בין שלב ה-developer
+  לשלב ה-qa. זה צפוי ומתועד כאן מראש — לא רגרסיה שצריך "לתקן", אלא קובץ שה-QA
+  מוחק כחלק מהעבודה שלו (ראו Affected Files).
+- **`docs/features/countdown-next/`:** לא מוחקים את התיקייה/התיעוד ההיסטורי
+  שלה — פיצ'ר שהוחלף נשאר מתועד (בדיוק כמו `mistake-explanation`, שגם "הוחלף"
+  ולא נמחק). מעדכנים רק את `status.md` שלה לציין שההתנהגות הוסרה על ידי
+  `notebook-usability-fixes`, לא הופכים אותה ל-retroactively "לא קרה".
+
+## Risks / Tradeoffs
+
+- **הסרת הספירה מקטינה משוב חיובי מיידי בתשובה נכונה** (אין יותר "משהו קורה
+  מעצמו" ברגע ההצלחה) — זו בדיוק ההחלטה של product-spec.md, לא תופעת לוואי:
+  הערך הלימודי של פסקת המורה נחשב חשוב יותר מהתחושה של תגובתיות אוטומטית.
+- **זום פתיחה קבוע (`70%`) לא מתאים באותה מידה לכל גודל מסך** — במסך גדול
+  מאוד (טאבלט/דסקטופ) ייתכן ש-`70%` יראה קטן יחסית לחלל הפנוי בהשוואה להתאמה
+  דינמית; זה תיקון ספציפית לבעיה שדווחה בטלפון, ולא בדיקה שהתבצעה על כל גודל
+  מסך. משתמש/ת בכל מסך עדיין יכול/ה לשנות זום מיידית.
+- **`pendingConfirm` כ-union מחליף `boolean`** — שינוי טיפוס קטן שמשפיע על כל
+  מקום שקורא ל-`confirmDelete` היום; קל לפספס reference ישן אם לא מחפשים
+  גלובלית. developer צריך לוודא (`grep confirmDelete`) שלא נשאר שימוש ישן.
+
+## Open Questions
+None.
+
+## Implementation Notes
+
+בוצע בדיוק לפי התוכנית למעלה, כולל שני התיקונים ל-design.md (זום פתיחה נשאר
+"נשמר בין שאלות", פונט מסך מלא יורד ל-`18px` ולא עולה ל-`40px`).
+
+- **`src/data/notebook.ts`:** נוסף `INITIAL_ZOOM = 0.7` ופונקציה חדשה
+  `computeInitialTransform(viewportWidth, viewportHeight)` — אותו מיקוד/מירכוז
+  כמו `computeFitTransform`, רק עם זום קבוע. `computeFitTransform` עצמו לא נגעו
+  בו כלל (עדיין משמש את מסך מלא, דינמי כמו היום).
+- **`src/components/PracticeNotebook.tsx`:**
+  - ה-import מוסיף `computeInitialTransform` לצד `computeFitTransform` הקיים.
+  - ה-`useEffect` של ה-mount הראשוני (טעינת ה-canvas) קורא עכשיו ל-
+    `computeInitialTransform` במקום `computeFitTransform`; שני מקומות ה-resize/
+    fullscreen-toggle ממשיכים לקרוא ל-`computeFitTransform` בלי שינוי.
+  - `confirmDelete: boolean` הוחלף ב-`pendingConfirm: "remove" | "clear" |
+    null`. `clearCurrentPage` שונה שם ל-`clearCurrentPageNow` (סימטרי ל-
+    `removeCurrentPageNow`) ומוסיף `setPendingConfirm(null)` בסופו. נוספה
+    `requestClearPage()` שמדלגת על האישור כשהדף כבר ריק, בדיוק כמו
+    `requestRemovePage()` הקיימת.
+  - כפתור "נקה דף" (🧹) עבר ב-JSX להיות הילד האחרון של `.notebook-toolbar`
+    (אחרי שתי קבוצות `.notebook-page-nav`) — שינוי מיקום טהור, אין שינוי CSS
+    (ה-`:last-of-type` הקיים ממשיך לדחוף רק את קבוצת ◀▶/+/🗑 שלפניו, וכל מה
+    שאחריה נשאר צמוד לאותו קצה).
+  - בלוק דיאלוג האישור הפך לבלוק אחד עם טקסט וכפתור-פעולה מותנים לפי
+    `pendingConfirm`.
+- **`src/components/Practice.tsx`:**
+  - `COUNTDOWN_SECONDS`, `secondsLeft`/`setSecondsLeft`,
+    `countdownStopped`/`setCountdownStopped`, שני ה-`useEffect` של הטיימר,
+    `stopCountdown()`, והרינדור של כפתור הספירה — כולם נמחקו. `next()` איבד
+    את שתי השורות `setSecondsLeft(null)`/`setCountdownStopped(false)`.
+    `handleTeacherReading` איבד את `if (!isLast) setSecondsLeft(COUNTDOWN_SECONDS)`
+    בלי שום תחליף.
+  - שורת ה-`errorPointer` בפסקת "מה המורה הבינה" מקבלת class נוסף
+    `teacher-reading-flag` כש-`feedback === "correct"`.
+  - שורת הפסוק: כש-`feedback === "correct" && teacherNote?.errorPointer` —
+    class הופך ל-`feedback correct-flagged` והטקסט ל-"התשובה נכונה"; אחרת
+    (נכון בלי errorPointer, או שגוי) בדיוק כמו היום.
+  - שני תיקוני תיעוד פנימיים (docstrings שהתייחסו ל"countdown") עודכנו כדי
+    לא להשאיר הפניה למנגנון שנמחק.
+- **`src/App.css`:** בלוק `.countdown`/`.countdown-digit`/`.countdown-text`
+  נמחק במלואו. `.notebook-fullscreen-topbar .prompt-ltr` ירד מ-`26px` ל-`18px`,
+  עם הערה שמסבירה למה זה לא `40px`. נוספו `.feedback.correct-flagged` ו-
+  `.teacher-reading-flag`, שניהם `#b45309` — אותו צבע בדיוק כמו `.diagnosis`,
+  לא צבע חדש.
+- **`docs/features/countdown-next/status.md`:** נוספה פסקת "הוסר (2026-09-04)"
+  שמפנה לתיעוד הזה.
+
+**בדיקות ידניות שבוצעו (build+lint בלבד, כנדרש משלב זה — לא `test:e2e`):**
+`npm run build` ו-`npm run lint` נקיים. גרסה עלתה ל-`1.27.1` (`npm run
+bump:fix`, כי זה בראנץ' `fix/`).
+
+**מה נשאר ל-QA:** מחיקת `tests/e2e/countdown-next.spec.ts` (הפיצ'ר שהוא בודק
+הוסר), ובדיקות e2e חדשות לחמשת התיקונים — ראו architecture.md, Affected
+Files/Edge Cases למעלה.
+
+## עדכון — שני באגים אמיתיים שנתפסו ב-QA (2026-09-04)
+
+`build`/`lint` נקיים לא היו מספיקים — שני באגים אמיתיים עלו רק בהרצת `test:e2e`
+בפועל, ותוקנו כחלק מהעבודה (לא הוחזרו ל-developer כסבב נפרד, כי מדובר באותו
+קוד שכתבתי כרגע ותיקון מיידי היה זול יותר מסבב תיעוד נוסף):
+
+1. **`prevFullscreen`/guard נגד StrictMode.** ה-`useEffect` שמתאים מחדש את הזום
+   בטוגל מסך-מלא (סעיף "2 — זום פתיחה קבוע" למעלה) תוכנן עם guard בוליאני ("רצתי
+   כבר פעם ראשונה?") כדי לא לדרוס את הזום הקבוע במסך הראשוני. זה עבד בבדיקה ידנית
+   חד-פעמית, אבל נכשל בעקביות תחת Playwright: React StrictMode (מצב פיתוח) מריץ
+   effects פעמיים ב-mount (mount → cleanup → mount), עם אותו `fullscreen=false`
+   בשתי הפעמים — ה-guard הבוליאני "נצרך" בהרצה הפנטומית הראשונה, והשאיר את הדינמית
+   (`computeFitTransform`) לרוץ בפועל בהרצה השנייה, ודורס את `INITIAL_ZOOM`. **תוקן**
+   להשוואת `prevFullscreen.current === fullscreen` (ref שמאתחל לערך הנוכחי, לא
+   flag) — אידמפוטנטי: שתי ההרצות הפנטומיות רואות אותה השוואה ומדלגות זהה. אומת
+   ישירות מול דפדפן אמיתי (סקריפט חד-פעמי, לא נשמר) לפני ואחרי, לא רק מול הבדיקה.
+
+2. **`drawOnCanvas` (עזר בדיקות משותף) הפסיק לעבוד מחוץ למסך צר.** תיקון #1 (זום
+   קבוע `70%`, ללא תלות בגודל התיבה) חושף השלכה שלא נצפתה מראש: על תיבה מוטבעת
+   ברוחב/גובה "רגיל" (לא טלפון), קנבס בגודל `1200×1600` בזום `70%` (`840×1120`)
+   יכול להיות **גדול** מהאזור הנראה של `.notebook-stage` (`overflow: hidden`).
+   `drawOnCanvas` חישב נקודת קליק יחסית לפינת ה-`<canvas>` עצמו
+   (`canvas.boundingBox()`, שמתעלם מחיתוך הורה) — נקודה כזו יכולה ליפול מחוץ לאזור
+   שבאמת נראה על המסך, כך שקליק עכבר אמיתי שם לא פוגע בקנבס בכלל, ו-`pageHasContent`
+   נשאר `false` לנצח (כפתור "שלח למורה" נעול). זה **לא** עלה בבדיקת המסך הצר
+   (390×700, שם התיבה עצמה קטנה מספיק שגם ב-70% היא כמעט תמיד גדולה מהאזור הנראה
+   באופן דומה) — עלה רק כש-`notebook-default-practice.spec.ts` הקיים (מסך Playwright
+   רגיל, לא צר) נכשל כמעט לגמרי (11/19). **תוקן** ב-`tests/e2e/helpers/notebookAnswer.ts`:
+   `drawOnCanvas` לוחץ במרכז `.notebook-stage` (שמוגדר-מראש להיות תמיד כולו נראה)
+   במקום נקודה יחסית לקנבס. זה עזר **משותף** לרוב בדיקות המחברת בסוויטה, לא רק
+   לפיצ'ר הזה — לכן אומת בנפרד מול `notebook-default-practice.spec.ts` (חזר ל-19/19)
+   ומול הסוויטה המלאה (328/328, ריצה בודדת ונקייה) לפני שנחשב גמור.
+
+שני הבאגים תוקנו בקבצי המקור/הבדיקות הקיימים (`PracticeNotebook.tsx`,
+`tests/e2e/helpers/notebookAnswer.ts`) — אין להם קובץ נפרד משלהם.
+
+## עדכון ארכיטקטורה — סבב רוויזיה א׳ (2026-09-05)
+
+לפי design.md, "עדכון עיצוב — סבב רוויזיה א׳". הכל בתוך `PracticeNotebook.tsx`
+ו-`src/data/notebook.ts` — אין קובץ חדש.
+
+### 1 — סדר "נקה דף"/"הסר דף"
+שינוי JSX טהור: כפתור `notebook-remove-btn` (🗑) עובר להיות **אחרי** כפתור
+`notebook-clear-btn` (🧹) ב-DOM, במקום בתוך קבוצת `.notebook-page-nav` השנייה
+(שנשארת עם "+" בלבד). ה-`:last-of-type` הקיים על `.notebook-page-nav` ממשיך
+לדחוף את קבוצת ה-"+" (עכשיו לבד) לקצה, ו-🧹/🗑 שאחריה נשארים צמודים לאותו קצה
+בסדר הנכון — אין צורך לגעת ב-CSS.
+
+### 2 — זום נשמר במעבר למסך מלא
+מוחקים את הקריאה ל-`computeFitTransform` בתוך ה-effect שמגיב לשינוי
+`fullscreen` (השורות שנוספו בסבב הקודם בדיוק כדי לפתור בעיה אחרת — הן היו
+פתרון-יתר). ה-effect **נשאר**, אבל רק כדי לקרוא ל-`applyTransform()` בלי לגעת
+ב-`panZoomRef.current` — כי `.notebook-stage` משנה גודל בפועל (תיבה קטנה ↔
+כמעט-כל-המסך) וה-minimap צריך להתעדכן לגודל החדש, גם אם הזום עצמו לא זז.
+`prevFullscreen` (ה-ref שמשווה ערך קודם/נוכחי, מהסבב הקודם) נשאר בדיוק כפי
+שהוא — עדיין צריך למנוע הרצה על ה-mount הראשוני, רק שעכשיו "מה שהוא מונע"
+הוא `applyTransform()` מיותר ולא דריסת זום.
+
+**איחוד עם ה-resize handler:** כדי שההתנהגות תהיה עקבית (זום לא מתאפס משום
+שינוי גודל, לא רק ממעבר מסך-מלא), גם ה-`handleResize` (מגיב ל-resize אמיתי
+של החלון) מפסיק לקרוא ל-`computeFitTransform` — פשוט קורא ל-`applyTransform()`
+תמיד, בלי בדיקת `fullscreenRef`. `fullscreenRef` עצמו (ה-ref שהיה קיים רק בשביל
+הבדיקה הזו) נמחק לגמרי — אין לו עוד שימוש.
+
+### 3 — כפתור "הצג את כל הדף"
+מצב חדש: `const [viewingWholePage, setViewingWholePage] = useState(false);`
+ו-ref חדש: `const savedTransform = useRef<PanZoom | null>(null);`
+
+```
+function toggleWholePage() {
+  const rect = stageRef.current?.getBoundingClientRect();
+  if (!rect) return;
+  if (viewingWholePage) {
+    if (savedTransform.current) panZoomRef.current = savedTransform.current;
+    savedTransform.current = null;
+    setViewingWholePage(false);
+  } else {
+    savedTransform.current = panZoomRef.current;
+    panZoomRef.current = computeFitTransform(rect.width, rect.height);
+    setViewingWholePage(true);
+  }
+  applyTransform();
+}
+```
+משתמש ב-`computeFitTransform` הקיים (בדיוק הפונקציה שכבר יודעת "להראות את כל
+הדף בתוך תיבה נתונה") — לא לוגיקה חדשה, רק שימוש חוזר כפעולה יזומה. הכפתור
+מתווסף ל-`.notebook-zoom-controls` (ליד `+`/`−`, לפני "⤢"), עם `aria-pressed=
+{viewingWholePage}` (אותו דפוס כמו כלי הכתיבה) ו-`aria-label` מותנה: `הצגת כל
+הדף` / `חזרה לזום הקודם`. אייקון: `⛶`, קבוע בשני המצבים — ה-`aria-pressed`
+לבדו מסמן את המצב (עיצוב, ראו design.md).
+
+**יציאה ממצב "הצג הכל" בדרכים אחרות:** אם התלמיד/ה מזז/ת/מזום/ת ידנית תוך
+כדי שהמצב פעיל (`handleWheel`, `zoomButton`, גרירה), `viewingWholePage`
+**לא** מתאפס אוטומטית — הכפתור עצמו הוא הדרך היחידה לצאת מהמצב ולשחזר את
+המצב השמור. זה עקבי עם איך שהמשתמש ניסח את הבקשה ("לחיצה נוספת... מחזירה
+בדיוק"), ולא מוסיף היגיון ניחוש ("האם התלמיד/ה 'התכוון/ה' לצאת").
+
+### 4 — פתיחה מהפינה השמאלית-עליונה
+ב-`src/data/notebook.ts`, `computeInitialTransform`: `panX`/`panY` עוברים
+מהנוסחה הממרכזת (`(viewportWidth - PAGE_WIDTH*zoom)/2`) ל-`0`/`0` — הפינה
+השמאלית-העליונה של הדף מיושרת בדיוק לפינה השמאלית-העליונה של התיבה. אין שינוי
+ב-`zoom` (`INITIAL_ZOOM` נשאר `0.7`) ואין שינוי ב-`computeFitTransform` (עדיין
+ממרכז, כי הוא משרת גם את "הצג את כל הדף" ומסך-מלא-דינמי-לשעבר, ששניהם כן
+אמורים למרכז).
+
+## Edge Cases (עדכון)
+
+- **"הצג את כל הדף" נלחץ, ואז נכנסים/יוצאים ממסך מלא:** `savedTransform`
+  נשאר ללא שינוי (מסך מלא לא נוגע בזום כלל, ראו סעיף 2 למעלה) — לחיצה חוזרת
+  על "הצג הכל" עדיין משחזרת נכון, בכל תיבה שהיא נמצאת בה כרגע.
+- **עמוד חדש נטען (שאלה הבאה) בזמן שהמצב "הצג הכל" פעיל על העמוד הקודם:**
+  `viewingWholePage`/`savedTransform` הם state/ref של `PracticeNotebook`,
+  שלא נטען מחדש בין שאלות (ראו architecture.md המקורי) — צריך לוודא
+  ב-implementation שהמעבר לדף/שאלה חדשים (`next()` ב-`Practice.tsx`) לא
+  משאיר את הכפתור "תקוע" במצב פעיל עם `savedTransform` של עמוד שכבר לא
+  קיים. **הכרעה:** ה-mount effect הקיים (שמפעיל `computeInitialTransform`)
+  רץ פעם אחת בלבד לכל חיי הקומפוננטה, לא לכל שאלה — ולכן `viewingWholePage`
+  היה נשאר `true` דרך כל התרגול לו לא היה מטופל. **מטפלים בזה על ידי איפוס
+  `viewingWholePage`/`savedTransform` בתוך `redrawFromPage`'s effect (התלוי
+  ב-`[currentPage]`)** — בכל פעם שהעמוד הנראה משתנה (כולל מעבר לשאלה חדשה,
+  שמוסיפה עמוד חדש ומחליפה את `currentPageIndex`), חוזרים למצב "לא בהצגת-הכל"
+  בלי זיכרון תלוי-הקשר מהעמוד הקודם. זה עקבי עם ההתנהגות הקיימת של נעילת
+  משטח הכתיבה בין שאלות.
+  **מה שכן ממשיך:** הזום עצמו (`panZoomRef.current`) לא מתאפס בחזרה ל-`70%`
+  באיפוס הזה — רק ה-toggle (`viewingWholePage`/`savedTransform`) מתאפס. זה
+  עקבי עם ההתנהגות הקיימת (לפני הפיצ'ר הזה): זום שהתלמיד/ה שינה/תה ידנית
+  כבר נשמר בין עמודים/שאלות היום (architecture.md המקורי, סעיף 2) — זום
+  שהגיע מ"הצג את כל הדף" מתנהג בדיוק כמו זום שהגיע מכפתורי `+`/`−`, לא
+  שונה. הכפתור עצמו (מצב לחוץ/לא-לחוץ) הוא היחיד שחייב לא לשקר לגבי העמוד
+  הנוכחי.
+
+## Open Questions
+None.
+
+## Implementation Notes — סבב רוויזיה א׳ (2026-09-05)
+
+בוצע בדיוק לפי התוכנית למעלה.
+
+- **`src/data/notebook.ts`:** `computeInitialTransform` איבד את שני הפרמטרים
+  שלו (`viewportWidth`/`viewportHeight`) — כבר לא צריך אותם, כי `panX`/`panY`
+  קבועים `0`. חתימת הפונקציה השתנתה ל-`()`, וקריאת היחיד לה ב-
+  `PracticeNotebook.tsx` עודכנה בהתאם.
+- **`src/components/PracticeNotebook.tsx`:**
+  - `fullscreenRef` (ה-ref וה-effect שסנכרן אותו) נמחקו לגמרי — לא נשאר להם
+    שימוש אחרי שה-resize handler הפסיק להבחין בין מסך-מלא לרגיל.
+  - `handleResize` הפשוט: תמיד `applyTransform()`, בלי שום `computeFitTransform`.
+  - effect ה-fullscreen-toggle: נשאר (עם ה-`prevFullscreen` guard מהסבב
+    הקודם), אבל איבד את שתי השורות שחישבו/הציבו זום חדש — נשאר רק
+    `applyTransform()`.
+  - state/ref חדשים: `viewingWholePage`/`savedTransform`, ופונקציה חדשה
+    `toggleWholePage()`, בדיוק כמתואר למעלה.
+  - ה-effect שתלוי ב-`[currentPage]` (שכבר קורא ל-`redrawFromPage`) מוסיף
+    שתי שורות איפוס (`setViewingWholePage(false)`, `savedTransform.current =
+    null`).
+  - JSX: כפתור חדש בין `−` ל-`⤢` בתוך `.notebook-zoom-controls`
+    (`aria-pressed`/`aria-label` מותנים, אייקון `⛶` קבוע). כפתור `🗑` (הסר דף)
+    עבר להיות אחרי `🧹` (נקה דף) בסוף `.notebook-toolbar`, מחוץ ל-`.notebook-page-nav`
+    השנייה (שנשארה עם "+" בלבד).
+- **`src/App.css`:** כלל חדש `.notebook-zoom-controls button[aria-pressed="true"]`
+  — אותו `var(--accent-bg)` בדיוק כמו `.tool-btn[aria-pressed="true"]`, לא צבע
+  חדש.
+- **`tests/e2e/notebook-usability-fixes.spec.ts`:** חמש בדיקות חדשות (ראו
+  tests.md לפירוט המלא) — כולל תיקון תוך-כדי-כתיבה לשתי בדיקות ראשוניות
+  שהניחו הנחות שגויות: (א) `getByRole(..., {name: "צאו ממסך מלא"})` דו-משמעי
+  בזמן מסך מלא (גם כפתור היציאה בפס המצומצם וגם כפתור ה-toggle בבקרות הזום
+  נושאים את אותו `aria-label`) — נפתר עם לוקטור לפי class. (ב) לוקטור לכפתור
+  "הצג את כל הדף" לפי השם הנגיש שלו נשבר ברגע שהשם משתנה (`aria-label` מתחלף
+  בין שני המצבים) — נפתר עם לוקטור לפי מיקום (`nth(2)` בתוך קבוצת בקרות הזום),
+  לא לפי שם.
+
+**בדיקה:** `npm run build && npm run lint && npm run test:e2e` — הרצה בודדת
+ונקייה: **333/333 עוברות** (328 + 5 חדשות), `build`/`lint` ירוקים. אין העלאת
+גרסה נוספת בסבב הזה — `1.27.1` כבר גבוה מה-`main` הנוכחי (`1.27.0`), וה-PR
+עדיין לא מוזג, אז בדיקת ה-version-bump כבר מרוצה מהסבב הקודם.
