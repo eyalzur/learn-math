@@ -333,3 +333,146 @@ patterns. הוספתי את המספרים הרלוונטיים (`\`${known}\`` 
 אנלוגיה — שינוי טקסטואלי קטן, לא סטייה מהעיצוב שנקבע (ה"סיפור" של כל אנלוגיה
 נשאר בדיוק כפי שנכתב ב-design.md/סבב א׳), רק מוודא שהיא באמת משתנה בין הרצות
 כמו שהתכנון התכוון שתהיה.
+
+## עדכון ארכיטקטורה — סבב ג׳ (2026-09-05, משוב על התצוגה המקדימה)
+
+### Overview (סבב ג׳)
+ארבעה שינויים, כולם בתוך הקבצים הקיימים — אין קובץ חדש. השינוי המרכזי (הדיאגרמה
+עם השאלה) עוקב אחרי תקדים `clockFace` כמעט אחד-לאחד. שינוי "השיעור למה זה נכון"
+נפתר בלי לגעת ב-`Question`/`Topic`/`questionExplanation.ts` בכלל — רק שדה חדש
+בתוך `AngleShape` עצמו, בדיוק כמו ש-`caption` כבר עובד.
+
+### Affected Files / Components (סבב ג׳)
+
+| קובץ | מה משתנה |
+|---|---|
+| `src/data/angleShape.ts` | כל וריאנט ב-`AngleShape` מקבל שדה `srLabel: string` חדש (חובה) — תיאור מבני-בלבד של הציור, בלי הכלל/השיטה. הווריאנטים `triangleAngles` ו-`parallelLines` מקבלים גם שדה `proof?: string`, מאוכלס רק כש-`exterior === true` (triangleAngles) או `relation === "corresponding"` (parallelLines). שינוי ה-regex של `straightAngleRight`/`90°` (ראו "ניסוחים" למטה). |
+| `src/components/AngleShape.tsx` | ה-`congruentTriangles` branch מצייר שישה סימוני התאמה (לא אחד) — שלושה זוגות `tickMark` (קו/קו-כפול/קו-משולש) לצלעות, שלושה זוגות קשת (יחידה/כפולה/משולשת) לזוויות; רק הזוג שהשאלה עוסקת בו מקבל גם תווית מספר/`?`. דורש helper חדש שמצייר `n` קווי-tick מקבילים קצרים (לא רק אחד) ו/או `n` קשתות קונצנטריות. שאר ה-branches (straightAngle/triangleAngles/parallelLines/isoscelesTriangle) **ללא שינוי בציור עצמו** — ה-`label` שמגיע אליהם מבחוץ פשוט תמיד `srLabel` מעכשיו, לא `caption`. |
+| `src/data/adaptiveAngles.ts` | `straightAngleRight`: prompt+hint1 מעודכנים (ראו "ניסוחים"). `triangleAnglesSum`: שלבי הפתרון מעודכנים לסוגריים מפורשים. פונקציה חדשה `generateAnglesLessonExample(difficulty, rng?)`: זהה ל-`generateAnglesQuestion` לכל דרגה, **חוץ** מדרגה `2` (מחזירה תמיד `triangleAnglesExterior`, לא `pick` בין השניים) ודרגה `3` (מחזירה תמיד `parallelLinesCorresponding`, לא `pick` בין השלושה) — כדי שעמוד השיעור של הדרגות האלה תמיד יראה את הדפוס שיש לו `proof`. |
+| `src/data/curriculum.ts` | `AdaptiveConfig` מקבל שדה אופציונלי חדש: `lessonExample?: (difficulty: number, rng?: () => number) => Question`. גנרי — לא ספציפי לנושא הזה; נושא בלי השדה ממשיך להתנהג בדיוק כמו היום. |
+| `src/data/grade8.ts` | טופיק `angles` מקבל `lessonExample: generateAnglesLessonExample` בתוך אובייקט ה-`adaptive` שלו, לצד `generate` הקיים. |
+| `src/App.tsx` | `lessonQuestions`: השורה `questions.push(generate(d))` הופכת ל-`questions.push((adaptive.lessonExample ?? generate)(d))` — נפילה חזרה ל-`generate` הרגיל לכל נושא אחר, בלי שינוי התנהגות עבורם. |
+| `src/components/Practice.tsx` | `angleSlot` חדש, לצד `clockSlot` הקיים (אותו מיקום בדיוק — בכותרת הרגילה ליד `questionBox`, וב-`topSlot` במסך מלא): `bundle.angle ? <AngleShape shape={bundle.angle} label={bundle.angle.srLabel} /> : null`. |
+| `src/components/TopicLesson.tsx` | אותו `angleSlot` נוסף מיד אחרי ה-`problem-box`, לצד `bundle.clock &&` הקיים (שורה `109`). אחרי `<QuestionExplanation bundle={bundle} />`: `{bundle.angle?.proof && <p className="lesson-proof">...</p>}`. `toggleSpeak` מוסיף את `bundle.angle.proof` (אם קיים) לסוף מערך ה-`parts` שהוא כבר בונה — **לא** בתוך `explanationSpeechParts` המשותפת, כי זה תוכן ייחודי למסך השיעור בלבד. |
+| `src/components/QuestionExplanation.tsx` | ה-`<figure className="angle-figure">` הקיים (עם `<AngleShape>` בפנים) מוחלף בפסקת טקסט בלבד — `<p className="angle-caption">{segmented(angle.caption)}</p>` — בלי `<AngleShape>`/`<svg>` בכלל, כדי לא להציג עותק כפול של הציור שכבר על המסך. |
+| `src/App.css` | `.angle-figure` (אם כבר לא בשימוש) מוחלף/מתווסף `.angle-caption`, `.angle-figure-inline` (למיקום ליד השאלה, במקביל ל-`.clock-face`), `.as-tick-2`/`.as-tick-3` וכו׳ לסימוני חפיפה מרובים, `.lesson-proof`. |
+| `tests/e2e/grade8-angles-congruence.spec.ts` | **QA, לא כאן** — ראו "ממצא ל-QA" למטה: העוגן `"משלימות"` נעלם מה-prompt החדש. |
+
+### Data / State Changes (סבב ג׳)
+```ts
+// angleShape.ts — הרחבת שני מהחמישה kind-ים הקיימים, לא שינוי מבני:
+| {
+    kind: "triangleAngles";
+    // ...שדות קיימים ללא שינוי...
+    srLabel: string;   // חדש — לכל kind
+    proof?: string;    // חדש — מאוכלס רק כש-exterior === true
+  }
+| {
+    kind: "parallelLines";
+    // ...שדות קיימים ללא שינוי...
+    srLabel: string;
+    proof?: string;    // חדש — מאוכלס רק כש-relation === "corresponding"
+  }
+// שאר שלושת ה-kind-ים מקבלים srLabel בלבד, בלי proof.
+```
+```ts
+// curriculum.ts — הוספה יחידה ל-AdaptiveConfig, לא שינוי לשדות קיימים:
+export interface AdaptiveConfig {
+  generate: (difficulty: number, rng?: () => number) => Question;
+  /** נעדר → lessonQuestions נופל חזרה ל-generate, בדיוק כמו היום לכל נושא אחר. */
+  lessonExample?: (difficulty: number, rng?: () => number) => Question;
+  // ...שאר השדות ללא שינוי...
+}
+```
+אין שינוי ל-`Question`/`Topic`/`ExplanationBundle` — הכל נכנס לתוך המבנים
+הקיימים או לצדם (שדה אופציונלי חדש), לא דורש קובץ חדש ולא שינוי לחתימת פונקציה
+קיימת.
+
+### Technical Approach (סבב ג׳)
+
+#### 1 · דיאגרמה עם השאלה, לא רק בהסבר
+`AngleShape.tsx` עצמו לא צריך "לדעת" אם הוא מוצג לפני או אחרי תשובה — הוא תמיד
+מקבל `label` אחד ומציג SVG אחד, בדיוק כמו `ClockFace`. ה**קריאה** אליו זזה: היום
+`QuestionExplanation.tsx` הוא הקורא היחיד (עם `caption`); מעכשיו `Practice.tsx`
+ו-`TopicLesson.tsx` הם הקוראים (עם `srLabel`), ו-`QuestionExplanation.tsx` לא
+קורא ל-`AngleShape` בכלל יותר — רק מציג את `caption` כטקסט. זו בדיוק אותה תזוזה
+ש-`clockFace` כבר עשה: הרכיב לא משתנה, רק מי קורא לו ומאיפה.
+
+#### 2 · "למה זה נכון" — שדה נתונים, לא לוגיקה בקומפוננטה
+`proof` הוא שדה על ה-shape עצמו, בדיוק כמו `caption` — לא `if (bundle.angle?.kind
+=== "triangleAngles" && bundle.angle.exterior)` בתוך `TopicLesson.tsx`. ההבדל
+חשוב: `TopicLesson.tsx` נשאר קומפוננטה גנרית לגמרי ("אם יש `proof`, מציגים
+אותו") בלי לדעת שום דבר על זוויות/משולשים — בדיוק כמו ש-`bundle.clock` כבר
+עובד היום (`Practice.tsx`'s comment: "`clock` is `null` for every other topic,
+so this is a no-op everywhere else"). נושא עתידי שירצה "למה זה נכון" משלו רק
+יאכלס `proof` על ה-shape שלו — אין צורך לגעת ב-`TopicLesson.tsx` שוב.
+
+**האחריות של `generateAnglesLessonExample` היא לוודא שה-`proof` בכלל מגיע
+למסך.** בלי הפונקציה הזו, `lessonQuestions` היה קורא ל-`generate(2)`/`generate(3)`
+הרגילים, שבוחרים אקראית בין הדפוסים בכל tier — כלומר לפעמים (בערך חצי מהפעמים
+ל-tier 2, שני שלישים ל-tier 3) עמוד השיעור היה מציג את הדפוס **בלי** proof,
+וה"שיעור למה זה נכון" פשוט לא היה מופיע. זו לא בעיה תיאורטית: `lessonQuestions`
+קורא ל-`generate` בלי `rng` מפורש (`Math.random`), כלומר זה קורה מחדש בכל פתיחה
+של מסך השיעור.
+
+#### 3 · סימון חפיפה מלא — רינדור בלבד, בלי שינוי נתונים
+שני המשולשים ב-`congruentTriangles` כבר מצוירים בקואורדינטות קבועות (לא
+פרופורציונליות לזוויות אמיתיות) — הם תרשים סכמטי, לא שרטוט מדויק. לכן "לסמן את
+כל שש ההתאמות" הוא שינוי רינדור טהור: מוסיפים קריאות `tickMark`/`arcPath` נוספות
+על הקודקודים/צלעות הקיימים, בלי לגעת ב-`angleShape.ts`. ה-`value`/`valueKind`
+הקיימים כבר מספיקים כדי לדעת איזה זוג מקבל תווית מספר/`?` — חמשת האחרים מקבלים
+רק את הסימון הצורני.
+
+#### 4 · ניסוחים — regex + hint, בלי לגעת בבדיקה מהצד השני
+`straightAngleRight` (`adaptiveAngles.ts`) עובר מ:
+> `` `שתי זוויות משלימות זו לזו, וסכומן \`90°\`. אחת מהן \`${known}°\`. מה גודל השנייה?` ``
+
+ל:
+> `` `בין שני ישרים נצבים (זווית ישרה, \`90°\`), שתי זוויות סמוכות. אחת מהן \`${known}°\`. מה גודל השנייה?` ``
+
+`angleShape.ts`'s `readShape()` — ה-regex התואם ל-90° (השני מבין שני ה-`if`ים
+של `straightAngle`) מתעדכן לתבנית החדשה, אותו עיקרון בדיוק (קבוצת לכידה יחידה
+על `known`). `triangleAnglesSum`'s `steps` מתעדכן לשלב יחיד עם סוגריים
+(`180 − (${angleA} + ${angleB}) = ...`) במקום שני שלבי `math` נפרדים — אין
+לזה שום השפעה על ה-`prompt` עצמו, ולכן שום השפעה על `readShape()`.
+
+### Edge Cases (סבב ג׳)
+- **`generateAnglesLessonExample` חייב עדיין לעבור דרך `withoutLeakingHints`** —
+  בדיוק כמו `generateAnglesQuestion` — כי הוא קורא ישירות לפונקציית pattern
+  בודדת, לא ל-`pick()` שכבר עוטף עם זה. פספוס כאן = רמז שמדליף תשובה בעמוד
+  השיעור ספציפית (אין לזה בדיקת תוכן, כי `content.spec.ts` לא רץ על שאלות
+  runtime — ראו Edge Cases, סבב א׳).
+- **`lessonExample` הוא אופציונלי בכוונה, לא ברירת מחדל חדשה לכל 12 המחוללים** —
+  11 הנושאים המסתגלים האחרים לא מגדירים אותו, ולכן `lessonQuestions` שלהם
+  ממשיך להתנהג בדיוק כמו היום (`generate` בלבד). אין סיבה "לתקן" אותם רק כי
+  המנגנון קיים עכשיו.
+- **`srLabel` הוא חובה על כל חמשת ה-`kind`, לא רק השניים עם `proof`** — כי
+  הדיאגרמה מוצגת עם השאלה בכל הדפוסים, לא רק בשניים שקיבלו שיעור נוסף. קל
+  לשכוח להוסיף אותו לשלושת ה-`kind` שלא נגעו בהם השינויים האחרים (`straightAngle`,
+  `congruentTriangles`, `isoscelesTriangle`) — ה-TypeScript יתפוס את זה (שדה
+  חובה) אם אכן מוגדר כחובה ולא כאופציונלי.
+
+### Risks / Tradeoffs (סבב ג׳)
+- **`QuestionExplanation.tsx` מפסיק לרנדר `<AngleShape>` — צריך לוודא שאין נושא
+  אחר שמצפה לזה.** בדקתי: `bundle.angle` הוא `null` לכל נושא חוץ מ-"זוויות
+  וחפיפת משולשים" (בדיוק כמו `bundle.clock`), אז ההסרה משפיעה רק על הנושא הזה.
+- **`lessonExample` הוא מנגנון גנרי חדש שרק נושא אחד משתמש בו כרגע** — נבדק מול
+  העיקרון "לא בונים הפשטה למקרה שימוש עתידי היפותטי": כאן זה לא הפשטה מיותרת
+  אלא הדרך הכי פחות פולשנית לפתור בעיה אמיתית וקיימת (`lessonQuestions` הגנרי,
+  המשותף ל-12 נושאים) בלי להוסיף פרמטר "כפה דפוס X" לחתימת `generate` המשותפת
+  של כולם, ובלי להפוך את `TopicLesson.tsx`/`App.tsx` למודעים לזוויות ספציפית.
+
+### ממצא ל-QA — סבב ג׳ (מחוץ ל-lane של developer)
+`tests/e2e/grade8-angles-congruence.spec.ts`'s `computeAnswer()` מזהה את דפוס
+`90°` על ידי `prompt.includes("משלימות")` (שורה `82`), והבדיקה `"covers angle
+questions"` (שורה `222`) בודקת `prompts.some(p => p.includes("משלימות"))` כדי
+לוודא שהדפוס הזה אכן נוצר. הניסוח החדש ("בין שני ישרים נצבים (זווית ישרה,
+`90°`), שתי זוויות סמוכות...") **לא מכיל את המילה "משלימות" יותר** — שני
+המקומות האלה צריכים עוגן חדש (למשל `"נצבים"`) במקום `"משלימות"`, אחרת הבדיקה
+תפסיק לזהות את הדפוס הזה בכלל (לא תיכשל מיד — `known` ייצא `null`, מה שיגרום
+לכל תשובה על השאלה הזו לצאת שגויה בפועל, בדיוק כמו הבאג האמיתי שכבר קרה
+בסבב ב׳ עם הגרשיים). `after(prompt, "אחת מהן ")` נשאר תקין ללא שינוי — הניסוח
+החדש שומר על אותו "אחת מהן `X°`" בדיוק.
+
+## Open Questions
+None.

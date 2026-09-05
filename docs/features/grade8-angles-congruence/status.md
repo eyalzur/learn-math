@@ -14,11 +14,11 @@
 
 - [x] Product spec — product-manager — 2026-09-05 (סבב ג׳: 5 קריטריוני קבלה חדשים, ראו product-spec.md)
 - [x] Design — designer — 2026-09-05 (סבב ג׳: דיאגרמה עם השאלה כמו clockFace, שיעור "למה זה נכון", סימון חפיפה מלא, ניסוחים)
-- [ ] Architecture — tech-lead — not started
+- [x] Architecture — tech-lead — 2026-09-05 (סבב ג׳: srLabel/proof על AngleShape, lessonExample חדש ב-AdaptiveConfig, ללא שינוי ל-Question/Topic)
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** tech-lead
+**Current phase:** developer
 **Branch:** `feature/grade8-angles-congruence`
 **PR:** https://github.com/eyalzur/learn-math/pull/65 — **טרם מוזג** (הריצה הקודמת
 לקראת מיזוג הופסקה כדי לשלב את המשוב הזה לפני שהוא נכנס לאתר החי)
@@ -42,6 +42,10 @@ None.
 
 - **Product (סבב ג׳, 2026-09-05):** רעיון לעתיד, לא חלק מהסבב הזה — קישור ישיר
   משאלה בתרגול אל השיעור על נושאה. ראו product-spec.md, Open Questions.
+- **QA (סבב ג׳, tech-lead flagged, 2026-09-05):** העוגן `"משלימות"` ב-
+  `tests/e2e/grade8-angles-congruence.spec.ts` (שורות `82`, `222`) נעלם מהניסוח
+  החדש של שאלת `90°` — צריך עוגן חדש (למשל `"נצבים"`). ראו architecture.md,
+  "ממצא ל-QA — סבב ג׳".
 - **הוחלף (סבב ב׳, 2026-09-01):** ההחלטה המקורית ("levels סטטיים בלבד, בלי מחולל
   אדפטיבי בסבב הזה") בוטלה על ידי המשתמש אחרי שראה את התצוגה המקדימה. ראו
   product-spec.md, Open Questions, לניסוח המדויק.
