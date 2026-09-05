@@ -5,17 +5,23 @@
 נכונה שהתהליך שלה כלל שגיאה.
 
 ## Progress
-- [x] Product spec — product-manager — 2026-09-04
-- [x] Design — designer — 2026-09-04
-- [x] Architecture — tech-lead — 2026-09-04
-- [x] Implementation — developer — 2026-09-04
-- [x] Tests — qa — 2026-09-04
+- [x] Product spec — product-manager — 2026-09-04, עדכון 2026-09-05 (סבב רוויזיה א׳)
+- [x] Design — designer — 2026-09-04, עדכון 2026-09-05 (סבב רוויזיה א׳)
+- [ ] Architecture — tech-lead — 2026-09-04 (סבב א׳ בלבד; סבב ב׳ טרם עודכן)
+- [ ] Implementation — developer — 2026-09-04 (סבב א׳ בלבד; סבב ב׳ בתהליך)
+- [ ] Tests — qa — 2026-09-04 (סבב א׳ בלבד; סבב ב׳ טרם)
 
-**Current phase:** done — ממתין ל-PR ולריוויו
+**Current phase:** developer (סבב רוויזיה א׳ — ריוויו על PR #67)
 **Branch:** `fix/notebook-usability-fixes`
-**PR:** [#67](https://github.com/eyalzur/learn-math/pull/67)
+**PR:** [#67](https://github.com/eyalzur/learn-math/pull/67) (יתעדכן, לא ייפתח מחדש)
 
 ## Open questions / blockers
+**סבב רוויזיה א׳ בתהליך (2026-09-05):** המשתמש בדק את התצוגה המקדימה של PR #67
+ומצא ארבע נקודות לחידוד — ראו product-spec.md/design.md, "עדכון (סבב רוויזיה
+א׳)": סדר "נקה דף"/"הסר דף", זום שנשמר במעבר למסך מלא, כפתור חדש "הצג את כל
+הדף" עם שחזור מדויק, ופתיחת שאלה מהפינה השמאלית-עליונה. מתועד, בתהליך מימוש
+על אותו בראנץ'/PR (לא בראנץ' חדש).
+
 None. שני תיקונים לניסוח לא מדויק ב-design.md נעשו בשלב הארכיטקטורה בלי לחזור
 ל-designer, כי הם לא שינוי בכוונת המוצר — ראו architecture.md, תיקונים 2 ו-4:
 זום פתיחה נשאר "נשמר בין שאלות" כמו היום (רק ה-fit הראשוני קבוע), ופונט מסך
