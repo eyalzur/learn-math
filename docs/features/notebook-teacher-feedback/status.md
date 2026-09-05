@@ -6,11 +6,11 @@
 ## Progress
 - [x] Product spec — product-manager — 2026-09-05
 - [x] Design — designer — 2026-09-05
-- [ ] Architecture — tech-lead — not started
+- [x] Architecture — tech-lead — 2026-09-05
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** tech-lead
+**Current phase:** developer
 **Branch:** `feature/notebook-teacher-feedback`
 **PR:** not opened yet
 
@@ -24,6 +24,15 @@ None. שתי הכרעות מוצריות שהתבקשו מהמשתמש (2026-09-
 תיקון נכון/שגוי אחרי תיקון מעדכן את **כל** מה שתלוי בקריאה (ציון, הסבר, ספירה),
 לא רק את הטקסט — סומן ל-tech-lead כנקודה שדורשת תשומת לב בזרימת המצב הקיימת
 (`handleTeacherReading`/`correctCount`/`onAnswered`), לא רק תצוגה.
+
+**ארכיטקטורה (2026-09-05):** `handleTeacherReading` הופך ל-reentrant (מאפס
+תמיד לפני שקובע מחדש). ציון (`correctCount`) מתעדכן בכל תיקון לפי מונה-האם-כבר-
+נספר; `onAnswered` (האות למנוע הקושי המסתגל) יורה **פעם אחת בלבד** לכל שאלה,
+גם אם תיקון הופך את הפסיקה — הכרעה מכוונת שלא לגעת במנגנון קיים מחוץ להיקף,
+מתועדת ב-Risks. השרת מקבל שדה אופציונלי `studentCorrection` באותו `/read-page`
+(לא endpoint חדש), עם הוראה מפורשת בפרומפט להתעלם מהוראות בתוך הטענה עצמה
+(prompt injection) — מוגבל גם על ידי פלט מובנה (Zod) ובדיקה מקומית שלעולם לא
+תלויה במודל.
 
 ## Docs
 - [Product spec](./product-spec.md)
