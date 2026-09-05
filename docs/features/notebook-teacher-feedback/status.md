@@ -10,7 +10,7 @@
 - [x] Implementation — developer — 2026-09-05
 - [x] Tests — qa — 2026-09-05
 
-**Current phase:** done, pending full clean test run before PR
+**Current phase:** done — ממתין לריוויו ולמיזוג
 **Branch:** `feature/notebook-teacher-feedback`
 **PR:** not opened yet
 
@@ -40,10 +40,8 @@ None. שתי הכרעות מוצריות שהתבקשו מהמשתמש (2026-09-
 `architecture.md`.
 
 **בדיקות (2026-09-05):** 12 בדיקות e2e חדשות ב-`tests/e2e/notebook-teacher-feedback.spec.ts`,
-נגד קריטריוני הקבלה בספק ובעיצוב — כולן עוברות בהרצה נפרדת של הקובץ. הרצת
-**כל** הסוויט בבת אחת, בריצה בודדת ונקייה (כנדרש ב-CLAUDE.md, "שתי ריצות
-מקבילות אינן שתי מדידות"), עדיין רצה ברקע בזמן הקומיט הזה — המספר הסופי יתעדכן
-כאן ברגע שהיא מסתיימת, לפני פתיחת ה-PR. מיפוי מלא ב-`tests.md`.
+נגד קריטריוני הקבלה בספק ובעיצוב. `347/347` עוברות בריצה בודדת ונקייה של כל
+הסוויט (`npm run test:e2e`) — ללא רגרסיה בקיים. מיפוי מלא ב-`tests.md`.
 
 ## Docs
 - [Product spec](./product-spec.md)
