@@ -6,6 +6,7 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
+| זוויות וחפיפת משולשים (כיתה ח׳) | 🟢 done — מוזג ל-main | [status](./grade8-angles-congruence/status.md) |
 | שעון וזמן — כיתה ב׳ | 🟢 done — מוזג ל-main | [status](./grade2-clock/status.md) |
 | סילבוס מלא לכיתה ב׳ (כפל, צורות, טווח 1000) | 🟢 done — מוזג ל-main | [status](./grade2-syllabus/status.md) |
 | שמות קבועים לדמויות בדימויים | 🟢 done — מוזג ל-main | [status](./analogy-character-names/status.md) |
