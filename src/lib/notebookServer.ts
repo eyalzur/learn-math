@@ -31,8 +31,17 @@ export interface TeacherReading {
  * — never the correct answer. It grounds the teacher's reading without handing the model
  * anything to grade against; judging correct/incorrect stays entirely with the caller's own
  * local check.
+ *
+ * `studentCorrection`, when given, is free text the student typed saying the teacher's
+ * *previous* reading of this same page was wrong (see
+ * docs/features/notebook-teacher-feedback/) — the teacher re-reads the same image with it
+ * as extra context, not as a fact handed to it for free.
  */
-export async function readPageWithTeacher(page: NotebookPage, expectedPrompt: string): Promise<TeacherReading> {
+export async function readPageWithTeacher(
+  page: NotebookPage,
+  expectedPrompt: string,
+  studentCorrection?: string,
+): Promise<TeacherReading> {
   if (!SERVER_URL) throw new Error("notebook server url is not configured");
 
   const response = await fetch(`${SERVER_URL}/read-page`, {
@@ -44,6 +53,7 @@ export async function readPageWithTeacher(page: NotebookPage, expectedPrompt: st
       cell: CELL,
       filledCells: Array.from(page.filledCells),
       expectedPrompt,
+      ...(studentCorrection ? { studentCorrection } : {}),
     }),
   });
 

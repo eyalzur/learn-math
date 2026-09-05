@@ -15,10 +15,10 @@
 - [x] Product spec — product-manager — 2026-09-05 (סבב ג׳: 5 קריטריוני קבלה חדשים, ראו product-spec.md)
 - [x] Design — designer — 2026-09-05 (סבב ג׳: דיאגרמה עם השאלה כמו clockFace, שיעור "למה זה נכון", סימון חפיפה מלא, ניסוחים)
 - [x] Architecture — tech-lead — 2026-09-05 (סבב ג׳: srLabel/proof על AngleShape, lessonExample חדש ב-AdaptiveConfig, ללא שינוי ל-Question/Topic)
-- [ ] Implementation — developer — not started
+- [x] Implementation — developer — 2026-09-05 (סבב ג׳: build/lint ירוקים, 3,000 שאלות אומתו עצמאית, ראו architecture.md Implementation Notes)
 - [ ] Tests — qa — not started
 
-**Current phase:** developer
+**Current phase:** qa
 **Branch:** `feature/grade8-angles-congruence`
 **PR:** https://github.com/eyalzur/learn-math/pull/65 — **טרם מוזג** (הריצה הקודמת
 לקראת מיזוג הופסקה כדי לשלב את המשוב הזה לפני שהוא נכנס לאתר החי)
@@ -45,7 +45,16 @@ None.
 - **QA (סבב ג׳, tech-lead flagged, 2026-09-05):** העוגן `"משלימות"` ב-
   `tests/e2e/grade8-angles-congruence.spec.ts` (שורות `82`, `222`) נעלם מהניסוח
   החדש של שאלת `90°` — צריך עוגן חדש (למשל `"נצבים"`). ראו architecture.md,
-  "ממצא ל-QA — סבב ג׳".
+  "ממצא ל-QA — סבב ג׳". **מאומת בפועל (developer, 2026-09-05):** הרצתי את
+  הקובץ בבידוד אחרי המימוש — `7/8` עברו, הכישלון היחיד הוא בדיוק זה, שום קריסה
+  אחרת.
+- **מיזוג שלישי ורביעי של `main` פנימה, תוך כדי מימוש סבב ג׳ (2026-09-05):**
+  `main` התקדם פעמיים נוספות תוך כדי הפיתוח (`PR #67` תיקוני שימושיות במחברת,
+  `PR #68` משוב לתלמיד/ה על מה שהמורה קראה) — התנגשות אמיתית ב-
+  `docs/features/README.md` (שתי שורות טבלה חדשות, נפתר בשמירת שתיהן) וב-
+  `package.json` (`main` עבר ל-`1.29.1`) — נפתר בקבלת `1.29.1` ואז
+  `npm run bump:feature` (`1.29.1 → 1.30.0`). `package-lock.json` עודכן מחדש
+  עם `npm install`. `build`/`lint` ירוקים אחרי המיזוג.
 - **הוחלף (סבב ב׳, 2026-09-01):** ההחלטה המקורית ("levels סטטיים בלבד, בלי מחולל
   אדפטיבי בסבב הזה") בוטלה על ידי המשתמש אחרי שראה את התצוגה המקדימה. ראו
   product-spec.md, Open Questions, לניסוח המדויק.

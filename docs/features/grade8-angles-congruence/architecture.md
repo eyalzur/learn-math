@@ -476,3 +476,53 @@ questions"` (שורה `222`) בודקת `prompts.some(p => p.includes("משלי�
 
 ## Open Questions
 None.
+
+## Implementation Notes — סבב ג׳ (2026-09-05)
+
+נבנה כמתוכנן: `srLabel`/`proof` על כל חמשת ה-`kind` ב-`angleShape.ts` (`proof`
+נוכח כשדה על כל הווריאנטים, כדי ש-`TopicLesson.tsx` יוכל לקרוא
+`bundle.angle?.proof` בלי לצמצם לפי `kind` — TypeScript לא הרשה שדה שקיים רק
+על שניים מתוך חמשת חברי ה-union בלי narrowing, ולכן זה שונה במעט מהתכנון
+המקורי ["רק שני הווריאנטים מקבלים `proof`"] אבל באותה כוונה בדיוק: שלושת
+האחרים פשוט אף פעם לא מאכלסים אותו). `generateAnglesLessonExample` חדש
+ב-`adaptiveAngles.ts`, מחווט ל-`Topic.adaptive.lessonExample` דרך שדה חדש
+ב-`AdaptiveConfig` (`curriculum.ts`) ונפילה חזרה ל-`generate` ב-`App.tsx`'s
+`lessonQuestions`. `AngleShape.tsx`: `tickMark`/`arcMark` מקבלים פרמטר `count`
+חדש (בררת מחדל `1`, אחורה-תואם לשני הקוראים הקיימים), וה-`congruentTriangles`
+branch מסמן שישה זוגות (1/2/3 קווים, 1/2/3 קשתות). `AngleShape` עצמו עטף את
+ה-`<svg>` שלו ב-`<div className="angle-figure-inline" role="img"
+aria-label={label}>` (במקום `role`/`aria-label` על ה-`<svg>` עצמו) כדי
+להתאים בדיוק לתבנית ה-wrapper של `ClockFace` — לא היה בארכיטקטורה במפורש,
+אבל נדרש כדי שהמיקום ליד השאלה יקבל את אותה עטיפה/ריווח כמו השעון, לא סטייה
+מהותית. `QuestionExplanation.tsx` מציג רק `<p className="angle-caption">`,
+בלי `<AngleShape>`. `npm run build && npm run lint` ירוקים.
+
+**מיזוג `main` פנימה תוך כדי העבודה (2026-09-05):** בזמן שהקוד נכתב, `main`
+התקדם פעמיים נוספות (`PR #67` תיקוני שימושיות במחברת, `PR #68` משוב לתלמיד/ה
+על מה שהמורה קראה) — התנגשות אמיתית ב-`docs/features/README.md` (שתי שורות
+טבלה חדשות, נפתר בשמירת שתיהן) וב-`package.json` (`main` עבר ל-`1.29.1`
+בזמן שהבראנץ' הזה עוד היה ב-`1.29.0` מהבמפ שקדם למיזוג הזה) — נפתר בקבלת
+`1.29.1` מ-`main` ואז `npm run bump:feature` (`1.29.1 → 1.30.0`).
+`package-lock.json` עודכן מחדש עם `npm install`, לא נערך ידנית. `src/App.css`
+ו-`src/components/Practice.tsx` התמזגו אוטומטית בלי התנגשות אמיתית (שינויים
+בלתי-קשורים במיקומים שונים בקובץ).
+
+**אימות עצמי לפני מסירה ל-QA:** תרגמתי את `adaptiveAngles.ts`/`angleShape.ts`
+ל-JS עם `node --experimental-strip-types` (עותקים זמניים, לא נשמרים בריפו)
+והרצתי `3,000` שאלות (`500` על כל אחד משישה ה-tiers) נגד `angleShape()`
+האמיתי:
+
+| בדיקה | תוצאה |
+|---|---|
+| `srLabel` מאוכלס (מחרוזת לא ריקה) על כל שאלה | `3000/3000` |
+| בדיוק שני הדפוסים הנכונים (`triangleAngles`-exterior, `parallelLines`-corresponding) מקבלים `proof`, השאר לא | `398/3000` מקבלים `proof`, תואם את היחס הצפוי (חצי מ-tier `2`, שליש מ-tier `3`) |
+| אין הדלפת תשובה ברמז | `0/3000` |
+| `generateAnglesLessonExample(2)`/`(3)` תמיד מחזירים שאלה עם `proof` (`300` קריאות לכל דרגה) | `300/300` ו-`300/300` |
+| `generateAnglesLessonExample` על tiers `1`/`4`/`5`/`6` אף פעם לא מחזיר `proof` (אין דליפה הפוכה) | `0` מקרים חריגים |
+
+בנוסף, הרצתי את `tests/e2e/grade8-angles-congruence.spec.ts` בבידוד
+(`--workers=1`, מול הקוד החדש, **לפני** שה-QA מתקן את העוגן) כדי לוודא שאין
+קריסה אמיתית, רק אי-התאמת תוכן ידועה: `7/8` עברו; הכישלון היחיד הוא בדיוק
+הממצא שכבר תועד למעלה תחת "ממצא ל-QA — סבב ג׳" (`prompts.some(p =>
+p.includes("משלימות"))` — המילה נעלמה מהניסוח החדש). שום קריסה, שום שגיאת
+רינדור בציור עם השאלה או בסימוני החפיפה השישה — בדיוק ההתנהגות הצפויה.

@@ -14,13 +14,25 @@ import type { Page } from "@playwright/test";
 
 /** A short ink stroke on the notebook canvas — just enough for `pageHasContent()` to be
  *  true and the "שלח למורה" button to enable. What's actually drawn never matters to these
- *  tests: the teacher's reading is always mocked below. */
+ *  tests: the teacher's reading is always mocked below.
+ *
+ * Clicks near the center of `.notebook-stage` (the clipping viewport), not a fixed offset
+ * from the `<canvas>` element's own bounding box. Since docs/features/notebook-usability-fixes/
+ * fixed the opening zoom at 70% regardless of container size, the canvas is routinely larger
+ * than the visible, panned/zoomed stage around it (`.notebook-stage { overflow: hidden }`) —
+ * on a container smaller than 1200×1600×0.7, a point like "canvas top-left + 100px" can fall
+ * outside the clipped, actually-visible area and hit nothing, since `getBoundingClientRect()`
+ * ignores ancestor clipping. The stage's own box is always exactly the visible area, and the
+ * page is centered within it (see `computeInitialTransform`/`computeFitTransform`), so its
+ * center is reliably over the canvas at any zoom. */
 export async function drawOnCanvas(page: Page) {
   const canvas = page.locator("canvas");
-  const box = await canvas.boundingBox();
-  if (!box) throw new Error("notebook canvas not found");
-  const cx = box.x + 100;
-  const cy = box.y + 100;
+  await canvas.waitFor({ state: "visible" });
+  const stage = page.locator(".notebook-stage");
+  const box = await stage.boundingBox();
+  if (!box) throw new Error("notebook stage not found");
+  const cx = box.x + box.width / 2;
+  const cy = box.y + box.height / 2;
   await page.mouse.move(cx, cy);
   await page.mouse.down();
   await page.mouse.move(cx + 30, cy + 30, { steps: 5 });
@@ -86,4 +98,25 @@ export async function mockTeacherCommunicationFailure(page: Page) {
   await page.route("**/read-page", (route) =>
     route.fulfill({ status: 500, contentType: "application/json", body: JSON.stringify({ error: "boom" }) }),
   );
+}
+
+/**
+ * Mocks a sequence of teacher readings, one per call to /read-page — the first call gets
+ * `readings[0]`, the second `readings[1]`, and so on, repeating the last entry if called
+ * more times than the list has. Supports notebook-teacher-feedback's correction flow,
+ * where a *second* (or third) call needs to return a different reading than the first so a
+ * test can prove the corrected verdict actually took effect, not just that the same mock
+ * fired again.
+ */
+export async function mockTeacherReadingSequence(
+  page: Page,
+  readings: ({ certain: false } | { certain: true; processReflection: string; errorPointer?: string; finalAnswer: number })[],
+) {
+  await page.unroute("**/read-page").catch(() => {});
+  let call = 0;
+  await page.route("**/read-page", (route) => {
+    const reading = readings[Math.min(call, readings.length - 1)];
+    call++;
+    return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ reading }) });
+  });
 }

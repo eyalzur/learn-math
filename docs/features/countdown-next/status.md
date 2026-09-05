@@ -13,6 +13,13 @@
 **Branch:** `feature/countdown-next` — ישב על `feature/style-lessons`, מוזג אחריו
 **PR:** https://github.com/eyalzur/learn-math/pull/34 — מוזג 2026-08-15
 
+**הוסר (2026-09-04):** ההתנהגות הזו בוטלה לגמרי על ידי
+[`docs/features/notebook-usability-fixes/`](../notebook-usability-fixes/status.md) —
+עכשיו שקריאת המורה ("מה המורה הבינה") מוסיפה ערך לימודי גם לתשובה נכונה, מעבר
+אוטומטי חתך בדיוק את הרגע הזה. אין יותר ספירה לאחור בקוד; כפתור "הבא" (שכבר
+היה קיים לתשובה שגויה) הוא הדרך היחידה להתקדם בשני המקרים. ראו שם ל"למה" ולפרטים
+הטכניים.
+
 ## Open questions / blockers
 None.
 

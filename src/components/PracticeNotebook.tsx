@@ -10,6 +10,7 @@ import {
   PEN_CELLS,
   clampZoom,
   computeFitTransform,
+  computeInitialTransform,
   createBlankPage,
   fillCellBlock,
   minimapViewRect,
@@ -75,8 +76,16 @@ export function PracticeNotebook({
   statusSlot,
 }: PracticeNotebookProps) {
   const [tool, setTool] = useState<DrawTool | "pan">("pen");
-  const [confirmDelete, setConfirmDelete] = useState(false);
+  /** Which destructive action, if any, is waiting on confirmation — "remove" (a whole page)
+   *  or "clear" (everything drawn on the current page). One dialog, two copies of the
+   *  question, never both pending at once. */
+  const [pendingConfirm, setPendingConfirm] = useState<"remove" | "clear" | null>(null);
   const [zoomPercent, setZoomPercent] = useState(100);
+  /** Whether "הצג את כל הדף" is currently zoomed out to fit the whole page — a toggle, not
+   *  a mode this component enters automatically. `savedTransform` is what a second press
+   *  restores: the exact zoom/pan from right before the first press, not a re-derived guess. */
+  const [viewingWholePage, setViewingWholePage] = useState(false);
+  const savedTransform = useRef<PanZoom | null>(null);
 
   // Drawing mutates currentPage.filledCells directly through refs, on purpose (see the
   // comment on panZoomRef above) — a pointermove can fire dozens of times a second, and
@@ -102,9 +111,6 @@ export function PracticeNotebook({
   const panZoomRef = useRef<PanZoom>({ panX: 0, panY: 0, zoom: 1 });
   const toolRef = useRef<DrawTool | "pan">("pen");
   const lockedRef = useRef(locked);
-  // Mirrors the fullscreen prop for the resize listener below, which is registered once
-  // ([] deps) and would otherwise close over the fullscreen value from its first render.
-  const fullscreenRef = useRef(fullscreen);
   const activePointers = useRef(new Map<number, { x: number; y: number }>());
   const drawing = useRef(false);
   const lastPoint = useRef<{ x: number; y: number } | null>(null);
@@ -126,10 +132,6 @@ export function PracticeNotebook({
   useEffect(() => {
     lockedRef.current = locked;
   }, [locked]);
-
-  useEffect(() => {
-    fullscreenRef.current = fullscreen;
-  }, [fullscreen]);
 
   function inkColor() {
     return getComputedStyle(document.documentElement).getPropertyValue("--text-h").trim() || "#08060d";
@@ -188,54 +190,60 @@ export function PracticeNotebook({
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctxRef.current = ctx;
 
-    if (stageRef.current) {
-      const rect = stageRef.current.getBoundingClientRect();
-      // Fit-to-screen, not a fixed zoom of 1: the stage used to be the full viewport
-      // (practice-notebook's original full-screen overlay, wide enough that the 1200px-wide
-      // page roughly fit at zoom 1), but notebook-default-practice embedded it as a bounded
-      // panel below the question — often much narrower than the page itself. A fixed zoom
-      // would center most of the page off both edges, invisible and undrawable; fitting to
-      // whatever space is actually there keeps the whole page visible on load regardless of
-      // how wide that turns out to be.
-      panZoomRef.current = computeFitTransform(rect.width, rect.height);
-    }
+    // A fixed opening zoom and top-left position (INITIAL_ZOOM, panX/panY 0), not a
+    // fit-to-viewport calculation: fitting the whole page into a narrow embedded panel could
+    // come out small enough to be unusable for writing (16% was observed on a phone, see
+    // docs/features/notebook-usability-fixes/), and centering hides where a real notebook
+    // page actually starts. "See the whole page"/fullscreen use the dynamic
+    // computeFitTransform on demand instead (below) — only this session-opening view is fixed.
+    panZoomRef.current = computeInitialTransform();
     applyTransform();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Redraw whenever the visible page changes (navigation, or a page was added/removed
-  // out from under the currently-viewed index).
+  // out from under the currently-viewed index). Also drops out of "הצג את כל הדף" — a
+  // memory of "the zoom/pan before I zoomed out" that belongs to the page it was captured
+  // on, not to whichever page happens to be visible when the button is pressed again.
   useEffect(() => {
     if (currentPage) redrawFromPage(currentPage);
+    setViewingWholePage(false);
+    savedTransform.current = null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage]);
 
   useEffect(() => {
+    // A resize (window resize, or most commonly a phone rotating) never recomputes zoom —
+    // the student's zoom/pan stays exactly where it was regardless of what triggered the
+    // resize, fullscreen included (see the fullscreen-toggle effect below for why fullscreen
+    // itself no longer recomputes either). Reapplying the existing transform is still needed:
+    // .notebook-stage's pixel size changed, so the minimap (computed from the stage's current
+    // rect) has to be refreshed even though the zoom/pan numbers themselves don't move.
     function handleResize() {
-      // Only while fullscreen: position:fixed;inset:0 means a resize (most commonly a
-      // phone rotating) changes the box's actual pixel size, so the fit has to be
-      // recomputed, not just reapplied. Outside fullscreen the box's size is driven by the
-      // page layout, not the viewport, and a fixed embedded panel resizing under an
-      // otherwise-unrelated window resize should keep the zoom the student chose, not reset
-      // it — same as before this revision.
-      if (fullscreenRef.current) {
-        const rect = stageRef.current?.getBoundingClientRect();
-        if (rect) panZoomRef.current = computeFitTransform(rect.width, rect.height);
-      }
       applyTransform();
     }
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Re-fit whenever fullscreen toggles: entering or leaving it changes .notebook-stage's
-  // actual pixel size dramatically (embedded panel <-> full viewport), so the scale that
-  // fit the old size is wrong for the new one. Runs once on mount too (fullscreen starts
-  // false), which repeats the mount effect's own fit harmlessly — same rect, same result.
+  // Refresh the minimap when fullscreen actually toggles: entering or leaving it changes
+  // .notebook-stage's actual pixel size dramatically (embedded panel <-> full viewport), and
+  // the minimap (computed from the stage's current rect inside applyTransform) needs to catch
+  // up — but the zoom/pan themselves are deliberately left untouched, so the student returns
+  // to exactly where they were (docs/features/notebook-usability-fixes/, "סבב רוויזיה א׳":
+  // the previous revision recomputed a dynamic fit here, which was reverted).
+  //
+  // Still guarded against firing on mount, even though it no longer touches panZoomRef there
+  // — an unconditional call would just be a harmless extra applyTransform() today, but the
+  // guard already exists and removing it would be gratuitous churn for no behavior change.
+  // Comparing against the *previous actual value*, not a "have I run yet" flag, because a
+  // boolean flag gets consumed by StrictMode's dev-only double-invoke of mount effects
+  // (mount → cleanup → mount again, same `fullscreen` both times) — comparing values is
+  // idempotent instead: both passes see `prevFullscreen.current === fullscreen` and skip.
+  const prevFullscreen = useRef(fullscreen);
   useEffect(() => {
-    const rect = stageRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    panZoomRef.current = computeFitTransform(rect.width, rect.height);
+    if (prevFullscreen.current === fullscreen) return;
+    prevFullscreen.current = fullscreen;
     applyTransform();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fullscreen]);
@@ -428,11 +436,39 @@ export function PracticeNotebook({
     applyTransform();
   }
 
-  function clearCurrentPage() {
+  /** Toggle for "הצג את כל הדף" — zooms out to fit the entire page (reusing
+   *  `computeFitTransform`, the same "fit the whole page in this box" math the notebook
+   *  already relies on elsewhere) on the first press, and restores the exact zoom/pan from
+   *  right before that press on the second — not a re-derived guess, the real prior value. */
+  function toggleWholePage() {
+    const rect = stageRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    if (viewingWholePage) {
+      if (savedTransform.current) panZoomRef.current = savedTransform.current;
+      savedTransform.current = null;
+      setViewingWholePage(false);
+    } else {
+      savedTransform.current = panZoomRef.current;
+      panZoomRef.current = computeFitTransform(rect.width, rect.height);
+      setViewingWholePage(true);
+    }
+    applyTransform();
+  }
+
+  function clearCurrentPageNow() {
     if (!currentPage) return;
     currentPage.filledCells.clear();
     notifyContentChanged();
     redrawFromPage(currentPage);
+    setPendingConfirm(null);
+  }
+
+  function requestClearPage() {
+    if (currentPage && pageHasContent(currentPage)) {
+      setPendingConfirm("clear");
+    } else {
+      clearCurrentPageNow();
+    }
   }
 
   function addPage() {
@@ -446,13 +482,13 @@ export function PracticeNotebook({
     const next = pages.filter((_, i) => i !== currentPageIndex);
     onPagesChange(next);
     onCurrentPageIndexChange(Math.min(currentPageIndex, next.length - 1));
-    setConfirmDelete(false);
+    setPendingConfirm(null);
   }
 
   function requestRemovePage() {
     if (pages.length <= 1) return;
     if (currentPage && pageHasContent(currentPage)) {
-      setConfirmDelete(true);
+      setPendingConfirm("remove");
     } else {
       removeCurrentPageNow();
     }
@@ -491,6 +527,14 @@ export function PracticeNotebook({
           </button>
           <button type="button" onClick={() => zoomButton(1 / 1.3)} aria-label="הקטן">
             −
+          </button>
+          <button
+            type="button"
+            aria-pressed={viewingWholePage}
+            onClick={toggleWholePage}
+            aria-label={viewingWholePage ? "חזרה לזום הקודם" : "הצגת כל הדף"}
+          >
+            ⛶
           </button>
           <button
             type="button"
@@ -534,9 +578,6 @@ export function PracticeNotebook({
             ✋
           </button>
         </div>
-        <button type="button" className="notebook-clear-btn" onClick={clearCurrentPage} aria-label="נקה דף">
-          🧹
-        </button>
         <button
           type="button"
           className="notebook-send-btn"
@@ -570,28 +611,46 @@ export function PracticeNotebook({
           <button type="button" onClick={addPage} disabled={atMaxPages} aria-label="דף חדש">
             +
           </button>
-          <button
-            type="button"
-            className="notebook-remove-btn"
-            onClick={requestRemovePage}
-            disabled={pages.length <= 1}
-            aria-label="הסר דף"
-          >
-            🗑
-          </button>
         </div>
+        {/* Furthest from the pen/eraser/pan tool-group on purpose — increasingly destructive
+            actions least likely to be hit by accident while reaching for the writing tools.
+            The page-nav group above already sits at this same far edge (see
+            .notebook-page-nav:last-of-type's margin-inline-start:auto), so placing these
+            after it keeps them at that same edge with no extra CSS. "נקה דף" (clears this
+            page's content) sits before "הסר דף" (removes the whole page, the more severe
+            of the two) — the more severe action is the very last, hardest-to-reach button. */}
+        <button type="button" className="notebook-clear-btn" onClick={requestClearPage} aria-label="נקה דף">
+          🧹
+        </button>
+        <button
+          type="button"
+          className="notebook-remove-btn"
+          onClick={requestRemovePage}
+          disabled={pages.length <= 1}
+          aria-label="הסר דף"
+        >
+          🗑
+        </button>
       </div>
       {atMaxPages && <p className="notebook-max-pages-note">הגעתם למספר המרבי של דפים במחברת הזאת.</p>}
 
-      {confirmDelete && (
+      {pendingConfirm && (
         <div className="notebook-confirm-backdrop">
           <div className="notebook-confirm-dialog" role="alertdialog" aria-modal="true">
-            <p>למחוק את הדף? מה שכתוב עליו יימחק ולא ניתן יהיה לשחזר אותו.</p>
+            <p>
+              {pendingConfirm === "remove"
+                ? "למחוק את הדף? מה שכתוב עליו יימחק ולא ניתן יהיה לשחזר אותו."
+                : "למחוק את מה שכתוב בדף? לא ניתן יהיה לשחזר."}
+            </p>
             <div className="notebook-confirm-actions">
-              <button type="button" className="notebook-confirm-delete" onClick={removeCurrentPageNow}>
+              <button
+                type="button"
+                className="notebook-confirm-delete"
+                onClick={pendingConfirm === "remove" ? removeCurrentPageNow : clearCurrentPageNow}
+              >
                 מחיקה
               </button>
-              <button type="button" className="secondary" onClick={() => setConfirmDelete(false)}>
+              <button type="button" className="secondary" onClick={() => setPendingConfirm(null)}>
                 ביטול
               </button>
             </div>
