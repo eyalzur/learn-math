@@ -52,9 +52,9 @@ Map of `product-spec.md`'s Acceptance Criteria (revised 2026-09-01, סבב ב׳)
 `npm run test:e2e`
 
 ## Status
-ירוק — 2026-09-04 (סבב ב׳, אחרי מיזוג `main` פנימה — `main` התקדם בינתיים עם
-`docs/features/grade2-syllabus/`). הרצה בודדת ונקייה: **`334/334`** עוברות. `npm
-run build` ו-`npm run lint` ירוקים גם הם.
+ירוק — 2026-09-05 (סבב ב׳, אחרי שני מיזוגים של `main` פנימה — `main` התקדם פעמיים
+בינתיים, עם `grade2-syllabus` ואז `grade2-clock`). הרצה בודדת ונקייה: **`343/343`**
+עוברות. `npm run build` ו-`npm run lint` ירוקים גם הם.
 
 **דו"ח כשלים אמיתי בדרך לירוק, לא רק "עבר בסוף":** הריצה הראשונה אחרי הכתיבה נכשלה
 בארבע בדיקות — לא flake, באג אמיתי ב-`computeAnswer()` עצמו (עוזר הבדיקה, לא
