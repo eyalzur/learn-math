@@ -8,9 +8,9 @@
 - [x] Design — designer — 2026-09-05
 - [x] Architecture — tech-lead — 2026-09-05
 - [x] Implementation — developer — 2026-09-05
-- [ ] Tests — qa — not started
+- [x] Tests — qa — 2026-09-05
 
-**Current phase:** qa
+**Current phase:** done, pending full clean test run before PR
 **Branch:** `feature/notebook-teacher-feedback`
 **PR:** not opened yet
 
@@ -37,7 +37,13 @@ None. שתי הכרעות מוצריות שהתבקשו מהמשתמש (2026-09-
 **מימוש (2026-09-05):** נבנה בדיוק לפי הארכיטקטורה, ללא סטיות. `npm run build`
 ו-`npm run lint` ירוקים בשורש הריפו; `npx tsc --noEmit` ירוק תחת `server/`.
 גרסה הועלתה ל-`1.29.0`. פירוט מלא ב-"Implementation Notes" בסוף
-`architecture.md`. סוויט ה-e2e המלא לא הורץ בשלב הזה — זו עבודת qa הבאה.
+`architecture.md`.
+
+**בדיקות (2026-09-05):** 12 בדיקות e2e חדשות ב-`tests/e2e/notebook-teacher-feedback.spec.ts`,
+נגד קריטריוני הקבלה בספק ובעיצוב — כולן עוברות בהרצה נפרדת של הקובץ. הרצת
+**כל** הסוויט בבת אחת, בריצה בודדת ונקייה (כנדרש ב-CLAUDE.md, "שתי ריצות
+מקבילות אינן שתי מדידות"), עדיין רצה ברקע בזמן הקומיט הזה — המספר הסופי יתעדכן
+כאן ברגע שהיא מסתיימת, לפני פתיחת ה-PR. מיפוי מלא ב-`tests.md`.
 
 ## Docs
 - [Product spec](./product-spec.md)
