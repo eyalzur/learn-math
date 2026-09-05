@@ -11,9 +11,9 @@
 - [x] Implementation — developer — 2026-09-04, עדכון 2026-09-05 (סבב רוויזיה א׳)
 - [x] Tests — qa — 2026-09-04, עדכון 2026-09-05 (סבב רוויזיה א׳, 333/333)
 
-**Current phase:** done — ממתין לריוויו על PR #67 (סבב שני)
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `fix/notebook-usability-fixes`
-**PR:** [#67](https://github.com/eyalzur/learn-math/pull/67) — עודכן עם סבב רוויזיה א׳
+**PR:** [#67](https://github.com/eyalzur/learn-math/pull/67) — מוזג 2026-09-05 (כולל סבב רוויזיה א׳). `342/342` בדיקות עוברות אחרי מיזוג `origin/main` (PR #66, שעון וזמן) לתוך הבראנץ' — ראו התיעוד למטה.
 
 ## Open questions / blockers
 **סבב רוויזיה א׳ הושלם (2026-09-05):** המשתמש בדק את התצוגה המקדימה של PR #67
