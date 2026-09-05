@@ -3,7 +3,7 @@ import { answerViaNotebook } from "./helpers/notebookAnswer";
 
 /**
  * Acceptance criteria under test
- * (docs/features/grade8-angles-congruence/product-spec.md, revised 2026-09-01 — סבב ב׳):
+ * (docs/features/grade8-angles-congruence/product-spec.md, revised 2026-09-05 — סבב ג׳):
  *  1. A new topic "זוויות וחפיפת משולשים" exists for Omer (grade ח׳), alongside the six
  *     existing ones.
  *  2. The topic is adaptive, like every other grade-8 topic (docs/features/
@@ -11,8 +11,8 @@ import { answerViaNotebook } from "./helpers/notebookAnswer";
  *     the level picker entirely and lands straight on practice, 20 questions long.
  *  3. Difficulty responds to real-time success, the same principle as every other adaptive
  *     topic in the app.
- *  4. Sub-domain: angles (straight-angle completion, exterior angle, triangle angle sum,
- *     parallel-line angles) — questions of this shape appear.
+ *  4. Sub-domain: angles (straight-angle completion, right-angle completion, exterior
+ *     angle, triangle angle sum, parallel-line angles) — questions of this shape appear.
  *  5. Sub-domain: triangle congruence (missing side/angle from two congruent triangles) —
  *     questions of this shape appear.
  *  6. Sub-domain: isosceles triangle (equal base angles, median = height) — questions of
@@ -21,14 +21,22 @@ import { answerViaNotebook } from "./helpers/notebookAnswer";
  *     explanation with steps and an analogy, same as every other topic.
  *  8. The topic is reachable from ordinary practice like any grade-8 topic, and a finished
  *     practice records date/topic/score in history.
+ *  9. (סבב ג׳) The diagram appears next to the question itself — for every pattern in this
+ *     topic, not only after a wrong answer, extending the `clockFace` precedent
+ *     (docs/features/grade2-clock/).
+ *  10. (סבב ג׳) The topic-lesson screen's exterior-angle and corresponding-angles pages
+ *      each show a short "why is this true" paragraph.
+ *  11. (סבב ג׳) The congruent-triangles diagram marks all six correspondences (three sides,
+ *      three angles), not only the one the question asks about.
  *
  * `design.md` fixes the exact wording of each sub-domain's sentence templates (`על קו ישר,
- * שתי זוויות סמוכות...`, `במשולש \`ABC\`, ...`, `שני ישרים מקבילים...`, `...חופף למשולש...`,
- * `...שווה-השוקיים...`) and `product-spec.md` fixes the underlying rule for each (a straight
- * line is `180°`, a triangle's angles sum to `180°`, congruent triangles' corresponding
- * parts are equal, an isosceles triangle's base angles are equal and its apex median is
- * also its height) — `computeAnswer` below re-derives the expected answer from those
- * stated rules, not from reading the generator's source.
+ * שתי זוויות סמוכות...`, `בין שני ישרים נצבים...`, `במשולש \`ABC\`, ...`, `שני ישרים
+ * מקבילים...`, `...חופף למשולש...`, `...שווה-השוקיים...`) and `product-spec.md` fixes the
+ * underlying rule for each (a straight line is `180°`, a right angle is `90°`, a triangle's
+ * angles sum to `180°`, congruent triangles' corresponding parts are equal, an isosceles
+ * triangle's base angles are equal and its apex median is also its height) —
+ * `computeAnswer` below re-derives the expected answer from those stated rules, not from
+ * reading the generator's source.
  */
 
 // Every student now picks a grade first (docs/features/any-grade-any-student) — Omer is
@@ -79,7 +87,7 @@ function computeAnswer(prompt: string): number | null {
   // (180° for a plain straight line, 90° for two named-complementary angles) differs.
   const known = after(prompt, "אחת מהן ");
   if (prompt.includes("קו ישר") && known !== null) return 180 - known; // a straight line is 180°
-  if (prompt.includes("משלימות") && known !== null) return 90 - known; // complementary to 90°
+  if (prompt.includes("נצבים") && known !== null) return 90 - known; // a right angle (נצבים) is 90°
 
   const angleA = after(prompt, "∡A = ");
   const angleB = after(prompt, "∡B = ");
@@ -219,7 +227,7 @@ test("covers angle questions — straight-angle completion, triangle angle sum, 
   const prompts = await playSessions(page, 4);
 
   expect(prompts.some((p) => p.includes("קו ישר"))).toBeTruthy();
-  expect(prompts.some((p) => p.includes("משלימות"))).toBeTruthy();
+  expect(prompts.some((p) => p.includes("נצבים"))).toBeTruthy();
   expect(prompts.some((p) => p.includes("∡A") && p.includes("∡B") && p.includes("∡C"))).toBeTruthy();
   expect(prompts.some((p) => p.includes("הזווית החיצונית"))).toBeTruthy();
   expect(prompts.some((p) => p.includes("מקבילים"))).toBeTruthy();
@@ -242,6 +250,81 @@ test("covers isosceles-triangle questions — equal base angles, and the median 
 
   expect(prompts.some((p) => p.includes("שווה-השוקיים"))).toBeTruthy();
   expect(prompts.some((p) => p.includes("התיכון") && p.includes("גם גובה"))).toBeTruthy();
+});
+
+test("the diagram appears next to the question itself, before any answer", async ({ page }) => {
+  await openTopic(page);
+  // Present as soon as the question is, not only after a wrong answer — the same
+  // `clockFace` precedent design.md extends to this topic (see docs/features/grade2-clock/).
+  await expect(page.locator(".angle-figure-inline")).toBeVisible();
+  await expect(page.locator(".angle-figure-inline")).toHaveAttribute("role", "img");
+  // Still there after a wrong answer too — the picture doesn't disappear or duplicate.
+  await answerViaNotebook(page, -999999);
+  await expect(page.locator(".angle-figure-inline")).toHaveCount(1);
+});
+
+test("the topic-lesson screen explains why the exterior-angle and corresponding-angles rules are true", async ({
+  page,
+}) => {
+  await openOmerTopics(page);
+  await page.getByRole("button", { name: `שיעור: ${TOPIC_TITLE}` }).click();
+  await expect(page.locator(".problem-text")).toBeVisible();
+
+  // Tier 1 (straight/right angle) carries no proof — the lesson doesn't show one it has
+  // nothing to say about.
+  await expect(page.locator(".lesson-proof")).toHaveCount(0);
+
+  // Tier 2 — exterior angle.
+  await page.getByRole("button", { name: "הבא →" }).click();
+  await expect(page.locator(".lesson-proof")).toHaveCount(1);
+  await expect(page.locator(".lesson-proof")).toContainText("למה זה נכון");
+
+  // Tier 3 — corresponding angles between parallel lines.
+  await page.getByRole("button", { name: "הבא →" }).click();
+  await expect(page.locator(".lesson-proof")).toHaveCount(1);
+  await expect(page.locator(".lesson-proof")).toContainText("למה זה נכון");
+});
+
+test("the congruent-triangles diagram marks all six correspondences, not just the one asked about", async ({
+  page,
+}) => {
+  await openTopic(page);
+  let prompt = await currentPrompt(page);
+  // Climb difficulty with correct answers until a congruence question shows up (same
+  // technique as the streak test above), rather than playing a whole session and losing
+  // track of which page is currently showing the diagram under test.
+  for (let i = 0; i < 20 && !prompt.includes("חופף למשולש"); i++) {
+    await answerAndNext(page, computeAnswer(prompt) ?? -999999);
+    prompt = await currentPrompt(page);
+  }
+  expect(prompt, "never reached a congruent-triangles question to check").toContain("חופף למשולש");
+
+  // Three side-pairs and three angle-pairs, each with a distinct tick/arc count
+  // (design.md, "סימון חפיפת משולשים — כל ההתאמות, לא רק זו שנשאלת") — one path per pair
+  // per triangle, so six of each across both triangles.
+  await expect(page.locator(".angle-figure-inline .as-tick")).toHaveCount(6);
+  await expect(page.locator(".angle-figure-inline .as-arc")).toHaveCount(6);
+});
+
+test("the triangle-angle-sum step shows the calculation with explicit brackets", async ({ page }) => {
+  await openTopic(page);
+  let prompt = await currentPrompt(page);
+  // Find a sum-of-angles question specifically (not exterior-angle, which shares its
+  // tier) — recognizable as the one asking for `∡C` without mentioning the exterior angle.
+  let found = false;
+  for (let i = 0; i < 30 && !found; i++) {
+    if (prompt.includes("∡C") && !prompt.includes("הזווית החיצונית")) {
+      found = true;
+      break;
+    }
+    await answerAndNext(page, computeAnswer(prompt) ?? -999999);
+    prompt = await currentPrompt(page);
+  }
+  expect(found, "never encountered a triangle-angle-sum question").toBe(true);
+
+  await answerViaNotebook(page, -999999);
+  const mathSteps = await page.locator(".explanation-math").allInnerTexts();
+  expect(mathSteps.some((s) => s.includes("(") && s.includes(")"))).toBeTruthy();
 });
 
 test("a finished practice records the topic and score in history", async ({ page }) => {
