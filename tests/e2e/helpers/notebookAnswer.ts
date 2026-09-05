@@ -99,3 +99,24 @@ export async function mockTeacherCommunicationFailure(page: Page) {
     route.fulfill({ status: 500, contentType: "application/json", body: JSON.stringify({ error: "boom" }) }),
   );
 }
+
+/**
+ * Mocks a sequence of teacher readings, one per call to /read-page — the first call gets
+ * `readings[0]`, the second `readings[1]`, and so on, repeating the last entry if called
+ * more times than the list has. Supports notebook-teacher-feedback's correction flow,
+ * where a *second* (or third) call needs to return a different reading than the first so a
+ * test can prove the corrected verdict actually took effect, not just that the same mock
+ * fired again.
+ */
+export async function mockTeacherReadingSequence(
+  page: Page,
+  readings: ({ certain: false } | { certain: true; processReflection: string; errorPointer?: string; finalAnswer: number })[],
+) {
+  await page.unroute("**/read-page").catch(() => {});
+  let call = 0;
+  await page.route("**/read-page", (route) => {
+    const reading = readings[Math.min(call, readings.length - 1)];
+    call++;
+    return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ reading }) });
+  });
+}

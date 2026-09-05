@@ -1575,6 +1575,59 @@ button.secondary {
   color: var(--text);
 }
 
+/* "ספרו למורה מה כתבתם" / "המורה טעתה? ספרו לה מה קרה" — a plain text link, not a full
+   button, so it reads as a lightweight alternative next to the message it corrects, not a
+   competing call to action. */
+.teacher-correction-link {
+  display: block;
+  max-width: 420px;
+  margin: 6px auto 0;
+  font-size: 14px;
+  text-align: right;
+}
+
+/* Sits where the link was, replacing it in place (docs/features/notebook-teacher-feedback/
+   design.md, מצב G) — same footprint as .teacher-uncertain/.teacher-reading so it doesn't
+   jump the layout around it. */
+.teacher-correction-form {
+  max-width: 420px;
+  margin: 8px auto 0;
+  text-align: right;
+}
+
+.teacher-correction-input {
+  display: block;
+  width: 100%;
+  min-height: 60px;
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 15px;
+  line-height: 150%;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text-h);
+  resize: vertical;
+}
+
+.teacher-correction-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.teacher-correction-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 8px;
+}
+
+.teacher-correction-error {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: #dc2626;
+}
+
 .notebook-confirm-backdrop {
   position: fixed;
   inset: 0;
