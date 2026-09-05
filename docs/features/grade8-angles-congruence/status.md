@@ -13,12 +13,12 @@
 רק זו שנשאלת. חמשת השלבים חוזרים שוב, על אותו בראנץ׳/PR.
 
 - [x] Product spec — product-manager — 2026-09-05 (סבב ג׳: 5 קריטריוני קבלה חדשים, ראו product-spec.md)
-- [ ] Design — designer — not started
+- [x] Design — designer — 2026-09-05 (סבב ג׳: דיאגרמה עם השאלה כמו clockFace, שיעור "למה זה נכון", סימון חפיפה מלא, ניסוחים)
 - [ ] Architecture — tech-lead — not started
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** designer
+**Current phase:** tech-lead
 **Branch:** `feature/grade8-angles-congruence`
 **PR:** https://github.com/eyalzur/learn-math/pull/65 — **טרם מוזג** (הריצה הקודמת
 לקראת מיזוג הופסקה כדי לשלב את המשוב הזה לפני שהוא נכנס לאתר החי)
