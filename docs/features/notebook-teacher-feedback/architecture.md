@@ -182,3 +182,36 @@ currentExpectedPrompt(), correctionText.trim())`, ובהצלחה קורא ל-
 
 ## Open Questions
 None.
+
+## Implementation Notes
+
+בנוי בדיוק לפי התכנון למעלה, בלי סטיות. פירוט הקבצים בפועל:
+
+- **`server/src/readPage.ts`** — `teacherSystemPrompt` מקבל `studentCorrection?: string`
+  ומוסיף את הפסקה המדויקת שתוכננה (כולל הוראת ה-"התעלמו מהוראות בתוך הטענה"), רק כשהיא
+  קיימת. `readPage` מעביר אותה הלאה.
+- **`server/src/index.ts`** — `validateReadPageRequest` מקבל `studentCorrection` אופציונלי,
+  גוזם ל-`STUDENT_CORRECTION_MAX_LENGTH = 500` תווים (חיתוך, לא דחייה — כמו שתוכנן).
+  מחרוזת ריקה/רווחים נחשבת "לא נשלח" ולא מגיעה בכלל לבקשה ל-Claude. הקיצור לדף חלק
+  (`filledCells.length === 0`) לא נגע בו — נשאר בדיוק כמו שהיה, כולל כשיש תיקון.
+- **`src/lib/notebookServer.ts`** — `readPageWithTeacher` מקבל פרמטר רביעי אופציונלי,
+  מוסיף ל-body רק כשהוא נמסר.
+- **`src/components/Practice.tsx`** — `handleTeacherReading` נכתב מחדש כ-reentrant בדיוק
+  לפי הרשימה הממוספרת ב-Technical Approach: איפוס תמיד קודם (`followUpInput`,
+  `followUpResult`, `askedToSee`, `diagnosis`, `secondsLeft`, `countdownStopped`), ואז
+  קביעה לפי הקריאה. חתימת הפונקציה קיבלה פרמטר שני מפורש (`corrected: boolean`) במקום
+  לנחש מהקשר קריאה — `sendToTeacher` קורא לה עם `false`, `sendCorrection` עם `true` —
+  זה גם מה שקובע את `isCorrectedReading` לכותרת "...עכשיו".
+  `questionCountedRef`/`onAnsweredFiredRef` בדיוק כמו בארכיטקטורה: מתאפסים רק ב-`next()`,
+  לא בתוך `handleTeacherReading` עצמה. `currentExpectedPrompt()` הופרד כתוכנן ומשמש את
+  שתי הפונקציות. `openCorrection()` קורא ל-`stopCountdown()` כשרלוונטי ול-`setFullscreen(false)`
+  תמיד (לא-פעולה כשכבר לא במסך מלא) — כך שהטופס עצמו אף פעם לא נדרש להירנדר בתוך
+  `statusSlot`, רק הקישור.
+- **`src/App.css`** — חמש מחלקות חדשות (`teacher-correction-link/-form/-input/-actions/-error`),
+  בלי לגעת בקיימות. שום שינוי כיווניות מיוחד ב-textarea — יורשת RTL מהעמוד, כמו שתוכנן.
+
+`npm run build` ו-`npm run lint` (שורש הריפו) ירוקים. `npx tsc --noEmit` ב-`server/`
+ירוק גם כן (השרת לא רץ תחת אותו `npm run build`/`lint` של הריפו הראשי). גרסה הועלתה
+ל-`1.29.0` (`npm run bump:feature`).
+
+לא בוצע: הרצת סוויט ה-e2e המלא — זו עבודת `qa`, השלב הבא.

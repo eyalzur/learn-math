@@ -7,10 +7,10 @@
 - [x] Product spec — product-manager — 2026-09-05
 - [x] Design — designer — 2026-09-05
 - [x] Architecture — tech-lead — 2026-09-05
-- [ ] Implementation — developer — not started
+- [x] Implementation — developer — 2026-09-05
 - [ ] Tests — qa — not started
 
-**Current phase:** developer
+**Current phase:** qa
 **Branch:** `feature/notebook-teacher-feedback`
 **PR:** not opened yet
 
@@ -33,6 +33,11 @@ None. שתי הכרעות מוצריות שהתבקשו מהמשתמש (2026-09-
 (לא endpoint חדש), עם הוראה מפורשת בפרומפט להתעלם מהוראות בתוך הטענה עצמה
 (prompt injection) — מוגבל גם על ידי פלט מובנה (Zod) ובדיקה מקומית שלעולם לא
 תלויה במודל.
+
+**מימוש (2026-09-05):** נבנה בדיוק לפי הארכיטקטורה, ללא סטיות. `npm run build`
+ו-`npm run lint` ירוקים בשורש הריפו; `npx tsc --noEmit` ירוק תחת `server/`.
+גרסה הועלתה ל-`1.29.0`. פירוט מלא ב-"Implementation Notes" בסוף
+`architecture.md`. סוויט ה-e2e המלא לא הורץ בשלב הזה — זו עבודת qa הבאה.
 
 ## Docs
 - [Product spec](./product-spec.md)
