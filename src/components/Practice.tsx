@@ -20,9 +20,6 @@ import { primeVoices, speak, speechParts, speechSupported, stopSpeaking } from "
  */
 type SpeakingBox = "question" | "diagnosis" | "explanation" | "teacher" | null;
 
-/** How long a correct answer rests on screen before the next question opens itself. */
-const COUNTDOWN_SECONDS = 5;
-
 interface PracticeProps {
   /**
    * What is being practised: a difficulty level, or a lesson on one style of exercise.
@@ -34,7 +31,7 @@ interface PracticeProps {
   /** This student has every new question read to them without asking. */
   readAloud: boolean;
   /** Fires once per question, right after right/wrong is decided — before the child even
-   *  sees the countdown or explanation. Only an adaptive lesson supplies this; every other
+   *  sees the feedback or explanation. Only an adaptive lesson supplies this; every other
    *  lesson leaves it unset and nothing here changes for it. */
   onAnswered?: (correct: boolean) => void;
 }
@@ -54,11 +51,6 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
   const [followUpInput, setFollowUpInput] = useState("");
   const [followUpResult, setFollowUpResult] = useState<"right" | "wrong" | null>(null);
   const [askedToSee, setAskedToSee] = useState(false);
-
-  /** Seconds still to wait before the next question opens itself, or null when idle. */
-  const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
-  /** The child asked to stay here. Cleared when the question changes, never before. */
-  const [countdownStopped, setCountdownStopped] = useState(false);
 
   /**
    * The notebook's pages. Deliberately state on *this* component, not a screen of its own
@@ -121,39 +113,6 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
    *  identical bundle for the same question, off the same function. */
   const bundle = buildExplanation(question);
   const { explanation } = bundle;
-
-  /**
-   * The countdown's clock.
-   *
-   * Two effects rather than one, and that split is the point: an interval that called
-   * `next()` from inside itself would capture `correctCount`, `index` and `isLast` from
-   * the render that created it — the very values `next()` depends on. This one only
-   * decrements, functionally, capturing nothing; the effect below sees the zero on a
-   * fresh render and calls the current `next`.
-   *
-   * `speakingBox` is in the dependencies, so silence is reactive rather than polled: while
-   * anything is being read the condition fails, no interval exists, and the digit simply
-   * waits. When `speak` clears the box the effect runs and counting begins.
-   *
-   * StrictMode is safe here for a different reason than `autoSpoken` below: two intervals
-   * are created, but the cleanup between them clears the first, and `clearInterval` undoes
-   * an interval completely before it is ever heard from. `speak()` has no such symmetry,
-   * which is why it needs a guard and this does not. It is also why the timer lives in an
-   * effect rather than in the click handler — a timer started there would have no cleanup,
-   * and would go on to skip a question after the child had already left the screen.
-   */
-  useEffect(() => {
-    if (feedback !== "correct" || isLast || countdownStopped) return;
-    if (secondsLeft === null || secondsLeft <= 0) return;
-    if (speakingBox !== null) return;
-    const id = setInterval(() => setSecondsLeft((s) => (s === null ? null : s - 1)), 1000);
-    return () => clearInterval(id);
-  }, [feedback, isLast, countdownStopped, secondsLeft, speakingBox]);
-
-  useEffect(() => {
-    if (secondsLeft === 0) next();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [secondsLeft]);
 
   /**
    * What has already been read out on its own, so it is never read twice.
@@ -244,8 +203,6 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
     setFollowUpResult(null);
     setAskedToSee(false);
     setDiagnosis(null);
-    setSecondsLeft(null);
-    setCountdownStopped(false);
 
     if (!reading.certain) {
       setUncertain(true);
@@ -278,13 +235,7 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
       onAnsweredFiredRef.current = true;
     }
 
-    if (isCorrect) {
-      // Not on the last question: there is no next one to open, and finishing a practice
-      // is a moment to arrive at rather than be delivered to. Guarded here rather than
-      // only in the effect, because the effect governs the *ticking* and this governs
-      // whether the row exists at all — without it the row appears and sits at five.
-      if (!isLast) setSecondsLeft(COUNTDOWN_SECONDS);
-    } else {
+    if (!isCorrect) {
       setDiagnosis(diagnose(question, reading.finalAnswer));
     }
   }
@@ -308,7 +259,6 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
   }
 
   function openCorrection() {
-    if (secondsLeft !== null) stopCountdown();
     // The form needs the regular width, not the compact fullscreen strip — same reason a
     // confident reading already drops out of fullscreen on its own (design.md, מצב F). A
     // no-op when we're not in fullscreen already.
@@ -358,8 +308,6 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
     setFollowUpInput("");
     setFollowUpResult(null);
     setAskedToSee(false);
-    setSecondsLeft(null);
-    setCountdownStopped(false);
     setSendState("idle");
     setUncertain(false);
     setTeacherNote(null);
@@ -384,12 +332,6 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
       setPages((prev) => [...prev, createBlankPage()]);
       setCurrentPageIndex(pages.length);
     }
-  }
-
-  /** The child asked for a moment. It does not start again on this question. */
-  function stopCountdown() {
-    setCountdownStopped(true);
-    setSecondsLeft(null);
   }
 
   function toggleSpeech(box: Exclude<SpeakingBox, null>) {
@@ -608,7 +550,13 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
             )}
           </div>
           <p className="teacher-reading-line">{segmented(teacherNote.reflection)}</p>
-          {teacherNote.errorPointer && <p className="teacher-reading-line">{segmented(teacherNote.errorPointer)}</p>}
+          {teacherNote.errorPointer && (
+            <p
+              className={`teacher-reading-line${feedback === "correct" ? " teacher-reading-flag" : ""}`}
+            >
+              {segmented(teacherNote.errorPointer)}
+            </p>
+          )}
           {/* Corrects the reading, not the correct/wrong verdict below it — always visible
               here regardless of feedback, including a reading that already came out
               correct (design.md, מצב D: "מופיע תמיד כשיש teacherNote"). */}
@@ -678,29 +626,18 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
         </div>
       )}
       {feedback && (feedback === "correct" || revealed) && (
-        <p className={`feedback ${feedback}`}>
-          {feedback === "correct" ? "נכון מאוד! 🎉" : `לא נכון. התשובה היא ${question.answer}`}
-        </p>
-      )}
-      {secondsLeft !== null && (
-        /* A screen that changes on its own has to be seen coming, be stoppable, and be
-           announced — so it is a button, it is visible for five seconds first, and the row
-           is a live region. The digit itself is hidden from the reader: announcing
-           "5, 4, 3" would drown out everything else. */
-        <button
-          type="button"
-          className="countdown"
-          onClick={stopCountdown}
-          aria-live="polite"
-          aria-label="עוד רגע ואנחנו ממשיכים. לחצו כדי להישאר כאן"
+        // A correct answer whose process the teacher flagged (errorPointer) still reads as
+        // correct, but not as an unqualified "🎉" — same amber accent as .diagnosis below,
+        // "points at something, does not mark work as failed" applied to a right answer too.
+        <p
+          className={`feedback ${feedback === "correct" && teacherNote?.errorPointer ? "correct-flagged" : feedback}`}
         >
-          <span className="countdown-digit" aria-hidden="true">
-            {secondsLeft}
-          </span>
-          <span className="countdown-text" aria-hidden="true">
-            עוד רגע ואנחנו ממשיכים
-          </span>
-        </button>
+          {feedback === "correct"
+            ? teacherNote?.errorPointer
+              ? "התשובה נכונה"
+              : "נכון מאוד! 🎉"
+            : `לא נכון. התשובה היא ${question.answer}`}
+        </p>
       )}
       {feedback === "wrong" && revealed && explanation !== null && (
         <QuestionExplanation

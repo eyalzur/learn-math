@@ -369,6 +369,13 @@
   color: #dc2626;
 }
 
+/* The final answer was right, but the teacher's reading flagged a step in the process
+   (errorPointer) — same amber as .diagnosis below, not the plain green .feedback.correct:
+   this still counts as correct, but it isn't an unqualified "🎉". */
+.feedback.correct-flagged {
+  color: #b45309;
+}
+
 /* The diagnosis line replaces the red verdict when the mistake is understood. Amber
    rather than red on purpose: it points at something, it does not mark work as failed. */
 .diagnosis {
@@ -1223,44 +1230,6 @@ button.secondary {
 }
 
 
-/* ------------------------------------------------------------------ countdown */
-
-/* A button, not a caption: stopping it has to be one tap on the thing you can see, and
-   nothing looks tappable without a border. */
-.countdown {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 0 0 16px;
-  padding: 10px 16px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--bg);
-  cursor: pointer;
-  font: inherit;
-  color: inherit;
-  transition: border-color 0.15s;
-}
-
-.countdown:hover {
-  border-color: var(--accent-border);
-}
-
-/* The digit carries the meaning for a child who cannot read yet — 5, 4, 3 is a sequence
-   she knows from hide-and-seek long before she can read the words beside it. */
-.countdown-digit {
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--accent);
-  min-width: 28px;
-  text-align: center;
-}
-
-.countdown-text {
-  font-size: 15px;
-  color: var(--text);
-}
-
 /* ---- practice notebook ---- */
 
 /* An embedded panel in the normal practice screen flow, not a full-screen takeover —
@@ -1317,8 +1286,11 @@ button.secondary {
   min-width: 0;
 }
 
+/* Deliberately smaller than the regular 40px prompt (App.css .prompt-ltr): this strip is a
+   compact stand-in for the full question header while the notebook fills the screen, and
+   26px still crowded out the writing surface on a phone. */
 .notebook-fullscreen-topbar .prompt-ltr {
-  font-size: 26px;
+  font-size: 18px;
 }
 
 .notebook-fullscreen-exit {
@@ -1426,6 +1398,12 @@ button.secondary {
   color: var(--text-h);
   box-shadow: var(--shadow);
   font-size: 20px;
+}
+
+/* "הצג את כל הדף" while active — same treatment as a pressed drawing tool (.tool-btn),
+   not a new color: it's a toggle exactly like pen/eraser/pan, just living in this group. */
+.notebook-zoom-controls button[aria-pressed="true"] {
+  background: var(--accent-bg);
 }
 
 /* One row, always — never wraps into a second line that eats into the writing area above
@@ -1572,6 +1550,14 @@ button.secondary {
 
 .teacher-reading-line:last-child {
   margin-bottom: 0;
+}
+
+/* The teacher spotted a step that didn't follow from the one before it, on an answer that
+   still came out right — same amber as .diagnosis/.feedback.correct-flagged, so this line
+   doesn't blend into the plain reflection line above it. */
+.teacher-reading-flag {
+  color: #b45309;
+  font-weight: 600;
 }
 
 /* "לא הצלחתי לקרוא את זה בבירור" — deliberately plain, not alarming (no red/amber): it is
