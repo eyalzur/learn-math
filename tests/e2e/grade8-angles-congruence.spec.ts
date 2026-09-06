@@ -223,8 +223,15 @@ test("a streak of correct answers reaches triangle-congruence questions, a strea
 test("covers angle questions — straight-angle completion, triangle angle sum, exterior angle, and parallel lines", async ({
   page,
 }) => {
+  // Bumped from 4 (tests.md, סבב ב׳) to 6 after a genuine statistical miss in a clean
+  // full-suite run: every answer here is correct, so a session only ever *visits* tier 2
+  // for its two climbing questions before permanently outgrowing it — two random draws
+  // between "sum" and "exterior" per session, eight total at four sessions, which misses
+  // "exterior" entirely about 1 in 250 runs. Six sessions cuts that to roughly 1 in 4000.
+  // Extended timeout for the same load reason as the two tests above.
+  test.setTimeout(60000);
   await openTopic(page);
-  const prompts = await playSessions(page, 4);
+  const prompts = await playSessions(page, 6);
 
   expect(prompts.some((p) => p.includes("קו ישר"))).toBeTruthy();
   expect(prompts.some((p) => p.includes("נצבים"))).toBeTruthy();
@@ -288,6 +295,9 @@ test("the topic-lesson screen explains why the exterior-angle and corresponding-
 test("the congruent-triangles diagram marks all six correspondences, not just the one asked about", async ({
   page,
 }) => {
+  // Same margin as the bracket test below, for the same reason: several notebook round
+  // trips under the full suite's load can occasionally cross the default 30s timeout.
+  test.setTimeout(60000);
   await openTopic(page);
   let prompt = await currentPrompt(page);
   // Climb difficulty with correct answers until a congruence question shows up (same
@@ -307,6 +317,13 @@ test("the congruent-triangles diagram marks all six correspondences, not just th
 });
 
 test("the triangle-angle-sum step shows the calculation with explicit brackets", async ({ page }) => {
+  // Hunting for one specific sibling pattern within a tier can take a couple dozen
+  // notebook round trips in the unlucky case — under the full suite's load (2 workers)
+  // a single one of those can occasionally cross the default 30s action timeout, the
+  // same "real load, not a logic bug" failure mode already documented in tests.md for
+  // this topic's coverage tests. Extending this one test's own timeout is the fix used
+  // there too, rather than weakening the search itself.
+  test.setTimeout(60000);
   await openTopic(page);
   let prompt = await currentPrompt(page);
   // Find a sum-of-angles question specifically (not exterior-angle, which shares its
