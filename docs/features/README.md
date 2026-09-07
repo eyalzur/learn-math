@@ -6,7 +6,7 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
-| יומן מקרים שבהם המורה טעתה | 🟡 in progress — architecture הושלמה, ממתין לפיתוח | [status](./teacher-misread-log/status.md) |
+| יומן מקרים שבהם המורה טעתה | 🟡 in progress — נבנה, ממתין לבדיקות | [status](./teacher-misread-log/status.md) |
 | תיקוני שימושיות במחברת התרגול | 🟢 done — מוזג ל-main | [status](./notebook-usability-fixes/status.md) |
 | משוב לתלמיד/ה על מה שהמורה קראה | 🟢 done — מוזג ל-main | [status](./notebook-teacher-feedback/status.md) |
 | שעון וזמן — כיתה ב׳ | 🟢 done — מוזג ל-main | [status](./grade2-clock/status.md) |

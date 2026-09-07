@@ -152,3 +152,42 @@ Cases) — לא תתרסק ולא תשבש את התשובה ללקוח.
 
 ## Open Questions
 None.
+
+## Implementation Notes
+
+נבנה בדיוק לפי התכנון למעלה, בלי סטיות. פירוט הקבצים בפועל:
+
+- **`server/src/misreadLog.ts`** *(חדש)* — `saveMisreadCase()` בדיוק כמתוכנן:
+  בדיקת גודל (`MAX_IMAGE_BASE64_LENGTH = 700_000`, `console.warn` ומדלגת אם
+  חורג), `FieldValue.serverTimestamp()` ל-`createdAt` (לא `new Date()` — חותמת
+  זמן אמיתית של שרת Firestore, כמו שתוכנן), כתיבה ל-collection `misread-cases`.
+- **`server/src/index.ts`** — `parsePageReading()` חדש מיישם את אותה "אל תנחשו"
+  שכבר קיימת ב-`readPage.ts`: `PageReadingSchema.safeParse` לבדו מרשה
+  `certain: true` בלי `processReflection`/`finalAnswer` (שני השדות
+  אופציונליים בסכמה) — לכן יש בדיקה נוספת אחרי ה-parse, בדיוק כמו ש-`readPage.ts`
+  כבר עושה על הפלט של Claude עצמו, ונופלת ל-`{certain: false}` אם משהו חסר.
+  `parseQuestionMeta()` מקבל רק שדות מחרוזת, מתעלם משאר. הקריאה ל-`saveMisreadCase`
+  יושבת **אחרי** `res.status(200).json(...)`, לא `await`-ה, עם `.catch` שרושם
+  ל-`console.error` — סדר הפעולות המדויק מהארכיטקטורה.
+- **`server/src/pageReading.ts`** — לא השתנה. `PageReadingSchema` הקיים שימש
+  כמו שתוכנן, בלי סכימה חדשה.
+- **`server/package.json`** — תלות חדשה `@google-cloud/firestore@^9.0.1` (הגרסה
+  היציבה העדכנית בזמן הכתיבה).
+- **`src/lib/notebookServer.ts`** — `readPageWithTeacher` מקבל שני פרמטרים
+  אופציונליים נוספים (`previousReading`, `questionMeta`), מוסיף אותם ל-body
+  רק כשהם קיימים, בדיוק כמו ש-`studentCorrection` כבר עובד.
+- **`src/components/Practice.tsx`** — state חדש `lastReading`, מתעדכן בשורה
+  הראשונה של `handleTeacherReading` (לפני כל דבר אחר — כך שכל קריאה, כולל
+  קריאה מתוקנת, הופכת ל"קריאה קודמת" הזמינה לסבב התיקון *הבא*). `sendCorrection()`
+  שולח את `lastReading` (מה שהיה *לפני* הקריאה הזו) יחד עם
+  `{questionId: question.id, topic: question.topic, lessonTitle: lesson.title}`.
+  `sendToTeacher()` (השליחה הראשונה, לא תיקון) לא נגע בו — לא שולח אף אחד
+  מהשדות החדשים, כנדרש (רק סבבי תיקון נרשמים). `next()` מאפס את `lastReading`.
+
+`npm run build` ו-`npm run lint` (שורש הריפו) ירוקים. `npx tsc --noEmit`
+ב-`server/` ירוק. גרסה הועלתה ל-`1.30.0` (`npm run bump:feature`).
+
+**לא נבדק, ולא ניתן להיבדק בסביבה הזו**: כתיבה אמיתית ל-Firestore. אין
+Firestore/GCP אמיתיים בסביבת הפיתוח — זה מחייב את שני הצעדים החד-פעמיים
+שהמשתמש צריך לבצע (ראו "צעד חד-פעמי נדרש" למעלה) אחרי המיזוג. qa (השלב הבא)
+יבדוק את ההתנהגות הנצפית מהלקוח (זהה לגמרי להיום) ולא כתיבה אמיתית לענן.

@@ -7,10 +7,10 @@
 - [x] Product spec — product-manager — 2026-09-07
 - [x] Design — designer — 2026-09-07
 - [x] Architecture — tech-lead — 2026-09-07
-- [ ] Implementation — developer — not started
+- [x] Implementation — developer — 2026-09-07
 - [ ] Tests — qa — not started
 
-**Current phase:** developer
+**Current phase:** qa
 **Branch:** `feature/teacher-misread-log`
 **PR:** not opened yet
 
@@ -31,6 +31,12 @@ Google Cloud Console. זה הופך במפורש סעיף Out of Scope קודם 
 לא נשמר כלום, אבל שום דבר לא נכשל. **צעד חד-פעמי נדרש מהמשתמש**: יצירת
 Firestore database (Native, `me-west1`) + הוספת `roles/datastore.user`
 ל-service account הקיים — בלי זה השמירה נכשלת בשקט (בלוג בלבד).
+
+**מימוש (2026-09-07):** נבנה בדיוק לפי הארכיטקטורה, ללא סטיות. `npm run build`
+ו-`npm run lint` ירוקים בשורש; `npx tsc --noEmit` ירוק תחת `server/`. גרסה
+הועלתה ל-`1.30.0`. כתיבה אמיתית ל-Firestore **לא נבדקה** — אין GCP בסביבת
+הפיתוח; זה מחייב את הצעד החד-פעמי של המשתמש אחרי המיזוג. פירוט מלא
+ב-"Implementation Notes" בסוף `architecture.md`.
 
 ## Docs
 - [Product spec](./product-spec.md)
