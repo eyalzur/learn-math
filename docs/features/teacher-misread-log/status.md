@@ -10,7 +10,7 @@
 - [x] Implementation — developer — 2026-09-07
 - [ ] Tests — qa — not started
 
-**Current phase:** qa
+**Current phase:** done — ממתין לריוויו ולמיזוג
 **Branch:** `feature/teacher-misread-log`
 **PR:** not opened yet
 
@@ -37,6 +37,11 @@ Firestore database (Native, `me-west1`) + הוספת `roles/datastore.user`
 הועלתה ל-`1.30.0`. כתיבה אמיתית ל-Firestore **לא נבדקה** — אין GCP בסביבת
 הפיתוח; זה מחייב את הצעד החד-פעמי של המשתמש אחרי המיזוג. פירוט מלא
 ב-"Implementation Notes" בסוף `architecture.md`.
+
+**בדיקות (2026-09-07):** 3 בדיקות e2e חדשות ב-`tests/e2e/teacher-misread-log.spec.ts`,
+נגד קריטריוני הקבלה בספק — בודקות את חוזה הרשת (מה שהלקוח שולח לשרת) ואת
+היעדר רגרסיה בזרימה הנצפית, כי אין ולא יכול להיות UI לבדוק (design.md).
+`357/357` עוברות בריצה בודדת ונקייה של כל הסוויט. מיפוי מלא ב-`tests.md`.
 
 ## Docs
 - [Product spec](./product-spec.md)
