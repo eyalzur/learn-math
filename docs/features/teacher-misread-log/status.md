@@ -12,7 +12,7 @@
 
 **Current phase:** done — ממתין לריוויו ולמיזוג
 **Branch:** `feature/teacher-misread-log`
-**PR:** not opened yet
+**PR:** [#69](https://github.com/eyalzur/learn-math/pull/69)
 
 ## Open questions / blockers
 None. הכרעות מוצר ננעלו: נשמר רק סבב שכולל תיקון בפועל (לא כל קריאה); אין
