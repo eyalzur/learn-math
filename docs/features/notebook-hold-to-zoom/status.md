@@ -12,7 +12,7 @@
 
 **Current phase:** done, ready for PR
 **Branch:** `feature/notebook-hold-to-zoom`
-**PR:** not opened yet
+**PR:** [#70](https://github.com/eyalzur/learn-math/pull/70)
 
 ## Open questions / blockers
 None שחוסם. שני דברים לא-חוסמים לתשומת לב, ראו `tests.md`:
