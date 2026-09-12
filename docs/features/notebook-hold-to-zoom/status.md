@@ -6,11 +6,11 @@
 ## Progress
 - [x] Product spec — product-manager — 2026-09-12
 - [x] Design — designer — 2026-09-12
-- [ ] Architecture — tech-lead — not started
+- [x] Architecture — tech-lead — 2026-09-12
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** tech-lead
+**Current phase:** developer
 **Branch:** `feature/notebook-hold-to-zoom`
 **PR:** not opened yet
 
