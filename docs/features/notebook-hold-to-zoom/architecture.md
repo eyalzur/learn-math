@@ -219,3 +219,36 @@ useEffect(() => {
 
 ## Open Questions
 None.
+
+## Implementation Notes
+
+נבנה בדיוק לפי התכנון לעיל, בלי סטיות — `src/components/PracticeNotebook.tsx` הוא
+הקובץ היחיד שהשתנה, `src/data/notebook.ts` נשאר כמו שהוא.
+
+- הקבועים (`HOLD_ZOOM_DWELL_MS=180`, `HOLD_ZOOM_TRANSITION_MS=120`,
+  `HOLD_ZOOM_FACTOR=0.7`, `HOLD_ZOOM_MOVE_TOLERANCE_PX=4`) והרפרנסים החדשים
+  (`holdZoomTimer`, `holdZoomPointerId`, `holdZoomDownPos`, `preHoldTransform`,
+  `transitionClearTimer`) נוספו בדיוק כמו שמתואר.
+- `clearTransition()`, `animateTransformTo()` ו-`triggerHoldZoom()` נוספו כפי
+  שתוארו, ליד `redrawFromPage`.
+- `handlePointerDown`: ההפעלה (arm) נוספה בסוף ענף `size === 1`, אחרי הלוגיקה
+  הקיימת של עט/הזזה — רצה בלי תלות בענף שרץ (גם אם `locked` ומצב "עט" לא
+  מסמן, הטיימר עדיין נערך, כנדרש ב"לא תלוי בכלי/בנעילה"). ההשלכה (discard)
+  נוספה בתחילת ענף `size === 2`, כולל קריאה ל-`clearTransition()` (תוספת קטנה
+  שלא הייתה מפורשת בקוד-הדוגמה של הארכיטקטורה אבל מוזכרת ב"Risks" כחוזה
+  שצריך לשמור עליו).
+- `handlePointerMove`: בדיקת הביטול-על-תזוזה נוספה בתחילת הפונקציה (רצה בלי
+  תלות ב-`size`, כי היא בודקת פר-`pointerId` ולא פר-מספר מגעים). נוסף גם
+  `clearTransition()` לפני עדכוני `panZoomRef`/`applyTransform()` הקיימים
+  בענפי הפאן והפינץ' — כדי שתזוזה רגילה שממשיכה מגע מוזם-אאוט (או ממגע
+  שהצטרף כ-pinch) לא "תירש" transition שנשאר דלוק ותרגיש עם lag.
+- `endPointer`: לוגיקת השחזור נוספה בתחילת הפונקציה, לפני הקוד הקיים — רצה
+  גם ב-`pointerup` וגם ב-`pointercancel` (שני האירועים כבר קוראים ל-`endPointer`
+  הזו בדיוק, בלי צורך בשינוי ב-JSX).
+- נוסף `useEffect` קטן לניקוי טיימרים ב-unmount, כמתואר.
+
+**נבדק:** `npm run build` ו-`npm run lint` ירוקים. `npm run bump:feature`
+הועלה מ-`1.30.0` ל-`1.31.0`. **לא נבדק על מכשיר מגע אמיתי** (הסביבה כאן
+אינה דפדפן) — הערכים המספריים (180ms/30%/120ms/4px) הם כפי שנקבעו בעיצוב
+ובארכיטקטורה, לא כווננו מול תחושה בפועל; ראו "Risks / Tradeoffs" למעלה.
+
