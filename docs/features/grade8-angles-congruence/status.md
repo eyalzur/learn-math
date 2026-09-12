@@ -18,10 +18,9 @@
 - [x] Implementation — developer — 2026-09-05 (סבב ג׳: build/lint ירוקים, 3,000 שאלות אומתו עצמאית, ראו architecture.md Implementation Notes)
 - [x] Tests — qa — 2026-09-05 (סבב ג׳: 4 בדיקות חדשות, 366/366 בריצה מלאה ונקייה)
 
-**Current phase:** done — ממתין לאישור מיזוג מהמשתמש
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `feature/grade8-angles-congruence`
-**PR:** https://github.com/eyalzur/learn-math/pull/65 — **טרם מוזג** (הריצה הקודמת
-לקראת מיזוג הופסקה כדי לשלב את המשוב הזה לפני שהוא נכנס לאתר החי)
+**PR:** https://github.com/eyalzur/learn-math/pull/65 — מוזג 2026-09-12
 
 ### סבב ב׳ — מחולל אדפטיבי, הושלם 2026-09-01, לפני משוב סבב ג׳
 - [x] Product spec — product-manager — 2026-09-01 (סבב ב׳: קריטריון ההסתגלות עודכן)

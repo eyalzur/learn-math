@@ -6,7 +6,7 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
-| זוויות וחפיפת משולשים (כיתה ח׳) | 🟡 done, ממתין לאישור מיזוג (PR #65, סבב ג׳) | [status](./grade8-angles-congruence/status.md) |
+| זוויות וחפיפת משולשים (כיתה ח׳) | 🟢 done — מוזג ל-main | [status](./grade8-angles-congruence/status.md) |
 | תיקוני שימושיות במחברת התרגול | 🟢 done — מוזג ל-main | [status](./notebook-usability-fixes/status.md) |
 | משוב לתלמיד/ה על מה שהמורה קראה | 🟢 done — מוזג ל-main | [status](./notebook-teacher-feedback/status.md) |
 | שעון וזמן — כיתה ב׳ | 🟢 done — מוזג ל-main | [status](./grade2-clock/status.md) |
