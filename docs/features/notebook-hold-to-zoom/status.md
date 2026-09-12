@@ -8,14 +8,20 @@
 - [x] Design — designer — 2026-09-12
 - [x] Architecture — tech-lead — 2026-09-12
 - [x] Implementation — developer — 2026-09-12
-- [ ] Tests — qa — not started
+- [x] Tests — qa — 2026-09-12
 
-**Current phase:** qa
+**Current phase:** done, ready for PR
 **Branch:** `feature/notebook-hold-to-zoom`
 **PR:** not opened yet
 
 ## Open questions / blockers
-None.
+None שחוסם. שני דברים לא-חוסמים לתשומת לב, ראו `tests.md`:
+- **QA:** ההתנהגות מול זום-שתי-אצבעות (pinch) תוך כדי hold-zoom לא אוטומטית
+  (דורש שני מגעים בו-זמנית — כמו כל הפיצ'ר הקיים של pinch, שגם לו אין
+  בדיקת e2e) — צריך אימות ידני חד-פעמי לפני מיזוג, ראו "מה לא נבדק" ב-tests.md.
+- **QA:** בריצת הסוויטה המלאה נכשלת בדיקה אחת — `grade8-angles-congruence.spec.ts`
+  "the triangle-angle-sum step..." — אומתה כ-flake קיים-מראש, לא קשור לפיצ'ר
+  הזה (נכשלת גם על `origin/main` נקי, ללא השינוי הזה).
 
 ## Docs
 - [Product spec](./product-spec.md)
