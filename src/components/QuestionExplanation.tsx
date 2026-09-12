@@ -24,8 +24,21 @@ interface QuestionExplanationProps {
  * having happened, and so a diagram wired into one screen can't be forgotten in the other.
  */
 export function QuestionExplanation({ bundle, speak }: QuestionExplanationProps) {
-  const { explanation, method, diagram, frame, strip, vertical, line, geometry, pythagoras, percent, ratio, linear } =
-    bundle;
+  const {
+    explanation,
+    method,
+    diagram,
+    frame,
+    strip,
+    vertical,
+    line,
+    geometry,
+    pythagoras,
+    percent,
+    ratio,
+    linear,
+    angle,
+  } = bundle;
   if (explanation === null) return null;
 
   return (
@@ -138,6 +151,11 @@ export function QuestionExplanation({ bundle, speak }: QuestionExplanationProps)
           <figcaption className="figure-caption">{segmented(linear.caption)}</figcaption>
         </figure>
       )}
+      {/* No <AngleShape> here — the picture already sits next to the question itself
+          (Practice.tsx's `angleSlot`/TopicLesson.tsx's equivalent), so this would be a
+          second, duplicate copy of it. Only the sentence that states the rule/method is
+          gated behind a wrong answer, same as the two hints already are. */}
+      {angle && <p className="angle-caption">{segmented(angle.caption)}</p>}
       {explanation.steps.map((step, i) => (
         <p key={i} className="explanation-step">
           {/* Same isolation every other text field gets — a step label can carry a

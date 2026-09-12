@@ -83,6 +83,17 @@ export interface Level {
  */
 export interface AdaptiveConfig {
   generate: (difficulty: number, rng?: () => number) => Question;
+  /**
+   * Overrides `generate` only for the topic-lesson screen's one worked example per
+   * difficulty tier (see `App.tsx`'s `lessonQuestions`) — absent (every adaptive topic but
+   * one, today) means "use `generate`", exactly as before this field existed. Exists so a
+   * topic whose lesson needs to reliably show a specific sibling pattern within a tier
+   * (not whichever `generate` happens to `pick()`) can say so, without adding a
+   * "force this pattern" parameter to `generate`'s signature that every other adaptive
+   * topic would have to ignore. See docs/features/grade8-angles-congruence/
+   * architecture.md, "עדכון ארכיטקטורה — סבב ג׳".
+   */
+  lessonExample?: (difficulty: number, rng?: () => number) => Question;
   minDifficulty: number;
   maxDifficulty: number;
   initialDifficulty: number;
@@ -205,6 +216,7 @@ const GRADE_8_TOPICS = [
   "משוואות",
   "חזקות ושורשים",
   "משפט פיתגורס",
+  "זוויות וחפיפת משולשים",
   "פונקציה קווית",
   "בעיות מילוליות",
 ];

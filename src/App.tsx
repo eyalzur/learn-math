@@ -226,18 +226,22 @@ function App() {
    *  `adaptive` (רותם/עומר — each tier is usually a different question pattern, not just
    *  bigger numbers, so showing only the easiest would skip most of the topic), or the
    *  topic's single easiest written example otherwise (מיקה — kept short on purpose, she's
-   *  still learning to read). `generate` is called with no explicit `rng`, so it falls back
-   *  to `Math.random` exactly like practice already does — fresh numbers each time the
-   *  lesson opens, not a fixed snapshot. Empty only if a topic's data is missing entirely,
-   *  which nothing in today's content does. */
+   *  still learning to read). Uses `lessonExample` when a topic defines one (today: only
+   *  "זוויות וחפיפת משולשים", so its lesson reliably shows the one sibling pattern per tier
+   *  that carries extra "why is this true" content, not whichever `generate` happens to
+   *  pick), falling back to `generate` otherwise — exactly as before this field existed.
+   *  Called with no explicit `rng`, so it falls back to `Math.random` exactly like practice
+   *  already does — fresh numbers each time the lesson opens, not a fixed snapshot. Empty
+   *  only if a topic's data is missing entirely, which nothing in today's content does. */
   function lessonQuestions(topic: Topic): Question[] {
     if (!topic.adaptive) {
       const q = topic.levels.find((l) => l.id === "easy")?.questions[0] ?? topic.levels[0]?.questions[0];
       return q ? [q] : [];
     }
-    const { generate, minDifficulty, maxDifficulty } = topic.adaptive;
+    const { generate, lessonExample, minDifficulty, maxDifficulty } = topic.adaptive;
+    const pickExample = lessonExample ?? generate;
     const questions: Question[] = [];
-    for (let d = minDifficulty; d <= maxDifficulty; d++) questions.push(generate(d));
+    for (let d = minDifficulty; d <= maxDifficulty; d++) questions.push(pickExample(d));
     return questions;
   }
 

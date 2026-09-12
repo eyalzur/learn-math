@@ -8,6 +8,7 @@ import { createBlankPage, MAX_PAGES, pageHasContent } from "../data/notebook";
 import type { PageReading } from "../lib/notebookServer";
 import { readPageWithTeacher } from "../lib/notebookServer";
 import { buildExplanation, explanationSpeechParts } from "../data/questionExplanation";
+import { AngleShape } from "./AngleShape";
 import { ClockFace } from "./ClockFace";
 import { PracticeNotebook } from "./PracticeNotebook";
 import { QuestionExplanation } from "./QuestionExplanation";
@@ -421,6 +422,14 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
    *  is `null` for every other topic, so this is a no-op everywhere else. */
   const clockSlot = bundle.clock ? <ClockFace data={bundle.clock} label={bundle.clock.caption} /> : null;
 
+  /** A second such diagram, added in docs/features/grade8-angles-congruence/design.md's
+   *  round ג׳ revision: the angle/triangle picture now sits with the question too, not
+   *  only inside the wrong-answer panel. `label` is `srLabel` — a structural description,
+   *  not `caption` (which states the rule/method and stays gated behind a wrong answer,
+   *  rendered as plain text by `QuestionExplanation`). `bundle.angle` is `null` for every
+   *  other topic, so this is a no-op everywhere else, same as `clockSlot`. */
+  const angleSlot = bundle.angle ? <AngleShape shape={bundle.angle} label={bundle.angle.srLabel} /> : null;
+
   /** What the notebook shows above the writing surface while it fills the screen: the
    *  question (so writing it down never means forgetting what's being solved) plus a way
    *  back out, replacing the regular header/title/hint-button that fullscreen hides — see
@@ -438,6 +447,7 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
       </button>
       {questionBox}
       {clockSlot}
+      {angleSlot}
       {speechSupported() && questionSpeakButton}
     </div>
   ) : null;
@@ -530,6 +540,7 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
           {speechSupported() && <div className="question-speech">{questionSpeakButton}</div>}
           {questionBox}
           {clockSlot}
+          {angleSlot}
         </>
       )}
       {!fullscreen && uncertain && (
