@@ -8,11 +8,11 @@
 - [x] Design — designer — 2026-09-07
 - [x] Architecture — tech-lead — 2026-09-07
 - [x] Implementation — developer — 2026-09-07
-- [ ] Tests — qa — not started
+- [x] Tests — qa — 2026-09-07
 
-**Current phase:** done — ממתין לריוויו ולמיזוג
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `feature/teacher-misread-log`
-**PR:** [#69](https://github.com/eyalzur/learn-math/pull/69)
+**PR:** [#69](https://github.com/eyalzur/learn-math/pull/69) — מוזג 2026-09-12
 
 ## Open questions / blockers
 None. הכרעות מוצר ננעלו: נשמר רק סבב שכולל תיקון בפועל (לא כל קריאה); אין
