@@ -1029,13 +1029,25 @@ button.secondary {
   gap: 8px;
 }
 
+/* The angle/triangle picture's caption — shown only after a wrong answer, inside
+   QuestionExplanation. The picture itself no longer lives here; see .angle-figure-inline
+   below, next to .clock-face, for where it actually renders now (round ג׳). */
+.angle-caption {
+  font-size: 14px;
+  line-height: 160%;
+  color: var(--text);
+  text-align: center;
+  margin: 0 0 16px;
+}
+
 /* An SVG does not inherit the page's direction habits — the same trap every shape in
    this feature has to guard against. */
 .geometry-shape,
 .pythagoras-triangle,
 .percent-strip,
 .ratio-strips,
-.linear-graph {
+.linear-graph,
+.angle-shape {
   direction: ltr;
   max-width: 100%;
   height: auto;
@@ -1087,6 +1099,50 @@ button.secondary {
   stroke: var(--text-h);
   stroke-width: 1.5;
   fill: none;
+}
+
+/* ---- angles and triangle congruence (grade8-angles-congruence) ---- */
+
+.as-line {
+  stroke: var(--text-h);
+  stroke-width: 1.5;
+  fill: none;
+}
+
+.as-dashed {
+  stroke: var(--text-h);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+  fill: none;
+}
+
+/* The arc that marks a known angle and the arc that marks the asked-for one are the same
+   stroke — the "?" beside it is what tells them apart, never colour alone. */
+.as-arc {
+  stroke: var(--text-h);
+  stroke-width: 1.5;
+  fill: none;
+}
+
+/* Matching tick marks on two sides is the standard "these are equal/corresponding" sign —
+   congruent triangles and the isosceles legs both read it the same way. */
+.as-tick {
+  stroke: var(--text-h);
+  stroke-width: 1.5;
+}
+
+.as-right-angle {
+  stroke: var(--text-h);
+  stroke-width: 1.5;
+  fill: none;
+}
+
+.as-label {
+  font-size: 15px;
+  font-weight: 600;
+  fill: var(--text);
+  direction: ltr;
+  unicode-bidi: isolate;
 }
 
 .ps-track {
@@ -1671,6 +1727,40 @@ button.secondary {
   margin: 0 0 16px;
   display: flex;
   justify-content: center;
+}
+
+/* ---- angle/triangle picture — the second diagram that renders next to the question
+   itself, added in docs/features/grade8-angles-congruence/design.md's round ג׳ revision.
+   Same placement principle as .clock-face just above. ---- */
+
+.angle-figure-inline {
+  margin: 0 0 16px;
+  display: flex;
+  justify-content: center;
+}
+
+/* The topic-lesson screen's short "why is this true" paragraph — shown only for the two
+   patterns that carry one (angleShape.ts's `proof` field). See TopicLesson.tsx. */
+.lesson-proof {
+  max-width: 420px;
+  margin: 0 auto 16px;
+  padding: 12px 18px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--code-bg);
+  text-align: right;
+}
+
+.lesson-proof h4 {
+  margin: 0 0 6px;
+  font-size: 14px;
+}
+
+.lesson-proof p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 160%;
+  color: var(--text);
 }
 
 .clock-pair {

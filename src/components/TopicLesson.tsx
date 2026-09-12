@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { Question } from "../data/curriculum";
 import { isHebrewPrompt, promptSegments } from "../data/curriculum";
 import { buildExplanation, explanationSpeechParts } from "../data/questionExplanation";
+import { AngleShape } from "./AngleShape";
 import { ClockFace } from "./ClockFace";
 import { QuestionExplanation } from "./QuestionExplanation";
 import { segmented } from "./segmented";
@@ -65,7 +66,15 @@ export function TopicLesson({ topicTitle, gradeLabel, questions, onBack, onPract
           .join(" ")
       : `\`${question.prompt}\``;
     const heading = showTierHeadings ? speechParts([`דוגמה ${currentPage + 1} מתוך ${questions.length}`]) : [];
-    const parts = [...heading, ...speechParts([promptText, ...question.hints]), ...explanationSpeechParts(bundle)];
+    // `bundle.angle?.proof` is lesson-only content (see angleShape.ts) — appended here,
+    // not inside `explanationSpeechParts`, so Practice.tsx's wrong-answer reading never
+    // picks it up.
+    const parts = [
+      ...heading,
+      ...speechParts([promptText, ...question.hints]),
+      ...explanationSpeechParts(bundle),
+      ...(bundle.angle?.proof ? speechParts(["למה זה נכון?", bundle.angle.proof]) : []),
+    ];
     if (!parts.length) return;
     setSpeaking(true);
     speak(parts, () => setSpeaking(false));
@@ -107,6 +116,7 @@ export function TopicLesson({ topicTitle, gradeLabel, questions, onBack, onPract
         </span>
       </div>
       {bundle.clock && <ClockFace data={bundle.clock} label={bundle.clock.caption} />}
+      {bundle.angle && <AngleShape shape={bundle.angle} label={bundle.angle.srLabel} />}
       <div className="hints">
         {question.hints.map((hint, j) => (
           <p key={j} className="hint">
@@ -115,6 +125,12 @@ export function TopicLesson({ topicTitle, gradeLabel, questions, onBack, onPract
         ))}
       </div>
       <QuestionExplanation bundle={bundle} />
+      {bundle.angle?.proof && (
+        <div className="lesson-proof">
+          <h4>למה זה נכון?</h4>
+          <p>{segmented(bundle.angle.proof)}</p>
+        </div>
+      )}
       <div className="actions">
         {hasPrevPage && (
           <button type="button" className="link-button" onClick={goToPrevPage}>
