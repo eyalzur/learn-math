@@ -1381,7 +1381,11 @@ button.secondary {
 /* The viewing window. overflow:hidden and touch-action:none on purpose — there is no
    scrollable element here at all, so there is nothing for the browser to scroll or
    rubber-band on its own; every pan/zoom gesture is handled by hand in
-   PracticeNotebook.tsx. */
+   PracticeNotebook.tsx. touch-action alone doesn't stop every native touch gesture: a real
+   phone's own long-press recognition (callout menu, text-selection magnifier) can still
+   fire independently of it, sending us a pointercancel mid-hold that our hold-to-zoom
+   gesture then reads as "finger lifted" — see docs/features/notebook-hold-to-zoom/,
+   "עדכון סבב ג׳". touch-callout/user-select suppress that native recognition outright. */
 .notebook-stage {
   position: relative;
   flex: 1;
@@ -1389,6 +1393,9 @@ button.secondary {
   overflow: hidden;
   background: var(--code-bg);
   touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 /* The page itself — fixed size in its own coordinate space, panned/zoomed purely via
@@ -1415,6 +1422,9 @@ button.secondary {
   height: 100%;
   display: block;
   touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .notebook-minimap {
