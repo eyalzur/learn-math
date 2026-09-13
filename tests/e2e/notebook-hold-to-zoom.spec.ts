@@ -4,7 +4,7 @@ import { answerViaNotebook } from "./helpers/notebookAnswer";
 /**
  * Acceptance criteria under test (docs/features/notebook-hold-to-zoom/product-spec.md).
  *
- * This is a pointer-timing gesture (a real-time dwell before the zoom-out triggers), not a
+ * This is a pointer-timing gesture (a real-time dwell before the zoom-in triggers), not a
  * click/state-toggle like the rest of this component's UI. Playwright's `page.mouse` fires
  * genuine pointer events in Chromium — the same mechanism `drawOnCanvas` in
  * helpers/notebookAnswer.ts already relies on to put ink on the canvas — so a real dwell
@@ -16,7 +16,7 @@ import { answerViaNotebook } from "./helpers/notebookAnswer";
  *    `page.mouse`/`page.touchscreen` APIs only drive a single active pointer; genuinely
  *    independent multi-pointer input isn't something this suite can drive reliably (the
  *    existing pinch-zoom feature itself has never had e2e coverage, for the same reason —
- *    grep the suite). Verify by hand: hold with one finger until the view zooms out, then
+ *    grep the suite). Verify by hand: hold with one finger until the view zooms in, then
  *    pinch with a second finger — the pinch should take over smoothly, and lifting both
  *    fingers should not snap back to any remembered pre-hold view.
  *  - "שאר הכלים נשארים כפי שהם" (existing pan tool / pinch-zoom unaffected) — this is a
@@ -70,7 +70,7 @@ const HOLD_LONG_ENOUGH_MS = 400;
 
 // -------------------------------------------------- arms only at the start, before movement
 
-test("holding a single touch still from the very start zooms the view out temporarily", async ({ page }) => {
+test("holding a single touch still from the very start zooms the view in temporarily", async ({ page }) => {
   await openLevel(page);
   const before = await zoomPercent(page);
 
@@ -80,7 +80,7 @@ test("holding a single touch still from the very start zooms the view out tempor
   await page.waitForTimeout(HOLD_LONG_ENOUGH_MS);
 
   const during = await zoomPercent(page);
-  expect(during).toBeLessThan(before);
+  expect(during).toBeGreaterThan(before);
 
   await page.mouse.up();
 });
@@ -109,7 +109,7 @@ test("starting to move immediately, without pausing first, never triggers the zo
 
 // ------------------------------------------------------------- stays zoomed for the touch
 
-test("the temporary zoom-out stays in effect while the same touch keeps moving (drawing) after it triggers", async ({
+test("the temporary zoom-in stays in effect while the same touch keeps moving (drawing) after it triggers", async ({
   page,
 }) => {
   await openLevel(page);
@@ -119,13 +119,13 @@ test("the temporary zoom-out stays in effect while the same touch keeps moving (
   await page.mouse.move(x, y);
   await page.mouse.down();
   await page.waitForTimeout(HOLD_LONG_ENOUGH_MS);
-  const zoomedOut = await zoomPercent(page);
-  expect(zoomedOut).toBeLessThan(before);
+  const zoomedIn = await zoomPercent(page);
+  expect(zoomedIn).toBeGreaterThan(before);
 
   // Keep "writing" — several small moves, the way finishing a digit would look.
   await page.mouse.move(x + 10, y + 10, { steps: 3 });
   await page.mouse.move(x + 5, y + 25, { steps: 3 });
-  await expect(zoomReadout(page)).toHaveText(`${zoomedOut}%`);
+  await expect(zoomReadout(page)).toHaveText(`${zoomedIn}%`);
 
   await page.mouse.up();
 });
@@ -169,7 +169,7 @@ test("triggers the same way with the pan tool selected, not only with the pen", 
   await page.waitForTimeout(HOLD_LONG_ENOUGH_MS);
 
   const during = await zoomPercent(page);
-  expect(during).toBeLessThan(before);
+  expect(during).toBeGreaterThan(before);
 
   await page.mouse.up();
   await expect(zoomReadout(page)).toHaveText(`${before}%`);
@@ -189,7 +189,7 @@ test("still triggers on a page that's already locked (answered and checked)", as
   await page.waitForTimeout(HOLD_LONG_ENOUGH_MS);
 
   const during = await zoomPercent(page);
-  expect(during).toBeLessThan(before);
+  expect(during).toBeGreaterThan(before);
 
   await page.mouse.up();
   await expect(zoomReadout(page)).toHaveText(`${before}%`);
@@ -204,8 +204,8 @@ test("drawing that continues through a hold-zoom cycle is still recorded as page
   const { x, y } = await stageCenter(page);
   await page.mouse.move(x, y);
   await page.mouse.down();
-  await page.waitForTimeout(HOLD_LONG_ENOUGH_MS); // triggers the temporary zoom-out
-  await page.mouse.move(x + 15, y + 15, { steps: 5 }); // "writes" on the zoomed-out view
+  await page.waitForTimeout(HOLD_LONG_ENOUGH_MS); // triggers the temporary zoom-in
+  await page.mouse.move(x + 15, y + 15, { steps: 5 }); // "writes" on the zoomed-in view
   await page.mouse.up();
 
   await expect(page.getByRole("button", { name: "שלח למורה" })).toBeEnabled();

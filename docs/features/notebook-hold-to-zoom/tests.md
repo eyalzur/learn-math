@@ -1,4 +1,8 @@
-# זום זמני בהחזקת מגע — כתיבה רציפה במחברת — Tests
+# זום זמני בהחזקת מגע — התקרבות למחברת — Tests
+
+**עדכון סבב ב׳ (2026-09-13):** כיוון הזום התהפך (התקרבות, לא התרחקות) —
+הבדיקות עודכנו בהתאם (`toBeGreaterThan` במקום `toBeLessThan`, ניסוחים
+"zoom-in"/"zoomed-in"). מבנה הבדיקות וכיסוי הקריטריונים לא השתנו.
 
 ## Coverage
 
@@ -6,9 +10,9 @@
 
 | קריטריון קבלה | בדיקה |
 |---|---|
-| הפעלה רק בתחילת מגע, לפני תזוזה | `tests/e2e/notebook-hold-to-zoom.spec.ts` › "holding a single touch still from the very start zooms the view out temporarily" |
+| הפעלה רק בתחילת מגע, לפני תזוזה | `tests/e2e/notebook-hold-to-zoom.spec.ts` › "holding a single touch still from the very start zooms the view in temporarily" |
 | אין שינוי תצוגה אם הכתיבה מתחילה מיד | › "starting to move immediately, without pausing first, never triggers the zoom — for the whole touch" |
-| נמשך כל עוד המגע נמשך | › "the temporary zoom-out stays in effect while the same touch keeps moving (drawing) after it triggers" |
+| נמשך כל עוד המגע נמשך | › "the temporary zoom-in stays in effect while the same touch keeps moving (drawing) after it triggers" |
 | חזרה מדויקת בהרמת האצבע | › "lifting the finger restores exactly the zoom and position from right before the touch started" |
 | מה שנכתב נשאר במקום הנכון בדף | › "drawing that continues through a hold-zoom cycle is still recorded as page content" — **בעקיפין**, ראו "מה לא נבדק" |
 | לא תלוי בכלי שנבחר | › "triggers the same way with the pan tool selected, not only with the pen" |
@@ -24,7 +28,7 @@
   מגע פעיל אחד בלבד — זה לא ייחודי לפיצ'ר הזה: לזום-שתי-אצבעות הקיים
   באפליקציה **אין ולא הייתה** אף פעם בדיקת e2e, מהסיבה הזו בדיוק (נבדק:
   `grep` על "pinch"/"PointerEvent"/"touchscreen" בכל `tests/e2e/` לא מוצא
-  כלום). **צריך אימות ידני:** מחזיקים אצבע אחת עד שהתצוגה מתרחקת, ואז
+  כלום). **צריך אימות ידני:** מחזיקים אצבע אחת עד שהתצוגה מתקרבת, ואז
   מוסיפים אצבע שנייה ומצבטים (pinch) — ה-pinch צריך להשתלט בצורה חלקה,
   ובהרמת שתי האצבעות **אסור** שהתצוגה "תיזרוק" חזרה למצב שהיה שמור מלפני
   ה-hold-zoom.
@@ -54,12 +58,14 @@ npm run test:e2e
 לבדיקה הזו בלבד: `npx playwright test tests/e2e/notebook-hold-to-zoom.spec.ts`
 
 ## Status
-**2026-09-12, ריצה בודדת ונקייה:** שבע הבדיקות החדשות עוברות. הסוויטה
-המלאה (373 בדיקות, כולל השבע האלה) — **372 עוברות, כשל אחד**:
-`grade8-angles-congruence.spec.ts` › "the triangle-angle-sum step shows the
-calculation with explicit brackets" — **timeout ב-`.problem-text`, לא
-קשור לפיצ'ר הזה.** אומת כ-flake קיים-מראש: הרצתי את הבדיקה הזו בלבד גם
-מול `origin/main` נקי (worktree נפרד, בלי שום שינוי מהפיצ'ר הזה) — נכשלה
-פעמיים משלוש ריצות, עברה פעם אחת, באותה צורה בדיוק. זה לא רגרסיה שהפיצ'ר
-הזה גרם לה — קדם לו, ולא חלק מהסקופ כאן. לא נזרק/הוחלש כדי "לעבור" — פשוט
-מדווח כמו שהוא.
+**2026-09-12, סבב א׳ (כיוון שהתברר כשגוי), ריצה בודדת ונקייה:** שבע הבדיקות
+עברו. הסוויטה המלאה (373 בדיקות) — 372 עוברות, כשל אחד
+(`grade8-angles-congruence.spec.ts`) אומת כ-flake קיים-מראש ולא-קשור, נכשל
+גם על `origin/main` נקי בלי השינוי הזה בכלל (שתי ריצות מתוך שלוש).
+
+**2026-09-13, סבב ב׳ (כיוון תוקן להתקרבות), ריצה בודדת ונקייה:** שבע
+הבדיקות עודכנו לכיוון הנכון (`toBeGreaterThan`) ועוברות. הסוויטה המלאה —
+שוב **372/373**, כשל יחיד באותה בדיקה קיימת-מראש (`grade8-angles-congruence.spec.ts`
+"the triangle-angle-sum step...") — לא הורץ אימות חדש מול `origin/main`
+כי זה כבר אומת בסבב א׳ ולא נגעתי בשום דבר שקשור לאותה בדיקה. לא
+נזרק/הוחלש כדי "לעבור" — פשוט מדווח כמו שהוא.
