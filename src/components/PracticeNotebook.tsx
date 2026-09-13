@@ -66,8 +66,9 @@ const PINCH_UNDO_WINDOW_MS = 220;
 /**
  * Hold-to-zoom: a single pointer that stays still (within HOLD_ZOOM_MOVE_TOLERANCE_PX)
  * for HOLD_ZOOM_DWELL_MS from the moment it touches down — before any real movement —
- * triggers a temporary, bounded zoom-out (HOLD_ZOOM_FACTOR) for the rest of that same
- * touch, animated over HOLD_ZOOM_TRANSITION_MS; releasing the pointer animates back to
+ * triggers a temporary, bounded zoom-IN (HOLD_ZOOM_FACTOR), a closer/more focused view —
+ * like leaning in to concentrate — for the rest of that same touch, animated over
+ * HOLD_ZOOM_TRANSITION_MS; releasing the pointer animates back to
  * exactly the transform saved right before the touch started. See
  * docs/features/notebook-hold-to-zoom/ for the full design and architecture. The move
  * tolerance isn't in design.md — real touches never land on the exact same pixel twice,
@@ -75,7 +76,7 @@ const PINCH_UNDO_WINDOW_MS = 220;
  */
 const HOLD_ZOOM_DWELL_MS = 180;
 const HOLD_ZOOM_TRANSITION_MS = 120;
-const HOLD_ZOOM_FACTOR = 0.7;
+const HOLD_ZOOM_FACTOR = 1.3;
 const HOLD_ZOOM_MOVE_TOLERANCE_PX = 4;
 
 export function PracticeNotebook({
@@ -143,7 +144,7 @@ export function PracticeNotebook({
   const holdZoomTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const holdZoomPointerId = useRef<number | null>(null);
   const holdZoomDownPos = useRef<{ x: number; y: number } | null>(null);
-  /** null = not currently in the temporary zoomed-out state. Non-null = the transform to
+  /** null = not currently in the temporary zoomed-in state. Non-null = the transform to
    *  restore on release — also doubles as the "is this touch currently held-zoomed" flag. */
   const preHoldTransform = useRef<PanZoom | null>(null);
   const transitionClearTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -437,7 +438,7 @@ export function PracticeNotebook({
     } else if (activePointers.current.size === 2) {
       // A second pointer means this is a pinch — hold-to-zoom's dwell/held state for the
       // first pointer is discarded outright, not paused: panZoomRef already holds the
-      // correct current value (synchronously updated even if already zoomed out), so the
+      // correct current value (synchronously updated even if already zoomed in), so the
       // pinch just continues from there with no separate snap-back step, and there's no
       // resumption of the temporary zoom once the pinch ends.
       if (holdZoomTimer.current) {
@@ -513,7 +514,7 @@ export function PracticeNotebook({
   function endPointer(e: React.PointerEvent<HTMLCanvasElement>) {
     if (!activePointers.current.has(e.pointerId)) return;
     // Covers both pointerup and pointercancel (both call endPointer) — releasing the
-    // pointer that held a temporary zoom-out animates back to exactly what was saved
+    // pointer that held a temporary zoom-in animates back to exactly what was saved
     // right before it started, not a recomputed guess.
     if (holdZoomPointerId.current === e.pointerId) {
       if (holdZoomTimer.current) {

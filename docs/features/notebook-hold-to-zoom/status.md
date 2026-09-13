@@ -12,8 +12,8 @@
 - [x] Product spec — product-manager — 2026-09-13 (סבב ב׳: כיוון הפוך + מוטיבציה מחודשת)
 - [x] Design — designer — 2026-09-13 (סבב ב׳: עיגון סביב נקודת המגע כדרישת נגישות, לא רק עקביות; 30% נבדק מחדש מזווית "מה נעלם" לא "מה נוסף")
 - [x] Architecture — tech-lead — 2026-09-13 (סבב ב׳: HOLD_ZOOM_FACTOR 0.7→1.3, וידוא zoomAroundPoint סימטרי, MIN_ZOOM→MAX_ZOOM כגבול הרלוונטי)
-- [ ] Implementation — developer — ממתין לעדכון
-- [ ] Tests — qa — ממתין לעדכון
+- [x] Implementation — developer — 2026-09-13 (סבב ב׳: HOLD_ZOOM_FACTOR שונה בקוד ל-1.3, שלוש הערות-קוד תוקנו, build/lint ירוקים)
+- [ ] Tests — qa — ממתין לעדכון (הבדיקות עדיין מניחות זום-אאוט, יכשלו עד לעדכון)
 
 ### סבב א׳ — הושלם 2026-09-12, כיוון שהתברר כשגוי
 - [x] Product spec — product-manager — 2026-09-12
@@ -22,7 +22,7 @@
 - [x] Implementation — developer — 2026-09-12
 - [x] Tests — qa — 2026-09-12
 
-**Current phase:** developer — סבב ב׳
+**Current phase:** qa — סבב ב׳
 **Branch:** `feature/notebook-hold-to-zoom`
 **PR:** [#70](https://github.com/eyalzur/learn-math/pull/70) (עדיין פתוח — יתעדכן, לא ייפתח מחדש)
 
