@@ -1,4 +1,12 @@
-# זום זמני בהחזקת מגע — כתיבה רציפה במחברת — Architecture
+# זום זמני בהחזקת מגע — התקרבות למחברת — Architecture
+
+**עדכון סבב ב׳ (2026-09-13):** כיוון הזום התהפך — התקרבות (זום-אין), לא
+התרחקות. מכונת המצבים (טיימר המתנה, ביטול-על-תזוזה, המשך-לאורך-המגע, שחזור
+מדויק, עצמאות מכלי/נעילה, מסירה ל-pinch) **לא השתנתה** — היפוך אמיתי יחיד:
+`HOLD_ZOOM_FACTOR` עובר מ-`0.7` (התרחקות) ל-`1.3` (התקרבות, "כ-30% יותר
+זום"). בנוסף, נבדק במפורש (ראו "וידוא: `zoomAroundPoint` עם factor > 1")
+שהמתמטיקה הקיימת עובדת סימטרית לשני הכיוונים, ונבדק מחדש איזה גבול זום
+(`MIN_ZOOM`/`MAX_ZOOM`) רלוונטי כעת — ראו Edge Cases.
 
 ## Overview
 תוספת אחת בלבד ל-`PracticeNotebook.tsx`: טיימר "אין תזוזה" לצד לוגיקת המגע
@@ -13,9 +21,12 @@
   קבועים חדשים (דמוי `PINCH_UNDO_WINDOW_MS` הקיים), refs חדשים, שינויים ב-
   `handlePointerDown`/`handlePointerMove`/`endPointer`, ופונקציות עזר חדשות
   (`triggerHoldZoom`, `animateTransformTo`). אין שינוי ב-props, ב-JSX
-  המוצג, או בשום callback שההורה (`Practice.tsx`) מקבל.
+  המוצג, או בשום callback שההורה (`Practice.tsx`) מקבל. **סבב ב׳: שינוי יחיד
+  בקובץ הזה — ערך `HOLD_ZOOM_FACTOR` והתיעוד לצידו (ראו למטה); שום דבר אחר
+  בקובץ לא זז.**
 - **`src/data/notebook.ts`** — לא משתנה. `zoomAroundPoint`, `clampZoom`,
-  ו-`PanZoom` נשארים כמו שהם ומשמשים ישירות.
+  ו-`PanZoom` נשארים כמו שהם ומשמשים ישירות — כולל בכיוון ההפוך (ראו "וידוא"
+  למטה).
 - **אין** שינוי ב-CSS (`src/App.css`) — `.notebook-stack` לא צריך כלל
   `transition` חדש בגיליון הסגנונות, כי ה-transition מוגדר ומוסר דינמית
   ב-inline style, בדיוק כמו ש-`transform` עצמו כבר מוגדר ב-inline style
@@ -30,8 +41,8 @@
 const holdZoomTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 const holdZoomPointerId = useRef<number | null>(null);
 const holdZoomDownPos = useRef<{ x: number; y: number } | null>(null);
-/** null = לא במצב "מוזם-אאוט זמני". לא-null = הזום/מיקום שצריך לחזור אליו
- *  בהרמת האצבע — גם משמש כדגל "האם המגע הזה כרגע במצב מוזם-אאוט". */
+/** null = לא במצב "מוזם-אין זמני". לא-null = הזום/מיקום שצריך לחזור אליו
+ *  בהרמת האצבע — גם משמש כדגל "האם המגע הזה כרגע במצב מוזם-אין". */
 const preHoldTransform = useRef<PanZoom | null>(null);
 const transitionClearTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 ```
@@ -40,11 +51,31 @@ const transitionClearTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 ```ts
 const HOLD_ZOOM_DWELL_MS = 180;        // design.md: חלון "בלי תזוזה" לפני הפעלה
 const HOLD_ZOOM_TRANSITION_MS = 120;   // design.md: משך התנועה המרוככת, בכניסה ובחזרה
-const HOLD_ZOOM_FACTOR = 0.7;          // design.md: "~30% יותר מזום-אאוט"
+const HOLD_ZOOM_FACTOR = 1.3;          // design.md: "~30% יותר קרוב" — סבב ב׳: היה 0.7 (התרחקות), עכשיו התקרבות
 const HOLD_ZOOM_MOVE_TOLERANCE_PX = 4; // לא בדיזיין — סף רעד/רעש חושי, ראו Risks
 ```
 
 ## Technical Approach
+
+### וידוא: `zoomAroundPoint` עם `factor > 1` (סבב ב׳)
+`src/data/notebook.ts`:
+```ts
+export function zoomAroundPoint(current: PanZoom, screenX: number, screenY: number, factor: number): PanZoom {
+  const newZoom = clampZoom(current.zoom * factor);
+  const actualFactor = newZoom / current.zoom;
+  return {
+    zoom: newZoom,
+    panX: screenX - actualFactor * (screenX - current.panX),
+    panY: screenY - actualFactor * (screenY - current.panY),
+  };
+}
+```
+זו כפל טהור בלי הנחת כיוון — `current.zoom * factor` גדל עבור `factor > 1`
+בדיוק כמו שהוא קטן עבור `factor < 1`, ו-`actualFactor` (המשמש לתיקון ה-pan
+כך שנקודת העיגון נשארת קבועה על המסך) נגזר מהיחס בין הזום החדש לישן —
+סימטרי לשני הכיוונים. **אין שינוי נדרש בפונקציה הזו.** ההבדל היחיד בין
+`factor=0.7` ל-`factor=1.3` הוא איזה גבול `clampZoom` עשוי לפגוע בו קודם
+(`MIN_ZOOM` מול `MAX_ZOOM`) — ראו Edge Cases.
 
 ### עיקרון מפתח: `panZoomRef` הוא מקור האמת, ה-CSS transition הוא קוסמטי בלבד
 `panZoomRef.current` מתעדכן תמיד **באופן סינכרוני ומיידי** לערך הסופי הנכון
@@ -106,10 +137,10 @@ if (holdZoomPointerId.current === e.pointerId && holdZoomTimer.current && holdZo
 }
 ```
 זה רץ בנוסף ללוגיקה הקיימת של `handlePointerMove` (ציור/פאן/pinch) — לא
-מחליף אותה. אם המגע הזה כבר במצב מוזם-אאוט (`preHoldTransform.current`
+מחליף אותה. אם המגע הזה כבר במצב מוזם-אין (`preHoldTransform.current`
 לא-null), הבדיקה הזו לא רלוונטית יותר (`holdZoomTimer.current` כבר `null`
 כי הטיימר כבר *הופעל*, לא בוטל) — הזרימה הרגילה (ציור/פאן) ממשיכה על
-התצוגה המוזמת-אאוט בלי שום קוד נוסף.
+התצוגה המוזמת-אין בלי שום קוד נוסף.
 
 ### ההפעלה בפועל: `triggerHoldZoom`
 ```ts
@@ -129,7 +160,10 @@ function triggerHoldZoom(pointerId: number) {
 (כמו ב-`handleWheel`/`zoomButton` הקיימים — `clientX/Y - stageRect.left/top`),
 **לא** לקואורדינטות-דף כמו שמחזיר `localPoint()` (ששימושי לציור, לא לזום).
 זו טעות קלה לעשות בהעתקה — `localPoint()` מחלק גם ב-scale, שזה לא מה ש-
-`zoomAroundPoint` מצפה לו.
+`zoomAroundPoint` מצפה לו. **זה הופך משמעותי יותר בהתקרבות** (ראו design.md,
+"מה שונה במיוחד עבור מיקה") — נקודת העיגון היא מה ששומר שהמגע לא "בורח" עם
+הזום; קואורדינטה שגויה כאן לא רק תזיז את הדף, אלא תגרום למה שנכתב רגע קודם
+לצאת מהתצוגה בלי שום סיבה טובה.
 
 ### חזרה: `endPointer`, בתחילת הפונקציה (לפני הלוגיקה הקיימת)
 ```ts
@@ -155,7 +189,7 @@ holdZoomDownPos.current = null;
 ```
 לא נדרשת "קפיצה" נוספת של התצוגה כאן: אם ה-hold-zoom כבר הופעל
 (`preHoldTransform.current` לא-null לפני האיפוס), `panZoomRef.current` כבר
-מכיל את הערך המוזם-אאוט הסופי (עודכן סינכרונית ב-`triggerHoldZoom`) —
+מכיל את הערך המוזם-אין הסופי (עודכן סינכרונית ב-`triggerHoldZoom`) —
 ה-pinch ממשיך פשוט מהזום הנוכחי, בלי חשבון נפרד. זו הפרשנות הישירה של
 design.md, שלב 5: "מבטל... לחלוטין... בלי חזרה לאחר סיום ה-pinch."
 
@@ -180,15 +214,22 @@ useEffect(() => {
   החדשה לא קוראת ל-`lockedRef` בשום מקום (בדיוק כמו שדרש design.md: "לא
   תלוי בנעילת הדף"). נעילה עדיין חוסמת ציור חדש בדיוק כמו היום, בנפרד
   לגמרי מהמחווה הזו.
-- **שינוי דף (`currentPageIndex`) תוך כדי מגע מוזם-אאוט:** תיאורטי (מחייב
+- **שינוי דף (`currentPageIndex`) תוך כדי מגע מוזם-אין:** תיאורטי (מחייב
   שני מגעים נפרדים בו-זמנית — אחד מחזיק על הקנבס, אחד מקליק על ◀▶) ולא
   נפתר כאן — אבל זה זהה בדיוק להתנהגות הקיימת היום (זום/פאן לא מתאפסים
   ב-`useEffect` שרץ על שינוי `currentPage`, ראו השורות שמאתחלות רק
   `viewingWholePage`/`savedTransform`). לא סיכון חדש שהפיצ'ר הזה מכניס.
-- **גבול הזום התחתון (`MIN_ZOOM = 0.15`):** אם המשתמש/ת כבר בזום נמוך
-  מאוד לפני שמפעילים hold-zoom, `zoomAroundPoint` (שכבר עושה `clampZoom`)
-  יכול להחזיר שינוי קטן מאוד או אפסי בפועל. זו התנהגות זהה לכפתור `−`
-  ולזום-שתי-אצבעות הקיימים באותו מצב — לא בעיה חדשה, לא דורש טיפול מיוחד.
+- **גבול הזום העליון (`MAX_ZOOM = 2.5`) — סבב ב׳, הגבול הרלוונטי התחלף
+  מ-`MIN_ZOOM`:** בגרסת ההתרחקות (`factor=0.7`) הגבול הרלוונטי היה
+  `MIN_ZOOM` (זום כבר נמוך). בהתקרבות (`factor=1.3`) הגבול הרלוונטי הוא
+  **`MAX_ZOOM`**: אם התלמיד/ה כבר התקרב/ה ידנית לזום גבוה (כפתור `+`
+  חוזר, או pinch) לפני שמפעילים hold-zoom, `zoomAroundPoint` (שכבר עושה
+  `clampZoom`) עשוי להחזיר שינוי קטן מאוד או אפסי בפועל — זהה בדיוק
+  להתנהגות כפתור `+`/pinch הקיימים באותו מצב. **הבדל אחד אמיתי מהתרחקות:**
+  זום פתיחה הוא `70%` ו-`MAX_ZOOM=2.5` (`250%`) — מרחק גדול, כך שבפועל
+  התלמיד/ה צריך/ה להתקרב ידנית הרבה מאוד (בערך פי `3.5`) לפני שהגבול הזה
+  בכלל נהיה רלוונטי. לא דורש טיפול מיוחד, רק תיעוד — QA כדאי שיבדוק את
+  המקרה הזה בנפרד מהמקרה הרגיל אם רוצים כיסוי מלא, לא חובה.
 - **מגע שני שמגיע *אחרי* שהטיימר כבר נורה אבל *לפני* שהאנימציה הסתיימה
   חזותית:** `panZoomRef.current` כבר מעודכן לערך הסופי (הלוגיקה סינכרונית),
   כך שאין חשיבות אם ה-CSS transition עדיין "בדרך" חזותית — ה-pinch שמתחיל
@@ -215,12 +256,17 @@ useEffect(() => {
   120ms, 4px) הם החלטות סבירות על הנייר; `developer`/`qa` לא יכולים
   "להרגיש" אם זה נכון בלי בדיקה אנושית בפועל (מחוץ לסקופ של בדיקות e2e
   אוטומטיות, שיכולות רק לאמת את מכונת המצבים עצמה — ראו הערה מקבילה
-  שתידרש מ-`qa`).
+  שתידרש מ-`qa`). **סבב ב׳:** זה נכון שבעתיים כעת — כיוון ההתקרבות תלוי
+  יותר בתחושה אנושית (האם `30%` מספיק/יותר מדי קרוב) מכיוון ההתרחקות,
+  כי "כמה מקרוב זה נכון לכתיבה" הוא שיפוט אנושי מובהק.
 
 ## Open Questions
 None.
 
 ## Implementation Notes
+
+**סבב א׳ (2026-09-12, כיוון שהתברר כשגוי — הקוד הזה שונה בסבב ב׳, ראו
+למטה):**
 
 נבנה בדיוק לפי התכנון לעיל, בלי סטיות — `src/components/PracticeNotebook.tsx` הוא
 הקובץ היחיד שהשתנה, `src/data/notebook.ts` נשאר כמו שהוא.
@@ -252,3 +298,7 @@ None.
 אינה דפדפן) — הערכים המספריים (180ms/30%/120ms/4px) הם כפי שנקבעו בעיצוב
 ובארכיטקטורה, לא כווננו מול תחושה בפועל; ראו "Risks / Tradeoffs" למעלה.
 
+**סבב ב׳ (ממתין למימוש):** developer עדיין צריך לשנות בפועל את `HOLD_ZOOM_FACTOR`
+מ-`0.7` ל-`1.3` בקוד (`src/components/PracticeNotebook.tsx`), לעדכן את
+התיעוד הצמוד לו בקוד, ולהריץ build/lint מחדש. שאר הקוד (כל מכונת המצבים)
+לא אמור להזדקק לשום שינוי נוסף — ראו "Overview" למעלה.
