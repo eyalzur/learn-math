@@ -10,7 +10,7 @@
 השלבים שכבר נכתבו לכיוון ההפוך נפתחים מחדש.
 
 - [x] Product spec — product-manager — 2026-09-13 (סבב ב׳: כיוון הפוך + מוטיבציה מחודשת)
-- [ ] Design — designer — ממתין לעדכון
+- [x] Design — designer — 2026-09-13 (סבב ב׳: עיגון סביב נקודת המגע כדרישת נגישות, לא רק עקביות; 30% נבדק מחדש מזווית "מה נעלם" לא "מה נוסף")
 - [ ] Architecture — tech-lead — ממתין לעדכון
 - [ ] Implementation — developer — ממתין לעדכון
 - [ ] Tests — qa — ממתין לעדכון
@@ -22,7 +22,7 @@
 - [x] Implementation — developer — 2026-09-12
 - [x] Tests — qa — 2026-09-12
 
-**Current phase:** designer — סבב ב׳
+**Current phase:** tech-lead — סבב ב׳
 **Branch:** `feature/notebook-hold-to-zoom`
 **PR:** [#70](https://github.com/eyalzur/learn-math/pull/70) (עדיין פתוח — יתעדכן, לא ייפתח מחדש)
 
