@@ -11,8 +11,8 @@
 המצבים. ראו architecture.md, "עדכון סבב ג׳" ו-Edge Cases.
 
 - [x] Architecture — tech-lead — 2026-09-13 (סבב ג׳: אבחון + תיקון מתועד — דיכוי callout/selection/contextmenu)
-- [ ] Implementation — developer — ממתין ליישום התיקון
-- [ ] Tests — qa — ממתין (לא צפוי להיות אוטומטי, כמו pinch)
+- [x] Implementation — developer — 2026-09-13 (סבב ג׳: CSS + onContextMenu נוספו, build/lint ירוקים, אומת שהערכים מגיעים ל-CSS המקומפל)
+- [ ] Tests — qa — לא צפוי להיות אוטומטי (כמו pinch) — ממתין לאימות ידני חוזר מהמשתמש על המכשיר שדיווח ממנו
 
 ## Progress — סבב ב׳ (2026-09-13): כיוון ההתקרבות התהפך
 המשתמש הכריע שהמחווה צריכה להתקרב (זום-אין) בהחזקה, לא להתרחק (זום-אאוט) —
@@ -33,7 +33,7 @@
 - [x] Implementation — developer — 2026-09-12
 - [x] Tests — qa — 2026-09-12
 
-**Current phase:** developer — סבב ג׳
+**Current phase:** done, סבב ג׳ הושלם — ממתין לאימות חוזר של המשתמש על מכשיר המגע, ולריוויו על אותו PR
 **Branch:** `feature/notebook-hold-to-zoom`
 **PR:** [#70](https://github.com/eyalzur/learn-math/pull/70) (עדיין פתוח — יתעדכן, לא ייפתח מחדש)
 

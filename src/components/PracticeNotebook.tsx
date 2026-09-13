@@ -642,6 +642,11 @@ export function PracticeNotebook({
             onPointerMove={handlePointerMove}
             onPointerUp={endPointer}
             onPointerCancel={endPointer}
+            // Some Android browsers show a context menu on a long press even with
+            // touch-action:none — left uncaught, that native menu is one more way a
+            // held touch can get interrupted mid hold-to-zoom. See
+            // docs/features/notebook-hold-to-zoom/, "עדכון סבב ג׳".
+            onContextMenu={(e) => e.preventDefault()}
           />
         </div>
         <div className="notebook-minimap" ref={minimapRef} aria-hidden="true">

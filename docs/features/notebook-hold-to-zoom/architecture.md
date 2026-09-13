@@ -384,3 +384,24 @@ None.
 בודד) — אין צורך בהעלאה נוספת על אותו PR. בדיקות ה-e2e (`tests/e2e/notebook-hold-to-zoom.spec.ts`)
 עדיין מניחות זום-אאוט (`toBeLessThan`) ויכשלו עד שסבב ב׳ של QA יעדכן אותן —
 זה בכוונה לא תוקן כאן, זה תפקיד השלב הבא.
+
+**סבב ג׳ (בוצע, 2026-09-13) — תיקון באג ממכשיר מגע:** שני שינויים בדיוק כפי
+שתוארו בארכיטקטורה, בלי סטייה:
+
+- `src/App.css`: `.notebook-stage` ו-`.notebook-canvas` קיבלו שלוש שורות
+  זהות (`-webkit-touch-callout: none; -webkit-user-select: none; user-select: none;`)
+  לצד ה-`touch-action: none` הקיים בכל אחד מהם — לא הוחלף, נוסף. אומת ב-build
+  שהערכים בפועל מגיעים ל-CSS המקומפל (`grep` על `dist/assets/*.css` אחרי
+  build, לפני ה-commit) ולא נבלעים ע"י המינימיזציה.
+- `src/components/PracticeNotebook.tsx`: נוסף `onContextMenu={(e) => e.preventDefault()}`
+  ל-`<canvas>`, לצד `onPointerUp`/`onPointerCancel` הקיימים. שום שינוי אחר
+  בקובץ — לא בלוגיקת `handlePointerDown`/`handlePointerMove`/`endPointer`/
+  `triggerHoldZoom`/`animateTransformTo`, כפי שהארכיטקטורה דרשה במפורש.
+
+**נבדק:** `npm run build` ו-`npm run lint` ירוקים. **לא הועלתה גרסה נוספת**
+(אותה סיבה כמו בסבב ב׳ — ה-PR כבר הועלה יחסית ל-`main`). **לא נבדק, ולא
+ניתן לבדוק, בבדיקות e2e** — התיקון תלוי בזיהוי-מחוות אמיתי של מערכת
+ההפעלה/הדפדפן (callout/הדגשת-טקסט/תפריט-הקשר) ש-Playwright לא מדמה בכלל
+(אין לו שכבת "מגע ממושך של OS אמיתי" להפעיל). המסמך הזה, לא בדיקה, הוא
+התיעוד של מה שתוקן ולמה — אימות בפועל דורש ניסוי חוזר על אותו מכשיר מגע
+שהמשתמש דיווח ממנו.
