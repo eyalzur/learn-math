@@ -18,7 +18,7 @@
 לא כיוונון מספר כמו סבב ד׳ — ראו product-spec.md, הסעיפים המסומנים "סבב ה׳".
 
 - [x] Product spec — product-manager — 2026-09-25 (סבב ה׳: 4 הכרעות מוצר — ברירת מחדל = הדרגה שאומתה (`70%`) ולא האמצעית, per-student, "כבוי" = המחווה לא קיימת, הבורר לא בדרך של הילד/ה)
-- [ ] Design — designer — ממתין
+- [x] Design — designer — 2026-09-25 (סבב ה׳: דרגות `9/15/25/42/70` — תקרה = הערך שאומת כדי שברירת המחדל תהיה אפשרות שאפשר לחזור אליה; שישה כפתורים באזור ההגדרות הקיים במסך הנושאים, לא בסרגל המחברת; בלי מספרים בממשק)
 - [ ] Architecture — tech-lead — ממתין
 - [ ] Implementation — developer — ממתין
 - [ ] Tests — qa — ממתין
@@ -63,7 +63,7 @@ design.md, "עדכון סבב ד׳".
 - [x] Implementation — developer — 2026-09-12
 - [x] Tests — qa — 2026-09-12
 
-**Current phase:** designer — סבב ה׳
+**Current phase:** tech-lead — סבב ה׳
 **Branch:** `feature/notebook-hold-to-zoom`
 **PR:** [#70](https://github.com/eyalzur/learn-math/pull/70) (עדיין פתוח — יתעדכן, לא ייפתח מחדש)
 
