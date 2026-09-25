@@ -11,13 +11,14 @@
 - [x] Implementation — developer — 2026-08-19
 - [x] Tests — qa — 2026-08-19
 
-**Current phase:** done — ממתין ל-PR ולריוויו
-**Branch:** `feature/levels-as-practice` (המשך ל-`PR #48` הפתוח — לא בראנץ' חדש,
-כי המשוב נוגע ישירות ב-12 המחוללים שאותו `PR` בנה)
-**PR:** [#48](https://github.com/eyalzur/learn-math/pull/48) (יתעדכן, לא ייפתח מחדש)
+**Current phase:** done — מוזג ל-`main`
+**Branch:** `feature/levels-as-practice` (המשך ל-`PR #48`, לא בראנץ' חדש — המשוב
+נוגע ישירות ב-12 המחוללים שאותו `PR` בנה)
+**PR:** [#48](https://github.com/eyalzur/learn-math/pull/48) — מוזג 2026-08-20
 
 ## Open questions / blockers
-None.
+None. תיעוד זה היה שגוי ("ממתין ל-PR ולריוויו") ימים ארוכים אחרי ש-`PR #48`
+כבר מוזג — תוקן ב-2026-09-13 בעקבות `/status`, ללא שינוי קוד.
 
 ## Docs
 - [Product spec](./product-spec.md)
