@@ -1,4 +1,5 @@
 import type { Topic } from "../data/curriculum";
+import { HOLD_ZOOM_LEVELS } from "../data/notebook";
 import { speechSupported } from "../data/speech";
 
 interface TopicPickerProps {
@@ -24,6 +25,10 @@ interface TopicPickerProps {
   /** Read every question aloud for this student. Absent when there is no student yet. */
   readAloud?: boolean;
   onReadAloudChange?: (value: boolean) => void;
+  /** Which hold-to-zoom strength this student is set to — a `HOLD_ZOOM_LEVELS` id. Absent
+   *  when there is no student yet, exactly like `readAloud`. */
+  holdZoomLevel?: string;
+  onHoldZoomLevelChange?: (levelId: string) => void;
 }
 
 export function TopicPicker({
@@ -36,11 +41,16 @@ export function TopicPicker({
   onHistory,
   readAloud,
   onReadAloudChange,
+  holdZoomLevel,
+  onHoldZoomLevelChange,
 }: TopicPickerProps) {
   // The setting belongs to a student, so it only appears once one is chosen — and only
   // where a voice exists to honour it.
   const showReadAloud =
     readAloud !== undefined && onReadAloudChange !== undefined && speechSupported();
+  // Same "only once a student is chosen" rule, without the speech check — this one has
+  // nothing to do with a voice being available.
+  const showHoldZoom = holdZoomLevel !== undefined && onHoldZoomLevelChange !== undefined;
   return (
     <div className="topic-picker">
       <div className="grade-header">
@@ -74,6 +84,33 @@ export function TopicPicker({
             <span className="read-aloud-knob" />
             <span className="visually-hidden">להקריא את השאלות בקול</span>
           </button>
+        </div>
+      )}
+
+      {showHoldZoom && (
+        <div className="hold-zoom-setting">
+          <div className="hold-zoom-header">
+            <span className="hold-zoom-icon" aria-hidden="true">
+              🔍
+            </span>
+            <span className="read-aloud-text">
+              <span className="read-aloud-title">התקרבות כשמחזיקים את האצבע</span>
+              <span className="read-aloud-note">כמה הדף מתקרב כשעוצרים לרגע לפני שכותבים</span>
+            </span>
+          </div>
+          <div className="hold-zoom-options" role="group" aria-label="התקרבות כשמחזיקים את האצבע">
+            {HOLD_ZOOM_LEVELS.map((level) => (
+              <button
+                key={level.id}
+                type="button"
+                className="hold-zoom-option"
+                aria-pressed={level.id === holdZoomLevel}
+                onClick={() => onHoldZoomLevelChange(level.id)}
+              >
+                {level.label}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 

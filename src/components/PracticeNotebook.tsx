@@ -51,6 +51,10 @@ interface PracticeNotebookProps {
    *  to the toolbar while fullscreen is on, instead of in the hidden regular header.
    *  Ignored outside fullscreen. */
   statusSlot: ReactNode;
+  /** How far a held touch closes in, as a multiplier — or `null` for "off", which means the
+   *  gesture doesn't exist at all (no dwell timer is even started). Comes from the student's
+   *  own setting; see docs/features/notebook-hold-to-zoom/ (סבב ה׳). */
+  holdZoomFactor: number | null;
 }
 
 /**
@@ -66,9 +70,9 @@ const PINCH_UNDO_WINDOW_MS = 220;
 /**
  * Hold-to-zoom: a single pointer that stays still (within HOLD_ZOOM_MOVE_TOLERANCE_PX)
  * for HOLD_ZOOM_DWELL_MS from the moment it touches down — before any real movement —
- * triggers a temporary, bounded zoom-IN (HOLD_ZOOM_FACTOR), a closer/more focused view —
- * like leaning in to concentrate — for the rest of that same touch, animated over
- * HOLD_ZOOM_TRANSITION_MS; releasing the pointer animates back to
+ * triggers a temporary, bounded zoom-IN (by the `holdZoomFactor` prop), a closer/more
+ * focused view — like leaning in to concentrate — for the rest of that same touch,
+ * animated over HOLD_ZOOM_TRANSITION_MS; releasing the pointer animates back to
  * exactly the transform saved right before the touch started. See
  * docs/features/notebook-hold-to-zoom/ for the full design and architecture. The move
  * tolerance isn't in design.md — real touches never land on the exact same pixel twice,
@@ -76,7 +80,6 @@ const PINCH_UNDO_WINDOW_MS = 220;
  */
 const HOLD_ZOOM_DWELL_MS = 180;
 const HOLD_ZOOM_TRANSITION_MS = 120;
-const HOLD_ZOOM_FACTOR = 1.7;
 const HOLD_ZOOM_MOVE_TOLERANCE_PX = 4;
 
 export function PracticeNotebook({
@@ -90,6 +93,7 @@ export function PracticeNotebook({
   onToggleFullscreen,
   topSlot,
   statusSlot,
+  holdZoomFactor,
 }: PracticeNotebookProps) {
   const [tool, setTool] = useState<DrawTool | "pan">("pen");
   /** Which destructive action, if any, is waiting on confirmation — "remove" (a whole page)
@@ -148,6 +152,7 @@ export function PracticeNotebook({
    *  restore on release — also doubles as the "is this touch currently held-zoomed" flag. */
   const preHoldTransform = useRef<PanZoom | null>(null);
   const transitionClearTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const holdZoomFactorRef = useRef(holdZoomFactor);
 
   const currentPage = pages[currentPageIndex];
 
@@ -158,6 +163,14 @@ export function PracticeNotebook({
   useEffect(() => {
     lockedRef.current = locked;
   }, [locked]);
+
+  // Mirrored into a ref for the same reason as `lockedRef`: triggerHoldZoom runs inside a
+  // setTimeout scheduled back at pointerdown, and a closure reading the prop directly would
+  // hold whatever value was current when the touch began. Reading the ref is also what makes
+  // a change to the setting apply to the very next hold, with no reload.
+  useEffect(() => {
+    holdZoomFactorRef.current = holdZoomFactor;
+  }, [holdZoomFactor]);
 
   function inkColor() {
     return getComputedStyle(document.documentElement).getPropertyValue("--text-h").trim() || "#08060d";
@@ -222,13 +235,16 @@ export function PracticeNotebook({
     holdZoomTimer.current = null;
     if (holdZoomPointerId.current !== pointerId) return;
     if (activePointers.current.size !== 1) return;
+    // Defensive: the setting could have flipped to "off" between arming and firing.
+    const factor = holdZoomFactorRef.current;
+    if (factor === null) return;
     const down = holdZoomDownPos.current;
     const stageRect = stageRef.current?.getBoundingClientRect();
     if (!down || !stageRect) return;
     preHoldTransform.current = { ...panZoomRef.current };
     // zoomAroundPoint wants stage-relative screen pixels (like handleWheel/zoomButton
     // below), not the page-space coordinates localPoint() returns for drawing.
-    const target = zoomAroundPoint(panZoomRef.current, down.x - stageRect.left, down.y - stageRect.top, HOLD_ZOOM_FACTOR);
+    const target = zoomAroundPoint(panZoomRef.current, down.x - stageRect.left, down.y - stageRect.top, factor);
     animateTransformTo(target, HOLD_ZOOM_TRANSITION_MS);
   }
 
@@ -430,11 +446,16 @@ export function PracticeNotebook({
         paintTo(localPoint(e.clientX, e.clientY));
       }
       // Armed regardless of the tool branch above — hold-to-zoom is a view-only gesture,
-      // independent of pen/eraser/pan and of whether the page is locked.
-      holdZoomPointerId.current = e.pointerId;
-      holdZoomDownPos.current = { x: e.clientX, y: e.clientY };
-      if (holdZoomTimer.current) clearTimeout(holdZoomTimer.current);
-      holdZoomTimer.current = setTimeout(() => triggerHoldZoom(e.pointerId), HOLD_ZOOM_DWELL_MS);
+      // independent of pen/eraser/pan and of whether the page is locked. "Off" is the one
+      // thing that stops it, and it stops it here rather than by passing a factor of 1:
+      // nothing is scheduled, nothing is recorded, so there is no timer to fire, no
+      // animation to run, and nothing to clean up — the gesture genuinely isn't there.
+      if (holdZoomFactorRef.current !== null) {
+        holdZoomPointerId.current = e.pointerId;
+        holdZoomDownPos.current = { x: e.clientX, y: e.clientY };
+        if (holdZoomTimer.current) clearTimeout(holdZoomTimer.current);
+        holdZoomTimer.current = setTimeout(() => triggerHoldZoom(e.pointerId), HOLD_ZOOM_DWELL_MS);
+      }
     } else if (activePointers.current.size === 2) {
       // A second pointer means this is a pinch — hold-to-zoom's dwell/held state for the
       // first pointer is discarded outright, not paused: panZoomRef already holds the

@@ -593,3 +593,52 @@ None.
 אוטומטית לאמת שה-`120%` החדש "מרגיש נכון" יותר מ-`91%` הקודם; זה בדיוק
 מה שביקש המשתמש אחרי ניסוי אמיתי, ורק ניסוי אמיתי נוסף (בתצוגה המקדימה)
 יכול לאשר את זה.
+
+**סבב ה׳ (בוצע, 2026-09-25) — בורר העוצמה:** נבנה לפי התכנון, שבעה קבצים:
+
+- `src/data/notebook.ts`: `HoldZoomLevel`, `HOLD_ZOOM_LEVELS` (שש רשומות
+  כפי שנקבע), `DEFAULT_HOLD_ZOOM_LEVEL = "veryMuch"`, ופונקציה קטנה
+  `holdZoomFactorFor(levelId)` שממירה מזהה לפקטור. **התוספת היחידה מעבר
+  לתכנון:** הפונקציה הזו לא הופיעה במסמך במפורש — בלעדיה כל קורא היה חוזר
+  על אותו `find(...)?.factor ?? null` (גם `App.tsx` וגם כל בדיקה עתידית),
+  וזה בדיוק המקום שבו "לא מוכר" ו"כבוי" צריכים להתמפות לאותה תוצאה
+  (`null`) במקום אחד.
+- `src/data/preferences.ts`: `holdZoomLevel?: Record<string, string>` לצד
+  `readAloud`; הקורא מאמת מול `HOLD_ZOOM_LEVELS` ומחזיר את ברירת המחדל
+  כשהערך חסר או לא מוכר; הכותב באותו דפוס `try/catch` של הקובץ.
+- `src/components/PracticeNotebook.tsx`: הקבוע `HOLD_ZOOM_FACTOR` נמחק;
+  נוסף prop `holdZoomFactor: number | null`, ו-`holdZoomFactorRef` שמתעדכן
+  ב-`useEffect` (כמו `lockedRef`); ההפעלה ב-`handlePointerDown` עטופה
+  ב-`if (holdZoomFactorRef.current !== null)` כך שב"כבוי" לא נזרע טיימר
+  ולא נכתבים `holdZoomPointerId`/`holdZoomDownPos`; `triggerHoldZoom`
+  קורא את ה-ref, מחזיר מיד אם הוא `null` (הגנה על החלפה בין זריעה לירייה),
+  ומעביר את הפקטור ל-`zoomAroundPoint`.
+- `src/components/Practice.tsx`: prop שעובר הלאה בלבד, בלי לוגיקה.
+- `src/App.tsx`: `holdZoomLevelFor(student.id)` + `holdZoomFactorFor(...)`
+  ליד `readAloudFor` הקיים; ה-tick שונה שם ל-`setPreferencesTick` (ההערה
+  מעליו עודכנה) ומקודם משתי ההגדרות; מסלול ה-`home` מקבל מזהה + callback,
+  ו-`Practice` מקבל את הפקטור. שתי הערות על מה שלא נגעתי בו: קריאת
+  ה-`TopicPicker` השנייה (הפול-ת׳רו בסוף הקומפוננטה) לא מקבלת את ה-props
+  החדשים — בדיוק כמו שהיא לא מקבלת את `readAloud` היום, וההגדרות יושבות
+  במסך ה-`home`.
+- `src/components/TopicPicker.tsx`: שורת ההגדרה השנייה עם ששת הכפתורים
+  והכיתובים מ-design.md מילה במילה, `aria-pressed` על הנבחר,
+  `role="group"` עם `aria-label` על השורה, ומוסתרת כשה-props חסרים (בלי
+  תנאי ה-`speechSupported()`). ה-JSX משתמש מחדש ב-`.read-aloud-text`/
+  `-title`/`-note` לגוש הטקסט — אותה אנטומיה, בלי שכפול CSS.
+- `src/App.css`: `.hold-zoom-setting` (אותו ארגז, בפריסת עמודה),
+  `.hold-zoom-header`, `.hold-zoom-icon`, `.hold-zoom-options`
+  (`flex-wrap: wrap`, לא `overflow-x`), `.hold-zoom-option` +
+  `[aria-pressed="true"]`.
+
+**גרסה — כאן התגלה משהו שהיה נכשל ב-CI:** שלושת הסבבים הקודמים תיעדו
+ש"אין צורך בהעלאת גרסה כי ה-PR כבר ב-`1.31.0` מול `main` ב-`1.30.0`".
+בדקתי בפועל במקום להניח, ו**זה כבר לא נכון**: מאז מוזג `PR #69`, ש-`main`
+העלה בו את הגרסה עצמאית ל-`1.31.0` — כלומר ה-PR והבסיס היו שווים, ובלי
+העלאה `scripts/check-version-bump.mjs` היה מפיל את ה-PR. הרצתי אותו ידנית
+כדי לאמת ("expected: 1.32.0"), ואז `npm run bump:feature` → **`1.31.0` →
+`1.32.0`**.
+
+**נבדק:** `npm run build` ו-`npm run lint` ירוקים אחרי ההעלאה. בדיקות
+ה-e2e הן תפקיד שלב ה-QA שבא אחרי זה — שימו לב שיש בסוויטה בדיקה שמשווה את
+המספר במסך הראשון ל-`package.json`, כך שההעלאה נוגעת גם בה.

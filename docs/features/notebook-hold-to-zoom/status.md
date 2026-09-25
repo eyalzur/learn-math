@@ -20,7 +20,7 @@
 - [x] Product spec — product-manager — 2026-09-25 (סבב ה׳: 4 הכרעות מוצר — ברירת מחדל = הדרגה שאומתה (`70%`) ולא האמצעית, per-student, "כבוי" = המחווה לא קיימת, הבורר לא בדרך של הילד/ה)
 - [x] Design — designer — 2026-09-25 (סבב ה׳: דרגות `9/15/25/42/70` — תקרה = הערך שאומת כדי שברירת המחדל תהיה אפשרות שאפשר לחזור אליה; שישה כפתורים באזור ההגדרות הקיים במסך הנושאים, לא בסרגל המחברת; בלי מספרים בממשק)
 - [x] Architecture — tech-lead — 2026-09-25 (סבב ה׳: נשמר מזהה דרגה ולא פקטור; HOLD_ZOOM_LEVELS ב-notebook.ts; ref לפקטור כמו lockedRef; "כבוי" לא זורע טיימר בכלל)
-- [ ] Implementation — developer — ממתין
+- [x] Implementation — developer — 2026-09-25 (סבב ה׳: שבעה קבצים; "כבוי" לא זורע טיימר; גרסה הועלתה 1.31.0→1.32.0 — main הגיע עצמאית ל-1.31.0 ב-PR #69, כך שבלי העלאה בדיקת הגרסה הייתה מפילה את ה-PR)
 - [ ] Tests — qa — ממתין
 
 ## Progress — סבב ד׳ (2026-09-25): כיוונון עוצמת ההתקרבות — 30% → 70%
@@ -63,7 +63,7 @@ design.md, "עדכון סבב ד׳".
 - [x] Implementation — developer — 2026-09-12
 - [x] Tests — qa — 2026-09-12
 
-**Current phase:** developer — סבב ה׳
+**Current phase:** qa — סבב ה׳
 **Branch:** `feature/notebook-hold-to-zoom`
 **PR:** [#70](https://github.com/eyalzur/learn-math/pull/70) (עדיין פתוח — יתעדכן, לא ייפתח מחדש)
 
