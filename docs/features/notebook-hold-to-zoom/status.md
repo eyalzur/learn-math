@@ -19,7 +19,7 @@ design.md, "עדכון סבב ד׳".
 
 - [x] Design — designer — 2026-09-25 (סבב ד׳: עוצמה 30%→70%, נימוק מחדש למרחק מ-MAX_ZOOM ולעיגון)
 - [x] Architecture — tech-lead — 2026-09-25 (סבב ד׳: HOLD_ZOOM_FACTOR 1.3→1.7, סף חיתוך MAX_ZOOM ירד מ-192% ל-147% זום ידני מראש — תועד, לא תוקן)
-- [ ] Implementation — developer — ממתין לעדכון
+- [x] Implementation — developer — 2026-09-25 (סבב ד׳: HOLD_ZOOM_FACTOR ל-1.7 בקוד, build/lint ירוקים, 7/7 בבדיקה המבודדת בלי שינוי בקובץ הבדיקות)
 
 ## Progress — סבב ג׳ (2026-09-13): באג אמיתי ממכשיר מגע — הזום קורס באמצע כתיבה
 המשתמש דיווח (בפעם השנייה/השלישית) שהזום-אין "יוצא בחזרה" באמצע כתיבה, על
@@ -51,7 +51,7 @@ design.md, "עדכון סבב ד׳".
 - [x] Implementation — developer — 2026-09-12
 - [x] Tests — qa — 2026-09-12
 
-**Current phase:** developer — סבב ד׳
+**Current phase:** done, סבב ד׳ הושלם — ממתין לאימות חוזר של המשתמש (עוצמת ההתקרבות + באג המגע), ולריוויו על אותו PR
 **Branch:** `feature/notebook-hold-to-zoom`
 **PR:** [#70](https://github.com/eyalzur/learn-math/pull/70) (עדיין פתוח — יתעדכן, לא ייפתח מחדש)
 

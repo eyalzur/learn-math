@@ -76,7 +76,7 @@ const PINCH_UNDO_WINDOW_MS = 220;
  */
 const HOLD_ZOOM_DWELL_MS = 180;
 const HOLD_ZOOM_TRANSITION_MS = 120;
-const HOLD_ZOOM_FACTOR = 1.3;
+const HOLD_ZOOM_FACTOR = 1.7;
 const HOLD_ZOOM_MOVE_TOLERANCE_PX = 4;
 
 export function PracticeNotebook({
