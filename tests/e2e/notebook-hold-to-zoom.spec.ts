@@ -197,6 +197,167 @@ test("still triggers on a page that's already locked (answered and checked)", as
 
 // ------------------------------------------------------- content written while zoomed sticks
 
+// ============================================================ סבב ה׳ — בורר העוצמה
+// Acceptance criteria under test: product-spec.md, "Acceptance Criteria — הגדרת עוצמת
+// ההתקרבות (סבב ה׳)". The seven tests above all exercise the DEFAULT level, since the
+// default is the strongest one — so they double as coverage that the default is wired.
+
+/** Stops at the topic screen ("מה נתרגל היום?"), where the settings rows live — one step
+ *  short of `openLevel`, which continues into practice. */
+async function openTopics(page: Page, studentName?: string) {
+  await page.goto("/learn-math/");
+  await page.evaluate(() => localStorage.clear());
+  await page.goto("/learn-math/");
+  if (studentName) await page.locator(".student-card", { hasText: studentName }).click();
+  else await page.locator(".student-card").first().click();
+  await page.locator(".grade-card").first().click();
+}
+
+/** From the topic screen into practice, the same two clicks `openLevel` ends with. */
+async function enterPractice(page: Page) {
+  await page.locator(".topic-card").first().click();
+  await page.locator(".style-card").first().click();
+}
+
+/** Walks back up to the topic screen, wherever we are. "← חזרה" goes up exactly one level,
+ *  and both practice and a reload land on the style screen rather than the topic one, so the
+ *  number of steps isn't fixed — climb until the settings row is actually there. */
+async function backToTopics(page: Page) {
+  const settings = page.locator(".hold-zoom-setting");
+  for (let i = 0; i < 3 && (await settings.count()) === 0; i++) {
+    await page.getByRole("button", { name: "← חזרה" }).first().click();
+    await page.waitForTimeout(150);
+  }
+  await expect(settings).toBeVisible();
+}
+
+function strengthOption(page: Page, label: string) {
+  return page.locator(".hold-zoom-option", { hasText: new RegExp(`^${label}$`) });
+}
+
+/** The zoom percentage reached while a held touch is at its strongest, then released. */
+async function zoomWhileHeld(page: Page): Promise<number> {
+  const { x, y } = await stageCenter(page);
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.waitForTimeout(HOLD_LONG_ENOUGH_MS);
+  const during = await zoomPercent(page);
+  await page.mouse.up();
+  return during;
+}
+
+test("the strength setting offers exactly six options, with the validated strongest one chosen by default", async ({
+  page,
+}) => {
+  await openTopics(page);
+
+  const options = page.locator(".hold-zoom-option");
+  await expect(options).toHaveCount(6);
+  await expect(options).toHaveText(["כבוי", "מעט מאוד", "מעט", "בינוני", "הרבה", "הרבה מאוד"]);
+  // Exactly one chosen, and it is the strongest — the level that was tried on a real
+  // device, not the middle of the scale. See product-spec.md for why.
+  await expect(page.locator('.hold-zoom-option[aria-pressed="true"]')).toHaveText("הרבה מאוד");
+});
+
+test('choosing "כבוי" means holding still changes nothing at all — not even momentarily', async ({
+  page,
+}) => {
+  await openTopics(page);
+  await strengthOption(page, "כבוי").click();
+  await enterPractice(page);
+
+  const before = await zoomPercent(page);
+  const scaleOf = () =>
+    page.locator(".notebook-stack").evaluate((el) => {
+      const m = getComputedStyle(el).transform.match(/matrix\(([^)]+)\)/);
+      return m ? Number(m[1].split(",")[0]) : NaN;
+    });
+  const scaleBefore = await scaleOf();
+
+  const { x, y } = await stageCenter(page);
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  // Sampled repeatedly *during* the hold, not just after it: "off" has to mean nothing
+  // happens, including no change that appears and then goes back — which a single
+  // after-the-fact assertion would sail straight past.
+  for (let i = 0; i < 8; i++) {
+    await page.waitForTimeout(60);
+    expect(await scaleOf()).toBeCloseTo(scaleBefore, 5);
+  }
+  await expect(zoomReadout(page)).toHaveText(`${before}%`);
+
+  // Still nothing once writing begins, and nothing on release either.
+  await page.mouse.move(x + 12, y + 12, { steps: 4 });
+  await expect(zoomReadout(page)).toHaveText(`${before}%`);
+  await page.mouse.up();
+  await expect(zoomReadout(page)).toHaveText(`${before}%`);
+  expect(await scaleOf()).toBeCloseTo(scaleBefore, 5);
+});
+
+test("a weaker level zooms in less than the strongest one", async ({ page }) => {
+  // Compared against each other rather than against fixed numbers: the scale has been
+  // retuned twice already, and "weaker is weaker" is the promise — not any one value.
+  await openTopics(page);
+  await enterPractice(page);
+  const atStrongest = await zoomWhileHeld(page);
+
+  await openTopics(page);
+  await strengthOption(page, "מעט מאוד").click();
+  await enterPractice(page);
+  const atWeakest = await zoomWhileHeld(page);
+
+  const resting = await zoomPercent(page);
+  expect(atWeakest).toBeGreaterThan(resting);
+  expect(atWeakest).toBeLessThan(atStrongest);
+});
+
+test("the choice survives a reload — both the marked option and the actual behaviour", async ({
+  page,
+}) => {
+  await openTopics(page);
+  await strengthOption(page, "מעט מאוד").click();
+  await enterPractice(page);
+  const beforeReload = await zoomWhileHeld(page);
+
+  await page.reload();
+  // A reload restores the screen the student was last on (the style screen here), so climb
+  // back to where the setting is shown before reading it.
+  await backToTopics(page);
+  await expect(page.locator('.hold-zoom-option[aria-pressed="true"]')).toHaveText("מעט מאוד");
+
+  await enterPractice(page);
+  expect(await zoomWhileHeld(page)).toBe(beforeReload);
+});
+
+test("each student keeps their own strength", async ({ page }) => {
+  await openTopics(page, "מיקה");
+  await strengthOption(page, "כבוי").click();
+  await expect(page.locator('.hold-zoom-option[aria-pressed="true"]')).toHaveText("כבוי");
+
+  // Topic screen → grade screen → student screen, then in as someone else.
+  await page.getByRole("button", { name: "← חזרה" }).click();
+  await page.getByRole("button", { name: "← החלף תלמיד" }).click();
+  await page.locator(".student-card", { hasText: "רותם" }).click();
+  await page.locator(".grade-card").first().click();
+
+  // Untouched for this student, so still the default — one student's choice does not
+  // reach across to another's.
+  await expect(page.locator('.hold-zoom-option[aria-pressed="true"]')).toHaveText("הרבה מאוד");
+});
+
+test("a change applies to the very next hold, with no reload in between", async ({ page }) => {
+  await openTopics(page);
+  await enterPractice(page);
+  const atDefault = await zoomWhileHeld(page);
+
+  // Out to the setting, change it, straight back in — no reload anywhere.
+  await backToTopics(page);
+  await strengthOption(page, "בינוני").click();
+  await enterPractice(page);
+
+  expect(await zoomWhileHeld(page)).toBeLessThan(atDefault);
+});
+
 test("drawing that continues through a hold-zoom cycle is still recorded as page content", async ({ page }) => {
   await openLevel(page);
   await expect(page.getByRole("button", { name: "שלח למורה" })).toBeDisabled();

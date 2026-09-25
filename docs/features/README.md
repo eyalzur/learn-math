@@ -6,7 +6,7 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
-| זום זמני בהחזקת מגע — התקרבות למחברת | 🟡 סבב ה׳ — בורר עוצמה מיושם, ממתין לבדיקות | [status](./notebook-hold-to-zoom/status.md) |
+| זום זמני בהחזקת מגע — התקרבות למחברת | 🟡 PR פתוח ([#70](https://github.com/eyalzur/learn-math/pull/70)), בורר עוצמה + ממתין לאימות ידני | [status](./notebook-hold-to-zoom/status.md) |
 | יומן מקרים שבהם המורה טעתה | 🟢 done — מוזג ל-main | [status](./teacher-misread-log/status.md) |
 | זוויות וחפיפת משולשים (כיתה ח׳) | 🟢 done — מוזג ל-main | [status](./grade8-angles-congruence/status.md) |
 | תיקוני שימושיות במחברת התרגול | 🟢 done — מוזג ל-main | [status](./notebook-usability-fixes/status.md) |
