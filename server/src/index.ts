@@ -1,9 +1,10 @@
 import cors from "cors";
 import express, { type Response } from "express";
 import { ensureFreshIdentityToken } from "./anthropicAuth.js";
+import { saveMisreadCase, type QuestionMeta } from "./misreadLog.js";
 import { readPage } from "./readPage.js";
 import { renderMatrix, type RenderMatrixInput } from "./renderMatrix.js";
-import type { PageReading } from "./pageReading.js";
+import { PageReadingSchema, type PageReading } from "./pageReading.js";
 
 /**
  * The static client lives on GitHub Pages; this is a real cross-origin call. Kept as an
@@ -79,7 +80,12 @@ app.post("/read-page", (req, res) => {
 });
 
 async function handleReadPage(
-  input: RenderMatrixInput & { expectedPrompt: string; studentCorrection?: string },
+  input: RenderMatrixInput & {
+    expectedPrompt: string;
+    studentCorrection?: string;
+    previousReading?: PageReading;
+    questionMeta?: QuestionMeta;
+  },
   res: Response,
 ): Promise<void> {
   try {
@@ -96,6 +102,23 @@ async function handleReadPage(
     await ensureFreshIdentityToken();
     const reading = await readPage(buffer, input.expectedPrompt, input.studentCorrection);
     res.status(200).json({ reading });
+
+    // Fire-and-forget, and only after the response above has already gone out — saving a
+    // misread case must never delay or affect what the student sees (see
+    // docs/features/teacher-misread-log/architecture.md, Technical Approach). Only a
+    // correction round with a previous reading to compare against is worth a record — a
+    // client that doesn't send one (an old cached build, say) simply doesn't get logged,
+    // which is fine: nothing here ever fails the request over it.
+    if (input.studentCorrection && input.previousReading) {
+      void saveMisreadCase({
+        pngBuffer: buffer,
+        expectedPrompt: input.expectedPrompt,
+        previousReading: input.previousReading,
+        studentCorrection: input.studentCorrection,
+        correctedReading: reading,
+        questionMeta: input.questionMeta,
+      }).catch((err: unknown) => console.error("failed to save misread case:", err));
+    }
   } catch (error) {
     // Cloud Run captures stdout/stderr into Cloud Logging automatically — without this,
     // a live failure here is invisible: the client only ever sees the generic 500 below,
@@ -126,20 +149,56 @@ const STUDENT_CORRECTION_MAX_LENGTH = 500;
 // reading (see readPage.ts). Required and non-empty: without it the model would be back to
 // guessing what exercise this even is from handwriting alone, the exact unreliability this
 // feature is meant to remove.
-function validateReadPageRequest(
-  body: unknown,
-): (RenderMatrixInput & { expectedPrompt: string; studentCorrection?: string }) | null {
+function validateReadPageRequest(body: unknown): (RenderMatrixInput & {
+  expectedPrompt: string;
+  studentCorrection?: string;
+  previousReading?: PageReading;
+  questionMeta?: QuestionMeta;
+}) | null {
   const validated = validateRequest(body);
   if (!validated) return null;
-  const { expectedPrompt, studentCorrection } = body as Record<string, unknown>;
+  const { expectedPrompt, studentCorrection, previousReading, questionMeta } = body as Record<string, unknown>;
   if (typeof expectedPrompt !== "string" || expectedPrompt.trim() === "") return null;
   if (studentCorrection !== undefined && typeof studentCorrection !== "string") return null;
   const trimmedCorrection = typeof studentCorrection === "string" ? studentCorrection.trim() : "";
+
+  // Both optional and best-effort: they only feed the misread log (see misreadLog.ts), never
+  // the actual reading, so a missing or malformed value here just means no record gets
+  // saved this time — never a 400 over something that isn't the student's answer.
+  const parsedPreviousReading = parsePageReading(previousReading);
+  const parsedQuestionMeta = parseQuestionMeta(questionMeta);
+
   return {
     ...validated,
     expectedPrompt,
     ...(trimmedCorrection ? { studentCorrection: trimmedCorrection.slice(0, STUDENT_CORRECTION_MAX_LENGTH) } : {}),
+    ...(parsedPreviousReading ? { previousReading: parsedPreviousReading } : {}),
+    ...(parsedQuestionMeta ? { questionMeta: parsedQuestionMeta } : {}),
   };
+}
+
+// Same "don't guess" tightening readPage.ts applies to Claude's own structured output:
+// PageReadingSchema alone allows a `certain: true` object with no processReflection/
+// finalAnswer, which isn't a valid PageReading — fall back to `{certain: false}` rather
+// than store a half-formed "certain" record.
+function parsePageReading(value: unknown): PageReading | null {
+  const parsed = PageReadingSchema.safeParse(value);
+  if (!parsed.success) return null;
+  const { certain, processReflection, errorPointer, finalAnswer } = parsed.data;
+  if (certain && processReflection && Number.isFinite(finalAnswer)) {
+    return { certain: true, processReflection, ...(errorPointer ? { errorPointer } : {}), finalAnswer: finalAnswer as number };
+  }
+  return { certain: false };
+}
+
+function parseQuestionMeta(value: unknown): QuestionMeta | undefined {
+  if (!value || typeof value !== "object") return undefined;
+  const { questionId, topic, lessonTitle } = value as Record<string, unknown>;
+  const meta: QuestionMeta = {};
+  if (typeof questionId === "string") meta.questionId = questionId;
+  if (typeof topic === "string") meta.topic = topic;
+  if (typeof lessonTitle === "string") meta.lessonTitle = lessonTitle;
+  return Object.keys(meta).length > 0 ? meta : undefined;
 }
 
 // Cloud Run injects the port to listen on via $PORT — it is not a fixed value.
