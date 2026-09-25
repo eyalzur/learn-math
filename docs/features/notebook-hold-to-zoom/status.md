@@ -19,7 +19,7 @@
 באותה מידה). הדרגות, ברירת המחדל, השמירה ו"כבוי" לא משתנים.
 
 - [x] Product spec — product-manager — 2026-09-25 (סבב ו׳: קריטריון "גלוי" עודכן — כפתור, לא פרישה; הוכרע שגם ההקראה עוברת)
-- [ ] Design — designer — ממתין
+- [x] Design — designer — 2026-09-25 (סבב ו׳: כפתור ⚙️ בשורת הכותרת, דיאלוג חוסם על אנטומיית דיאלוג האישור הקיים, role=dialog ולא alertdialog, סגירה ב-"סגירה"/רקע; ההקראה ראשונה בדיאלוג)
 - [ ] Architecture — tech-lead — ממתין
 - [ ] Implementation — developer — ממתין
 - [ ] Tests — qa — ממתין
@@ -76,7 +76,7 @@ design.md, "עדכון סבב ד׳".
 - [x] Implementation — developer — 2026-09-12
 - [x] Tests — qa — 2026-09-12
 
-**Current phase:** designer — סבב ו׳
+**Current phase:** tech-lead — סבב ו׳
 **Branch:** `feature/notebook-hold-to-zoom`
 **PR:** [#70](https://github.com/eyalzur/learn-math/pull/70) (עדיין פתוח — יתעדכן, לא ייפתח מחדש)
 
