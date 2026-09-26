@@ -6,7 +6,12 @@
  * value that gets overwritten. Sharing one array would force every history read to filter
  * out rows that are not practices, which looks cheap on the first day and is not.
  */
-import { DEFAULT_HOLD_ZOOM_LEVEL, HOLD_ZOOM_LEVELS } from "./notebook";
+import {
+  AUTO_SCROLL_JUMP_LEVELS,
+  DEFAULT_AUTO_SCROLL_JUMP_LEVEL,
+  DEFAULT_HOLD_ZOOM_LEVEL,
+  HOLD_ZOOM_LEVELS,
+} from "./notebook";
 
 const STORAGE_KEY = "learn-math:preferences";
 
@@ -19,9 +24,10 @@ interface Preferences {
    *  option could show as chosen. An id keeps what the person meant ("the second-strongest")
    *  across retunes, and can be validated against a closed list. */
   holdZoomLevel?: Record<string, string>;
-  /** Student id → whether the notebook's view follows the writing point while writing near
-   *  an edge. Unlike `readAloud`, missing/absent means *on* — see `autoScrollFollow` below. */
-  autoScrollFollow?: Record<string, boolean>;
+  /** Student id → how far the notebook's view jumps between finished strokes (an
+   *  `AUTO_SCROLL_JUMP_LEVELS` id, "off" included) — same reasoning as `holdZoomLevel`
+   *  above: an id survives a scale retune, a stored number wouldn't. */
+  autoScrollJumpLevel?: Record<string, string>;
 }
 
 /**
@@ -78,19 +84,22 @@ export function setHoldZoomLevel(studentId: string, levelId: string): void {
   }
 }
 
-/** Whether the notebook's view follows this student's writing near an edge. On unless
- *  turned off — the opposite default from `readAloud` — so a student who never opens the
- *  setting still gets it, per product-spec.md. */
-export function autoScrollFollow(studentId: string): boolean {
-  return readAll().autoScrollFollow?.[studentId] !== false;
+/**
+ * Which auto-scroll-jump strength this student is set to. Validated against the current
+ * scale, same as `holdZoomLevel` — a missing or stale value falls back to the default
+ * rather than propagating a level nothing can render as chosen.
+ */
+export function autoScrollJumpLevel(studentId: string): string {
+  const stored = readAll().autoScrollJumpLevel?.[studentId];
+  return AUTO_SCROLL_JUMP_LEVELS.some((level) => level.id === stored) ? stored! : DEFAULT_AUTO_SCROLL_JUMP_LEVEL;
 }
 
-export function setAutoScrollFollow(studentId: string, value: boolean): void {
+export function setAutoScrollJumpLevel(studentId: string, levelId: string): void {
   try {
     const all = readAll();
     localStorage.setItem(
       STORAGE_KEY,
-      JSON.stringify({ ...all, autoScrollFollow: { ...all.autoScrollFollow, [studentId]: value } }),
+      JSON.stringify({ ...all, autoScrollJumpLevel: { ...all.autoScrollJumpLevel, [studentId]: levelId } }),
     );
   } catch {
     // ignore

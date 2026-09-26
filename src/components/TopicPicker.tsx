@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Topic } from "../data/curriculum";
-import { HOLD_ZOOM_LEVELS } from "../data/notebook";
+import { AUTO_SCROLL_JUMP_LEVELS, HOLD_ZOOM_LEVELS } from "../data/notebook";
 import { speechSupported } from "../data/speech";
 
 interface TopicPickerProps {
@@ -30,10 +30,11 @@ interface TopicPickerProps {
    *  when there is no student yet, exactly like `readAloud`. */
   holdZoomLevel?: string;
   onHoldZoomLevelChange?: (levelId: string) => void;
-  /** Whether this student has the notebook's view follow their writing near an edge. Absent
-   *  when there is no student yet, exactly like `readAloud`/`holdZoomLevel`. */
-  autoScrollFollow?: boolean;
-  onAutoScrollFollowChange?: (value: boolean) => void;
+  /** How far this student's notebook view jumps between finished strokes — an
+   *  `AUTO_SCROLL_JUMP_LEVELS` id. Absent when there is no student yet, exactly like
+   *  `readAloud`/`holdZoomLevel`. */
+  autoScrollJumpLevel?: string;
+  onAutoScrollJumpLevelChange?: (levelId: string) => void;
 }
 
 export function TopicPicker({
@@ -48,8 +49,8 @@ export function TopicPicker({
   onReadAloudChange,
   holdZoomLevel,
   onHoldZoomLevelChange,
-  autoScrollFollow,
-  onAutoScrollFollowChange,
+  autoScrollJumpLevel,
+  onAutoScrollJumpLevelChange,
 }: TopicPickerProps) {
   /* Transient and never persisted, so it lives here rather than in App.tsx — the ⚙️ button
      and the dialog are both this component's. The settings *values* keep coming from
@@ -68,12 +69,12 @@ export function TopicPicker({
   // nothing to do with a voice being available.
   const showHoldZoom = holdZoomLevel !== undefined && onHoldZoomLevelChange !== undefined;
   // Same "only once a student is chosen" rule as showHoldZoom, no voice check either.
-  const showAutoScrollFollow = autoScrollFollow !== undefined && onAutoScrollFollowChange !== undefined;
+  const showAutoScrollJump = autoScrollJumpLevel !== undefined && onAutoScrollJumpLevelChange !== undefined;
   /* Whether there is anything to open a dialog for at all. Written as the union, not as
      `showHoldZoom` alone (which it equals today): the design's invariant is that the ⚙️
      button never leads to an empty dialog, and that stays true if the zoom picker ever
      grows a display condition of its own. */
-  const showSettings = showReadAloud || showHoldZoom || showAutoScrollFollow;
+  const showSettings = showReadAloud || showHoldZoom || showAutoScrollJump;
   return (
     <div className="topic-picker">
       <div className="grade-header">
@@ -214,27 +215,36 @@ export function TopicPicker({
                 </div>
               )}
 
-              {showAutoScrollFollow && (
-                <div className="read-aloud-setting">
-                  <span className="read-aloud-icon" aria-hidden="true">
-                    ↔️
-                  </span>
-                  <span className="read-aloud-text">
-                    <span className="read-aloud-title">התצוגה עוקבת אחרי הכתיבה</span>
-                    <span className="read-aloud-note">
-                      כשמתקרבים לקצה, הדף זז לבד כדי שהכתיבה תישאר גלויה
+              {showAutoScrollJump && (
+                <div className="auto-scroll-setting">
+                  <div className="auto-scroll-header">
+                    <span className="auto-scroll-icon" aria-hidden="true">
+                      ↔️
                     </span>
-                  </span>
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={autoScrollFollow}
-                    className={`read-aloud-switch ${autoScrollFollow ? "on" : "off"}`}
-                    onClick={() => onAutoScrollFollowChange(!autoScrollFollow)}
+                    <span className="read-aloud-text">
+                      <span className="read-aloud-title">התצוגה קופצת בין תו לתו</span>
+                      <span className="read-aloud-note">
+                        כשמסיימים לכתוב ספרה או אות, הדף זז קצת כדי לפנות מקום להמשך
+                      </span>
+                    </span>
+                  </div>
+                  <div
+                    className="auto-scroll-options"
+                    role="group"
+                    aria-label="התצוגה קופצת בין תו לתו"
                   >
-                    <span className="read-aloud-knob" />
-                    <span className="visually-hidden">התצוגה עוקבת אחרי הכתיבה</span>
-                  </button>
+                    {AUTO_SCROLL_JUMP_LEVELS.map((level) => (
+                      <button
+                        key={level.id}
+                        type="button"
+                        className="auto-scroll-option"
+                        aria-pressed={level.id === autoScrollJumpLevel}
+                        onClick={() => onAutoScrollJumpLevelChange(level.id)}
+                      >
+                        {level.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>

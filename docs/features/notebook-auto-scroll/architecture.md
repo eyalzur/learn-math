@@ -308,3 +308,82 @@ None.
   `readAloud`/`holdZoomLevel`.
 
 אין סטיות מהתכנון שדורשות פתיחת שאלה חוזרת לשלב קודם.
+
+## Implementation Notes (סבב ב׳ — 2026-09-26)
+מומש בדיוק לפי הארכיטקטורה למעלה. סבב א׳ הוסר לגמרי מהקוד (לא רק מהתיעוד):
+שום `applyAutoScrollFollow`, שום `AUTO_SCROLL_FOLLOW_*`, שום `autoScrollFollow`
+בשום קובץ.
+
+**מה בדיוק השתנה, לפי קובץ:**
+- `src/data/notebook.ts` — `clampFollowPanX` רופקטר להשתמש בעזר משותף
+  (`clampPanAxis`, לא מיוצא) יחד עם `clampFollowPanY` החדשה. `AUTO_SCROLL_JUMP_GAP_THRESHOLD_CELLS`
+  (`10`), `AUTO_SCROLL_JUMP_LEVELS` (שש דרגות, מבנה זהה ל-`HOLD_ZOOM_LEVELS`),
+  `DEFAULT_AUTO_SCROLL_JUMP_LEVEL = "medium"`, `autoScrollJumpFractionFor`.
+- `src/data/preferences.ts` — `autoScrollFollow`/`setAutoScrollFollow` הוחלפו
+  ב-`autoScrollJumpLevel`/`setAutoScrollJumpLevel`, מילה במילה כמו `holdZoomLevel`.
+- `src/components/PracticeNotebook.tsx`:
+  - prop/ref הוחלפו ל-`autoScrollJumpFraction`/`autoScrollJumpFractionRef`.
+  - שני refs חדשים: `strokeBoundsRef` (הקו הנוכחי), `lastStrokeBoundsRef` (הקו
+    האחרון שהושלם).
+  - `paintTo` — חישוב `col`/`row` הוצא מחוץ ל-`if (ctx)` (עכשיו תמיד רץ), וקורא
+    ל-`extendStrokeBounds(col, row)` החדשה.
+  - `handlePointerDown` — `strokeBoundsRef.current = null` בתחילת קו חדש (ליד
+    `lastPoint.current = null` הקיים), וגם בענף הפינץ' (ליד `undoRecording()`,
+    כדי שקו שבוטל לא יזוהם כ"קו אחרון").
+  - `endPointer` — נלכד `finishedStrokeBounds` **לפני** האיפוסים, ואז בתוך
+    `if (wasDrawing)`: `maybeJumpForNewStroke(finishedStrokeBounds,
+    lastStrokeBoundsRef.current)` ואז `lastStrokeBoundsRef.current =
+    finishedStrokeBounds`.
+  - `useEffect([currentPage])` הקיים ו-`clearCurrentPageNow` — שניהם מאפסים
+    `lastStrokeBoundsRef.current = null`, בדיוק כמו שתוכנן ב-Edge Cases.
+  - קבוע חדש `AUTO_SCROLL_JUMP_TRANSITION_MS = 150`.
+- `src/components/Practice.tsx`, `src/components/TopicPicker.tsx`, `src/App.tsx` —
+  חיווט מלא של `autoScrollJumpLevel`/`autoScrollJumpFraction` לאורך השרשרת.
+  ב-`TopicPicker.tsx`: השורה השלישית בדיאלוג עברה מ-JSX של מתג ל-JSX של
+  בורר-כפתורים (`role="group"`, `.auto-scroll-*` — מחלקות **נפרדות** מ-
+  `.hold-zoom-*`, בדיוק כמו שה-Risks דרש).
+- `src/App.css` — המחלקות `.auto-scroll-setting`/`.auto-scroll-header`/
+  `.auto-scroll-icon`/`.auto-scroll-options`/`.auto-scroll-option` (כולל
+  `[aria-pressed="true"]`) נוספו **לאותם selectors** של `.hold-zoom-*`
+  המקבילות — לא בלוק CSS נפרד.
+
+**גרסה: לא הועלתה שוב.** `package.json` כבר עומד על `1.33.0` מסבב א׳ (על אותו
+בראנץ', אותו PR עדיין לא מוזג) — בדיוק אותו לקח שכבר מתועד ב-
+`notebook-hold-to-zoom/architecture.md` (סבב ו׳): "הבדיקה דורשת בדיוק
+middle+1... העלאה נוספת הייתה מפילה אותה." העלאה נוספת כאן הייתה עושה
+`1.34.0`, לא `middle+1` ביחס ל-`main`.
+
+**`npm run build` ו-`npm run lint` ירוקים.**
+
+**אימות ידני בדפדפן (Playwright, `/opt/pw-browsers/chromium`, מול `npm run dev`),
+תלמיד/ה רותם, כיתה ו׳, "שברים פשוטים":**
+- דיאלוג ⚙️: שש אפשרויות (`כבוי`/`מעט מאוד`/`מעט`/`בינוני`/`הרבה`/`הרבה מאוד`),
+  ברירת המחדל המסומנת היא `בינוני` כמתוכנן (לא `הרבה מאוד`).
+- **קו ראשון על דף חדש:** לא גורם לשום תזוזה (אין קו קודם להשוות).
+- **קו שני, רחוק מהראשון (ימינה):** בזמן משיכת הקו עצמו — `transform` **קפוא
+  לגמרי** (נבדק תוך כדי, לא רק אחרי). ברגע ההרמה — קפיצה חד-פעמית, `panX` זז
+  מ-`0` ל-`-81.4px` (בדיוק `-stageWidth*0.22` בזום `0.7`, כלומר `stageWidth *
+  fraction` — הנוסחה עובדת כמתוכנן, "בינוני" = `0.22`).
+- **קו שלישי, קרוב לקו השני בקואורדינטות-דף בפועל** (מתוקן בבדיקה כדי לפצות על
+  ההזזה של המצלמה מהקפיצה הקודמת — נקודה חשובה: "קרוב על המסך" ו"קרוב בדף"
+  הם לא אותו דבר ברגע שהמצלמה כבר קפצה פעם אחת): **לא** גרם לקפיצה נוספת —
+  `panX` נשאר `-81.4px`. הריצה הראשונה של הבדיקה (בלי הפיצוי הזה) הראתה קפיצה
+  שנייה — לא באג בקוד, אלא כי המבחן עצמו חישב מיקום-מסך שגוי אחרי שהמצלמה כבר
+  זזה; אחרי התיקון הראשוני, ההתנהגות תואמת בדיוק את המתוכנן.
+- **קו רביעי, רחוק למטה:** קפיצה גם בציר Y (`panY` זז ל-`-76.35px`), בו-זמנית
+  עם עדכון `panX` הנוסף מאותו קו — קפיצה דו-ממדית עובדת.
+- **עוצמה "כבוי":** אחרי בחירתה, שני קווים רחוקים לגמרי לא הזיזו את
+  `transform` בכלל (`translate(0px, 0px)` נשאר קבוע).
+- **שמירה per-student:** אחרי בחירת "כבוי" עבור "רותם",
+  `localStorage["learn-math:preferences"]` הכיל בדיוק
+  `{"autoScrollJumpLevel":{"rotem":"off"}}`.
+
+**הערה טכנית שאומתה תוך כדי הבדיקה, לא תוכננה מראש בפירוט:** קפיצה שקורית על
+קו שנמשך בזמן שזום-ההחזקה הזמני היה פעיל — הקפיצה נקראת **אחרי** שחזרת
+זום-ההחזקה (`animateTransformTo(preHoldTransform...)`) כבר קרתה באותו
+`endPointer`, ולכן היא מחשבת ומזיזה יחסית לתצוגה **שכבר חזרה** למקומה
+המקורי, לא לתצוגה המוגדלת זמנית — התוצאה היא קפיצה אחת נקייה, בלי "התנגשות"
+או ריצוד בין שתי האנימציות, כי שתיהן משתמשות ב-`animateTransformTo` הסינכרוני
+ואין ציור מסך בין שתי הקריאות.
+
+אין סטיות מהתכנון שדורשות פתיחת שאלה חוזרת לשלב קודם.

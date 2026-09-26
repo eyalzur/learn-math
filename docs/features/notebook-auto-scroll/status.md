@@ -20,10 +20,13 @@
 - [x] Architecture — tech-lead — 2026-09-26 (bounding-box של כל קו, השוואה
   ב-endPointer, קפיצה חד-פעמית דרך animateTransformTo הקיים; לקח מפורש מסבב
   א׳: שמות מחלקה נפרדים לשני בוררים באותו דיאלוג, לא שיתוף)
-- [ ] Implementation — developer — not started
+- [x] Implementation — developer — 2026-09-26 (מנגנון סבב א׳ הוסר לגמרי,
+  bounding-box + קפיצה בדידה + בורר שש-דרגות ממומשים; build/lint ירוקים,
+  אומת ידנית בדפדפן כולל "כבוי" ותצוגה דו-ממדית; גרסה לא הועלתה שוב — כבר
+  1.33.0 מסבב א׳ על אותו PR)
 - [ ] Tests — qa — not started
 
-**Current phase:** developer
+**Current phase:** qa
 **Branch:** `feature/notebook-auto-scroll`
 **PR:** [#75](https://github.com/eyalzur/learn-math/pull/75) — עודכן, סבב ב׳ בעיצומו
 

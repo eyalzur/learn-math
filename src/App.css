@@ -799,8 +799,15 @@ button.secondary {
 
 /* The hold-to-zoom strength setting — same box as the read-aloud row, but stacked: six
    options don't fit beside the text at phone width, so the text block sits on top and the
-   options row underneath. See docs/features/notebook-hold-to-zoom/ (סבב ה׳/ו׳). */
-.hold-zoom-setting {
+   options row underneath. See docs/features/notebook-hold-to-zoom/ (סבב ה׳/ו׳).
+   The auto-scroll-jump strength setting (docs/features/notebook-auto-scroll/, סבב ב׳) shares
+   this same visual style — same six-buttons-in-a-row shape — but keeps its own class names
+   rather than reusing these: round 1 of that feature reused `.read-aloud-switch`/
+   `role="switch"` for an unrelated row and it broke three existing e2e tests that assumed a
+   single match for a bare selector (see that feature's tests.md). Two distinct pickers in
+   the same dialog need two distinct sets of class names even when the CSS is identical. */
+.hold-zoom-setting,
+.auto-scroll-setting {
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -811,26 +818,30 @@ button.secondary {
   text-align: right;
 }
 
-.hold-zoom-header {
+.hold-zoom-header,
+.auto-scroll-header {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.hold-zoom-icon {
+.hold-zoom-icon,
+.auto-scroll-icon {
   font-size: 22px;
   line-height: 1;
 }
 
 /* wrap, not overflow-x: all six options have to be visible at once. The notebook toolbar
    scrolls horizontally and that is exactly the failure mode being avoided here. */
-.hold-zoom-options {
+.hold-zoom-options,
+.auto-scroll-options {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
 
-.hold-zoom-option {
+.hold-zoom-option,
+.auto-scroll-option {
   padding: 6px 12px;
   font-size: 14px;
   color: var(--text);
@@ -839,7 +850,8 @@ button.secondary {
   border-radius: 999px;
 }
 
-.hold-zoom-option[aria-pressed="true"] {
+.hold-zoom-option[aria-pressed="true"],
+.auto-scroll-option[aria-pressed="true"] {
   background: var(--accent-bg);
   border-color: var(--accent-border);
   color: var(--text-h);
