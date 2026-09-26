@@ -7,10 +7,10 @@
 - [x] Product spec — product-manager — 2026-09-26
 - [x] Design — designer — 2026-09-26
 - [x] Architecture — tech-lead — 2026-09-26
-- [ ] Implementation — developer — not started
+- [x] Implementation — developer — 2026-09-26
 - [ ] Tests — qa — not started
 
-**Current phase:** developer
+**Current phase:** qa
 **Branch:** `feature/notebook-auto-scroll`
 **PR:** not opened yet
 

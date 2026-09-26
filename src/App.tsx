@@ -19,6 +19,8 @@ import {
   setReadAloud,
   holdZoomLevel as holdZoomLevelFor,
   setHoldZoomLevel,
+  autoScrollFollow as autoScrollFollowFor,
+  setAutoScrollFollow,
 } from "./data/preferences";
 import { holdZoomFactorFor } from "./data/notebook";
 import "./App.css";
@@ -299,6 +301,7 @@ function App() {
   const readAloud = readAloudFor(student.id);
   const holdZoomLevel = holdZoomLevelFor(student.id);
   const holdZoomFactor = holdZoomFactorFor(holdZoomLevel);
+  const autoScrollFollow = autoScrollFollowFor(student.id);
 
   function finish(topic: Topic | null, lesson: Lesson, correctCount: number) {
     recordPractice({
@@ -340,6 +343,11 @@ function App() {
         holdZoomLevel={holdZoomLevel}
         onHoldZoomLevelChange={(levelId) => {
           setHoldZoomLevel(student.id, levelId);
+          setPreferencesTick((n) => n + 1);
+        }}
+        autoScrollFollow={autoScrollFollow}
+        onAutoScrollFollowChange={(value) => {
+          setAutoScrollFollow(student.id, value);
           setPreferencesTick((n) => n + 1);
         }}
       />
@@ -422,6 +430,7 @@ function App() {
         }}
         readAloud={readAloud}
         holdZoomFactor={holdZoomFactor}
+        autoScrollFollow={autoScrollFollow}
         onAnswered={topic?.adaptive ? (correct) => handleAdaptiveAnswered(topic, correct) : undefined}
       />
     );

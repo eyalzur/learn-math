@@ -34,6 +34,9 @@ interface PracticeProps {
   /** This student's hold-to-zoom strength, already resolved to a multiplier — `null` when
    *  they have it switched off. Passed straight through to the notebook. */
   holdZoomFactor: number | null;
+  /** Whether this student has the notebook's view follow their writing near an edge.
+   *  Passed straight through to the notebook. */
+  autoScrollFollow: boolean;
   /** Fires once per question, right after right/wrong is decided — before the child even
    *  sees the feedback or explanation. Only an adaptive lesson supplies this; every other
    *  lesson leaves it unset and nothing here changes for it. */
@@ -46,6 +49,7 @@ export function Practice({
   onExit,
   readAloud,
   holdZoomFactor,
+  autoScrollFollow,
   onAnswered,
 }: PracticeProps) {
   const [index, setIndex] = useState(0);
@@ -697,6 +701,7 @@ export function Practice({
         topSlot={topSlot}
         statusSlot={statusSlot}
         holdZoomFactor={holdZoomFactor}
+        autoScrollFollow={autoScrollFollow}
       />
       {!fullscreen && sendState === "error" && (
         <p className="notebook-send-error" aria-live="polite">

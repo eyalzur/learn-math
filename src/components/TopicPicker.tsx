@@ -30,6 +30,10 @@ interface TopicPickerProps {
    *  when there is no student yet, exactly like `readAloud`. */
   holdZoomLevel?: string;
   onHoldZoomLevelChange?: (levelId: string) => void;
+  /** Whether this student has the notebook's view follow their writing near an edge. Absent
+   *  when there is no student yet, exactly like `readAloud`/`holdZoomLevel`. */
+  autoScrollFollow?: boolean;
+  onAutoScrollFollowChange?: (value: boolean) => void;
 }
 
 export function TopicPicker({
@@ -44,6 +48,8 @@ export function TopicPicker({
   onReadAloudChange,
   holdZoomLevel,
   onHoldZoomLevelChange,
+  autoScrollFollow,
+  onAutoScrollFollowChange,
 }: TopicPickerProps) {
   /* Transient and never persisted, so it lives here rather than in App.tsx — the ⚙️ button
      and the dialog are both this component's. The settings *values* keep coming from
@@ -61,11 +67,13 @@ export function TopicPicker({
   // Same "only once a student is chosen" rule, without the speech check — this one has
   // nothing to do with a voice being available.
   const showHoldZoom = holdZoomLevel !== undefined && onHoldZoomLevelChange !== undefined;
+  // Same "only once a student is chosen" rule as showHoldZoom, no voice check either.
+  const showAutoScrollFollow = autoScrollFollow !== undefined && onAutoScrollFollowChange !== undefined;
   /* Whether there is anything to open a dialog for at all. Written as the union, not as
      `showHoldZoom` alone (which it equals today): the design's invariant is that the ⚙️
      button never leads to an empty dialog, and that stays true if the zoom picker ever
      grows a display condition of its own. */
-  const showSettings = showReadAloud || showHoldZoom;
+  const showSettings = showReadAloud || showHoldZoom || showAutoScrollFollow;
   return (
     <div className="topic-picker">
       <div className="grade-header">
@@ -203,6 +211,30 @@ export function TopicPicker({
                       </button>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {showAutoScrollFollow && (
+                <div className="read-aloud-setting">
+                  <span className="read-aloud-icon" aria-hidden="true">
+                    ↔️
+                  </span>
+                  <span className="read-aloud-text">
+                    <span className="read-aloud-title">התצוגה עוקבת אחרי הכתיבה</span>
+                    <span className="read-aloud-note">
+                      כשמתקרבים לקצה, הדף זז לבד כדי שהכתיבה תישאר גלויה
+                    </span>
+                  </span>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={autoScrollFollow}
+                    className={`read-aloud-switch ${autoScrollFollow ? "on" : "off"}`}
+                    onClick={() => onAutoScrollFollowChange(!autoScrollFollow)}
+                  >
+                    <span className="read-aloud-knob" />
+                    <span className="visually-hidden">התצוגה עוקבת אחרי הכתיבה</span>
+                  </button>
                 </div>
               )}
             </div>
