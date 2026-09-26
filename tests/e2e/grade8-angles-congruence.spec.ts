@@ -322,8 +322,9 @@ test("the triangle-angle-sum step shows the calculation with explicit brackets",
   // a single one of those can occasionally cross the default 30s action timeout, the
   // same "real load, not a logic bug" failure mode already documented in tests.md for
   // this topic's coverage tests. Extending this one test's own timeout is the fix used
-  // there too, rather than weakening the search itself.
-  test.setTimeout(60000);
+  // there too, rather than weakening the search itself. Bumped again 60s → 90s
+  // (2026-09-13) after the 60s margin itself was crossed once under full-suite CI load.
+  test.setTimeout(90000);
   await openTopic(page);
   let prompt = await currentPrompt(page);
   // Find a sum-of-angles question specifically (not exterior-angle, which shares its
