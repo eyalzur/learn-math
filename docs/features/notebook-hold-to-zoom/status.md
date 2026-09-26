@@ -21,7 +21,7 @@
 - [x] Product spec — product-manager — 2026-09-25 (סבב ו׳: קריטריון "גלוי" עודכן — כפתור, לא פרישה; הוכרע שגם ההקראה עוברת)
 - [x] Design — designer — 2026-09-25 (סבב ו׳: כפתור ⚙️ בשורת הכותרת, דיאלוג חוסם על אנטומיית דיאלוג האישור הקיים, role=dialog ולא alertdialog, סגירה ב-"סגירה"/רקע; ההקראה ראשונה בדיאלוג)
 - [x] Architecture — tech-lead — 2026-09-25 (סבב ו׳: מצב הדיאלוג מקומי ב-TopicPicker; JSX inline ולא רכיב חדש — התקדים היחיד inline; showSettings = showReadAloud || showHoldZoom כדי שלא ייפתח דיאלוג ריק; מחלקות CSS חדשות ולא שימוש חוזר ב-notebook-confirm-*; אין Escape/focus trap — פער מתועד, עקבי עם הדיאלוג הקיים; נבדק בפועל שאין צורך בהעלאת גרסה נוספת)
-- [ ] Implementation — developer — ממתין
+- [x] Implementation — developer — 2026-09-26 (סבב ו׳: שני קבצים — TopicPicker.tsx ו-App.css; שתי השורות הועברו מילה במילה לתוך הדיאלוג; הגרסה במפורש לא הועלתה — הבדיקה דורשת בדיוק middle+1 והעלאה נוספת הייתה מפילה אותה; build/lint ירוקים; שש בדיקות מסבב ה׳ צפויות להיכשל עד שה-QA יעדכן את הניווט)
 - [ ] Tests — qa — ממתין
 
 ## Progress — סבב ה׳ (2026-09-25): בורר עוצמה שנשמר (כבוי + חמש דרגות)
@@ -76,7 +76,7 @@ design.md, "עדכון סבב ד׳".
 - [x] Implementation — developer — 2026-09-12
 - [x] Tests — qa — 2026-09-12
 
-**Current phase:** developer — סבב ו׳
+**Current phase:** qa — סבב ו׳
 **Branch:** `feature/notebook-hold-to-zoom`
 **PR:** [#70](https://github.com/eyalzur/learn-math/pull/70) (עדיין פתוח — יתעדכן, לא ייפתח מחדש)
 
