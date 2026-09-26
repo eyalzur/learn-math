@@ -14,12 +14,14 @@
 ## Progress — סבב ב׳ (2026-09-26): קפיצה בדידה בין תווים, בורר עוצמה
 - [x] Product spec — product-manager — 2026-09-26 (השאלה הפתוחה הוכרעה: "לכל
   כיוון" כולל גם אנכי)
-- [ ] Design — designer — not started
+- [x] Design — designer — 2026-09-26 (מסמך נכתב מחדש במלואו; מתג בינארי הופך
+  לבורר שש אפשרויות כמו זום-ההחזקה, ברירת מחדל "בינוני" כי אין עדיין ערך שאומת
+  בשטח)
 - [ ] Architecture — tech-lead — not started
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** designer
+**Current phase:** tech-lead
 **Branch:** `feature/notebook-auto-scroll`
 **PR:** [#75](https://github.com/eyalzur/learn-math/pull/75) — עודכן, סבב ב׳ בעיצומו
 
