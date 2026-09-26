@@ -102,17 +102,20 @@ const speakButton = (page: Page) =>
  * The read-aloud setting is no longer a row on the topic screen — since סבב ו׳ of
  * docs/features/notebook-hold-to-zoom it lives in the settings dialog behind that screen's
  * ⚙️ button. These two wrap the extra open/close, so the tests below still read as
- * "turn it on" and "what is it set to".
+ * "turn it on" and "what is it set to". Named explicitly, not a bare `getByRole("switch")`:
+ * docs/features/notebook-auto-scroll/ added a second switch to the same dialog.
  */
+const READ_ALOUD_SWITCH_NAME = "להקריא את השאלות בקול";
+
 async function toggleReadAloud(page: Page) {
   await page.getByRole("button", { name: "הגדרות" }).click();
-  await page.getByRole("switch").click();
+  await page.getByRole("switch", { name: READ_ALOUD_SWITCH_NAME }).click();
   await page.getByRole("button", { name: "סגירה" }).click();
 }
 
 async function readAloudState(page: Page): Promise<string | null> {
   await page.getByRole("button", { name: "הגדרות" }).click();
-  const value = await page.getByRole("switch").getAttribute("aria-checked");
+  const value = await page.getByRole("switch", { name: READ_ALOUD_SWITCH_NAME }).getAttribute("aria-checked");
   await page.getByRole("button", { name: "סגירה" }).click();
   return value;
 }
@@ -271,10 +274,11 @@ test("a browser with no speech engine shows no setting and no button", async ({ 
   await fresh(page);
   await openStudent(page, 0);
 
-  // Open the settings and look inside: "no switch anywhere on the screen" would pass
-  // trivially now that the settings sit behind a button, so it would prove nothing.
+  // Open the settings and look inside: "no read-aloud switch" specifically — not "no switch
+  // anywhere in the dialog", since docs/features/notebook-auto-scroll/ added a second switch
+  // that has nothing to do with speech and is still there regardless.
   await page.getByRole("button", { name: "הגדרות" }).click();
-  await expect(page.getByRole("switch")).toHaveCount(0);
+  await expect(page.getByRole("switch", { name: READ_ALOUD_SWITCH_NAME })).toHaveCount(0);
   // The zoom setting has nothing to do with speech, so it is still there — which is also
   // why the ⚙️ button never opens an empty dialog.
   await expect(page.locator(".hold-zoom-setting")).toBeVisible();
