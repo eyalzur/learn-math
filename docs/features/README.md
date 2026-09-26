@@ -6,7 +6,7 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
-| זום זמני בהחזקת מגע — התקרבות למחברת | 🟡 סבב ו׳ — כפתור הגדרות, בבדיקות | [status](./notebook-hold-to-zoom/status.md) |
+| זום זמני בהחזקת מגע — התקרבות למחברת | 🟡 סבב ו׳ — כפתור הגדרות, ממתין לריוויו | [status](./notebook-hold-to-zoom/status.md) |
 | יומן מקרים שבהם המורה טעתה | 🟢 done — מוזג ל-main | [status](./teacher-misread-log/status.md) |
 | זוויות וחפיפת משולשים (כיתה ח׳) | 🟢 done — מוזג ל-main | [status](./grade8-angles-congruence/status.md) |
 | תיקוני שימושיות במחברת התרגול | 🟢 done — מוזג ל-main | [status](./notebook-usability-fixes/status.md) |

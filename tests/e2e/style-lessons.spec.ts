@@ -195,7 +195,11 @@ test("a child who cannot read gets the example spoken, one button per card", asy
   // A reload would resume inside the style picker just entered, not the topics list
   // (docs/features/any-grade-any-student) — walk back through the UI instead.
   await page.getByRole("button", { name: "← חזרה" }).click();
+  // Since docs/features/notebook-hold-to-zoom (סבב ו׳) the setting lives in a dialog behind
+  // the ⚙️ button rather than on the topic screen itself.
+  await page.getByRole("button", { name: "הגדרות" }).click();
   await page.locator(".read-aloud-switch").click();
+  await page.getByRole("button", { name: "סגירה" }).click();
   await page.locator(".topic-card").nth(PLACE).click();
   await expect(page.locator(".style-speak")).toHaveCount(6);
 

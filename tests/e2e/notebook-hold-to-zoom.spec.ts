@@ -202,8 +202,9 @@ test("still triggers on a page that's already locked (answered and checked)", as
 // ההתקרבות (סבב ה׳)". The seven tests above all exercise the DEFAULT level, since the
 // default is the strongest one — so they double as coverage that the default is wired.
 
-/** Stops at the topic screen ("מה נתרגל היום?"), where the settings rows live — one step
- *  short of `openLevel`, which continues into practice. */
+/** Stops at the topic screen ("מה נתרגל היום?"), where the ⚙️ button lives — one step
+ *  short of `openLevel`, which continues into practice. Since סבב ו׳ this screen shows the
+ *  button only; the settings themselves are behind `openSettings`. */
 async function openTopics(page: Page, studentName?: string) {
   await page.goto("/learn-math/");
   await page.evaluate(() => localStorage.clear());
@@ -221,14 +222,40 @@ async function enterPractice(page: Page) {
 
 /** Walks back up to the topic screen, wherever we are. "← חזרה" goes up exactly one level,
  *  and both practice and a reload land on the style screen rather than the topic one, so the
- *  number of steps isn't fixed — climb until the settings row is actually there. */
+ *  number of steps isn't fixed — climb until the ⚙️ button is actually there. Leaves the
+ *  settings closed; callers that need the picker follow with `openSettings`. */
 async function backToTopics(page: Page) {
-  const settings = page.locator(".hold-zoom-setting");
-  for (let i = 0; i < 3 && (await settings.count()) === 0; i++) {
+  const gear = settingsButton(page);
+  for (let i = 0; i < 3 && (await gear.count()) === 0; i++) {
     await page.getByRole("button", { name: "← חזרה" }).first().click();
     await page.waitForTimeout(150);
   }
-  await expect(settings).toBeVisible();
+  await expect(gear).toBeVisible();
+}
+
+/** The one thing the topic screen shows for settings since סבב ו׳ — named by its
+ *  `aria-label`, since it is an icon with no text of its own. */
+function settingsButton(page: Page) {
+  return page.getByRole("button", { name: "הגדרות" });
+}
+
+async function openSettings(page: Page) {
+  await settingsButton(page).click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+}
+
+async function closeSettings(page: Page) {
+  await page.getByRole("button", { name: "סגירה" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+}
+
+/** Open the settings, pick a strength, close again — the whole round trip an adult makes,
+ *  and what every strength test needs before it can enter practice (the dialog's backdrop
+ *  covers the topic cards while it is open). */
+async function chooseStrength(page: Page, label: string) {
+  await openSettings(page);
+  await strengthOption(page, label).click();
+  await closeSettings(page);
 }
 
 function strengthOption(page: Page, label: string) {
@@ -250,6 +277,7 @@ test("the strength setting offers exactly six options, with the validated strong
   page,
 }) => {
   await openTopics(page);
+  await openSettings(page);
 
   const options = page.locator(".hold-zoom-option");
   await expect(options).toHaveCount(6);
@@ -263,7 +291,7 @@ test('choosing "כבוי" means holding still changes nothing at all — not eve
   page,
 }) => {
   await openTopics(page);
-  await strengthOption(page, "כבוי").click();
+  await chooseStrength(page, "כבוי");
   await enterPractice(page);
 
   const before = await zoomPercent(page);
@@ -302,7 +330,7 @@ test("a weaker level zooms in less than the strongest one", async ({ page }) => 
   const atStrongest = await zoomWhileHeld(page);
 
   await openTopics(page);
-  await strengthOption(page, "מעט מאוד").click();
+  await chooseStrength(page, "מעט מאוד");
   await enterPractice(page);
   const atWeakest = await zoomWhileHeld(page);
 
@@ -315,7 +343,7 @@ test("the choice survives a reload — both the marked option and the actual beh
   page,
 }) => {
   await openTopics(page);
-  await strengthOption(page, "מעט מאוד").click();
+  await chooseStrength(page, "מעט מאוד");
   await enterPractice(page);
   const beforeReload = await zoomWhileHeld(page);
 
@@ -323,7 +351,9 @@ test("the choice survives a reload — both the marked option and the actual beh
   // A reload restores the screen the student was last on (the style screen here), so climb
   // back to where the setting is shown before reading it.
   await backToTopics(page);
+  await openSettings(page);
   await expect(page.locator('.hold-zoom-option[aria-pressed="true"]')).toHaveText("מעט מאוד");
+  await closeSettings(page);
 
   await enterPractice(page);
   expect(await zoomWhileHeld(page)).toBe(beforeReload);
@@ -331,8 +361,10 @@ test("the choice survives a reload — both the marked option and the actual beh
 
 test("each student keeps their own strength", async ({ page }) => {
   await openTopics(page, "מיקה");
+  await openSettings(page);
   await strengthOption(page, "כבוי").click();
   await expect(page.locator('.hold-zoom-option[aria-pressed="true"]')).toHaveText("כבוי");
+  await closeSettings(page);
 
   // Topic screen → grade screen → student screen, then in as someone else.
   await page.getByRole("button", { name: "← חזרה" }).click();
@@ -342,6 +374,7 @@ test("each student keeps their own strength", async ({ page }) => {
 
   // Untouched for this student, so still the default — one student's choice does not
   // reach across to another's.
+  await openSettings(page);
   await expect(page.locator('.hold-zoom-option[aria-pressed="true"]')).toHaveText("הרבה מאוד");
 });
 
@@ -352,7 +385,7 @@ test("a change applies to the very next hold, with no reload in between", async 
 
   // Out to the setting, change it, straight back in — no reload anywhere.
   await backToTopics(page);
-  await strengthOption(page, "בינוני").click();
+  await chooseStrength(page, "בינוני");
   await enterPractice(page);
 
   expect(await zoomWhileHeld(page)).toBeLessThan(atDefault);
@@ -370,4 +403,95 @@ test("drawing that continues through a hold-zoom cycle is still recorded as page
   await page.mouse.up();
 
   await expect(page.getByRole("button", { name: "שלח למורה" })).toBeEnabled();
+});
+
+// ============================================================ סבב ו׳ — כפתור ההגדרות
+// Acceptance criteria under test: product-spec.md, "Acceptance Criteria — כפתור הגדרות
+// (סבב ו׳)". The six tests above now go through the button as well, so they double as
+// coverage that the picker is still fully usable from behind it.
+
+test("the practice-choice screen shows one settings button and none of the options", async ({
+  page,
+}) => {
+  await openTopics(page);
+
+  // What the child sees on the way to practice: topic cards, and no settings laid out.
+  await expect(page.locator(".hold-zoom-option")).toHaveCount(0);
+  await expect(page.locator(".hold-zoom-setting")).toHaveCount(0);
+  await expect(page.locator(".read-aloud-setting")).toHaveCount(0);
+  await expect(page.locator(".topic-card").first()).toBeVisible();
+
+  // One button, identifiable as settings by its accessible name, and reachable without
+  // scrolling — the criterion is "an adult finds it without instructions".
+  await expect(settingsButton(page)).toHaveCount(1);
+  await expect(settingsButton(page)).toBeInViewport();
+
+  await openSettings(page);
+  await expect(page.locator(".hold-zoom-option")).toHaveCount(6);
+});
+
+test("opening the settings shows both settings, titled, with the current choice marked", async ({
+  page,
+}) => {
+  await openTopics(page);
+  await openSettings(page);
+
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByText("הגדרות", { exact: true })).toBeVisible();
+  // Both settings in one place — the read-aloud row moved here too (a product decision
+  // recorded in product-spec.md), so an adult has one place to look rather than two.
+  await expect(dialog.locator(".read-aloud-setting")).toBeVisible();
+  await expect(dialog.locator(".hold-zoom-setting")).toBeVisible();
+  await expect(dialog.locator(".hold-zoom-option")).toHaveCount(6);
+  await expect(dialog.locator('.hold-zoom-option[aria-pressed="true"]')).toHaveCount(1);
+});
+
+test('closing the settings without choosing returns to exactly the same screen — by "סגירה" and by tapping the backdrop', async ({
+  page,
+}) => {
+  await openTopics(page);
+  const heading = await page.locator("h1").textContent();
+  const topics = await page.locator(".topic-title").allTextContents();
+  const chosen = async () => {
+    await openSettings(page);
+    const label = await page.locator('.hold-zoom-option[aria-pressed="true"]').textContent();
+    return label;
+  };
+
+  const before = await chosen();
+  await closeSettings(page);
+  // Opening settings is not navigation: the screen underneath never moved.
+  await expect(page.locator("h1")).toHaveText(heading!);
+  expect(await page.locator(".topic-title").allTextContents()).toEqual(topics);
+
+  // The dimmed backdrop closes it too — clicked near its corner, well outside the card.
+  await openSettings(page);
+  await page.locator(".settings-backdrop").click({ position: { x: 5, y: 5 } });
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.locator("h1")).toHaveText(heading!);
+  expect(await page.locator(".topic-title").allTextContents()).toEqual(topics);
+
+  // And nothing was changed along the way — closing without choosing changes nothing.
+  expect(await chosen()).toBe(before);
+});
+
+test("the read-aloud setting moved into the settings and still works and saves there", async ({
+  page,
+}) => {
+  await openTopics(page);
+  await expect(page.locator(".read-aloud-switch")).toHaveCount(0);
+
+  await openSettings(page);
+  const speech = page.getByRole("switch", { name: "להקריא את השאלות בקול" });
+  await expect(speech).toHaveAttribute("aria-checked", "false");
+  await speech.click();
+  await expect(speech).toHaveAttribute("aria-checked", "true");
+
+  // Still on, after closing and reopening — the move did not cost it its persistence.
+  await closeSettings(page);
+  await openSettings(page);
+  await expect(page.getByRole("switch", { name: "להקריא את השאלות בקול" })).toHaveAttribute(
+    "aria-checked",
+    "true",
+  );
 });
