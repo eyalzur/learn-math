@@ -12,7 +12,7 @@
 
 **Current phase:** done — ממתין לריוויו ולמיזוג
 **Branch:** `feature/notebook-auto-scroll`
-**PR:** not opened yet
+**PR:** [#75](https://github.com/eyalzur/learn-math/pull/75) — ממתין לריוויו
 
 ## Open questions / blockers
 None.
