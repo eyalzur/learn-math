@@ -12,21 +12,19 @@
 - [x] Tests — qa — 2026-09-26 (398/398, ריצה בודדת ונקייה)
 
 ## Progress — סבב ב׳ (2026-09-26): קפיצה בדידה בין תווים, בורר עוצמה
-- [x] Product spec — product-manager — 2026-09-26 — **חסום**, ראו Open questions
-- [ ] Design — designer — ממתין לתשובת המשתמש
+- [x] Product spec — product-manager — 2026-09-26 (השאלה הפתוחה הוכרעה: "לכל
+  כיוון" כולל גם אנכי)
+- [ ] Design — designer — not started
 - [ ] Architecture — tech-lead — not started
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** product-manager — blocked, see Open questions below
+**Current phase:** designer
 **Branch:** `feature/notebook-auto-scroll`
-**PR:** [#75](https://github.com/eyalzur/learn-math/pull/75) — עודכן, ממתין לתשובת
-המשתמש לפני שהסבב הבא ממשיך
+**PR:** [#75](https://github.com/eyalzur/learn-math/pull/75) — עודכן, סבב ב׳ בעיצומו
 
 ## Open questions / blockers
-- **Product (סבב ב׳):** "כמובן זה צריך לעבוד לכל כיוון" — רק אופקית (ימין/שמאל,
-  כמו ה-scope הקיים), או גם אנכית (מעבר שורה למעלה/למטה)? ראו product-spec.md,
-  Open Questions, לפירוט המלא. נשאל המשתמש ישירות.
+None.
 
 ## Docs
 - [Product spec](./product-spec.md)
