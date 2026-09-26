@@ -26,6 +26,15 @@ export interface TeacherReading {
   reading: PageReading;
 }
 
+/** Loose identifiers for the question being worked on — enough to group misread cases by
+ *  question/topic/lesson later (see docs/features/teacher-misread-log/) without the server
+ *  needing to know anything about the curriculum's shape. Sent only alongside a correction. */
+export interface QuestionMeta {
+  questionId?: string;
+  topic?: string;
+  lessonTitle?: string;
+}
+
 /**
  * `expectedPrompt` is the exercise text already shown to the student (e.g. `question.prompt`)
  * — never the correct answer. It grounds the teacher's reading without handing the model
@@ -36,11 +45,17 @@ export interface TeacherReading {
  * *previous* reading of this same page was wrong (see
  * docs/features/notebook-teacher-feedback/) — the teacher re-reads the same image with it
  * as extra context, not as a fact handed to it for free.
+ *
+ * `previousReading` and `questionMeta`, when given alongside a correction, let the server
+ * log the case for a future test bank (docs/features/teacher-misread-log/) — purely
+ * best-effort on the server's side; omitting them just means that round isn't logged.
  */
 export async function readPageWithTeacher(
   page: NotebookPage,
   expectedPrompt: string,
   studentCorrection?: string,
+  previousReading?: PageReading,
+  questionMeta?: QuestionMeta,
 ): Promise<TeacherReading> {
   if (!SERVER_URL) throw new Error("notebook server url is not configured");
 
@@ -54,6 +69,8 @@ export async function readPageWithTeacher(
       filledCells: Array.from(page.filledCells),
       expectedPrompt,
       ...(studentCorrection ? { studentCorrection } : {}),
+      ...(previousReading ? { previousReading } : {}),
+      ...(questionMeta ? { questionMeta } : {}),
     }),
   });
 

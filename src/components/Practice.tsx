@@ -1,6 +1,6 @@
 import type { Lesson } from "../data/style";
 import { useEffect, useRef, useState } from "react";
-import { isHebrewPrompt, promptSegments } from "../data/curriculum";
+import { isHebrewPrompt, promptSegments, promptWithEquals } from "../data/curriculum";
 import type { Diagnosis } from "../data/diagnose";
 import { diagnose } from "../data/diagnose";
 import type { NotebookPage } from "../data/notebook";
@@ -72,6 +72,10 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
   const [uncertain, setUncertain] = useState(false);
   /** What the teacher understood, once a reading comes back confident. */
   const [teacherNote, setTeacherNote] = useState<{ reflection: string; errorPointer?: string } | null>(null);
+  /** The most recent reading, kept around only so a correction can tell the server what it's
+   *  correcting (docs/features/teacher-misread-log/) — the client never displays this
+   *  directly, `teacherNote`/`uncertain` do that. Reset in `next()`. */
+  const [lastReading, setLastReading] = useState<PageReading | null>(null);
 
   /** Telling the teacher she got it wrong (docs/features/notebook-teacher-feedback/):
    *  whether the free-text correction form is open, its content, and whether the reading
@@ -199,6 +203,7 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
    * very first call behaves exactly as before this feature existed.
    */
   function handleTeacherReading(reading: PageReading, corrected: boolean) {
+    setLastReading(reading);
     setIsCorrectedReading(corrected);
     setFollowUpInput("");
     setFollowUpResult(null);
@@ -278,7 +283,13 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
     if (!currentPage || sendState === "sending" || correctionText.trim() === "") return;
     setSendState("sending");
     try {
-      const { reading } = await readPageWithTeacher(currentPage, currentExpectedPrompt(), correctionText.trim());
+      const { reading } = await readPageWithTeacher(
+        currentPage,
+        currentExpectedPrompt(),
+        correctionText.trim(),
+        lastReading ?? undefined,
+        { questionId: question.id, topic: question.topic, lessonTitle: lesson.title },
+      );
       setSendState("idle");
       handleTeacherReading(reading, true);
       setCorrectionOpen(false);
@@ -312,6 +323,7 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
     setSendState("idle");
     setUncertain(false);
     setTeacherNote(null);
+    setLastReading(null);
     setCorrectionOpen(false);
     setCorrectionText("");
     setIsCorrectedReading(false);
@@ -399,7 +411,7 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
             ),
           )
         ) : (
-          <>{`${question.prompt} =`}</>
+          <>{promptWithEquals(question.prompt)}</>
         )}
       </span>
     </div>

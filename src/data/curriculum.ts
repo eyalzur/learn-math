@@ -265,3 +265,12 @@ export function promptSegments(prompt: string): PromptSegment[] {
     .map((value, i): PromptSegment => ({ kind: i % 2 === 1 ? "math" : "text", value }))
     .filter((segment) => segment.value !== "");
 }
+
+/**
+ * Bare arithmetic ("23 + 45") has no "=" of its own, so the box needs one to show the
+ * student where the answer goes. An equation ("x + 11 = 22") already carries one —
+ * appending another produced a visible "x + 11 = 22 =" for every question in משוואות.
+ */
+export function promptWithEquals(prompt: string): string {
+  return prompt.includes("=") ? prompt : `${prompt} =`;
+}
