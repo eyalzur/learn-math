@@ -8,9 +8,9 @@
 - [x] Design — designer — 2026-09-26
 - [x] Architecture — tech-lead — 2026-09-26
 - [x] Implementation — developer — 2026-09-26
-- [ ] Tests — qa — not started
+- [x] Tests — qa — 2026-09-26 (398/398, ריצה בודדת ונקייה)
 
-**Current phase:** qa
+**Current phase:** done — ממתין לריוויו ולמיזוג
 **Branch:** `feature/notebook-auto-scroll`
 **PR:** not opened yet
 

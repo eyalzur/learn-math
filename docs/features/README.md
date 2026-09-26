@@ -6,7 +6,7 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
-| גלילה אוטומטית במחברת לפי כיוון הכתיבה | 🟡 ממומש, ממתין ל-QA | [status](./notebook-auto-scroll/status.md) |
+| גלילה אוטומטית במחברת לפי כיוון הכתיבה | 🟢 done — ממתין לריוויו ולמיזוג | [status](./notebook-auto-scroll/status.md) |
 | זום זמני בהחזקת מגע — התקרבות למחברת | 🟢 done — מוזג ל-main (שישה סבבים, האחרון: כפתור הגדרות) | [status](./notebook-hold-to-zoom/status.md) |
 | יומן מקרים שבהם המורה טעתה | 🟢 done — מוזג ל-main | [status](./teacher-misread-log/status.md) |
 | זוויות וחפיפת משולשים (כיתה ח׳) | 🟢 done — מוזג ל-main | [status](./grade8-angles-congruence/status.md) |
