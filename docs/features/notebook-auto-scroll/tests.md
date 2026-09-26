@@ -1,54 +1,55 @@
 # גלילה אוטומטית במחברת לפי כיוון הכתיבה — Tests
 
+**עדכון סבב ב׳ (2026-09-26) — מסמך זה נכתב מחדש.** המנגנון הרציף של סבב א׳ בוטל
+לגמרי, ולכן כל שנים-עשר הבדיקות שבדקו אותו (`tests/e2e/notebook-auto-scroll.spec.ts`
+המקורי) הוחלפו בקובץ חדש שבודק את הקפיצה הבדידה של סבב ב׳. שום בדיקה מהקובץ
+הישן לא נשארה — היא בדקה התנהגות שכבר לא קיימת.
+
 ## Coverage
-מיפוי קריטריוני הקבלה מ-product-spec.md ↔ בדיקות ב-`tests/e2e/notebook-auto-scroll.spec.ts`:
+מיפוי קריטריוני הקבלה מ-product-spec.md, "Acceptance Criteria — סבב ב׳" ↔ בדיקות
+ב-`tests/e2e/notebook-auto-scroll.spec.ts`:
 
-- "כשהכתיבה מתקרבת לקצה הימני... נע ימינה" → `writing that keeps moving toward the right
-  edge pans the view further right`
-- "כשהכתיבה מתקרבת לקצה השמאלי... נע שמאלה" → `writing that keeps moving toward the left
-  edge pans the view further left`
-- "התנועה... לא קופצת/רועדת בעקבות תזוזה קטנה מקומית" → `a small reversal while still near
-  the same edge doesn't flip the pan direction back`
-- "לא דוחפת את התצוגה מעבר לגבול הדף עצמו" → `holding near the edge for a while never keeps
-  pushing the view past the page's own boundary`
-- "גלילה/זום... ביד מקבלים עדיפות" (חצי הגרירה — ראו הערה למטה לגבי צביטה) →
-  `dragging with the הזזה tool near the edge pans by exactly the manual drag, not more`
-- "קיימת הגדרה... מאחורי אותו כפתור הגדרות, ברירת מחדל מופעל" → `the settings dialog offers
-  the setting after the hold-to-zoom row, on by default`
-- "כשהמעקב האוטומטי כבוי, ההתנהגות זהה לחלוטין להיום" → `turning the setting off means
-  writing near an edge changes nothing at all`
-- תוקף מיידי, בלי רענון (מ-Interaction Flow) → `turning the setting back on applies to the
-  very next stroke, with no reload`
-- נשמר בין סשנים (מ-Interaction Flow) → `the choice survives a reload`
-- per-student (מ-Interaction Flow, וקריטריון "לכל תלמיד/ה בנפרד") → `each student keeps
-  their own choice`
-- "פועל בכל רמת זום... כולל זום ידני וזום ההחזקה הזמני" → שתי בדיקות: `still follows after a
-  manual zoom-in, not only at the opening zoom` ו-`still follows while the temporary
-  hold-to-zoom view is active`
+- "תוך כדי משיכת קו בפועל התצוגה אינה זזה בשום שלב" → `the view never moves while
+  a stroke is actively being drawn, even near the edge`
+- "קו שמסתיים רחוק מימין... קפיצה ימינה" → `a stroke that ends clearly to the
+  right of the last one jumps the view right, after it's lifted`
+- אותו דבר לשמאל/מעלה/מטה → `...jumps the view left`, `...jumps the view down`,
+  `...jumps the view up` (שלוש בדיקות נפרדות, כל אחת פותחת בתנועה לכיוון ההפוך
+  קודם — ראו הערה למטה על קצה הדף ההתחלתי)
+- "שילוב של שני צירים בו-זמנית" → `a stroke far away on both axes at once jumps
+  the view diagonally, in one motion`
+- "קו שמסתיים קרוב לקודם... לא גורם לקפיצה" → `a second (and third) stroke
+  landing close to the last one never jumps — a multi-stroke character`
+- "הקפיצה לא דוחפת מעבר לגבול הדף" → `repeated strokes that keep moving the same
+  way eventually stop at the page's own edge`
+- "גלילה/זום ידניים מקבלים עדיפות מלאה" (חצי הגרירה — ראו הערה למטה לגבי צביטה) →
+  `panning manually with the הזזה tool moves the view by exactly the drag, no
+  extra jump added`
+- "ההגדרה הופכת לבורר עוצמה... כבוי כאחת האפשרויות... ברירת מחדל" → `the
+  settings dialog offers six jump strengths, off first, medium chosen by default`
+- "כבוי = ההתנהגות זהה למה שהיה לפני הפיצ'ר כולו" → `choosing "כבוי" means no
+  stroke, however far from the last one, ever jumps the view`
+- תוקף מיידי בלי רענון, per-student, נשמר בין סשנים (Interaction Flow) → `a
+  change applies to the very next stroke, with no reload`, `the choice survives
+  a reload`, `each student keeps their own choice`
 
-**לא הודגם באוטומציה, במפורש:** עדיפות מול **צביטת שתי-אצבעות** (רק חצי-גרירה מהקריטריון
-נבדק). כמו ב-`notebook-hold-to-zoom.spec.ts`, ה-API של Playwright (`page.mouse`) לא מריץ שני
-מגעים בו-זמנית באמת — אותה מגבלה מתועדת שם, לא חדשה כאן. בדיקה ידנית: פינץ' תוך כדי כתיבה
-קרוב לקצה אמור להתנהג בדיוק כמו היום, בלי שהמעקב האוטומטי מתערב.
+**לא הודגם באוטומציה, במפורש:** עדיפות מול **צביטת שתי-אצבעות** — כמו בסבב א׳
+וב-`notebook-hold-to-zoom.spec.ts`, Playwright's `page.mouse` לא מריץ שני מגעים
+בו-זמנית באמת. בדיקה ידנית: פינץ' בין שתי כתיבות אמור להתנהג בדיוק כמו היום,
+בלי שהקפיצה מתערבת.
 
-## תיקוני-לוואי לקבצי בדיקה קיימים (לא חלק מהספק של הפיצ'ר הזה)
-הוספת שורה שנייה בעלת `role="switch"` לאותו דיאלוג הגדרות (המתג החדש, לצד מתג ההקראה
-הקיים) שברה ריצה נקייה של הסוויטה המלאה: כמה בדיקות קיימות בקבצים אחרים פנו ל-switch
-"הראשון/היחיד" בלי לציין שם (`getByRole("switch")` בלי `name`, או `.read-aloud-switch` בלי
-היקף), בהנחה סמויה שיש רק מתג אחד בדיאלוג. ברגע שיש שניים, ה-locator הופך דו-משמעי
-(strict-mode violation ב-Playwright), לא בגלל שההתנהגות שהם בודקים נשברה בפועל.
+**"פועל בכל רמת זום" (מסבב א׳, נשאר בתוקף כקריטריון אך לא לובש בדיקה ייעודית
+כאן:** המנגנון פועל על `panZoomRef` הנוכחי בכל רמה, ואינו תלוי בזום — כל
+הבדיקות למעלה כבר רצות בזום הפתיחה (`70%`), ותרגום לרמת זום אחרת הוא אותו
+מסלול קוד בדיוק (ראו architecture.md). בדיקה נפרדת לכל רמת זום הייתה בודקת את
+אותו קוד פעמיים.
 
-תוקן ב-3 קבצים, בדיוק אותו סוג תיקון בכל אחד — היקוף ה-locator לפי `name`/role, בלי לשנות
-שום assertion על ההתנהגות עצמה:
-- `tests/e2e/notebook-hold-to-zoom.spec.ts` — "opening the settings shows both settings..."
-- `tests/e2e/read-aloud-questions.spec.ts` — `toggleReadAloud`/`readAloudState` (המשותפים
-  לכמה בדיקות), ובדיקת "a browser with no speech engine..." (שהניחה "אין switch בכלל" כהוכחה
-  ל"אין שורת הקראה", הנחה שכבר לא נכונה).
-- `tests/e2e/style-lessons.spec.ts` — "a child who cannot read gets the example spoken..."
-
-זה בדיוק אותו סוג תיקון-לוואי שכבר תועד ב-`notebook-hold-to-zoom`'s own QA notes (סבב ו׳):
-"שני קבצי בדיקות אחרים דרשו תיקון ניווט" — תופעה חוזרת כשתוספת ל-UI משותף (דיאלוג
-ההגדרות) פוגשת בדיקות קיימות שהניחו יחידות (uniqueness) שלא הובטחה במפורש.
+**ניואנס אמיתי שהתגלה תוך כדי כתיבת הבדיקות (לא רק תוך כדי המימוש):** אחרי
+שהתצוגה כבר קפצה, אותה קואורדינטת-מסך כבר לא מייצגת את אותה קואורדינטת-דף.
+שלוש בדיקות (ימין/שמאל, מעלה/מטה) בונות על זה במפורש: כדי לבדוק "קפיצה שמאלה",
+קודם גוללים ימינה כדי לפנות מקום — בדיוק כמו ש-`notebook-hold-to-zoom.spec.ts`
+כבר עושה לבדיקות הזום שלו, מהסיבה הזהה: התצוגה הפותחת כבר יושבת בדיוק בקצה
+הדף (פינה שמאלית-עליונה), כך שאין "עוד יותר שמאלה/למעלה" לחשוף מהמצב ההתחלתי.
 
 ## How to run
 ```bash
@@ -56,6 +57,9 @@ npm run build && npm run lint && npm run test:e2e
 ```
 
 ## Status
-✅ ירוק — `398/398` עוברות, ריצה בודדת ונקייה (2026-09-26): `386` הקיימות (כולל תיקון
-ה-flake ב-`grade8-angles-congruence` שמוזג היום) + `12` חדשות בקובץ הזה, ואפס כשלים.
-`build`/`lint` ירוקים.
+✅ ירוק — `400/400` עוברות, ריצה בודדת ונקייה (2026-09-26): `386` הבסיס +
+`14` חדשות בקובץ הזה (מחליפות את `12` בדיקות סבב א׳ שהוסרו — נטו `+2`).
+`build`/`lint` ירוקים. הפעם, ללא צורך בתיקוני-לוואי לקבצי בדיקה אחרים — שמות
+המחלקות של הבורר החדש (`.auto-scroll-option` וכו') נבחרו מראש נפרדים משל
+זום-ההחזקה (`.hold-zoom-option`), בדיוק כדי למנוע את התקלה שקרתה בסבב א׳ (ראו
+architecture.md, Risks/Tradeoffs).
