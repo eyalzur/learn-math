@@ -17,11 +17,13 @@
 - [x] Design — designer — 2026-09-26 (מסמך נכתב מחדש במלואו; מתג בינארי הופך
   לבורר שש אפשרויות כמו זום-ההחזקה, ברירת מחדל "בינוני" כי אין עדיין ערך שאומת
   בשטח)
-- [ ] Architecture — tech-lead — not started
+- [x] Architecture — tech-lead — 2026-09-26 (bounding-box של כל קו, השוואה
+  ב-endPointer, קפיצה חד-פעמית דרך animateTransformTo הקיים; לקח מפורש מסבב
+  א׳: שמות מחלקה נפרדים לשני בוררים באותו דיאלוג, לא שיתוף)
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** tech-lead
+**Current phase:** developer
 **Branch:** `feature/notebook-auto-scroll`
 **PR:** [#75](https://github.com/eyalzur/learn-math/pull/75) — עודכן, סבב ב׳ בעיצומו
 
