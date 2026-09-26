@@ -316,29 +316,61 @@ test("the congruent-triangles diagram marks all six correspondences, not just th
   await expect(page.locator(".angle-figure-inline .as-arc")).toHaveCount(6);
 });
 
+/** Like `currentPrompt`, but for a loop that keeps answering until a specific question
+ *  shows up: the practice session can end (`.result`) before that ever happens, and
+ *  `.problem-text` then never reappears — so this races the two instead of only ever
+ *  waiting on the one that might be gone for good, which used to hang for the rest of the
+ *  test's own timeout. `null` means the session ended. */
+async function currentPromptOrSessionEnd(page: Page): Promise<string | null> {
+  const problemText = page.locator(".problem-text");
+  const result = page.locator(".result");
+  await Promise.race([problemText.waitFor({ state: "visible" }), result.waitFor({ state: "visible" })]);
+  if (await result.isVisible()) return null;
+  return (await problemText.innerText()).trim();
+}
+
 test("the triangle-angle-sum step shows the calculation with explicit brackets", async ({ page }) => {
-  // Hunting for one specific sibling pattern within a tier can take a couple dozen
-  // notebook round trips in the unlucky case — under the full suite's load (2 workers)
-  // a single one of those can occasionally cross the default 30s action timeout, the
-  // same "real load, not a logic bug" failure mode already documented in tests.md for
-  // this topic's coverage tests. Extending this one test's own timeout is the fix used
-  // there too, rather than weakening the search itself. Bumped again 60s → 90s
-  // (2026-09-13) after the 60s margin itself was crossed once under full-suite CI load.
-  test.setTimeout(90000);
-  await openTopic(page);
-  let prompt = await currentPrompt(page);
+  test.setTimeout(60000);
   // Find a sum-of-angles question specifically (not exterior-angle, which shares its
   // tier) — recognizable as the one asking for `∡C` without mentioning the exterior angle.
+  //
+  // Not just a slow search: adaptiveAngles.ts's tier 2 has exactly these two siblings, the
+  // bot below always answers correctly whenever it recognizes a pattern (every tier does),
+  // and streak (App.tsx) only ever grows on a correct run, never resets on a tier change —
+  // so once 2 correct answers happen anywhere, EVERY later correct answer keeps climbing a
+  // tier, forever. That means tier 2 used to be visited exactly once per session with no
+  // retry: get the exterior sibling there and answering it "correctly" (as the loop used to,
+  // unconditionally) climbs straight past tier 2 for good — no tier above it ever shows `∡C`
+  // again. That's an up-to-50%-of-runs dead end, not a load-dependent flake — no amount of
+  // extra timeout fixed it (raising 60s → 90s here on 2026-09-13 didn't either).
+  //
+  // Two independent fixes, because either alone still left a real (measured ~5%) residual
+  // failure rate:
+  // 1. Answer the unwanted exterior sibling WRONG on purpose. A wrong answer drops the
+  //    difficulty back by one tier (nextAnglesDifficulty), so missing tier 2 costs a couple
+  //    of questions instead of the rest of the session, and the loop gets another random
+  //    shot at it — several shots per session instead of one.
+  // 2. Even so, a session can still run out of its fixed 20 questions on a long streak of
+  //    bad luck. Detect that (currentPromptOrSessionEnd, above) instead of hanging on
+  //    `.problem-text`, and start a fresh session for another full run at it — bounded to a
+  //    handful of sessions, which drives the compound failure probability essentially to
+  //    zero without ever blocking on a selector that session has already made moot.
   let found = false;
-  for (let i = 0; i < 30 && !found; i++) {
-    if (prompt.includes("∡C") && !prompt.includes("הזווית החיצונית")) {
-      found = true;
-      break;
+  for (let session = 0; session < 5 && !found; session++) {
+    await openTopic(page);
+    let prompt: string | null = await currentPrompt(page);
+    for (let i = 0; i < 20 && !found && prompt !== null; i++) {
+      if (prompt.includes("∡C") && !prompt.includes("הזווית החיצונית")) {
+        found = true;
+        break;
+      }
+      const isUnwantedExteriorSibling = prompt.includes("הזווית החיצונית") && prompt.includes("∡A") && prompt.includes("∡B");
+      const answer = isUnwantedExteriorSibling ? -999999 : computeAnswer(prompt) ?? -999999;
+      await answerAndNext(page, answer);
+      prompt = await currentPromptOrSessionEnd(page);
     }
-    await answerAndNext(page, computeAnswer(prompt) ?? -999999);
-    prompt = await currentPrompt(page);
   }
-  expect(found, "never encountered a triangle-angle-sum question").toBe(true);
+  expect(found, "never encountered a triangle-angle-sum question across 5 sessions").toBe(true);
 
   await answerViaNotebook(page, -999999);
   const mathSteps = await page.locator(".explanation-math").allInnerTexts();

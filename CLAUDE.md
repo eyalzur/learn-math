@@ -111,6 +111,26 @@ npm run build && npm run lint && npm run test:e2e
 **הכלל: מריצים את הסוויטה פעם אחת, ומחכים.** אם דיווח נשען על ריצה שהתחילה בזמן
 שריצה אחרת עוד רצה — הוא לא נמדד, הוא נוחש.
 
+### GitHub Pages נכבה בהגדרות הריפו — האתר החי היה למטה בלי שקוד נגע בזה
+ב-2026-09-13 המשתמש דיווח ש-https://eyalzur.github.io/learn-math/ לא עובד. זה לא
+היה קשור לקוד: workflow ה-`Deploy to GitHub Pages` נכשל בכל ריצה מאז מיזוג
+`PR #65` (12/9) עם `Error: Failed to create deployment (status: 404) ... Ensure
+GitHub Pages has been enabled`. הסיבה: Settings → Pages → **Source** היה מוגדר
+על "Deploy from a branch" (ו-Pages הופיע כ-disabled שם), בעוד ה-workflow בפועל
+מפרסם בשיטת "GitHub Actions" — אי-התאמה בין הגדרת הריפו לקוד. ה-build וה-lint
+עברו בלי בעיה; זו לא הייתה תקלת קוד ולכן אף בדיקה לא הייתה תופסת אותה.
+
+**מה עצר את הבדיקה ש"זה תוקן":** הרצת ה-workflow מחדש בלי לשנות כלום עדיין נכשלה
+עם אותה שגיאה בדיוק — כך אישרנו שזו לא תקלה חד-פעמית (flake) אלא הגדרה שבורה.
+המשתמש שינה את ה-Source ל-"GitHub Actions" ב-Settings → Pages, ורק אז ריצה חוזרת
+של אותו workflow הצליחה.
+
+**הכלל:** אם האתר החי "לא עובד" בלי שיש PR פתוח או קומיט חשוד, בודקים קודם את
+ריצת ה-`Deploy to GitHub Pages` האחרונה על `main` (לא את הקוד) — שגיאת 404 עם
+"Ensure GitHub Pages has been enabled" פירושה שהבעיה ב-Settings → Pages, לא
+בקוד. זה שינוי הגדרות בריפו שרק בעל/ת החשבון יכול/ה לעשות — Claude יכול לאבחן
+ולהריץ מחדש את ה-workflow אחרי התיקון, אבל לא לשנות את ה-Source בעצמו.
+
 ### תלות מעגלית בין קבצי נתונים
 `grade1.ts` קרא ל-`level()` מ-`curriculum.ts` שמייבא אותו בחזרה → מסך לבן,
 `Cannot access 'LEVEL_META' before initialization`. TypeScript **לא תופס** את זה.
