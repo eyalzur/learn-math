@@ -440,7 +440,10 @@ test("opening the settings shows both settings, titled, with the current choice 
   await expect(dialog.getByText("הגדרות", { exact: true })).toBeVisible();
   // Both settings in one place — the read-aloud row moved here too (a product decision
   // recorded in product-spec.md), so an adult has one place to look rather than two.
-  await expect(dialog.locator(".read-aloud-setting")).toBeVisible();
+  // Scoped by role+name, not `.read-aloud-setting`/`getByText`: docs/features/notebook-auto-scroll/
+  // reuses that same row anatomy (and that exact visible+visually-hidden text pairing) for
+  // its own setting, so either bare selector now matches more than one element.
+  await expect(dialog.getByRole("switch", { name: "להקריא את השאלות בקול" })).toBeVisible();
   await expect(dialog.locator(".hold-zoom-setting")).toBeVisible();
   await expect(dialog.locator(".hold-zoom-option")).toHaveCount(6);
   await expect(dialog.locator('.hold-zoom-option[aria-pressed="true"]')).toHaveCount(1);

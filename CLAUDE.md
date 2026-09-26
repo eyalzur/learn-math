@@ -160,7 +160,10 @@ docs/features/    מסמך לכל פיצ'ר. README.md הוא האינדקס
 ## מה פתוח
 
 ### ממתין לריוויו ולמיזוג
-אין כרגע אף PR שממתין.
+[#75](https://github.com/eyalzur/learn-math/pull/75) גלילה אוטומטית במחברת לפי כיוון
+הכתיבה — האזור הגלוי עוקב אחרי מקום הכתיבה ונע לצדדים לפי כיוון תנועת העט, עם הגדרת
+הפעלה/כיבוי per-student חדשה מאחורי ⚙️ הקיים (ברירת מחדל: מופעל). `398/398` בדיקות,
+ריצה בודדת ונקייה. ראו `docs/features/notebook-auto-scroll/status.md`.
 
 **מוזג ב-2026-09-26:** [#71](https://github.com/eyalzur/learn-math/pull/71)
 תיקון שורש לבדיקת ה-e2e השבורה בכיתה ח׳ (`grade8-angles-congruence.spec.ts`

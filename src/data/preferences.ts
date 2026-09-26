@@ -19,6 +19,9 @@ interface Preferences {
    *  option could show as chosen. An id keeps what the person meant ("the second-strongest")
    *  across retunes, and can be validated against a closed list. */
   holdZoomLevel?: Record<string, string>;
+  /** Student id → whether the notebook's view follows the writing point while writing near
+   *  an edge. Unlike `readAloud`, missing/absent means *on* — see `autoScrollFollow` below. */
+  autoScrollFollow?: Record<string, boolean>;
 }
 
 /**
@@ -69,6 +72,25 @@ export function setHoldZoomLevel(studentId: string, levelId: string): void {
     localStorage.setItem(
       STORAGE_KEY,
       JSON.stringify({ ...all, holdZoomLevel: { ...all.holdZoomLevel, [studentId]: levelId } }),
+    );
+  } catch {
+    // ignore
+  }
+}
+
+/** Whether the notebook's view follows this student's writing near an edge. On unless
+ *  turned off — the opposite default from `readAloud` — so a student who never opens the
+ *  setting still gets it, per product-spec.md. */
+export function autoScrollFollow(studentId: string): boolean {
+  return readAll().autoScrollFollow?.[studentId] !== false;
+}
+
+export function setAutoScrollFollow(studentId: string, value: boolean): void {
+  try {
+    const all = readAll();
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ ...all, autoScrollFollow: { ...all.autoScrollFollow, [studentId]: value } }),
     );
   } catch {
     // ignore

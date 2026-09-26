@@ -2,12 +2,16 @@ import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import type { DrawTool, NotebookPage, PanZoom } from "../data/notebook";
 import {
+  AUTO_SCROLL_FOLLOW_GAIN,
+  AUTO_SCROLL_FOLLOW_MARGIN_FRACTION,
+  AUTO_SCROLL_FOLLOW_MAX_STEP_PX,
   CELL,
   ERASER_CELLS,
   MAX_PAGES,
   PAGE_HEIGHT,
   PAGE_WIDTH,
   PEN_CELLS,
+  clampFollowPanX,
   clampZoom,
   computeFitTransform,
   computeInitialTransform,
@@ -55,6 +59,10 @@ interface PracticeNotebookProps {
    *  gesture doesn't exist at all (no dwell timer is even started). Comes from the student's
    *  own setting; see docs/features/notebook-hold-to-zoom/ (סבב ה׳). */
   holdZoomFactor: number | null;
+  /** Whether the view follows the writing point sideways while writing near the edge of the
+   *  visible area. Comes from the student's own setting; see
+   *  docs/features/notebook-auto-scroll/. */
+  autoScrollFollow: boolean;
 }
 
 /**
@@ -94,6 +102,7 @@ export function PracticeNotebook({
   topSlot,
   statusSlot,
   holdZoomFactor,
+  autoScrollFollow,
 }: PracticeNotebookProps) {
   const [tool, setTool] = useState<DrawTool | "pan">("pen");
   /** Which destructive action, if any, is waiting on confirmation — "remove" (a whole page)
@@ -154,6 +163,11 @@ export function PracticeNotebook({
   const transitionClearTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const holdZoomFactorRef = useRef(holdZoomFactor);
 
+  // Auto-scroll-follow: mirrored into a ref for the same reason as `holdZoomFactorRef` —
+  // handlePointerMove reads it on every move, and a change to the setting has to apply to
+  // the very next stroke with no reload. See docs/features/notebook-auto-scroll/.
+  const autoScrollFollowRef = useRef(autoScrollFollow);
+
   const currentPage = pages[currentPageIndex];
 
   useEffect(() => {
@@ -171,6 +185,10 @@ export function PracticeNotebook({
   useEffect(() => {
     holdZoomFactorRef.current = holdZoomFactor;
   }, [holdZoomFactor]);
+
+  useEffect(() => {
+    autoScrollFollowRef.current = autoScrollFollow;
+  }, [autoScrollFollow]);
 
   function inkColor() {
     return getComputedStyle(document.documentElement).getPropertyValue("--text-h").trim() || "#08060d";
@@ -421,6 +439,45 @@ export function PracticeNotebook({
     return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
   }
 
+  /**
+   * Auto-scroll-follow: called from the drawing branch of handlePointerMove, before
+   * paintTo, so a stroke that pans the view this tick still paints at the point under the
+   * pen's *new* camera position — see docs/features/notebook-auto-scroll/architecture.md.
+   *
+   * A position-based controller, not a velocity/trend one: `direction` only depends on
+   * which margin band `clientX` currently sits in, never on how it got there, so a small
+   * in-band reversal (a dot, a crossbar) changes `penetration` but never flips `direction` —
+   * the view only ever stops (not reverses) when the pointer leaves the margin band
+   * entirely. See architecture.md, "למה בקר-מיקום ולא מעקב-מגמה/מהירות מפורש".
+   */
+  function applyAutoScrollFollow(clientX: number) {
+    if (!autoScrollFollowRef.current) return;
+    const stageRect = stageRef.current?.getBoundingClientRect();
+    if (!stageRect || stageRect.width === 0) return;
+    const localX = clientX - stageRect.left;
+    const margin = stageRect.width * AUTO_SCROLL_FOLLOW_MARGIN_FRACTION;
+    let direction: 1 | -1 | 0 = 0;
+    let penetration = 0;
+    if (localX < margin) {
+      direction = 1;
+      penetration = margin - localX;
+    } else if (localX > stageRect.width - margin) {
+      direction = -1;
+      penetration = localX - (stageRect.width - margin);
+    }
+    if (direction === 0) return;
+    const step = Math.min(AUTO_SCROLL_FOLLOW_MAX_STEP_PX, penetration * AUTO_SCROLL_FOLLOW_GAIN);
+    const nextPanX = clampFollowPanX(
+      panZoomRef.current.panX + direction * step,
+      panZoomRef.current.zoom,
+      stageRect.width,
+    );
+    if (nextPanX === panZoomRef.current.panX) return;
+    clearTransition();
+    panZoomRef.current = { ...panZoomRef.current, panX: nextPanX };
+    applyTransform();
+  }
+
   function handlePointerDown(e: React.PointerEvent<HTMLCanvasElement>) {
     try {
       e.currentTarget.setPointerCapture(e.pointerId);
@@ -512,6 +569,7 @@ export function PracticeNotebook({
         };
         applyTransform();
       } else if (drawing.current) {
+        applyAutoScrollFollow(e.clientX);
         paintTo(localPoint(e.clientX, e.clientY));
       }
     } else if (activePointers.current.size === 2 && pinch.current) {

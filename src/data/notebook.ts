@@ -180,3 +180,29 @@ export function minimapViewRect(
   const bottom = Math.min(minimapHeight, (visTop + visHeight) * scaleY);
   return { left, top, width: Math.max(2, right - left), height: Math.max(2, bottom - top) };
 }
+
+/**
+ * Auto-scroll-follow: while writing near the edge of the visible area, the view pans
+ * sideways to keep the writing point comfortably in view — see
+ * docs/features/notebook-auto-scroll/. Starting values, not validated on a real
+ * touchscreen yet (same situation notebook-hold-to-zoom started from before its own
+ * tuning rounds).
+ */
+export const AUTO_SCROLL_FOLLOW_MARGIN_FRACTION = 0.2;
+export const AUTO_SCROLL_FOLLOW_GAIN = 0.4;
+export const AUTO_SCROLL_FOLLOW_MAX_STEP_PX = 32;
+
+/**
+ * `panX` clamped so the view never slides past the page's own left/right edge — used only
+ * by the auto-scroll-follow step (see PracticeNotebook.tsx's `applyAutoScrollFollow`), the
+ * same way `minimapViewRect` above already derives "what's visible" from `panX`/`zoom`, but
+ * to bound `panX` itself rather than draw a rectangle. Deliberately not applied to manual
+ * pan/pinch-zoom or hold-to-zoom, which stay exactly as unbounded as they are today — see
+ * architecture.md, Risks/Tradeoffs.
+ */
+export function clampFollowPanX(panX: number, zoom: number, viewportWidth: number): number {
+  const pageSpan = PAGE_WIDTH * zoom;
+  const lo = Math.min(0, viewportWidth - pageSpan);
+  const hi = Math.max(0, viewportWidth - pageSpan);
+  return Math.min(hi, Math.max(lo, panX));
+}
