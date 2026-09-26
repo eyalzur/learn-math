@@ -1,6 +1,6 @@
 import type { Lesson } from "../data/style";
 import { useEffect, useRef, useState } from "react";
-import { isHebrewPrompt, promptSegments } from "../data/curriculum";
+import { isHebrewPrompt, promptSegments, promptWithEquals } from "../data/curriculum";
 import type { Diagnosis } from "../data/diagnose";
 import { diagnose } from "../data/diagnose";
 import type { NotebookPage } from "../data/notebook";
@@ -411,7 +411,7 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
             ),
           )
         ) : (
-          <>{`${question.prompt} =`}</>
+          <>{promptWithEquals(question.prompt)}</>
         )}
       </span>
     </div>

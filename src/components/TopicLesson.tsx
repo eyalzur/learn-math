@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Question } from "../data/curriculum";
-import { isHebrewPrompt, promptSegments } from "../data/curriculum";
+import { isHebrewPrompt, promptSegments, promptWithEquals } from "../data/curriculum";
 import { buildExplanation, explanationSpeechParts } from "../data/questionExplanation";
 import { AngleShape } from "./AngleShape";
 import { ClockFace } from "./ClockFace";
@@ -112,7 +112,7 @@ export function TopicLesson({ topicTitle, gradeLabel, questions, onBack, onPract
       )}
       <div className={`problem-box ${isWordProblem ? "box-rtl" : "box-ltr"}`}>
         <span className={`problem-text ${isWordProblem ? "prompt-rtl" : "prompt-ltr"}`}>
-          {isWordProblem ? segmented(question.prompt) : <>{`${question.prompt} =`}</>}
+          {isWordProblem ? segmented(question.prompt) : <>{promptWithEquals(question.prompt)}</>}
         </span>
       </div>
       {bundle.clock && <ClockFace data={bundle.clock} label={bundle.clock.caption} />}
