@@ -14,7 +14,13 @@ import type { Lesson } from "./data/style";
 import { hasStyleLessons, stylesOf } from "./data/style";
 import { speak, speechParts } from "./data/speech";
 import { recordPractice } from "./data/progress";
-import { readAloud as readAloudFor, setReadAloud } from "./data/preferences";
+import {
+  readAloud as readAloudFor,
+  setReadAloud,
+  holdZoomLevel as holdZoomLevelFor,
+  setHoldZoomLevel,
+} from "./data/preferences";
+import { holdZoomFactorFor } from "./data/notebook";
 import "./App.css";
 
 const STORAGE_KEY = "learn-math:student";
@@ -152,8 +158,9 @@ function App() {
     if (!initial) return { name: "home" };
     return resolveScreen(initial.id, loadMenuPosition(initial.id)?.gradeId ?? null);
   });
-  /** The read-aloud setting is stored, not held in state; this forces a re-read of it. */
-  const [, setReadAloudTick] = useState(0);
+  /** The per-student settings (read-aloud, hold-to-zoom strength) are stored rather than
+   *  held in state; this forces a re-read after either of them is written. */
+  const [, setPreferencesTick] = useState(0);
 
   /** Live state for a topic's runtime-generated questions — `null` outside one. Not part
    *  of `Screen`, for the same reason `gradeId` isn't: the questions for an adaptive
@@ -290,6 +297,8 @@ function App() {
 
   const grade = grades.find((g) => g.id === gradeId)!;
   const readAloud = readAloudFor(student.id);
+  const holdZoomLevel = holdZoomLevelFor(student.id);
+  const holdZoomFactor = holdZoomFactorFor(holdZoomLevel);
 
   function finish(topic: Topic | null, lesson: Lesson, correctCount: number) {
     recordPractice({
@@ -326,7 +335,12 @@ function App() {
         onReadAloudChange={(value) => {
           setReadAloud(student.id, value);
           // The value lives in storage, so a render is needed to pick it back up.
-          setReadAloudTick((n) => n + 1);
+          setPreferencesTick((n) => n + 1);
+        }}
+        holdZoomLevel={holdZoomLevel}
+        onHoldZoomLevelChange={(levelId) => {
+          setHoldZoomLevel(student.id, levelId);
+          setPreferencesTick((n) => n + 1);
         }}
       />
     );
@@ -407,6 +421,7 @@ function App() {
           setScreen(insideTopic(topic));
         }}
         readAloud={readAloud}
+        holdZoomFactor={holdZoomFactor}
         onAnswered={topic?.adaptive ? (correct) => handleAdaptiveAnswered(topic, correct) : undefined}
       />
     );

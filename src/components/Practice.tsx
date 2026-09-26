@@ -31,13 +31,23 @@ interface PracticeProps {
   onExit: () => void;
   /** This student has every new question read to them without asking. */
   readAloud: boolean;
+  /** This student's hold-to-zoom strength, already resolved to a multiplier — `null` when
+   *  they have it switched off. Passed straight through to the notebook. */
+  holdZoomFactor: number | null;
   /** Fires once per question, right after right/wrong is decided — before the child even
    *  sees the feedback or explanation. Only an adaptive lesson supplies this; every other
    *  lesson leaves it unset and nothing here changes for it. */
   onAnswered?: (correct: boolean) => void;
 }
 
-export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: PracticeProps) {
+export function Practice({
+  lesson,
+  onFinish,
+  onExit,
+  readAloud,
+  holdZoomFactor,
+  onAnswered,
+}: PracticeProps) {
   const [index, setIndex] = useState(0);
   const [feedback, setFeedback] = useState<"correct" | "wrong" | null>(null);
   const [correctCount, setCorrectCount] = useState(0);
@@ -686,6 +696,7 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
         onToggleFullscreen={() => setFullscreen((f) => !f)}
         topSlot={topSlot}
         statusSlot={statusSlot}
+        holdZoomFactor={holdZoomFactor}
       />
       {!fullscreen && sendState === "error" && (
         <p className="notebook-send-error" aria-live="polite">

@@ -20,6 +20,49 @@ export const MAX_ZOOM = 2.5;
  *  observed in review). Manual zoom/pan after that is unaffected. */
 export const INITIAL_ZOOM = 0.7;
 
+/**
+ * How far hold-to-zoom closes in, as a choice rather than a constant — see
+ * docs/features/notebook-hold-to-zoom/ (סבב ה׳). Six options: "off", then five strengths
+ * rising by a constant ratio of ~1.67, which puts the middle one at exactly +25% (the
+ * number the user asked for) and the strongest at +70% (the value that was actually tried
+ * and approved on a real touchscreen, which is also the default).
+ *
+ * Ordered array rather than separate order/label/factor maps: those three can drift apart
+ * in a later edit, and then the row a person taps and the zoom they get describe different
+ * things. `factor: null` is "off" — one field covers all six states, so there is no
+ * separate boolean to keep in sync with it.
+ *
+ * A ratio scale, not equal steps: zoom reads multiplicatively (10%→20% feels like
+ * 50%→100%, not like 50%→60%), so equal ratios are what feel evenly spaced to someone
+ * trying the six in turn.
+ */
+export interface HoldZoomLevel {
+  id: string;
+  label: string;
+  /** Multiplier applied to the current zoom, or `null` for "off". */
+  factor: number | null;
+}
+
+export const HOLD_ZOOM_LEVELS: HoldZoomLevel[] = [
+  { id: "off", label: "כבוי", factor: null },
+  { id: "veryLittle", label: "מעט מאוד", factor: 1.09 },
+  { id: "little", label: "מעט", factor: 1.15 },
+  { id: "medium", label: "בינוני", factor: 1.25 },
+  { id: "much", label: "הרבה", factor: 1.42 },
+  { id: "veryMuch", label: "הרבה מאוד", factor: 1.7 },
+];
+
+/** The strongest level — the one validated on a real device, so it is what a student who
+ *  never opens the setting gets. See product-spec.md for why the default is the tested
+ *  value rather than the middle of the scale. */
+export const DEFAULT_HOLD_ZOOM_LEVEL = "veryMuch";
+
+/** The multiplier for a stored level id, or `null` when the level is "off" *or* the id is
+ *  unknown-but-somehow-present. Callers get one number (or null) and never see ids. */
+export function holdZoomFactorFor(levelId: string): number | null {
+  return HOLD_ZOOM_LEVELS.find((level) => level.id === levelId)?.factor ?? null;
+}
+
 export interface NotebookPage {
   id: string;
   /** Keys are "col,row" — the same sparse cell-fill model as the prototype. */

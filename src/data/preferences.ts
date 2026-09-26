@@ -6,11 +6,19 @@
  * value that gets overwritten. Sharing one array would force every history read to filter
  * out rows that are not practices, which looks cheap on the first day and is not.
  */
+import { DEFAULT_HOLD_ZOOM_LEVEL, HOLD_ZOOM_LEVELS } from "./notebook";
+
 const STORAGE_KEY = "learn-math:preferences";
 
 interface Preferences {
   /** Student id → read every new question aloud without being asked. */
   readAloud?: Record<string, boolean>;
+  /** Student id → which hold-to-zoom strength (a `HOLD_ZOOM_LEVELS` id, "off" included).
+   *  An id rather than the multiplier itself: the scale has already been retuned twice, and
+   *  a stored number would be orphaned by the next retune — no level would match it, so no
+   *  option could show as chosen. An id keeps what the person meant ("the second-strongest")
+   *  across retunes, and can be validated against a closed list. */
+  holdZoomLevel?: Record<string, string>;
 }
 
 /**
@@ -39,6 +47,28 @@ export function setReadAloud(studentId: string, value: boolean): void {
     localStorage.setItem(
       STORAGE_KEY,
       JSON.stringify({ ...all, readAloud: { ...all.readAloud, [studentId]: value } }),
+    );
+  } catch {
+    // ignore
+  }
+}
+
+/**
+ * Which hold-to-zoom strength this student is set to. Validated against the current scale:
+ * a missing value, or one left behind by an older scale (or hand-edited storage), falls
+ * back to the default rather than propagating a level nothing can render as chosen.
+ */
+export function holdZoomLevel(studentId: string): string {
+  const stored = readAll().holdZoomLevel?.[studentId];
+  return HOLD_ZOOM_LEVELS.some((level) => level.id === stored) ? stored! : DEFAULT_HOLD_ZOOM_LEVEL;
+}
+
+export function setHoldZoomLevel(studentId: string, levelId: string): void {
+  try {
+    const all = readAll();
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ ...all, holdZoomLevel: { ...all.holdZoomLevel, [studentId]: levelId } }),
     );
   } catch {
     // ignore

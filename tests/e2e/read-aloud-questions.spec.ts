@@ -98,6 +98,25 @@ const speakButton = (page: Page) =>
 
 // --------------------------------------------------------------- hearing the question
 
+/**
+ * The read-aloud setting is no longer a row on the topic screen — since סבב ו׳ of
+ * docs/features/notebook-hold-to-zoom it lives in the settings dialog behind that screen's
+ * ⚙️ button. These two wrap the extra open/close, so the tests below still read as
+ * "turn it on" and "what is it set to".
+ */
+async function toggleReadAloud(page: Page) {
+  await page.getByRole("button", { name: "הגדרות" }).click();
+  await page.getByRole("switch").click();
+  await page.getByRole("button", { name: "סגירה" }).click();
+}
+
+async function readAloudState(page: Page): Promise<string | null> {
+  await page.getByRole("button", { name: "הגדרות" }).click();
+  const value = await page.getByRole("switch").getAttribute("aria-checked");
+  await page.getByRole("button", { name: "סגירה" }).click();
+  return value;
+}
+
 test("every question can be heard before answering, without a mistake first", async ({
   page,
 }) => {
@@ -131,7 +150,7 @@ test("a hint is read too — help that cannot be read is not help", async ({ pag
   await stubSpeech(page);
   await fresh(page);
   await openStudent(page, 0);
-  await page.getByRole("switch").click();
+  await toggleReadAloud(page);
   await startHintedLevel(page);
 
   await expect.poll(() => spokenText(page)).not.toHaveLength(0);
@@ -153,7 +172,7 @@ test("the setting is off until someone turns it on", async ({ page }) => {
   await fresh(page);
   await openStudent(page, 0);
 
-  await expect(page.getByRole("switch")).toHaveAttribute("aria-checked", "false");
+  expect(await readAloudState(page)).toBe("false");
 });
 
 test("with the setting off, nothing is spoken until it is asked for", async ({ page }) => {
@@ -171,7 +190,7 @@ test("with the setting on, a new question reads itself", async ({ page }) => {
   await stubSpeech(page);
   await fresh(page);
   await openStudent(page, 0);
-  await page.getByRole("switch").click();
+  await toggleReadAloud(page);
   await startHintedLevel(page);
 
   await expect.poll(() => spokenText(page)).not.toHaveLength(0);
@@ -181,10 +200,10 @@ test("the setting survives a reload", async ({ page }) => {
   await stubSpeech(page);
   await fresh(page);
   await openStudent(page, 0);
-  await page.getByRole("switch").click();
+  await toggleReadAloud(page);
 
   await page.reload();
-  await expect(page.getByRole("switch")).toHaveAttribute("aria-checked", "true");
+  expect(await readAloudState(page)).toBe("true");
 });
 
 test("the setting belongs to the student, not the device", async ({ page }) => {
@@ -192,8 +211,8 @@ test("the setting belongs to the student, not the device", async ({ page }) => {
   await fresh(page);
 
   await openStudent(page, 0);
-  await page.getByRole("switch").click();
-  await expect(page.getByRole("switch")).toHaveAttribute("aria-checked", "true");
+  await toggleReadAloud(page);
+  expect(await readAloudState(page)).toBe("true");
 
   // A different child on the same device is unaffected. Mika's topics screen leads to
   // the grade picker first ("← חזרה") — switching student happens from there.
@@ -202,7 +221,7 @@ test("the setting belongs to the student, not the device", async ({ page }) => {
   await page.locator(".student-card").nth(1).click();
   // Every student now picks a grade first (docs/features/any-grade-any-student).
   await page.locator(".grade-card").nth(2).click(); // grade ו׳
-  await expect(page.getByRole("switch")).toHaveAttribute("aria-checked", "false");
+  expect(await readAloudState(page)).toBe("false");
 
   // And the first child's choice is still there — the read-aloud setting, that is; her
   // grade choice was explicitly forgotten by stepping back to reconsider it earlier in
@@ -211,7 +230,7 @@ test("the setting belongs to the student, not the device", async ({ page }) => {
   await page.getByRole("button", { name: "← החלף תלמיד" }).click();
   await page.locator(".student-card").nth(0).click();
   await page.locator(".grade-card").first().click();
-  await expect(page.getByRole("switch")).toHaveAttribute("aria-checked", "true");
+  expect(await readAloudState(page)).toBe("true");
 });
 
 // --------------------------------------------------------------------- stopping
@@ -220,7 +239,7 @@ test("checking an answer silences a reading in progress", async ({ page }) => {
   await stubSpeech(page);
   await fresh(page);
   await openStudent(page, 0);
-  await page.getByRole("switch").click();
+  await toggleReadAloud(page);
   await startHintedLevel(page);
   await expect.poll(() => spokenText(page)).not.toHaveLength(0);
 
@@ -252,7 +271,14 @@ test("a browser with no speech engine shows no setting and no button", async ({ 
   await fresh(page);
   await openStudent(page, 0);
 
+  // Open the settings and look inside: "no switch anywhere on the screen" would pass
+  // trivially now that the settings sit behind a button, so it would prove nothing.
+  await page.getByRole("button", { name: "הגדרות" }).click();
   await expect(page.getByRole("switch")).toHaveCount(0);
+  // The zoom setting has nothing to do with speech, so it is still there — which is also
+  // why the ⚙️ button never opens an empty dialog.
+  await expect(page.locator(".hold-zoom-setting")).toBeVisible();
+  await page.getByRole("button", { name: "סגירה" }).click();
 
   await startHintedLevel(page);
   await expect(page.locator(".speak-button")).toHaveCount(0);

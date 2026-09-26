@@ -722,19 +722,128 @@ button.secondary {
   direction: ltr;
 }
 
+/* ---- settings: the ⚙️ in the topic screen's header, and the dialog it opens. Both
+   settings rows below live inside it. See docs/features/notebook-hold-to-zoom/ (סבב ו׳). ---- */
+
+.settings-button {
+  flex: 0 0 auto;
+  padding: 2px 6px;
+  border: none;
+  background: none;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* Same anatomy and values as .notebook-confirm-backdrop/-dialog, deliberately under its own
+   name: a `notebook-confirm-` class on the topic screen would misname it, and sharing one
+   class would tie every future tweak of one dialog to the other. */
+.settings-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 31;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 24px;
+}
+
+.settings-dialog {
+  /* 420px, not the confirm dialog's 360px: that is the width the six strength options were
+     designed to. max-height keeps it whole on a short phone. */
+  max-width: 420px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--bg);
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+
+.settings-title {
+  margin: 0 0 16px;
+  font-size: 19px;
+  color: var(--text-h);
+  text-align: right;
+}
+
+.settings-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.settings-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
 /* ---- read-aloud: the per-student setting, and the question's own speaker ---- */
 
+/* Lives inside the settings dialog since סבב ו׳ of docs/features/notebook-hold-to-zoom —
+   the dialog sets the width and `.settings-body`'s gap sets the spacing, so this row no
+   longer centres itself in the page. */
 .read-aloud-setting {
   display: flex;
   align-items: center;
   gap: 12px;
-  max-width: 420px;
-  margin: 0 auto 20px;
   padding: 12px 16px;
   border: 1px solid var(--border);
   border-radius: 12px;
   background: var(--code-bg);
   text-align: right;
+}
+
+/* The hold-to-zoom strength setting — same box as the read-aloud row, but stacked: six
+   options don't fit beside the text at phone width, so the text block sits on top and the
+   options row underneath. See docs/features/notebook-hold-to-zoom/ (סבב ה׳/ו׳). */
+.hold-zoom-setting {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--code-bg);
+  text-align: right;
+}
+
+.hold-zoom-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.hold-zoom-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+/* wrap, not overflow-x: all six options have to be visible at once. The notebook toolbar
+   scrolls horizontally and that is exactly the failure mode being avoided here. */
+.hold-zoom-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.hold-zoom-option {
+  padding: 6px 12px;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+
+.hold-zoom-option[aria-pressed="true"] {
+  background: var(--accent-bg);
+  border-color: var(--accent-border);
+  color: var(--text-h);
+  font-weight: 600;
 }
 
 .read-aloud-icon {
@@ -1381,7 +1490,11 @@ button.secondary {
 /* The viewing window. overflow:hidden and touch-action:none on purpose — there is no
    scrollable element here at all, so there is nothing for the browser to scroll or
    rubber-band on its own; every pan/zoom gesture is handled by hand in
-   PracticeNotebook.tsx. */
+   PracticeNotebook.tsx. touch-action alone doesn't stop every native touch gesture: a real
+   phone's own long-press recognition (callout menu, text-selection magnifier) can still
+   fire independently of it, sending us a pointercancel mid-hold that our hold-to-zoom
+   gesture then reads as "finger lifted" — see docs/features/notebook-hold-to-zoom/,
+   "עדכון סבב ג׳". touch-callout/user-select suppress that native recognition outright. */
 .notebook-stage {
   position: relative;
   flex: 1;
@@ -1389,6 +1502,9 @@ button.secondary {
   overflow: hidden;
   background: var(--code-bg);
   touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 /* The page itself — fixed size in its own coordinate space, panned/zoomed purely via
@@ -1415,6 +1531,9 @@ button.secondary {
   height: 100%;
   display: block;
   touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .notebook-minimap {
