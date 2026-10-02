@@ -4,17 +4,17 @@
 
 ## Progress
 - [x] Product spec — product-manager — 2026-10-02
-- [ ] Design — designer — not started
+- [x] Design — designer — 2026-10-02
 - [ ] Architecture — tech-lead — not started
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** designer
+**Current phase:** tech-lead
 **Branch:** `feature/notebook-toolbar-actions`
 **PR:** not opened yet
 
 ## Open questions / blockers
-- **Product:** המיקום החדש של הכפתור לא נאמר. ההצעה: כפתור רחב מתחת לסרגל, ובמסך מלא בפס העליון. לא חוסם; לאישור בעיצוב.
+- **Design:** מיקום הכפתור לא נאמר. הוצע: שורה רחבה מתחת לסרגל, באותו מקום גם במסך מלא. לא חוסם; לאישור המשתמש בריוויו.
 - **Product:** "הבא" הובן ככפתור מעבר לשאלה הבאה, לא כחץ ▶ של דפי המחברת. אם התכוונת לחץ — לתקן.
 
 ## Docs
