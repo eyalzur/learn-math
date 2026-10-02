@@ -5,11 +5,11 @@
 ## Progress
 - [x] Product spec — product-manager — 2026-10-02
 - [x] Design — designer — 2026-10-02
-- [ ] Architecture — tech-lead — not started
+- [x] Architecture — tech-lead — 2026-10-02
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** tech-lead
+**Current phase:** developer
 **Branch:** `feature/notebook-toolbar-actions`
 **PR:** not opened yet
 
