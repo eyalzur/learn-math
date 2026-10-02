@@ -160,7 +160,15 @@ docs/features/    מסמך לכל פיצ'ר. README.md הוא האינדקס
 ## מה פתוח
 
 ### ממתין לריוויו ולמיזוג
-אין כרגע אף PR שממתין.
+[#75](https://github.com/eyalzur/learn-math/pull/75) גלילה אוטומטית במחברת
+(קפיצה בדידה בין תווים, בורר עוצמה בהגדרות) — נבנה ונבדק (`400/400`), ממתין
+לריוויו שלך ולמיזוג. עדיין אין לו דף בדיקה. ראו
+`docs/features/notebook-auto-scroll/status.md`.
+
+**מוזג ב-2026-10-02:** [#76](https://github.com/eyalzur/learn-math/pull/76)
+"שלח למורה" ו"הבא" יצאו מסרגל הכלים לשורה משלהם מתחתיו (אותו מקום גם במסך מלא),
+ומסך מלא שבחרו בו נשאר לשאלה הבאה (✕ ידני מבטל). `394/394` בדיקות. **באתר החי**
+אחרי הפריסה. ראו `docs/features/notebook-toolbar-actions/`.
 
 **מוזג ב-2026-09-26:** [#71](https://github.com/eyalzur/learn-math/pull/71)
 תיקון שורש לבדיקת ה-e2e השבורה בכיתה ח׳ (`grade8-angles-congruence.spec.ts`

@@ -730,15 +730,7 @@ export function PracticeNotebook({
             ✋
           </button>
         </div>
-        <button
-          type="button"
-          className="notebook-send-btn"
-          onClick={primaryAction.onClick}
-          disabled={primaryAction.disabled}
-        >
-          {primaryAction.label}
-        </button>
-        {/* Prev/next stay right after "שלח למורה" — the page-nav actions actually used while
+        {/* Prev/next stay right after the tool group — the page-nav actions actually used while
             solving. Add/remove page (below) come last: used far less often, so they're the
             ones that scroll out of view first if the row doesn't fully fit. */}
         <div className="notebook-page-nav">
@@ -782,6 +774,18 @@ export function PracticeNotebook({
           aria-label="הסר דף"
         >
           🗑
+        </button>
+      </div>
+      {/* The question's one main action ("שלח למורה" / "הבא") lives in its own row, not among
+          the tools: see docs/features/notebook-toolbar-actions/. */}
+      <div className="notebook-action-row">
+        <button
+          type="button"
+          className="notebook-send-btn"
+          onClick={primaryAction.onClick}
+          disabled={primaryAction.disabled}
+        >
+          {primaryAction.label}
         </button>
       </div>
       {atMaxPages && <p className="notebook-max-pages-note">הגעתם למספר המרבי של דפים במחברת הזאת.</p>}

@@ -1661,14 +1661,29 @@ button.secondary {
   color: #dc2626;
 }
 
-.notebook-send-btn {
+.notebook-action-row {
   flex-shrink: 0;
-  white-space: nowrap;
-  min-height: 36px;
-  padding: 0 10px;
-  font-size: 14px;
+  padding: 6px 10px 10px;
+}
+
+.notebook-send-btn {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 16px;
+  font-size: 18px;
+  font-weight: 600;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.notebook-send-btn:disabled {
   background: var(--code-bg);
-  color: var(--text-h);
+  color: var(--text);
+  cursor: default;
 }
 
 .notebook-max-pages-note {
