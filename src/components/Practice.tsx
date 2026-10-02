@@ -107,6 +107,10 @@ export function Practice({
    *  result mode: see the effect below, which drops it the moment a reading comes back
    *  confident (design.md, מצב F). */
   const [fullscreen, setFullscreen] = useState(false);
+  // What the student asked for, as opposed to what is showing right now: a reading or the
+  // correction form drops fullscreen temporarily, and "הבא" brings it back. Only the toggle
+  // and the ✕ change this — see docs/features/notebook-toolbar-actions/.
+  const [fullscreenWanted, setFullscreenWanted] = useState(false);
 
   // Voices load asynchronously, so warm the list before the first press.
   useEffect(primeVoices, []);
@@ -324,6 +328,7 @@ export function Practice({
       return;
     }
     setIndex((i) => i + 1);
+    setFullscreen(fullscreenWanted);
     setFeedback(null);
     setHintsShown(0);
     setDiagnosis(null);
@@ -450,7 +455,10 @@ export function Practice({
       <button
         type="button"
         className="notebook-fullscreen-exit"
-        onClick={() => setFullscreen(false)}
+        onClick={() => {
+          setFullscreen(false);
+          setFullscreenWanted(false);
+        }}
         aria-label="צאו ממסך מלא"
       >
         ✕
@@ -693,7 +701,11 @@ export function Practice({
         locked={feedback !== null}
         primaryAction={primaryAction}
         fullscreen={fullscreen}
-        onToggleFullscreen={() => setFullscreen((f) => !f)}
+        onToggleFullscreen={() => {
+          const turnOn = !fullscreen;
+          setFullscreen(turnOn);
+          setFullscreenWanted(turnOn);
+        }}
         topSlot={topSlot}
         statusSlot={statusSlot}
         holdZoomFactor={holdZoomFactor}

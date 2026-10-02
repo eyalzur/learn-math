@@ -54,3 +54,10 @@
 
 ## Open Questions
 None.
+
+## Implementation Notes
+נבנה כמתוכנן, בלי סטיות:
+- `PracticeNotebook.tsx`: כפתור הפעולה הראשית עבר מתוך `.notebook-toolbar` ל-`div.notebook-action-row` חדש מיד אחריו; ההערה על "prev/next אחרי שלח למורה" עודכנה.
+- `Practice.tsx`: נוסף `fullscreenWanted`; הוא משתנה רק בלחיצה על ⤢ וב-✕. `next()` מחזיר `setFullscreen(fullscreenWanted)`. האפקט שיורד ממסך מלא בתוצאה ו-`openCorrection` לא נגעו בו.
+- `App.css`: `.notebook-action-row` חדש, ו-`.notebook-send-btn` ברוחב מלא, גובה 48px, צבע `--accent`; מצב `:disabled` אפור.
+- גרסה: `1.33.0` (`bump:feature`). `npm run build` ו-`npm run lint` נקיים. סוויטת e2e לא הורצה בשלב זה (שלב qa).
