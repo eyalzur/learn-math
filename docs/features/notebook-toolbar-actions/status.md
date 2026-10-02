@@ -7,9 +7,9 @@
 - [x] Design — designer — 2026-10-02
 - [x] Architecture — tech-lead — 2026-10-02
 - [x] Implementation — developer — 2026-10-02
-- [ ] Tests — qa — not started
+- [x] Tests — qa — 2026-10-02 (394/394, ריצה בודדת)
 
-**Current phase:** qa
+**Current phase:** done — ממתין לריוויו ולמיזוג
 **Branch:** `feature/notebook-toolbar-actions`
 **PR:** not opened yet
 
