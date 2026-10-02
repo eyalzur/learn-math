@@ -9,13 +9,12 @@
 - [x] Implementation — developer — 2026-10-02
 - [x] Tests — qa — 2026-10-02 (394/394, ריצה בודדת)
 
-**Current phase:** done — ממתין לריוויו ולמיזוג
+**Current phase:** done — מוזג ל-`main` (394/394)
 **Branch:** `feature/notebook-toolbar-actions`
-**PR:** not opened yet
+**PR:** [#76](https://github.com/eyalzur/learn-math/pull/76) — מוזג 2026-10-02
 
 ## Open questions / blockers
-- **Design:** מיקום הכפתור לא נאמר. הוצע: שורה רחבה מתחת לסרגל, באותו מקום גם במסך מלא. לא חוסם; לאישור המשתמש בריוויו.
-- **Product:** "הבא" הובן ככפתור מעבר לשאלה הבאה, לא כחץ ▶ של דפי המחברת. אם התכוונת לחץ — לתקן.
+None. שתי ההנחות (מיקום: שורה מתחת לסרגל; "הבא" = מעבר לשאלה הבאה, לא חץ הדפים) אושרו במיזוג.
 
 ## Docs
 - [Product spec](./product-spec.md)
