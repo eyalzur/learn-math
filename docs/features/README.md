@@ -6,7 +6,7 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
-| כפתורי ניווט במחברת — פאד כיוונים | 🟡 in architecture | [status](./notebook-nav-buttons/status.md) |
+| כפתורי ניווט במחברת — פאד כיוונים | 🔴 blocked on product decision | [status](./notebook-nav-buttons/status.md) |
 | כפתורי פעולה מחוץ לסרגל הכלים + מסך מלא שנשאר | 🟢 done — מוזג ל-main | [status](./notebook-toolbar-actions/status.md) |
 | זום זמני בהחזקת מגע — התקרבות למחברת | 🟢 done — מוזג ל-main (שישה סבבים, האחרון: כפתור הגדרות) | [status](./notebook-hold-to-zoom/status.md) |
 | יומן מקרים שבהם המורה טעתה | 🟢 done — מוזג ל-main | [status](./teacher-misread-log/status.md) |
