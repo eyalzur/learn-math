@@ -6,6 +6,7 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
+| הגדרת מהירות כפתורי הניווט במחברת | 🟡 in design | [status](./notebook-nav-settings/status.md) |
 | כפתורי ניווט במחברת — פאד כיוונים | 🟢 done — מוזג ל-main | [status](./notebook-nav-buttons/status.md) |
 | כפתורי פעולה מחוץ לסרגל הכלים + מסך מלא שנשאר | 🟢 done — מוזג ל-main | [status](./notebook-toolbar-actions/status.md) |
 | זום זמני בהחזקת מגע — התקרבות למחברת | 🟢 done — מוזג ל-main (שישה סבבים, האחרון: כפתור הגדרות) | [status](./notebook-hold-to-zoom/status.md) |
