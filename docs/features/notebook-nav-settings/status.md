@@ -19,9 +19,12 @@
   `App.tsx` → `Practice.tsx` → `PracticeNotebook.tsx` שמחליפים את
   `PAN_STEP_PX`/`PAN_HOLD_INTERVAL_MS` הקשיחים; `PAN_HOLD_DELAY_MS` נשאר
   קבוע. `npm run build && npm run lint` עברו, גרסה עלתה ל-1.35.0)
-- [ ] Tests — qa — not started
+- [x] Tests — qa — 2026-10-09 (תשע בדיקות חדשות ב-
+  `tests/e2e/notebook-nav-settings.spec.ts`; `415/415` בריצה מלאה ונקייה
+  — `406` הקיימות + `9` חדשות, `0` כשלים. ראו tests.md להערה תפעולית על
+  ריצה מזוהמת שנפסלה ונרצה מחדש)
 
-**Current phase:** qa
+**Current phase:** done — ממתין לריוויו ולמיזוג
 **Branch:** `feature/notebook-nav-settings`
 **PR:** not opened yet
 
