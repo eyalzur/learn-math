@@ -5,12 +5,14 @@
 
 ## Progress
 - [x] Product spec — product-manager — 2026-10-09
-- [ ] Design — designer — not started
+- [x] Design — designer — 2026-10-09 (בלוק שלישי בדיאלוג ⚙️ הקיים, תחת בורר
+  עוצמת זום-ההחזקה — אותה אנטומיה בדיוק: אייקון 🧭+כותרת+תת-כותרת מעל שורת
+  שישה כפתורים, "כבוי" ראשון ואז חמש דרגות עולות. ראו design.md)
 - [ ] Architecture — tech-lead — not started
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** designer
+**Current phase:** tech-lead
 **Branch:** `feature/notebook-nav-settings`
 **PR:** not opened yet
 
