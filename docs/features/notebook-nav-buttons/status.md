@@ -20,9 +20,10 @@
   ב-architecture.md לשלושה דברים שהתגלו תוך כדי: clamp חסר בזום-החזקה,
   disabled שלא התעדכן אחרי גרירה טהורה, ובאג RTL אמיתי — האשכול נחת
   בפינה הלא-נכונה — שנתפס בתצוגה מקדימה אינטראקטיבית ותוקן לפני שהתפרסם)
-- [ ] Tests — qa — not started
+- [x] Tests — qa — 2026-10-09 (עשר בדיקות חדשות ב-
+  `tests/e2e/notebook-nav-buttons.spec.ts`; `404/404` בריצה מלאה ונקייה)
 
-**Current phase:** qa
+**Current phase:** done — ממתין לריוויו ולמיזוג
 **Branch:** `feature/notebook-nav-buttons`
 **PR:** not opened yet
 
