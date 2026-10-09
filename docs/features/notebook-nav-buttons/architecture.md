@@ -144,3 +144,35 @@ Approach.)
 נכון אחרי לחיצות חוזרות וחוזר ל-enabled כשמתרחקים מהקצה, אפס שגיאות
 קונסול. גרסה הועלתה `1.33.0` → `1.34.0` (`npm run bump:feature`).
 `build`/`lint`/`tsc` ירוקים.
+
+## Implementation Notes — עדכון (2026-10-09): החזקה-לגלילה-רציפה
+תוספת אחרי ריוויו על PR #78 (שגם כיווץ את הכפתורים, קומיט נפרד): הקריטריון
+המקורי "לא גלילה רציפה כל עוד מחזיקים" הוחלף בדרישה ההפוכה — החזקה כן
+ממשיכה להזיז. מומש ב-`PracticeNotebook.tsx` בלבד, בלי לגעת ב-`notebook.ts`:
+
+- שני קבועים חדשים: `PAN_HOLD_DELAY_MS` (350, השהיה לפני שההחזקה "נדלקת" —
+  כדי שהקשה רגילה לא תיתפס כהתחלת החזקה) ו-`PAN_HOLD_INTERVAL_MS` (80, הקצב
+  בין צעד לצעד בזמן החזקה).
+- שלושה refs חדשים (`panHoldTimer`, `panHoldInterval`, `panHoldFired`) —
+  אותו דפוס בדיוק כמו `holdZoomTimer`/`transitionClearTimer` הקיימים, כולל
+  ניקוי ב-unmount.
+- `startPanHold(dx, dy)` (על `onPointerDown`): אחרי `PAN_HOLD_DELAY_MS`
+  מתחיל `setInterval` שקורא ל-`panButton` כל `PAN_HOLD_INTERVAL_MS`, ובודק
+  בכל טיק את `panDisabled` — מפסיק את עצמו ברגע שאין יותר לאן לזוז, בלי
+  לחכות לשחרור.
+- `stopPanHold()` (על `onPointerUp`/`onPointerLeave`/`onPointerCancel`):
+  מנקה את שני ה-timers.
+- **הבעיה שהיה צריך לפתור:** הקשה רגילה מייצרת `pointerdown`→`pointerup`→
+  `click` ברצף — אם `onClick` היה ממשיך לקרוא ל-`panButton` גם כש-ההחזקה
+  כבר הזיזה, הקשה בודדת הייתה זזה פעמיים. נפתר עם `panHoldFired` (ref
+  בוליאני): `startPanHold` מאפס אותו, כל טיק של ה-interval מסמן אותו
+  `true`; `panButtonClick` (מה ש-`onClick` קורא לו עכשיו, במקום `panButton`
+  ישירות) בודק את הדגל — אם `true`, מאפס ומדלג (ההחזקה כבר הזיזה); אם
+  `false` (הקשה רגילה או הפעלה מהמקלדת), מבצע את הצעד הרגיל. נשאר שלם גם
+  מהמקלדת: `Enter`/`רווח` על כפתור ממוקד מפעילים `click` ישירות, בלי
+  `pointerdown`, אז `panHoldFired` תמיד `false` בנתיב הזה.
+
+אומת: הקשה קצרה (50ms) זזה צעד אחד בדיוק; החזקה ארוכה (900ms, דרך
+`PAN_HOLD_DELAY_MS`+כמה חזרות) זזה משמעותית יותר מצעד בודד; שתי הקשות
+רצופות זזות אותו צעד פעמיים, לא יותר (אין double-fire אחרי החזקה קודמת).
+שתי בדיקות e2e חדשות. `build`/`lint`/`tsc` ירוקים.

@@ -192,3 +192,75 @@ test("pressing the pan buttons never changes which notebook page is shown", asyn
   }
   await expect(pageIndicator(page)).toHaveText(before);
 });
+
+// -------------------------------------------------- hold to keep scrolling
+
+/**
+ * A real pointer hold (page.mouse.down/up with a real wait in between), the same technique
+ * notebook-hold-to-zoom.spec.ts already relies on for timing-sensitive gestures in this
+ * component — no fake timers, just a genuine hold in a real browser.
+ */
+test("holding a directional button down keeps panning on its own, not just one step per press", async ({
+  page,
+}) => {
+  await openLevel(page);
+  await zoomInALot(page);
+
+  const down = panButton(page, "הזז למטה");
+  const box = await down.boundingBox();
+  if (!box) throw new Error("pan button not found");
+  const center = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+
+  const beforeTap = await minimapPosition(page);
+  await page.mouse.move(center.x, center.y);
+  await page.mouse.down();
+  await page.waitForTimeout(50); // well under the hold delay — a plain tap
+  await page.mouse.up();
+  const afterTap = await minimapPosition(page);
+  const tapStep = Math.abs(afterTap.top - beforeTap.top);
+  expect(tapStep).toBeGreaterThan(0); // the tap itself still moved the view, once
+
+  const beforeHold = await minimapPosition(page);
+  await page.mouse.move(center.x, center.y);
+  await page.mouse.down();
+  await page.waitForTimeout(900); // past the delay, several repeats while still held
+  await page.mouse.up();
+  const afterHold = await minimapPosition(page);
+  const holdStep = Math.abs(afterHold.top - beforeHold.top);
+
+  // A hold moves noticeably more than one tap's worth, on its own — not because it was
+  // clicked repeatedly.
+  expect(holdStep).toBeGreaterThan(tapStep * 1.5);
+});
+
+test("a quick tap still pans exactly one step, not two — releasing after a hold doesn't double-fire", async ({
+  page,
+}) => {
+  await openLevel(page);
+  await zoomInALot(page);
+
+  const down = panButton(page, "הזז למטה");
+  const box = await down.boundingBox();
+  if (!box) throw new Error("pan button not found");
+  const center = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+
+  const beforeTap = await minimapPosition(page);
+  await page.mouse.move(center.x, center.y);
+  await page.mouse.down();
+  await page.waitForTimeout(50);
+  await page.mouse.up();
+  const afterTap = await minimapPosition(page);
+  const tapStep = Math.abs(afterTap.top - beforeTap.top);
+
+  // One more single tap, right after — if the click that follows mouse.up after the first
+  // tap had fired a second time, this second tap would land on top of an extra step.
+  const beforeSecond = await minimapPosition(page);
+  await page.mouse.move(center.x, center.y);
+  await page.mouse.down();
+  await page.waitForTimeout(50);
+  await page.mouse.up();
+  const afterSecond = await minimapPosition(page);
+  const secondStep = Math.abs(afterSecond.top - beforeSecond.top);
+
+  expect(secondStep).toBeCloseTo(tapStep, 1);
+});

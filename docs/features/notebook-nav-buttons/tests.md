@@ -24,11 +24,16 @@
   direction`
 - אשכול נפרד מניווט-בין-דפים (design.md) → `pressing the pan buttons
   never changes which notebook page is shown`
+- **עדכון (2026-10-09):** החזקה ממשיכה להזיז לבד → `holding a
+  directional button down keeps panning on its own, not just one step
+  per press` + `a quick tap still pans exactly one step, not two —
+  releasing after a hold doesn't double-fire`
 
 ## How to run
 `npm run test:e2e`
 
 ## Status
-עבר — `404/404`, ריצה בודדת ונקייה (2026-10-09), כולל עשר הבדיקות
-החדשות. `grade8-angles-congruence.spec.ts` (ה-flake הקיים-מראש המתועד
-ב-CLAUDE.md) עבר בריצה הזו — לא נוגע בפיצ'ר הזה בכל מקרה.
+עבר — `406/406`, ריצה בודדת ונקייה (2026-10-09), אחרי תוספת
+ההחזקה-לגלילה-רציפה (שתי בדיקות חדשות מעל ה-`404` המקוריות).
+`grade8-angles-congruence.spec.ts` (ה-flake הקיים-מראש המתועד
+ב-CLAUDE.md) לא קשור לפיצ'ר הזה בכל מקרה.

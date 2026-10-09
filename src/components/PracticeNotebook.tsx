@@ -84,6 +84,13 @@ const HOLD_ZOOM_DWELL_MS = 180;
 const HOLD_ZOOM_TRANSITION_MS = 120;
 const HOLD_ZOOM_MOVE_TOLERANCE_PX = 4;
 
+/** Holding a directional nav button down: PAN_HOLD_DELAY_MS of stillness before the first
+ *  repeat (long enough that a quick tap never triggers it — a tap is handled by the
+ *  button's own onClick, once, not by this at all), then one more step every
+ *  PAN_HOLD_INTERVAL_MS until released. */
+const PAN_HOLD_DELAY_MS = 350;
+const PAN_HOLD_INTERVAL_MS = 80;
+
 export function PracticeNotebook({
   pages,
   currentPageIndex,
@@ -161,6 +168,13 @@ export function PracticeNotebook({
   const preHoldTransform = useRef<PanZoom | null>(null);
   const transitionClearTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const holdZoomFactorRef = useRef(holdZoomFactor);
+
+  // Hold-to-repeat on a directional nav button — see PAN_HOLD_DELAY_MS/PAN_HOLD_INTERVAL_MS
+  // above. panHoldFired distinguishes "this press turned into a hold" (so the click that
+  // follows release should be a no-op) from a plain tap (which onClick alone handles).
+  const panHoldTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const panHoldInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+  const panHoldFired = useRef(false);
 
   const currentPage = pages[currentPageIndex];
 
@@ -303,6 +317,8 @@ export function PracticeNotebook({
     return () => {
       if (holdZoomTimer.current) clearTimeout(holdZoomTimer.current);
       if (transitionClearTimer.current) clearTimeout(transitionClearTimer.current);
+      if (panHoldTimer.current) clearTimeout(panHoldTimer.current);
+      if (panHoldInterval.current) clearInterval(panHoldInterval.current);
     };
   }, []);
 
@@ -631,6 +647,47 @@ export function PracticeNotebook({
     return clamped.panX === current.panX && clamped.panY === current.panY;
   }
 
+  /** A quick tap: onClick fires once from the button itself. A hold firing this already
+   *  means the click that follows release is the same press, not a second one — skip it
+   *  rather than panning one extra step. */
+  function panButtonClick(dx: number, dy: number) {
+    if (panHoldFired.current) {
+      panHoldFired.current = false;
+      return;
+    }
+    panButton(dx, dy);
+  }
+
+  /** Arms on pointerdown: after PAN_HOLD_DELAY_MS of still holding, starts repeating the
+   *  step every PAN_HOLD_INTERVAL_MS, stopping itself once that direction is disabled
+   *  (reusing panDisabled — the same single source of truth panButton/the disabled prop
+   *  already go through) rather than running past the edge and relying on clampPan alone
+   *  to silently absorb it. */
+  function startPanHold(dx: number, dy: number) {
+    panHoldFired.current = false;
+    panHoldTimer.current = setTimeout(() => {
+      panHoldInterval.current = setInterval(() => {
+        if (panDisabled(dx, dy)) {
+          stopPanHold();
+          return;
+        }
+        panHoldFired.current = true;
+        panButton(dx, dy);
+      }, PAN_HOLD_INTERVAL_MS);
+    }, PAN_HOLD_DELAY_MS);
+  }
+
+  function stopPanHold() {
+    if (panHoldTimer.current) {
+      clearTimeout(panHoldTimer.current);
+      panHoldTimer.current = null;
+    }
+    if (panHoldInterval.current) {
+      clearInterval(panHoldInterval.current);
+      panHoldInterval.current = null;
+    }
+  }
+
   /** Toggle for "הצג את כל הדף" — zooms out to fit the entire page (reusing
    *  `computeFitTransform`, the same "fit the whole page in this box" math the notebook
    *  already relies on elsewhere) on the first press, and restores the exact zoom/pan from
@@ -754,7 +811,11 @@ export function PracticeNotebook({
             <button
               type="button"
               className="notebook-pan-up"
-              onClick={() => panButton(0, PAN_STEP_PX)}
+              onClick={() => panButtonClick(0, PAN_STEP_PX)}
+              onPointerDown={() => startPanHold(0, PAN_STEP_PX)}
+              onPointerUp={stopPanHold}
+              onPointerLeave={stopPanHold}
+              onPointerCancel={stopPanHold}
               disabled={panDisabled(0, PAN_STEP_PX)}
               aria-label="הזז למעלה"
             >
@@ -763,7 +824,11 @@ export function PracticeNotebook({
             <button
               type="button"
               className="notebook-pan-left"
-              onClick={() => panButton(PAN_STEP_PX, 0)}
+              onClick={() => panButtonClick(PAN_STEP_PX, 0)}
+              onPointerDown={() => startPanHold(PAN_STEP_PX, 0)}
+              onPointerUp={stopPanHold}
+              onPointerLeave={stopPanHold}
+              onPointerCancel={stopPanHold}
               disabled={panDisabled(PAN_STEP_PX, 0)}
               aria-label="הזז שמאלה"
             >
@@ -772,7 +837,11 @@ export function PracticeNotebook({
             <button
               type="button"
               className="notebook-pan-right"
-              onClick={() => panButton(-PAN_STEP_PX, 0)}
+              onClick={() => panButtonClick(-PAN_STEP_PX, 0)}
+              onPointerDown={() => startPanHold(-PAN_STEP_PX, 0)}
+              onPointerUp={stopPanHold}
+              onPointerLeave={stopPanHold}
+              onPointerCancel={stopPanHold}
               disabled={panDisabled(-PAN_STEP_PX, 0)}
               aria-label="הזז ימינה"
             >
@@ -781,7 +850,11 @@ export function PracticeNotebook({
             <button
               type="button"
               className="notebook-pan-down"
-              onClick={() => panButton(0, -PAN_STEP_PX)}
+              onClick={() => panButtonClick(0, -PAN_STEP_PX)}
+              onPointerDown={() => startPanHold(0, -PAN_STEP_PX)}
+              onPointerUp={stopPanHold}
+              onPointerLeave={stopPanHold}
+              onPointerCancel={stopPanHold}
               disabled={panDisabled(0, -PAN_STEP_PX)}
               aria-label="הזז למטה"
             >
