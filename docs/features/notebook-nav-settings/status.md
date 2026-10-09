@@ -8,11 +8,15 @@
 - [x] Design — designer — 2026-10-09 (בלוק שלישי בדיאלוג ⚙️ הקיים, תחת בורר
   עוצמת זום-ההחזקה — אותה אנטומיה בדיוק: אייקון 🧭+כותרת+תת-כותרת מעל שורת
   שישה כפתורים, "כבוי" ראשון ואז חמש דרגות עולות. ראו design.md)
-- [ ] Architecture — tech-lead — not started
+- [x] Architecture — tech-lead — 2026-10-09 (טבלת `PAN_SPEED_LEVELS` חדשה
+  ב-`notebook.ts` עם `stepPx`+`holdIntervalMs` לכל דרגה, `panSpeedFor()`
+  lookup; `App.tsx` מתרגם level→שני מספרים ומעביר כ-props דרך `Practice`
+  ל-`PracticeNotebook`, בדיוק כמו ש-`holdZoomFactor` כבר עובד היום. ראו
+  architecture.md)
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** tech-lead
+**Current phase:** developer
 **Branch:** `feature/notebook-nav-settings`
 **PR:** not opened yet
 
