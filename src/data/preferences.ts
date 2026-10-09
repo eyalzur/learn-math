@@ -6,7 +6,7 @@
  * value that gets overwritten. Sharing one array would force every history read to filter
  * out rows that are not practices, which looks cheap on the first day and is not.
  */
-import { DEFAULT_HOLD_ZOOM_LEVEL, HOLD_ZOOM_LEVELS } from "./notebook";
+import { DEFAULT_HOLD_ZOOM_LEVEL, HOLD_ZOOM_LEVELS, DEFAULT_PAN_SPEED_LEVEL, PAN_SPEED_LEVELS } from "./notebook";
 
 const STORAGE_KEY = "learn-math:preferences";
 
@@ -19,6 +19,9 @@ interface Preferences {
    *  option could show as chosen. An id keeps what the person meant ("the second-strongest")
    *  across retunes, and can be validated against a closed list. */
   holdZoomLevel?: Record<string, string>;
+  /** Student id → which pan-button speed (a `PAN_SPEED_LEVELS` id, "off" included) — same
+   *  id-not-number reasoning as `holdZoomLevel` above. */
+  panSpeedLevel?: Record<string, string>;
 }
 
 /**
@@ -69,6 +72,27 @@ export function setHoldZoomLevel(studentId: string, levelId: string): void {
     localStorage.setItem(
       STORAGE_KEY,
       JSON.stringify({ ...all, holdZoomLevel: { ...all.holdZoomLevel, [studentId]: levelId } }),
+    );
+  } catch {
+    // ignore
+  }
+}
+
+/**
+ * Which pan-button speed this student is set to. Same validation-with-fallback as
+ * `holdZoomLevel` above.
+ */
+export function panSpeedLevel(studentId: string): string {
+  const stored = readAll().panSpeedLevel?.[studentId];
+  return PAN_SPEED_LEVELS.some((level) => level.id === stored) ? stored! : DEFAULT_PAN_SPEED_LEVEL;
+}
+
+export function setPanSpeedLevel(studentId: string, levelId: string): void {
+  try {
+    const all = readAll();
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ ...all, panSpeedLevel: { ...all.panSpeedLevel, [studentId]: levelId } }),
     );
   } catch {
     // ignore

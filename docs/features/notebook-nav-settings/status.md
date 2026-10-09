@@ -13,10 +13,15 @@
   lookup; `App.tsx` מתרגם level→שני מספרים ומעביר כ-props דרך `Practice`
   ל-`PracticeNotebook`, בדיוק כמו ש-`holdZoomFactor` כבר עובד היום. ראו
   architecture.md)
-- [ ] Implementation — developer — not started
+- [x] Implementation — developer — 2026-10-09 (`PAN_SPEED_LEVELS` +
+  `panSpeedFor()` ב-`notebook.ts`, `panSpeedLevel`/`setPanSpeedLevel`
+  ב-`preferences.ts`, הבורר השלישי ב-`TopicPicker.tsx`, props חדשים דרך
+  `App.tsx` → `Practice.tsx` → `PracticeNotebook.tsx` שמחליפים את
+  `PAN_STEP_PX`/`PAN_HOLD_INTERVAL_MS` הקשיחים; `PAN_HOLD_DELAY_MS` נשאר
+  קבוע. `npm run build && npm run lint` עברו, גרסה עלתה ל-1.35.0)
 - [ ] Tests — qa — not started
 
-**Current phase:** developer
+**Current phase:** qa
 **Branch:** `feature/notebook-nav-settings`
 **PR:** not opened yet
 
