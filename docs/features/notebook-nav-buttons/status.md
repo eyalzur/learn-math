@@ -26,9 +26,9 @@
   והוספת החזקה-לגלילה-רציפה — עוד שתי בדיקות; `406/406` בריצה מלאה
   ונקייה. ראו tests.md ו-architecture.md, Implementation Notes)
 
-**Current phase:** done — ממתין לריוויו ולמיזוג
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `feature/notebook-nav-buttons`
-**PR:** [#78](https://github.com/eyalzur/learn-math/pull/78)
+**PR:** [#78](https://github.com/eyalzur/learn-math/pull/78) — מוזג 2026-10-09
 
 ## Open questions / blockers
 None.
