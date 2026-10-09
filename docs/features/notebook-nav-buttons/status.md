@@ -25,7 +25,7 @@
 
 **Current phase:** done — ממתין לריוויו ולמיזוג
 **Branch:** `feature/notebook-nav-buttons`
-**PR:** not opened yet
+**PR:** [#78](https://github.com/eyalzur/learn-math/pull/78)
 
 ## Open questions / blockers
 None.
