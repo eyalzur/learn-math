@@ -31,3 +31,6 @@ dist-ssr
 
 # stray screenshots from manual verification runs
 *.png
+
+# throwaway standalone-component preview harnesses (built, not shipped)
+.preview-scratch/
