@@ -5,12 +5,14 @@
 
 ## Progress
 - [x] Product spec — product-manager — 2026-10-09
-- [ ] Design — designer — not started
+- [x] Design — designer — 2026-10-09 (פאד כיוונים בצורת צלב, בפינה הצפה
+  הנגדית לכפתורי הזום; הכיוונים מרחביים ולא עוברים היפוך RTL — ראו
+  Accessibility/RTL notes ב-design.md)
 - [ ] Architecture — tech-lead — not started
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** designer
+**Current phase:** tech-lead
 **Branch:** `feature/notebook-nav-buttons`
 **PR:** not opened yet
 
