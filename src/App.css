@@ -1565,15 +1565,27 @@ button.secondary {
 }
 
 .notebook-zoom-controls button,
-.notebook-pan-controls button {
-  width: 44px;
-  height: 44px;
+.notebook-pan-grid button {
   padding: 0;
   border-radius: 50%;
   background: var(--bg);
   color: var(--text-h);
   box-shadow: var(--shadow);
+}
+
+.notebook-zoom-controls button {
+  width: 44px;
+  height: 44px;
   font-size: 20px;
+}
+
+/* Smaller than the zoom buttons on purpose — four of these sit together (the zoom column
+   only ever shows one at a time), so the cross reads as one compact control rather than
+   claiming as much floating space as the whole zoom column. Still a real touch target. */
+.notebook-pan-grid button {
+  width: 32px;
+  height: 32px;
+  font-size: 14px;
 }
 
 /* "הצג את כל הדף" while active — same treatment as a pressed drawing tool (.tool-btn),
@@ -1603,9 +1615,9 @@ button.secondary {
 
 .notebook-pan-grid {
   display: grid;
-  grid-template-columns: repeat(3, 44px);
-  grid-template-rows: repeat(3, 44px);
-  gap: 4px;
+  grid-template-columns: repeat(3, 32px);
+  grid-template-rows: repeat(3, 32px);
+  gap: 2px;
   /* Spatial, not reading-order (see the JSX comment above this group): CSS grid columns
      flow right-to-left in an RTL-inherited container by default, which would put
      .notebook-pan-left's column 1 on the physical right — exactly the mismatch this
