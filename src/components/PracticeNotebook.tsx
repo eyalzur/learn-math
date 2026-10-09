@@ -7,7 +7,9 @@ import {
   MAX_PAGES,
   PAGE_HEIGHT,
   PAGE_WIDTH,
+  PAN_STEP_PX,
   PEN_CELLS,
+  clampPan,
   clampZoom,
   computeFitTransform,
   computeInitialTransform,
@@ -101,6 +103,12 @@ export function PracticeNotebook({
    *  question, never both pending at once. */
   const [pendingConfirm, setPendingConfirm] = useState<"remove" | "clear" | null>(null);
   const [zoomPercent, setZoomPercent] = useState(100);
+  /** Bumped on every `applyTransform()` purely to force a re-render — `panZoomRef` is a
+   *  ref (deliberately, see the comment above it: pan/draw events fire too often for
+   *  state), but the nav buttons' disabled state depends on its current value, and a pure
+   *  pan with no zoom change doesn't otherwise trigger one (`setZoomPercent` bails out when
+   *  the rounded percentage is unchanged). */
+  const [, setPanVersion] = useState(0);
   /** Whether "הצג את כל הדף" is currently zoomed out to fit the whole page — a toggle, not
    *  a mode this component enters automatically. `savedTransform` is what a second press
    *  restores: the exact zoom/pan from right before the first press, not a re-derived guess. */
@@ -182,6 +190,7 @@ export function PracticeNotebook({
       stackRef.current.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
     }
     setZoomPercent(Math.round(zoom * 100));
+    setPanVersion((v) => v + 1);
     updateMinimap();
   }
 
@@ -245,7 +254,7 @@ export function PracticeNotebook({
     // zoomAroundPoint wants stage-relative screen pixels (like handleWheel/zoomButton
     // below), not the page-space coordinates localPoint() returns for drawing.
     const target = zoomAroundPoint(panZoomRef.current, down.x - stageRect.left, down.y - stageRect.top, factor);
-    animateTransformTo(target, HOLD_ZOOM_TRANSITION_MS);
+    animateTransformTo(clampPan(target, stageRect.width, stageRect.height), HOLD_ZOOM_TRANSITION_MS);
   }
 
   function redrawFromPage(page: NotebookPage) {
@@ -504,12 +513,18 @@ export function PracticeNotebook({
     if (activePointers.current.size === 1) {
       if (singlePanStart.current) {
         const start = singlePanStart.current;
+        const stageRect = stageRef.current?.getBoundingClientRect();
+        if (!stageRect) return;
         clearTransition();
-        panZoomRef.current = {
-          ...panZoomRef.current,
-          panX: start.panX0 + (e.clientX - start.x),
-          panY: start.panY0 + (e.clientY - start.y),
-        };
+        panZoomRef.current = clampPan(
+          {
+            ...panZoomRef.current,
+            panX: start.panX0 + (e.clientX - start.x),
+            panY: start.panY0 + (e.clientY - start.y),
+          },
+          stageRect.width,
+          stageRect.height,
+        );
         applyTransform();
       } else if (drawing.current) {
         paintTo(localPoint(e.clientX, e.clientY));
@@ -523,11 +538,15 @@ export function PracticeNotebook({
       const curMidStage = { x: curMid.x - stageRect.left, y: curMid.y - stageRect.top };
       const newZoom = clampZoom(pinch.current.startZoom * (curDist / pinch.current.startDist));
       clearTransition();
-      panZoomRef.current = {
-        zoom: newZoom,
-        panX: curMidStage.x - pinch.current.localFixed.x * newZoom,
-        panY: curMidStage.y - pinch.current.localFixed.y * newZoom,
-      };
+      panZoomRef.current = clampPan(
+        {
+          zoom: newZoom,
+          panX: curMidStage.x - pinch.current.localFixed.x * newZoom,
+          panY: curMidStage.y - pinch.current.localFixed.y * newZoom,
+        },
+        stageRect.width,
+        stageRect.height,
+      );
       applyTransform();
     }
   }
@@ -572,15 +591,44 @@ export function PracticeNotebook({
     if (!stageRect) return;
     const sx = e.clientX - stageRect.left;
     const sy = e.clientY - stageRect.top;
-    panZoomRef.current = zoomAroundPoint(panZoomRef.current, sx, sy, e.deltaY < 0 ? 1.12 : 1 / 1.12);
+    const target = zoomAroundPoint(panZoomRef.current, sx, sy, e.deltaY < 0 ? 1.12 : 1 / 1.12);
+    panZoomRef.current = clampPan(target, stageRect.width, stageRect.height);
     applyTransform();
   }
 
   function zoomButton(factor: number) {
     const rect = stageRef.current?.getBoundingClientRect();
     if (!rect) return;
-    panZoomRef.current = zoomAroundPoint(panZoomRef.current, rect.width / 2, rect.height / 2, factor);
+    const target = zoomAroundPoint(panZoomRef.current, rect.width / 2, rect.height / 2, factor);
+    panZoomRef.current = clampPan(target, rect.width, rect.height);
     applyTransform();
+  }
+
+  /** One press moves the view by PAN_STEP_PX screen pixels in a direction — symmetric to
+   *  `zoomButton` above, sharing the same clampPan() the page's other movement sources go
+   *  through, so a button never appears able to move the view somewhere a drag couldn't. */
+  function panButton(dx: number, dy: number) {
+    const rect = stageRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    clearTransition();
+    panZoomRef.current = clampPan(
+      { ...panZoomRef.current, panX: panZoomRef.current.panX + dx, panY: panZoomRef.current.panY + dy },
+      rect.width,
+      rect.height,
+    );
+    applyTransform();
+  }
+
+  /** Whether a press of a directional button in this direction would actually move the
+   *  view — reuses clampPan() itself rather than a parallel "am I at the edge" check, so
+   *  the disabled state can never disagree with what panButton would really do. */
+  function panDisabled(dx: number, dy: number): boolean {
+    const rect = stageRef.current?.getBoundingClientRect();
+    if (!rect) return true;
+    const current = panZoomRef.current;
+    const attempted = { ...current, panX: current.panX + dx, panY: current.panY + dy };
+    const clamped = clampPan(attempted, rect.width, rect.height);
+    return clamped.panX === current.panX && clamped.panY === current.panY;
   }
 
   /** Toggle for "הצג את כל הדף" — zooms out to fit the entire page (reusing
@@ -695,6 +743,51 @@ export function PracticeNotebook({
           >
             {fullscreen ? "✕" : "⤢"}
           </button>
+        </div>
+        {/* Spatial, not reading-order: these pan the view by its screen-visible direction
+            (◀ always shows more of the page's visual left), unlike the ◀/▶ page-nav buttons
+            in the toolbar below, which follow page order. The cross shape (not a row) plus
+            the separate cluster from page-nav keeps the two meanings from colliding — see
+            docs/features/notebook-nav-buttons/design.md. */}
+        <div className="notebook-pan-controls">
+          <div className="notebook-pan-grid" role="group" aria-label="הזזת התצוגה">
+            <button
+              type="button"
+              className="notebook-pan-up"
+              onClick={() => panButton(0, PAN_STEP_PX)}
+              disabled={panDisabled(0, PAN_STEP_PX)}
+              aria-label="הזז למעלה"
+            >
+              ▲
+            </button>
+            <button
+              type="button"
+              className="notebook-pan-left"
+              onClick={() => panButton(PAN_STEP_PX, 0)}
+              disabled={panDisabled(PAN_STEP_PX, 0)}
+              aria-label="הזז שמאלה"
+            >
+              ◀
+            </button>
+            <button
+              type="button"
+              className="notebook-pan-right"
+              onClick={() => panButton(-PAN_STEP_PX, 0)}
+              disabled={panDisabled(-PAN_STEP_PX, 0)}
+              aria-label="הזז ימינה"
+            >
+              ▶
+            </button>
+            <button
+              type="button"
+              className="notebook-pan-down"
+              onClick={() => panButton(0, -PAN_STEP_PX)}
+              disabled={panDisabled(0, -PAN_STEP_PX)}
+              aria-label="הזז למטה"
+            >
+              ▼
+            </button>
+          </div>
         </div>
       </div>
 

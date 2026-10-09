@@ -16,10 +16,13 @@
 קודמת של הקובץ הזה) הוכרעה בלי אישור מפורש לאחת משלוש האפשרויות —
 המשתמש ביקש להמשיך ("צריך כפתורי ניווט") ולכן ההכרעה (אפשרות ב, הגבלה
 גם לגרירה) היא שלי. ראו architecture.md, Overview, לנימוק המלא.
-- [ ] Implementation — developer — not started
+- [x] Implementation — developer — 2026-10-09 (ראו Implementation Notes
+  ב-architecture.md לשלושה דברים שהתגלו תוך כדי: clamp חסר בזום-החזקה,
+  disabled שלא התעדכן אחרי גרירה טהורה, ובאג RTL אמיתי — האשכול נחת
+  בפינה הלא-נכונה — שנתפס בתצוגה מקדימה אינטראקטיבית ותוקן לפני שהתפרסם)
 - [ ] Tests — qa — not started
 
-**Current phase:** developer
+**Current phase:** qa
 **Branch:** `feature/notebook-nav-buttons`
 **PR:** not opened yet
 

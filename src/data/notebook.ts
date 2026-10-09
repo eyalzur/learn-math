@@ -20,6 +20,12 @@ export const MAX_ZOOM = 2.5;
  *  observed in review). Manual zoom/pan after that is unaffected. */
 export const INITIAL_ZOOM = 0.7;
 
+/** How far one press of a directional nav button moves the view, in screen pixels (not
+ *  page pixels — a constant step regardless of zoom, same convention `zoomButton` already
+ *  uses for its own factor). One named value, easy to retune — see
+ *  docs/features/notebook-nav-buttons/. */
+export const PAN_STEP_PX = 120;
+
 /**
  * How far hold-to-zoom closes in, as a choice rather than a constant — see
  * docs/features/notebook-hold-to-zoom/ (סבב ה׳). Six options: "off", then five strengths
@@ -121,6 +127,29 @@ export interface PanZoom {
   panX: number;
   panY: number;
   zoom: number;
+}
+
+/**
+ * Keeps the page from being panned fully out of view. On screen the page occupies
+ * [panX, panX + PAGE_WIDTH*zoom) × [panY, panY + PAGE_HEIGHT*zoom) — this clamps panX/panY
+ * so that span stays within [stageWidth - PAGE_WIDTH*zoom, 0] (and the Y equivalent).
+ * Zoomed in, that keeps the page's far edge from passing the viewport's near edge; zoomed
+ * out past the viewport size, the two bounds swap order, so `Math.min`/`Math.max` (not a
+ * fixed low/high) is what makes the same formula hold the page inside the viewport instead
+ * of letting it drift. Applied at every point panZoomRef is written to from real movement —
+ * drag, pinch, wheel, the zoom buttons, and the nav buttons — never to the hold-zoom/fit
+ * transforms, which are already computed to land in bounds.
+ */
+export function clampPan(panZoom: PanZoom, stageWidth: number, stageHeight: number): PanZoom {
+  const clampAxis = (pan: number, stageSize: number, pageSize: number) => {
+    const edge = stageSize - pageSize * panZoom.zoom;
+    return Math.min(Math.max(0, edge), Math.max(Math.min(0, edge), pan));
+  };
+  return {
+    ...panZoom,
+    panX: clampAxis(panZoom.panX, stageWidth, PAGE_WIDTH),
+    panY: clampAxis(panZoom.panY, stageHeight, PAGE_HEIGHT),
+  };
 }
 
 /**

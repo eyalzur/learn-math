@@ -111,3 +111,36 @@ panX = clamp(panX, min(0, stageW - PAGE_WIDTH*zoom), max(0, stageW - PAGE_WIDTH*
 ## Open Questions
 None. (הוכרע 2026-10-09 — אפשרות (ב), ראו הערה ב-Overview ו-Technical
 Approach.)
+
+## Implementation Notes
+נבנה כמתוכנן, עם שלושה דברים שהתגלו תוך כדי מימוש ולא היו באדריכלות
+המקורית:
+
+1. **זום-החזקה (hold-to-zoom) כן היה צריך clamp.** Overview הניח ש
+   `animateTransformTo`/זום-החזקה "כבר מחושבים להישאר בגבולות" — נכון
+   ל-`computeFitTransform`/`computeInitialTransform`, אבל **לא** ליעד
+   של זום-החזקה עצמו (`triggerHoldZoom`), שמחושב דרך `zoomAroundPoint` —
+   אותה פונקציה בדיוק שכבר ידוע שצריכה clamp ב-`handleWheel`/
+   `zoomButton`. תוקן: `clampPan` מופעל גם שם.
+2. **ה-disabled לא היה מתעדכן אחרי גרירה טהורה.** `panZoomRef` הוא ref
+   (לא state, בכוונה — ראו ההערה הקיימת מעל הגדרתו), ו-`applyTransform`
+   היה קורא ל-`setZoomPercent` עם אותו ערך מעוגל כש-רק הפאן השתנה (לא
+   הזום) — React לא מרנדר מחדש במקרה הזה, אז הכפתורים היו נשארים עם
+   מצב disabled ישן. תוקן: `useState` חדש (`panVersion`, ערכו לא
+   נקרא בכלל — רק קיים כדי לכפות רינדור) נבדק ב-`applyTransform`.
+3. **באג RTL אמיתי, נתפס בבדיקה חזותית לפני שהתפרסם.** הניסיון הראשון
+   שם `direction: ltr` ישירות על `.notebook-pan-controls` — האלמנט
+   הממוקם (עם `inset-inline-start`). זה תיקן את סדר העמודות בתוך
+   ה-grid, אבל **גם** הפך את `inset-inline-start` של האלמנט עצמו
+   להתפרש כ"שמאל" (LTR) במקום "ימין" (RTL) — כך שהאשכול כולו נחת באותו
+   צד כמו כפתורי הזום, לא בפינה הנגדית. תצוגה מקדימה אינטראקטיבית
+   (מדידת `boundingClientRect` בפועל, לא רק קריאת הקוד) תפסה את זה.
+   תוקן: `direction: ltr` עבר לאלמנט-פנימי חדש (`.notebook-pan-grid`),
+   כך שהמיקום (`.notebook-pan-controls`) ממשיך לרשת RTL רגיל ונוחת
+   בפינה הנכונה, ורק סדר העמודות בתוך ה-grid מכוון.
+
+אומת בתצוגה מקדימה אינטראקטיבית (הרכיב האמיתי, מחוץ לאפליקציה): שני
+האשכולות בפינות נגדיות, הצלב בכיוון הפיזי הנכון, מצב ה-disabled מתעדכן
+נכון אחרי לחיצות חוזרות וחוזר ל-enabled כשמתרחקים מהקצה, אפס שגיאות
+קונסול. גרסה הועלתה `1.33.0` → `1.34.0` (`npm run bump:feature`).
+`build`/`lint`/`tsc` ירוקים.
