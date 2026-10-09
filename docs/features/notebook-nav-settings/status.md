@@ -24,9 +24,9 @@
   — `406` הקיימות + `9` חדשות, `0` כשלים. ראו tests.md להערה תפעולית על
   ריצה מזוהמת שנפסלה ונרצה מחדש)
 
-**Current phase:** done — ממתין לריוויו ולמיזוג
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `feature/notebook-nav-settings`
-**PR:** not opened yet
+**PR:** [#79](https://github.com/eyalzur/learn-math/pull/79) — מוזג 2026-10-09
 
 ## Open questions / blockers
 None.
