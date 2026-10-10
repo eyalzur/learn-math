@@ -1566,7 +1566,12 @@ button.secondary {
 }
 
 /* The page itself — fixed size in its own coordinate space, panned/zoomed purely via
-   the transform PracticeNotebook.tsx sets on this element. */
+   the transform PracticeNotebook.tsx sets on this element.
+   The squared-paper guide is one grid, sized and coloured as its own design choice (24px,
+   --notebook-grid) — not derived from CELL/ERASER_CELLS in notebook.ts. It used to be two
+   overlapping grids that happened to reuse those same numbers, which made the "paper" and
+   the ink rendering visually indistinguishable; the two are unrelated and are kept that
+   way on purpose now. */
 .notebook-stack {
   position: absolute;
   top: 0;
@@ -1576,10 +1581,16 @@ button.secondary {
   transform-origin: 0 0;
   background: var(--bg);
   background-image:
-    repeating-linear-gradient(0deg, var(--border) 0 1px, transparent 1px 4.665px),
-    repeating-linear-gradient(90deg, var(--border) 0 1px, transparent 1px 4.665px),
-    repeating-linear-gradient(0deg, var(--accent-border) 0 1.5px, transparent 1.5px 23.33px),
-    repeating-linear-gradient(90deg, var(--accent-border) 0 1.5px, transparent 1.5px 23.33px);
+    repeating-linear-gradient(
+      0deg,
+      color-mix(in srgb, var(--notebook-grid) 55%, transparent) 0 1px,
+      transparent 1px 24px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--notebook-grid) 55%, transparent) 0 1px,
+      transparent 1px 24px
+    );
 }
 
 .notebook-canvas {
