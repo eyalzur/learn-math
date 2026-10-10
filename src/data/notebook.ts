@@ -21,6 +21,50 @@ export const MAX_ZOOM = 2.5;
 export const INITIAL_ZOOM = 0.7;
 
 /**
+ * How far one press of a directional nav button moves the view (screen pixels, not page
+ * pixels — same convention `zoomButton` already uses for its own factor), and how fast
+ * holding one down keeps repeating that — as a per-student choice rather than a constant.
+ * See docs/features/notebook-nav-settings/.
+ *
+ * Both numbers live on the same record because the setting is "how fast the button feels",
+ * one thing a student experiences, not two things to tune separately — see
+ * product-spec.md's "בורר אחד, לא שניים". `holdIntervalMs: null` is "off": holding a button
+ * still works as a single step (via `stepPx`), it just never repeats on its own.
+ *
+ * `medium`'s numbers equal the old hardcoded constants (120px / 80ms) so a student who
+ * never opens the setting — the default — sees the exact behavior PR #78 shipped with.
+ */
+export interface PanSpeedLevel {
+  id: string;
+  label: string;
+  stepPx: number;
+  /** Milliseconds between repeats while held, or `null` for "off" (no repeat). */
+  holdIntervalMs: number | null;
+}
+
+export const PAN_SPEED_LEVELS: PanSpeedLevel[] = [
+  { id: "off", label: "כבוי", stepPx: 120, holdIntervalMs: null },
+  { id: "verySlow", label: "אטי מאוד", stepPx: 70, holdIntervalMs: 160 },
+  { id: "slow", label: "אטי", stepPx: 95, holdIntervalMs: 120 },
+  { id: "medium", label: "בינוני", stepPx: 120, holdIntervalMs: 80 },
+  { id: "fast", label: "מהיר", stepPx: 150, holdIntervalMs: 55 },
+  { id: "veryFast", label: "מהיר מאוד", stepPx: 190, holdIntervalMs: 35 },
+];
+
+/** The middle of the five active levels — no field-validated value yet (unlike
+ *  hold-to-zoom's tuned default), so the middle is the safest starting point. */
+export const DEFAULT_PAN_SPEED_LEVEL = "medium";
+
+/** The step/interval pair for a stored level id, falling back to the default level's pair
+ *  when the id is unknown-but-somehow-present — same shape as `holdZoomFactorFor`. */
+export function panSpeedFor(levelId: string): { stepPx: number; holdIntervalMs: number | null } {
+  const level =
+    PAN_SPEED_LEVELS.find((l) => l.id === levelId) ??
+    PAN_SPEED_LEVELS.find((l) => l.id === DEFAULT_PAN_SPEED_LEVEL)!;
+  return { stepPx: level.stepPx, holdIntervalMs: level.holdIntervalMs };
+}
+
+/**
  * How far hold-to-zoom closes in, as a choice rather than a constant — see
  * docs/features/notebook-hold-to-zoom/ (סבב ה׳). Six options: "off", then five strengths
  * rising by a constant ratio of ~1.67, which puts the middle one at exactly +25% (the
@@ -121,6 +165,29 @@ export interface PanZoom {
   panX: number;
   panY: number;
   zoom: number;
+}
+
+/**
+ * Keeps the page from being panned fully out of view. On screen the page occupies
+ * [panX, panX + PAGE_WIDTH*zoom) × [panY, panY + PAGE_HEIGHT*zoom) — this clamps panX/panY
+ * so that span stays within [stageWidth - PAGE_WIDTH*zoom, 0] (and the Y equivalent).
+ * Zoomed in, that keeps the page's far edge from passing the viewport's near edge; zoomed
+ * out past the viewport size, the two bounds swap order, so `Math.min`/`Math.max` (not a
+ * fixed low/high) is what makes the same formula hold the page inside the viewport instead
+ * of letting it drift. Applied at every point panZoomRef is written to from real movement —
+ * drag, pinch, wheel, the zoom buttons, and the nav buttons — never to the hold-zoom/fit
+ * transforms, which are already computed to land in bounds.
+ */
+export function clampPan(panZoom: PanZoom, stageWidth: number, stageHeight: number): PanZoom {
+  const clampAxis = (pan: number, stageSize: number, pageSize: number) => {
+    const edge = stageSize - pageSize * panZoom.zoom;
+    return Math.min(Math.max(0, edge), Math.max(Math.min(0, edge), pan));
+  };
+  return {
+    ...panZoom,
+    panX: clampAxis(panZoom.panX, stageWidth, PAGE_WIDTH),
+    panY: clampAxis(panZoom.panY, stageHeight, PAGE_HEIGHT),
+  };
 }
 
 /**

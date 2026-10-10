@@ -858,6 +858,52 @@ button.secondary {
   font-weight: 600;
 }
 
+/* The nav-buttons speed setting — same box/wrap behavior as .hold-zoom-setting above, just
+   a different set of options. See docs/features/notebook-nav-settings/. */
+.pan-speed-setting {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--code-bg);
+  text-align: right;
+}
+
+.pan-speed-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pan-speed-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.pan-speed-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pan-speed-option {
+  padding: 6px 12px;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+
+.pan-speed-option[aria-pressed="true"] {
+  background: var(--accent-bg);
+  border-color: var(--accent-border);
+  color: var(--text-h);
+  font-weight: 600;
+}
+
 .read-aloud-icon {
   font-size: 22px;
   line-height: 1;
@@ -1576,21 +1622,87 @@ button.secondary {
   gap: 8px;
 }
 
-.notebook-zoom-controls button {
-  width: 44px;
-  height: 44px;
+.notebook-zoom-controls button,
+.notebook-pan-grid button {
   padding: 0;
   border-radius: 50%;
   background: var(--bg);
   color: var(--text-h);
   box-shadow: var(--shadow);
+}
+
+.notebook-zoom-controls button {
+  width: 44px;
+  height: 44px;
   font-size: 20px;
+}
+
+/* Smaller than the zoom buttons on purpose — four of these sit together (the zoom column
+   only ever shows one at a time), so the cross reads as one compact control rather than
+   claiming as much floating space as the whole zoom column. Still a real touch target. */
+.notebook-pan-grid button {
+  width: 32px;
+  height: 32px;
+  font-size: 14px;
 }
 
 /* "הצג את כל הדף" while active — same treatment as a pressed drawing tool (.tool-btn),
    not a new color: it's a toggle exactly like pen/eraser/pan, just living in this group. */
 .notebook-zoom-controls button[aria-pressed="true"] {
   background: var(--accent-bg);
+}
+
+/* The directional pad — the opposite floating corner from .notebook-zoom-controls (same
+   bottom offset, the other inline side), so the notebook's floating controls spread across
+   its corners instead of stacking in one. A 3x3 grid in a cross: up/down centered, left and
+   right flanking an empty middle cell — recognizable as "move this way" without reading a
+   single label, which matters for Mika (grade 1, still learning to read). See
+   docs/features/notebook-nav-buttons/design.md. */
+/* Positioning only, left at the page's inherited RTL direction on purpose — this is what
+   makes inset-inline-start resolve to the physical corner opposite .notebook-zoom-controls
+   (inset-inline-end), the same way those two already read as a matched pair. The grid
+   itself (and its own direction override, below) lives one level in, on
+   .notebook-pan-grid — direction is inherited by children too, so overriding it here would
+   just move the whole cluster to the wrong corner instead of only reordering its columns
+   (this shipped once already, caught in review: both clusters landed on the same side). */
+.notebook-pan-controls {
+  position: absolute;
+  bottom: 10px;
+  inset-inline-start: 10px;
+}
+
+.notebook-pan-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 32px);
+  grid-template-rows: repeat(3, 32px);
+  gap: 2px;
+  /* Spatial, not reading-order (see the JSX comment above this group): CSS grid columns
+     flow right-to-left in an RTL-inherited container by default, which would put
+     .notebook-pan-left's column 1 on the physical right — exactly the mismatch this
+     project has shipped before (CLAUDE.md, "כיווניות — הבאג החוזר"). Forcing ltr here
+     keeps column 1 physically on the left regardless of page direction, matching where
+     the ◀ glyph and the "reveal more of the left" behavior actually are. */
+  direction: ltr;
+}
+
+.notebook-pan-up {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.notebook-pan-left {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.notebook-pan-right {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+.notebook-pan-down {
+  grid-column: 2;
+  grid-row: 3;
 }
 
 /* One row, always — never wraps into a second line that eats into the writing area above
@@ -1673,14 +1785,29 @@ button.secondary {
   color: #dc2626;
 }
 
-.notebook-send-btn {
+.notebook-action-row {
   flex-shrink: 0;
-  white-space: nowrap;
-  min-height: 36px;
-  padding: 0 10px;
-  font-size: 14px;
+  padding: 6px 10px 10px;
+}
+
+.notebook-send-btn {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 16px;
+  font-size: 18px;
+  font-weight: 600;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.notebook-send-btn:disabled {
   background: var(--code-bg);
-  color: var(--text-h);
+  color: var(--text);
+  cursor: default;
 }
 
 .notebook-max-pages-note {

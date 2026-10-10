@@ -38,6 +38,11 @@ interface PracticeProps {
    *  to a fraction of the stage size — `null` when off. Passed straight through to the
    *  notebook. */
   autoScrollJumpFraction: number | null;
+  /** This student's nav-button speed, already resolved to a step size and repeat interval
+   *  — `holdIntervalMs: null` means holding a button doesn't repeat. Passed straight
+   *  through to the notebook, same as `holdZoomFactor`. */
+  panStepPx: number;
+  panHoldIntervalMs: number | null;
   /** Fires once per question, right after right/wrong is decided — before the child even
    *  sees the feedback or explanation. Only an adaptive lesson supplies this; every other
    *  lesson leaves it unset and nothing here changes for it. */
@@ -51,6 +56,8 @@ export function Practice({
   readAloud,
   holdZoomFactor,
   autoScrollJumpFraction,
+  panStepPx,
+  panHoldIntervalMs,
   onAnswered,
 }: PracticeProps) {
   const [index, setIndex] = useState(0);
@@ -112,6 +119,10 @@ export function Practice({
    *  result mode: see the effect below, which drops it the moment a reading comes back
    *  confident (design.md, מצב F). */
   const [fullscreen, setFullscreen] = useState(false);
+  // What the student asked for, as opposed to what is showing right now: a reading or the
+  // correction form drops fullscreen temporarily, and "הבא" brings it back. Only the toggle
+  // and the ✕ change this — see docs/features/notebook-toolbar-actions/.
+  const [fullscreenWanted, setFullscreenWanted] = useState(false);
 
   // Voices load asynchronously, so warm the list before the first press.
   useEffect(primeVoices, []);
@@ -329,6 +340,7 @@ export function Practice({
       return;
     }
     setIndex((i) => i + 1);
+    setFullscreen(fullscreenWanted);
     setFeedback(null);
     setHintsShown(0);
     setDiagnosis(null);
@@ -455,7 +467,10 @@ export function Practice({
       <button
         type="button"
         className="notebook-fullscreen-exit"
-        onClick={() => setFullscreen(false)}
+        onClick={() => {
+          setFullscreen(false);
+          setFullscreenWanted(false);
+        }}
         aria-label="צאו ממסך מלא"
       >
         ✕
@@ -698,11 +713,17 @@ export function Practice({
         locked={feedback !== null}
         primaryAction={primaryAction}
         fullscreen={fullscreen}
-        onToggleFullscreen={() => setFullscreen((f) => !f)}
+        onToggleFullscreen={() => {
+          const turnOn = !fullscreen;
+          setFullscreen(turnOn);
+          setFullscreenWanted(turnOn);
+        }}
         topSlot={topSlot}
         statusSlot={statusSlot}
         holdZoomFactor={holdZoomFactor}
         autoScrollJumpFraction={autoScrollJumpFraction}
+        panStepPx={panStepPx}
+        panHoldIntervalMs={panHoldIntervalMs}
       />
       {!fullscreen && sendState === "error" && (
         <p className="notebook-send-error" aria-live="polite">

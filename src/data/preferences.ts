@@ -10,7 +10,9 @@ import {
   AUTO_SCROLL_JUMP_LEVELS,
   DEFAULT_AUTO_SCROLL_JUMP_LEVEL,
   DEFAULT_HOLD_ZOOM_LEVEL,
+  DEFAULT_PAN_SPEED_LEVEL,
   HOLD_ZOOM_LEVELS,
+  PAN_SPEED_LEVELS,
 } from "./notebook";
 
 const STORAGE_KEY = "learn-math:preferences";
@@ -28,6 +30,9 @@ interface Preferences {
    *  `AUTO_SCROLL_JUMP_LEVELS` id, "off" included) — same reasoning as `holdZoomLevel`
    *  above: an id survives a scale retune, a stored number wouldn't. */
   autoScrollJumpLevel?: Record<string, string>;
+  /** Student id → which pan-button speed (a `PAN_SPEED_LEVELS` id, "off" included) — same
+   *  id-not-number reasoning as `holdZoomLevel` above. */
+  panSpeedLevel?: Record<string, string>;
 }
 
 /**
@@ -100,6 +105,27 @@ export function setAutoScrollJumpLevel(studentId: string, levelId: string): void
     localStorage.setItem(
       STORAGE_KEY,
       JSON.stringify({ ...all, autoScrollJumpLevel: { ...all.autoScrollJumpLevel, [studentId]: levelId } }),
+    );
+  } catch {
+    // ignore
+  }
+}
+
+/**
+ * Which pan-button speed this student is set to. Same validation-with-fallback as
+ * `holdZoomLevel` above.
+ */
+export function panSpeedLevel(studentId: string): string {
+  const stored = readAll().panSpeedLevel?.[studentId];
+  return PAN_SPEED_LEVELS.some((level) => level.id === stored) ? stored! : DEFAULT_PAN_SPEED_LEVEL;
+}
+
+export function setPanSpeedLevel(studentId: string, levelId: string): void {
+  try {
+    const all = readAll();
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ ...all, panSpeedLevel: { ...all.panSpeedLevel, [studentId]: levelId } }),
     );
   } catch {
     // ignore

@@ -11,6 +11,7 @@ import {
   PEN_CELLS,
   clampFollowPanX,
   clampFollowPanY,
+  clampPan,
   clampZoom,
   computeFitTransform,
   computeInitialTransform,
@@ -63,6 +64,13 @@ interface PracticeNotebookProps {
    *  tracked). Comes from the student's own setting; see
    *  docs/features/notebook-auto-scroll/. */
   autoScrollJumpFraction: number | null;
+  /** How far one press of a directional nav button moves the view, in screen pixels —
+   *  comes from the student's own setting; see docs/features/notebook-nav-settings/. */
+  panStepPx: number;
+  /** Milliseconds between repeats while a nav button is held down, or `null` for "off" —
+   *  holding still performs the one step the press itself already did, it just never
+   *  repeats on its own. */
+  panHoldIntervalMs: number | null;
 }
 
 /**
@@ -95,6 +103,13 @@ const HOLD_ZOOM_MOVE_TOLERANCE_PX = 4;
  *  animateTransformTo mechanism. See docs/features/notebook-auto-scroll/ (סבב ב׳). */
 const AUTO_SCROLL_JUMP_TRANSITION_MS = 150;
 
+/** Holding a directional nav button down: PAN_HOLD_DELAY_MS of stillness before the first
+ *  repeat (long enough that a quick tap never triggers it — a tap is handled by the
+ *  button's own onClick, once, not by this at all), then one more step every
+ *  `panHoldIntervalMs` (the student's own setting) until released. The delay itself isn't
+ *  part of that setting — see docs/features/notebook-nav-settings/architecture.md. */
+const PAN_HOLD_DELAY_MS = 350;
+
 export function PracticeNotebook({
   pages,
   currentPageIndex,
@@ -108,6 +123,8 @@ export function PracticeNotebook({
   statusSlot,
   holdZoomFactor,
   autoScrollJumpFraction,
+  panStepPx,
+  panHoldIntervalMs,
 }: PracticeNotebookProps) {
   const [tool, setTool] = useState<DrawTool | "pan">("pen");
   /** Which destructive action, if any, is waiting on confirmation — "remove" (a whole page)
@@ -115,6 +132,12 @@ export function PracticeNotebook({
    *  question, never both pending at once. */
   const [pendingConfirm, setPendingConfirm] = useState<"remove" | "clear" | null>(null);
   const [zoomPercent, setZoomPercent] = useState(100);
+  /** Bumped on every `applyTransform()` purely to force a re-render — `panZoomRef` is a
+   *  ref (deliberately, see the comment above it: pan/draw events fire too often for
+   *  state), but the nav buttons' disabled state depends on its current value, and a pure
+   *  pan with no zoom change doesn't otherwise trigger one (`setZoomPercent` bails out when
+   *  the rounded percentage is unchanged). */
+  const [, setPanVersion] = useState(0);
   /** Whether "הצג את כל הדף" is currently zoomed out to fit the whole page — a toggle, not
    *  a mode this component enters automatically. `savedTransform` is what a second press
    *  restores: the exact zoom/pan from right before the first press, not a re-derived guess. */
@@ -187,6 +210,13 @@ export function PracticeNotebook({
     null,
   );
 
+  // Hold-to-repeat on a directional nav button — see PAN_HOLD_DELAY_MS/PAN_HOLD_INTERVAL_MS
+  // above. panHoldFired distinguishes "this press turned into a hold" (so the click that
+  // follows release should be a no-op) from a plain tap (which onClick alone handles).
+  const panHoldTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const panHoldInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+  const panHoldFired = useRef(false);
+
   const currentPage = pages[currentPageIndex];
 
   useEffect(() => {
@@ -219,6 +249,7 @@ export function PracticeNotebook({
       stackRef.current.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
     }
     setZoomPercent(Math.round(zoom * 100));
+    setPanVersion((v) => v + 1);
     updateMinimap();
   }
 
@@ -282,7 +313,7 @@ export function PracticeNotebook({
     // zoomAroundPoint wants stage-relative screen pixels (like handleWheel/zoomButton
     // below), not the page-space coordinates localPoint() returns for drawing.
     const target = zoomAroundPoint(panZoomRef.current, down.x - stageRect.left, down.y - stageRect.top, factor);
-    animateTransformTo(target, HOLD_ZOOM_TRANSITION_MS);
+    animateTransformTo(clampPan(target, stageRect.width, stageRect.height), HOLD_ZOOM_TRANSITION_MS);
   }
 
   function redrawFromPage(page: NotebookPage) {
@@ -331,6 +362,8 @@ export function PracticeNotebook({
     return () => {
       if (holdZoomTimer.current) clearTimeout(holdZoomTimer.current);
       if (transitionClearTimer.current) clearTimeout(transitionClearTimer.current);
+      if (panHoldTimer.current) clearTimeout(panHoldTimer.current);
+      if (panHoldInterval.current) clearInterval(panHoldInterval.current);
     };
   }, []);
 
@@ -615,12 +648,18 @@ export function PracticeNotebook({
     if (activePointers.current.size === 1) {
       if (singlePanStart.current) {
         const start = singlePanStart.current;
+        const stageRect = stageRef.current?.getBoundingClientRect();
+        if (!stageRect) return;
         clearTransition();
-        panZoomRef.current = {
-          ...panZoomRef.current,
-          panX: start.panX0 + (e.clientX - start.x),
-          panY: start.panY0 + (e.clientY - start.y),
-        };
+        panZoomRef.current = clampPan(
+          {
+            ...panZoomRef.current,
+            panX: start.panX0 + (e.clientX - start.x),
+            panY: start.panY0 + (e.clientY - start.y),
+          },
+          stageRect.width,
+          stageRect.height,
+        );
         applyTransform();
       } else if (drawing.current) {
         paintTo(localPoint(e.clientX, e.clientY));
@@ -634,11 +673,15 @@ export function PracticeNotebook({
       const curMidStage = { x: curMid.x - stageRect.left, y: curMid.y - stageRect.top };
       const newZoom = clampZoom(pinch.current.startZoom * (curDist / pinch.current.startDist));
       clearTransition();
-      panZoomRef.current = {
-        zoom: newZoom,
-        panX: curMidStage.x - pinch.current.localFixed.x * newZoom,
-        panY: curMidStage.y - pinch.current.localFixed.y * newZoom,
-      };
+      panZoomRef.current = clampPan(
+        {
+          zoom: newZoom,
+          panX: curMidStage.x - pinch.current.localFixed.x * newZoom,
+          panY: curMidStage.y - pinch.current.localFixed.y * newZoom,
+        },
+        stageRect.width,
+        stageRect.height,
+      );
       applyTransform();
     }
   }
@@ -691,15 +734,87 @@ export function PracticeNotebook({
     if (!stageRect) return;
     const sx = e.clientX - stageRect.left;
     const sy = e.clientY - stageRect.top;
-    panZoomRef.current = zoomAroundPoint(panZoomRef.current, sx, sy, e.deltaY < 0 ? 1.12 : 1 / 1.12);
+    const target = zoomAroundPoint(panZoomRef.current, sx, sy, e.deltaY < 0 ? 1.12 : 1 / 1.12);
+    panZoomRef.current = clampPan(target, stageRect.width, stageRect.height);
     applyTransform();
   }
 
   function zoomButton(factor: number) {
     const rect = stageRef.current?.getBoundingClientRect();
     if (!rect) return;
-    panZoomRef.current = zoomAroundPoint(panZoomRef.current, rect.width / 2, rect.height / 2, factor);
+    const target = zoomAroundPoint(panZoomRef.current, rect.width / 2, rect.height / 2, factor);
+    panZoomRef.current = clampPan(target, rect.width, rect.height);
     applyTransform();
+  }
+
+  /** One press moves the view by panStepPx screen pixels in a direction — symmetric to
+   *  `zoomButton` above, sharing the same clampPan() the page's other movement sources go
+   *  through, so a button never appears able to move the view somewhere a drag couldn't. */
+  function panButton(dx: number, dy: number) {
+    const rect = stageRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    clearTransition();
+    panZoomRef.current = clampPan(
+      { ...panZoomRef.current, panX: panZoomRef.current.panX + dx, panY: panZoomRef.current.panY + dy },
+      rect.width,
+      rect.height,
+    );
+    applyTransform();
+  }
+
+  /** Whether a press of a directional button in this direction would actually move the
+   *  view — reuses clampPan() itself rather than a parallel "am I at the edge" check, so
+   *  the disabled state can never disagree with what panButton would really do. */
+  function panDisabled(dx: number, dy: number): boolean {
+    const rect = stageRef.current?.getBoundingClientRect();
+    if (!rect) return true;
+    const current = panZoomRef.current;
+    const attempted = { ...current, panX: current.panX + dx, panY: current.panY + dy };
+    const clamped = clampPan(attempted, rect.width, rect.height);
+    return clamped.panX === current.panX && clamped.panY === current.panY;
+  }
+
+  /** A quick tap: onClick fires once from the button itself. A hold firing this already
+   *  means the click that follows release is the same press, not a second one — skip it
+   *  rather than panning one extra step. */
+  function panButtonClick(dx: number, dy: number) {
+    if (panHoldFired.current) {
+      panHoldFired.current = false;
+      return;
+    }
+    panButton(dx, dy);
+  }
+
+  /** Arms on pointerdown: after PAN_HOLD_DELAY_MS of still holding, starts repeating the
+   *  step every `panHoldIntervalMs`, stopping itself once that direction is disabled
+   *  (reusing panDisabled — the same single source of truth panButton/the disabled prop
+   *  already go through) rather than running past the edge and relying on clampPan alone
+   *  to silently absorb it. "off" (`panHoldIntervalMs === null`) doesn't arm anything at
+   *  all — the press's own onClick already moved one step, and that's all "off" promises. */
+  function startPanHold(dx: number, dy: number) {
+    if (panHoldIntervalMs === null) return;
+    panHoldFired.current = false;
+    panHoldTimer.current = setTimeout(() => {
+      panHoldInterval.current = setInterval(() => {
+        if (panDisabled(dx, dy)) {
+          stopPanHold();
+          return;
+        }
+        panHoldFired.current = true;
+        panButton(dx, dy);
+      }, panHoldIntervalMs);
+    }, PAN_HOLD_DELAY_MS);
+  }
+
+  function stopPanHold() {
+    if (panHoldTimer.current) {
+      clearTimeout(panHoldTimer.current);
+      panHoldTimer.current = null;
+    }
+    if (panHoldInterval.current) {
+      clearInterval(panHoldInterval.current);
+      panHoldInterval.current = null;
+    }
   }
 
   /** Toggle for "הצג את כל הדף" — zooms out to fit the entire page (reusing
@@ -818,6 +933,67 @@ export function PracticeNotebook({
             {fullscreen ? "✕" : "⤢"}
           </button>
         </div>
+        {/* Spatial, not reading-order: these pan the view by its screen-visible direction
+            (◀ always shows more of the page's visual left), unlike the ◀/▶ page-nav buttons
+            in the toolbar below, which follow page order. The cross shape (not a row) plus
+            the separate cluster from page-nav keeps the two meanings from colliding — see
+            docs/features/notebook-nav-buttons/design.md. */}
+        <div className="notebook-pan-controls">
+          <div className="notebook-pan-grid" role="group" aria-label="הזזת התצוגה">
+            <button
+              type="button"
+              className="notebook-pan-up"
+              onClick={() => panButtonClick(0, panStepPx)}
+              onPointerDown={() => startPanHold(0, panStepPx)}
+              onPointerUp={stopPanHold}
+              onPointerLeave={stopPanHold}
+              onPointerCancel={stopPanHold}
+              disabled={panDisabled(0, panStepPx)}
+              aria-label="הזז למעלה"
+            >
+              ▲
+            </button>
+            <button
+              type="button"
+              className="notebook-pan-left"
+              onClick={() => panButtonClick(panStepPx, 0)}
+              onPointerDown={() => startPanHold(panStepPx, 0)}
+              onPointerUp={stopPanHold}
+              onPointerLeave={stopPanHold}
+              onPointerCancel={stopPanHold}
+              disabled={panDisabled(panStepPx, 0)}
+              aria-label="הזז שמאלה"
+            >
+              ◀
+            </button>
+            <button
+              type="button"
+              className="notebook-pan-right"
+              onClick={() => panButtonClick(-panStepPx, 0)}
+              onPointerDown={() => startPanHold(-panStepPx, 0)}
+              onPointerUp={stopPanHold}
+              onPointerLeave={stopPanHold}
+              onPointerCancel={stopPanHold}
+              disabled={panDisabled(-panStepPx, 0)}
+              aria-label="הזז ימינה"
+            >
+              ▶
+            </button>
+            <button
+              type="button"
+              className="notebook-pan-down"
+              onClick={() => panButtonClick(0, -panStepPx)}
+              onPointerDown={() => startPanHold(0, -panStepPx)}
+              onPointerUp={stopPanHold}
+              onPointerLeave={stopPanHold}
+              onPointerCancel={stopPanHold}
+              disabled={panDisabled(0, -panStepPx)}
+              aria-label="הזז למטה"
+            >
+              ▼
+            </button>
+          </div>
+        </div>
       </div>
 
       {fullscreen && statusSlot}
@@ -852,15 +1028,7 @@ export function PracticeNotebook({
             ✋
           </button>
         </div>
-        <button
-          type="button"
-          className="notebook-send-btn"
-          onClick={primaryAction.onClick}
-          disabled={primaryAction.disabled}
-        >
-          {primaryAction.label}
-        </button>
-        {/* Prev/next stay right after "שלח למורה" — the page-nav actions actually used while
+        {/* Prev/next stay right after the tool group — the page-nav actions actually used while
             solving. Add/remove page (below) come last: used far less often, so they're the
             ones that scroll out of view first if the row doesn't fully fit. */}
         <div className="notebook-page-nav">
@@ -904,6 +1072,18 @@ export function PracticeNotebook({
           aria-label="הסר דף"
         >
           🗑
+        </button>
+      </div>
+      {/* The question's one main action ("שלח למורה" / "הבא") lives in its own row, not among
+          the tools: see docs/features/notebook-toolbar-actions/. */}
+      <div className="notebook-action-row">
+        <button
+          type="button"
+          className="notebook-send-btn"
+          onClick={primaryAction.onClick}
+          disabled={primaryAction.disabled}
+        >
+          {primaryAction.label}
         </button>
       </div>
       {atMaxPages && <p className="notebook-max-pages-note">הגעתם למספר המרבי של דפים במחברת הזאת.</p>}
