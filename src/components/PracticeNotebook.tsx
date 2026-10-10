@@ -98,6 +98,22 @@ const HOLD_ZOOM_DWELL_MS = 180;
 const HOLD_ZOOM_TRANSITION_MS = 120;
 const HOLD_ZOOM_MOVE_TOLERANCE_PX = 4;
 
+/** Ink is still stored and looked up as a quantized `cells`-sized block (unchanged — see
+ *  fillCellBlock in notebook.ts), but drawn as a filled circle inscribed in that block
+ *  instead of a hard-edged square: overlapping circles along a stroke fuse into a rounded
+ *  line, while overlapping squares staircase at any angle that isn't axis-aligned. Used by
+ *  both the live stroke (paintTo) and the stored-page redraw (redrawFromPage), so a page
+ *  looks the same freshly drawn as it does after navigating away and back. */
+function stampCell(ctx: CanvasRenderingContext2D, col: number, row: number, cells: number) {
+  const half = Math.floor(cells / 2);
+  const size = cells * CELL;
+  const cx = (col - half) * CELL + size / 2;
+  const cy = (row - half) * CELL + size / 2;
+  ctx.beginPath();
+  ctx.arc(cx, cy, size / 2, 0, Math.PI * 2);
+  ctx.fill();
+}
+
 /** How long the auto-scroll-jump's own hop animates — a quick, clearly-one-shot step, not a
  *  scroll. Same order of magnitude as HOLD_ZOOM_TRANSITION_MS, reusing the same
  *  animateTransformTo mechanism. See docs/features/notebook-auto-scroll/ (סבב ב׳). */
@@ -326,7 +342,7 @@ export function PracticeNotebook({
     ctx.fillStyle = inkColor();
     for (const key of page.filledCells) {
       const [c, r] = key.split(",").map(Number);
-      ctx.fillRect(c * CELL, r * CELL, CELL, CELL);
+      stampCell(ctx, c, r, 1);
     }
   }
 
@@ -457,7 +473,7 @@ export function PracticeNotebook({
         if (mode === "eraser") ctx.clearRect(rectX, rectY, size, size);
         else {
           ctx.fillStyle = inkColor();
-          ctx.fillRect(rectX, rectY, size, size);
+          stampCell(ctx, col, row, cells);
         }
       }
     }
