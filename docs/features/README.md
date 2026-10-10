@@ -6,6 +6,9 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
+| גלילה אוטומטית במחברת לפי כיוון הכתיבה | 🟢 done — מוזג ל-main | [status](./notebook-auto-scroll/status.md) |
+| הגדרת מהירות כפתורי הניווט במחברת | 🟢 done — מוזג ל-main | [status](./notebook-nav-settings/status.md) |
+| כפתורי ניווט במחברת — פאד כיוונים | 🟢 done — מוזג ל-main | [status](./notebook-nav-buttons/status.md) |
 | כפתורי פעולה מחוץ לסרגל הכלים + מסך מלא שנשאר | 🟢 done — מוזג ל-main | [status](./notebook-toolbar-actions/status.md) |
 | זום זמני בהחזקת מגע — התקרבות למחברת | 🟢 done — מוזג ל-main (שישה סבבים, האחרון: כפתור הגדרות) | [status](./notebook-hold-to-zoom/status.md) |
 | יומן מקרים שבהם המורה טעתה | 🟢 done — מוזג ל-main | [status](./teacher-misread-log/status.md) |

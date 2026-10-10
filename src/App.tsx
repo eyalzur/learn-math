@@ -19,8 +19,12 @@ import {
   setReadAloud,
   holdZoomLevel as holdZoomLevelFor,
   setHoldZoomLevel,
+  autoScrollJumpLevel as autoScrollJumpLevelFor,
+  setAutoScrollJumpLevel,
+  panSpeedLevel as panSpeedLevelFor,
+  setPanSpeedLevel,
 } from "./data/preferences";
-import { holdZoomFactorFor } from "./data/notebook";
+import { autoScrollJumpFractionFor, holdZoomFactorFor, panSpeedFor } from "./data/notebook";
 import "./App.css";
 
 const STORAGE_KEY = "learn-math:student";
@@ -299,6 +303,10 @@ function App() {
   const readAloud = readAloudFor(student.id);
   const holdZoomLevel = holdZoomLevelFor(student.id);
   const holdZoomFactor = holdZoomFactorFor(holdZoomLevel);
+  const autoScrollJumpLevel = autoScrollJumpLevelFor(student.id);
+  const autoScrollJumpFraction = autoScrollJumpFractionFor(autoScrollJumpLevel);
+  const panSpeedLevel = panSpeedLevelFor(student.id);
+  const { stepPx: panStepPx, holdIntervalMs: panHoldIntervalMs } = panSpeedFor(panSpeedLevel);
 
   function finish(topic: Topic | null, lesson: Lesson, correctCount: number) {
     recordPractice({
@@ -340,6 +348,16 @@ function App() {
         holdZoomLevel={holdZoomLevel}
         onHoldZoomLevelChange={(levelId) => {
           setHoldZoomLevel(student.id, levelId);
+          setPreferencesTick((n) => n + 1);
+        }}
+        autoScrollJumpLevel={autoScrollJumpLevel}
+        onAutoScrollJumpLevelChange={(levelId) => {
+          setAutoScrollJumpLevel(student.id, levelId);
+          setPreferencesTick((n) => n + 1);
+        }}
+        panSpeedLevel={panSpeedLevel}
+        onPanSpeedLevelChange={(levelId) => {
+          setPanSpeedLevel(student.id, levelId);
           setPreferencesTick((n) => n + 1);
         }}
       />
@@ -422,6 +440,9 @@ function App() {
         }}
         readAloud={readAloud}
         holdZoomFactor={holdZoomFactor}
+        autoScrollJumpFraction={autoScrollJumpFraction}
+        panStepPx={panStepPx}
+        panHoldIntervalMs={panHoldIntervalMs}
         onAnswered={topic?.adaptive ? (correct) => handleAdaptiveAnswered(topic, correct) : undefined}
       />
     );

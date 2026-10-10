@@ -34,6 +34,15 @@ interface PracticeProps {
   /** This student's hold-to-zoom strength, already resolved to a multiplier — `null` when
    *  they have it switched off. Passed straight through to the notebook. */
   holdZoomFactor: number | null;
+  /** How far this student's notebook view jumps between finished strokes, already resolved
+   *  to a fraction of the stage size — `null` when off. Passed straight through to the
+   *  notebook. */
+  autoScrollJumpFraction: number | null;
+  /** This student's nav-button speed, already resolved to a step size and repeat interval
+   *  — `holdIntervalMs: null` means holding a button doesn't repeat. Passed straight
+   *  through to the notebook, same as `holdZoomFactor`. */
+  panStepPx: number;
+  panHoldIntervalMs: number | null;
   /** Fires once per question, right after right/wrong is decided — before the child even
    *  sees the feedback or explanation. Only an adaptive lesson supplies this; every other
    *  lesson leaves it unset and nothing here changes for it. */
@@ -46,6 +55,9 @@ export function Practice({
   onExit,
   readAloud,
   holdZoomFactor,
+  autoScrollJumpFraction,
+  panStepPx,
+  panHoldIntervalMs,
   onAnswered,
 }: PracticeProps) {
   const [index, setIndex] = useState(0);
@@ -709,6 +721,9 @@ export function Practice({
         topSlot={topSlot}
         statusSlot={statusSlot}
         holdZoomFactor={holdZoomFactor}
+        autoScrollJumpFraction={autoScrollJumpFraction}
+        panStepPx={panStepPx}
+        panHoldIntervalMs={panHoldIntervalMs}
       />
       {!fullscreen && sendState === "error" && (
         <p className="notebook-send-error" aria-live="polite">
