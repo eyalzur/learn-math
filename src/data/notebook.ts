@@ -247,3 +247,71 @@ export function minimapViewRect(
   const bottom = Math.min(minimapHeight, (visTop + visHeight) * scaleY);
   return { left, top, width: Math.max(2, right - left), height: Math.max(2, bottom - top) };
 }
+
+/**
+ * Auto-scroll-jump: after a stroke on the notebook page ends clearly away from where the
+ * previous one ended, the view jumps once, sideways and/or vertically, to make writing room
+ * — see docs/features/notebook-auto-scroll/. Round 2 (2026-09-26) replaces round 1's
+ * continuous per-pointermove follow entirely, per user feedback after trying it.
+ */
+
+/**
+ * `pan` clamped so the view never slides past the page's own edge on the given axis — used
+ * only by the auto-scroll jump (see PracticeNotebook.tsx's `maybeJumpForNewStroke`), the
+ * same way `minimapViewRect` above already derives "what's visible" from `panX`/`panY`/
+ * `zoom`, but to bound the pan itself rather than draw a rectangle. Deliberately not applied
+ * to manual pan/pinch-zoom or hold-to-zoom, which stay exactly as unbounded as they are
+ * today — see architecture.md, Risks/Tradeoffs.
+ */
+function clampPanAxis(pan: number, zoom: number, viewportSize: number, pageSize: number): number {
+  const pageSpan = pageSize * zoom;
+  const lo = Math.min(0, viewportSize - pageSpan);
+  const hi = Math.max(0, viewportSize - pageSpan);
+  return Math.min(hi, Math.max(lo, pan));
+}
+export function clampFollowPanX(panX: number, zoom: number, viewportWidth: number): number {
+  return clampPanAxis(panX, zoom, viewportWidth, PAGE_WIDTH);
+}
+export function clampFollowPanY(panY: number, zoom: number, viewportHeight: number): number {
+  return clampPanAxis(panY, zoom, viewportHeight, PAGE_HEIGHT);
+}
+
+/**
+ * How many cells of gap between two strokes' bounding boxes counts as "a new character",
+ * not a second stroke of the same one (a dot, a crossbar, the second stroke of a digit like
+ * `4`). A starting guess, not validated against real handwriting yet — see architecture.md.
+ */
+export const AUTO_SCROLL_JUMP_GAP_THRESHOLD_CELLS = 10;
+
+/**
+ * How far the view jumps when a new stroke lands far enough from the last one — a choice
+ * rather than a constant, mirroring `HOLD_ZOOM_LEVELS` exactly: six options, "off" first,
+ * five rising strengths. Unlike hold-to-zoom's scale, none of these has been tried on a real
+ * touchscreen yet, so the default is the middle option rather than the strongest one.
+ */
+export interface AutoScrollJumpLevel {
+  id: string;
+  label: string;
+  /** Fraction of the current stage width/height the view jumps on the relevant axis, or
+   *  `null` for "off". */
+  jumpFraction: number | null;
+}
+
+export const AUTO_SCROLL_JUMP_LEVELS: AutoScrollJumpLevel[] = [
+  { id: "off", label: "כבוי", jumpFraction: null },
+  { id: "veryLittle", label: "מעט מאוד", jumpFraction: 0.08 },
+  { id: "little", label: "מעט", jumpFraction: 0.14 },
+  { id: "medium", label: "בינוני", jumpFraction: 0.22 },
+  { id: "much", label: "הרבה", jumpFraction: 0.32 },
+  { id: "veryMuch", label: "הרבה מאוד", jumpFraction: 0.45 },
+];
+
+/** No level here has real-device evidence behind it yet (unlike hold-to-zoom's `70%`), so
+ *  the default is the middle of the scale rather than the strongest option. */
+export const DEFAULT_AUTO_SCROLL_JUMP_LEVEL = "medium";
+
+/** The jump fraction for a stored level id, or `null` when the level is "off" *or* the id is
+ *  unknown-but-somehow-present. */
+export function autoScrollJumpFractionFor(levelId: string): number | null {
+  return AUTO_SCROLL_JUMP_LEVELS.find((level) => level.id === levelId)?.jumpFraction ?? null;
+}

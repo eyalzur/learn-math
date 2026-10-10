@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Topic } from "../data/curriculum";
-import { HOLD_ZOOM_LEVELS, PAN_SPEED_LEVELS } from "../data/notebook";
+import { AUTO_SCROLL_JUMP_LEVELS, HOLD_ZOOM_LEVELS, PAN_SPEED_LEVELS } from "../data/notebook";
 import { speechSupported } from "../data/speech";
 
 interface TopicPickerProps {
@@ -30,6 +30,11 @@ interface TopicPickerProps {
    *  when there is no student yet, exactly like `readAloud`. */
   holdZoomLevel?: string;
   onHoldZoomLevelChange?: (levelId: string) => void;
+  /** How far this student's notebook view jumps between finished strokes — an
+   *  `AUTO_SCROLL_JUMP_LEVELS` id. Absent when there is no student yet, exactly like
+   *  `readAloud`/`holdZoomLevel`. */
+  autoScrollJumpLevel?: string;
+  onAutoScrollJumpLevelChange?: (levelId: string) => void;
   /** Which nav-button speed this student is set to — a `PAN_SPEED_LEVELS` id. Absent when
    *  there is no student yet, exactly like `holdZoomLevel`. */
   panSpeedLevel?: string;
@@ -48,6 +53,8 @@ export function TopicPicker({
   onReadAloudChange,
   holdZoomLevel,
   onHoldZoomLevelChange,
+  autoScrollJumpLevel,
+  onAutoScrollJumpLevelChange,
   panSpeedLevel,
   onPanSpeedLevelChange,
 }: TopicPickerProps) {
@@ -67,6 +74,8 @@ export function TopicPicker({
   // Same "only once a student is chosen" rule, without the speech check — this one has
   // nothing to do with a voice being available.
   const showHoldZoom = holdZoomLevel !== undefined && onHoldZoomLevelChange !== undefined;
+  // Same "only once a student is chosen" rule as showHoldZoom, no voice check either.
+  const showAutoScrollJump = autoScrollJumpLevel !== undefined && onAutoScrollJumpLevelChange !== undefined;
   // Same "only once a student is chosen" rule as showHoldZoom — the nav buttons
   // themselves are always shown (PR #78), only their speed setting is conditional on this.
   const showPanSpeed = panSpeedLevel !== undefined && onPanSpeedLevelChange !== undefined;
@@ -74,7 +83,7 @@ export function TopicPicker({
      `showHoldZoom` alone (which it equals today): the design's invariant is that the ⚙️
      button never leads to an empty dialog, and that stays true if the zoom picker ever
      grows a display condition of its own. */
-  const showSettings = showReadAloud || showHoldZoom || showPanSpeed;
+  const showSettings = showReadAloud || showHoldZoom || showAutoScrollJump || showPanSpeed;
   return (
     <div className="topic-picker">
       <div className="grade-header">
@@ -207,6 +216,39 @@ export function TopicPicker({
                         className="hold-zoom-option"
                         aria-pressed={level.id === holdZoomLevel}
                         onClick={() => onHoldZoomLevelChange(level.id)}
+                      >
+                        {level.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {showAutoScrollJump && (
+                <div className="auto-scroll-setting">
+                  <div className="auto-scroll-header">
+                    <span className="auto-scroll-icon" aria-hidden="true">
+                      ↔️
+                    </span>
+                    <span className="read-aloud-text">
+                      <span className="read-aloud-title">התצוגה קופצת בין תו לתו</span>
+                      <span className="read-aloud-note">
+                        כשמסיימים לכתוב ספרה או אות, הדף זז קצת כדי לפנות מקום להמשך
+                      </span>
+                    </span>
+                  </div>
+                  <div
+                    className="auto-scroll-options"
+                    role="group"
+                    aria-label="התצוגה קופצת בין תו לתו"
+                  >
+                    {AUTO_SCROLL_JUMP_LEVELS.map((level) => (
+                      <button
+                        key={level.id}
+                        type="button"
+                        className="auto-scroll-option"
+                        aria-pressed={level.id === autoScrollJumpLevel}
+                        onClick={() => onAutoScrollJumpLevelChange(level.id)}
                       >
                         {level.label}
                       </button>

@@ -2,12 +2,15 @@ import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import type { DrawTool, NotebookPage, PanZoom } from "../data/notebook";
 import {
+  AUTO_SCROLL_JUMP_GAP_THRESHOLD_CELLS,
   CELL,
   ERASER_CELLS,
   MAX_PAGES,
   PAGE_HEIGHT,
   PAGE_WIDTH,
   PEN_CELLS,
+  clampFollowPanX,
+  clampFollowPanY,
   clampPan,
   clampZoom,
   computeFitTransform,
@@ -56,6 +59,11 @@ interface PracticeNotebookProps {
    *  gesture doesn't exist at all (no dwell timer is even started). Comes from the student's
    *  own setting; see docs/features/notebook-hold-to-zoom/ (סבב ה׳). */
   holdZoomFactor: number | null;
+  /** How far the view jumps between finished strokes, as a fraction of the stage size — or
+   *  `null` for "off", which means the jump never happens at all (no bounds are even
+   *  tracked). Comes from the student's own setting; see
+   *  docs/features/notebook-auto-scroll/. */
+  autoScrollJumpFraction: number | null;
   /** How far one press of a directional nav button moves the view, in screen pixels —
    *  comes from the student's own setting; see docs/features/notebook-nav-settings/. */
   panStepPx: number;
@@ -90,6 +98,11 @@ const HOLD_ZOOM_DWELL_MS = 180;
 const HOLD_ZOOM_TRANSITION_MS = 120;
 const HOLD_ZOOM_MOVE_TOLERANCE_PX = 4;
 
+/** How long the auto-scroll-jump's own hop animates — a quick, clearly-one-shot step, not a
+ *  scroll. Same order of magnitude as HOLD_ZOOM_TRANSITION_MS, reusing the same
+ *  animateTransformTo mechanism. See docs/features/notebook-auto-scroll/ (סבב ב׳). */
+const AUTO_SCROLL_JUMP_TRANSITION_MS = 150;
+
 /** Holding a directional nav button down: PAN_HOLD_DELAY_MS of stillness before the first
  *  repeat (long enough that a quick tap never triggers it — a tap is handled by the
  *  button's own onClick, once, not by this at all), then one more step every
@@ -109,6 +122,7 @@ export function PracticeNotebook({
   topSlot,
   statusSlot,
   holdZoomFactor,
+  autoScrollJumpFraction,
   panStepPx,
   panHoldIntervalMs,
 }: PracticeNotebookProps) {
@@ -177,6 +191,25 @@ export function PracticeNotebook({
   const transitionClearTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const holdZoomFactorRef = useRef(holdZoomFactor);
 
+  // Auto-scroll-jump: mirrored into a ref for the same reason as `holdZoomFactorRef` — read
+  // at the end of every stroke, and a change to the setting has to apply to the very next
+  // one with no reload. See docs/features/notebook-auto-scroll/ (סבב ב׳).
+  const autoScrollJumpFractionRef = useRef(autoScrollJumpFraction);
+
+  /** The bounding box (in cell/grid units) of the stroke currently being drawn — `null`
+   *  between strokes. Reset at the start of every new stroke; grown in `paintTo` via
+   *  `extendStrokeBounds`. Only tracked at all when the setting is on (see
+   *  `extendStrokeBounds`), so "off" costs nothing. */
+  const strokeBoundsRef = useRef<{ minCol: number; maxCol: number; minRow: number; maxRow: number } | null>(
+    null,
+  );
+  /** The bounding box of the most recently *completed* stroke — what the next stroke's own
+   *  bounds get compared against in `endPointer`. `null` means "nothing to compare yet" (a
+   *  fresh page, right after a clear, or the very first stroke of the practice). */
+  const lastStrokeBoundsRef = useRef<{ minCol: number; maxCol: number; minRow: number; maxRow: number } | null>(
+    null,
+  );
+
   // Hold-to-repeat on a directional nav button — see PAN_HOLD_DELAY_MS/PAN_HOLD_INTERVAL_MS
   // above. panHoldFired distinguishes "this press turned into a hold" (so the click that
   // follows release should be a no-op) from a plain tap (which onClick alone handles).
@@ -201,6 +234,10 @@ export function PracticeNotebook({
   useEffect(() => {
     holdZoomFactorRef.current = holdZoomFactor;
   }, [holdZoomFactor]);
+
+  useEffect(() => {
+    autoScrollJumpFractionRef.current = autoScrollJumpFraction;
+  }, [autoScrollJumpFraction]);
 
   function inkColor() {
     return getComputedStyle(document.documentElement).getPropertyValue("--text-h").trim() || "#08060d";
@@ -338,6 +375,9 @@ export function PracticeNotebook({
     if (currentPage) redrawFromPage(currentPage);
     setViewingWholePage(false);
     savedTransform.current = null;
+    // The previous page's last stroke is not something a stroke on this page should ever be
+    // compared against — the first stroke on a newly-visited/newly-created page never jumps.
+    lastStrokeBoundsRef.current = null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage]);
 
@@ -406,9 +446,10 @@ export function PracticeNotebook({
     for (const point of points) {
       const changed = fillCellBlock(currentPage.filledCells, point.x, point.y, cells, mode);
       if (recordingCells.current) recordingCells.current.push(...changed);
+      const col = Math.floor(point.x / CELL);
+      const row = Math.floor(point.y / CELL);
+      extendStrokeBounds(col, row);
       if (ctx) {
-        const col = Math.floor(point.x / CELL);
-        const row = Math.floor(point.y / CELL);
         const half = Math.floor(cells / 2);
         const rectX = (col - half) * CELL;
         const rectY = (row - half) * CELL;
@@ -421,6 +462,71 @@ export function PracticeNotebook({
       }
     }
     lastPoint.current = p;
+  }
+
+  /** Grows the in-progress stroke's bounding box to cover (col, row) — called once per
+   *  point painted. A no-op when the setting is off, so "off" costs nothing beyond this one
+   *  ref check. See docs/features/notebook-auto-scroll/architecture.md. */
+  function extendStrokeBounds(col: number, row: number) {
+    if (autoScrollJumpFractionRef.current === null) return;
+    const b = strokeBoundsRef.current;
+    if (!b) {
+      strokeBoundsRef.current = { minCol: col, maxCol: col, minRow: row, maxRow: row };
+    } else {
+      b.minCol = Math.min(b.minCol, col);
+      b.maxCol = Math.max(b.maxCol, col);
+      b.minRow = Math.min(b.minRow, row);
+      b.maxRow = Math.max(b.maxRow, row);
+    }
+  }
+
+  type StrokeBounds = { minCol: number; maxCol: number; minRow: number; maxRow: number };
+
+  /**
+   * Called once a stroke ends, comparing it against the previous completed stroke. If the
+   * gap between their bounding boxes is clearly more than a single character's worth on
+   * either axis, the view jumps once — via the same `animateTransformTo` hold-to-zoom
+   * already uses for its own one-shot hop, not a continuous scroll. Bounding boxes, not just
+   * endpoints: a multi-stroke character (like the digit `4`) can have its second stroke end
+   * far from where the first one ended, even though the two strokes sit right next to each
+   * other — see architecture.md, Risks/Tradeoffs.
+   */
+  function maybeJumpForNewStroke(finished: StrokeBounds | null, previous: StrokeBounds | null) {
+    const fraction = autoScrollJumpFractionRef.current;
+    if (fraction === null || !finished || !previous) return;
+    const stageRect = stageRef.current?.getBoundingClientRect();
+    if (!stageRect) return;
+
+    let dirX: 1 | -1 | 0 = 0;
+    let gapCols = 0;
+    if (finished.minCol > previous.maxCol) {
+      gapCols = finished.minCol - previous.maxCol;
+      dirX = -1; // new stroke is to the right — reveal more of the page to the right
+    } else if (previous.minCol > finished.maxCol) {
+      gapCols = previous.minCol - finished.maxCol;
+      dirX = 1; // new stroke is to the left — reveal more of the page to the left
+    }
+    if (gapCols < AUTO_SCROLL_JUMP_GAP_THRESHOLD_CELLS) dirX = 0;
+
+    let dirY: 1 | -1 | 0 = 0;
+    let gapRows = 0;
+    if (finished.minRow > previous.maxRow) {
+      gapRows = finished.minRow - previous.maxRow;
+      dirY = -1; // new stroke is lower — reveal more of the page below
+    } else if (previous.minRow > finished.maxRow) {
+      gapRows = previous.minRow - finished.maxRow;
+      dirY = 1; // new stroke is higher — reveal more of the page above
+    }
+    if (gapRows < AUTO_SCROLL_JUMP_GAP_THRESHOLD_CELLS) dirY = 0;
+
+    if (dirX === 0 && dirY === 0) return;
+
+    const { panX, panY, zoom } = panZoomRef.current;
+    const nextPanX = dirX !== 0 ? clampFollowPanX(panX + dirX * stageRect.width * fraction, zoom, stageRect.width) : panX;
+    const nextPanY =
+      dirY !== 0 ? clampFollowPanY(panY + dirY * stageRect.height * fraction, zoom, stageRect.height) : panY;
+    if (nextPanX === panX && nextPanY === panY) return;
+    animateTransformTo({ panX: nextPanX, panY: nextPanY, zoom }, AUTO_SCROLL_JUMP_TRANSITION_MS);
   }
 
   function startRecording() {
@@ -475,6 +581,7 @@ export function PracticeNotebook({
         // pinch-zoom (below) stay live so the student can still look the page over.
         drawing.current = true;
         lastPoint.current = null;
+        strokeBoundsRef.current = null;
         startRecording();
         paintTo(localPoint(e.clientX, e.clientY));
       }
@@ -506,6 +613,10 @@ export function PracticeNotebook({
       drawing.current = false;
       lastPoint.current = null;
       singlePanStart.current = null;
+      // The ink from any in-progress stroke is about to be undone below — its bounds must
+      // not survive to be compared against as "the last stroke" for a jump that never
+      // actually happened.
+      strokeBoundsRef.current = null;
       undoRecording();
       const pts = Array.from(activePointers.current.values());
       const stageRect = stageRef.current?.getBoundingClientRect();
@@ -593,12 +704,20 @@ export function PracticeNotebook({
       holdZoomDownPos.current = null;
     }
     const wasDrawing = drawing.current;
+    const finishedStrokeBounds = strokeBoundsRef.current;
     activePointers.current.delete(e.pointerId);
     drawing.current = false;
     lastPoint.current = null;
     singlePanStart.current = null;
     pinch.current = null;
-    if (wasDrawing) notifyContentChanged();
+    strokeBoundsRef.current = null;
+    if (wasDrawing) {
+      notifyContentChanged();
+      // Read after any hold-zoom restore above, so a jump lands on top of the correctly
+      // restored base view rather than being overwritten by it — see architecture.md.
+      maybeJumpForNewStroke(finishedStrokeBounds, lastStrokeBoundsRef.current);
+      lastStrokeBoundsRef.current = finishedStrokeBounds;
+    }
     if (activePointers.current.size === 1) {
       const [, p] = Array.from(activePointers.current.entries())[0];
       if (toolRef.current === "pan") {
@@ -723,6 +842,9 @@ export function PracticeNotebook({
     notifyContentChanged();
     redrawFromPage(currentPage);
     setPendingConfirm(null);
+    // The ink that made this "the last stroke" is gone — the next stroke on the now-blank
+    // page has nothing left to jump relative to.
+    lastStrokeBoundsRef.current = null;
   }
 
   function requestClearPage() {

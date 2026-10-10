@@ -34,6 +34,10 @@ interface PracticeProps {
   /** This student's hold-to-zoom strength, already resolved to a multiplier — `null` when
    *  they have it switched off. Passed straight through to the notebook. */
   holdZoomFactor: number | null;
+  /** How far this student's notebook view jumps between finished strokes, already resolved
+   *  to a fraction of the stage size — `null` when off. Passed straight through to the
+   *  notebook. */
+  autoScrollJumpFraction: number | null;
   /** This student's nav-button speed, already resolved to a step size and repeat interval
    *  — `holdIntervalMs: null` means holding a button doesn't repeat. Passed straight
    *  through to the notebook, same as `holdZoomFactor`. */
@@ -51,6 +55,7 @@ export function Practice({
   onExit,
   readAloud,
   holdZoomFactor,
+  autoScrollJumpFraction,
   panStepPx,
   panHoldIntervalMs,
   onAnswered,
@@ -716,6 +721,7 @@ export function Practice({
         topSlot={topSlot}
         statusSlot={statusSlot}
         holdZoomFactor={holdZoomFactor}
+        autoScrollJumpFraction={autoScrollJumpFraction}
         panStepPx={panStepPx}
         panHoldIntervalMs={panHoldIntervalMs}
       />
