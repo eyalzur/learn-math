@@ -6,7 +6,7 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
-| מחברת: עמודת כפתורים ממוקדת + הצעת הפעולה הבאה | 🟡 in architecture | [status](./notebook-toolbar-redesign/status.md) |
+| מחברת: עמודת כפתורים ממוקדת + הצעת הפעולה הבאה | 🟡 in development | [status](./notebook-toolbar-redesign/status.md) |
 | גלילה אוטומטית במחברת לפי כיוון הכתיבה | 🟢 done — מוזג ל-main | [status](./notebook-auto-scroll/status.md) |
 | הגדרת מהירות כפתורי הניווט במחברת | 🟢 done — מוזג ל-main | [status](./notebook-nav-settings/status.md) |
 | כפתורי ניווט במחברת — פאד כיוונים | 🟢 done — מוזג ל-main | [status](./notebook-nav-buttons/status.md) |

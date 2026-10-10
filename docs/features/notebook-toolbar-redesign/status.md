@@ -9,11 +9,16 @@
   5 כפתורים משמאל-למעלה, כלים 3 כפתורים מימין-למטה; הצעה = גדילה+ברק,
   לא צבע רקע, כדי להישאר נבדלת מ"נבחר"; בורר גודל-כפתורים חדש עם 3
   אפשרויות בלי "כבוי", לא 6 כמו שאר הבוררים — ראו design.md לנימוק)
-- [ ] Architecture — tech-lead — not started
+- [x] Architecture — tech-lead — 2026-10-10 (טבלאות `BUTTON_SIZE_LEVELS`
+  ו-`SUGGESTION_SENSITIVITY_LEVELS` חדשות ב-`notebook.ts`; מנגנון ההצעה
+  נשען על נקודות קיימות בקוד — `endPointer`, תחילת גרירה, פאד-ניווט —
+  בלי פולינג חדש; `data-suggested` נפרד מ-`aria-pressed` לתמיכה במקרה
+  "נבחר וגם מוצע". ראו architecture.md, כולל שני נתיבי ה-clearSuggestion
+  הנפרדים (גרירה + פאד-ניווט) ב-Implementation Notes)
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** tech-lead
+**Current phase:** developer
 **Branch:** `feature/notebook-toolbar-redesign`
 **PR:** not opened yet
 
