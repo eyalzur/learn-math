@@ -38,9 +38,11 @@
 - [x] יישום באפליקציה — שלושת הקבצים לעיל; `build`/`lint`/`tsc` ירוקים — 2026-10-09
 - [x] בדיקות e2e — ריצה מלאה ונקייה לפני פתיחת ה-PR (ראו התוצאה בתיאור ה-PR) — 2026-10-09
 
-**Current phase:** done — ממתין לריוויו ולמיזוג
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `fix/notebook-writing-smoothness`
-**PR:** ייפתח מיד אחרי הדחיפה
+**PR:** [#77](https://github.com/eyalzur/learn-math/pull/77) — מוזג 2026-10-10. `393/394` בדיקות
+(הכשל היחיד הוא ה-flake הקיים-מראש של `grade8-angles-congruence.spec.ts`, אושר כ-flake
+על ריצה חוזרת בודדת של אותה job ב-CI).
 
 ## Open questions / blockers
 None. התיקון היסודי יותר (קו וקטורי אמיתי על המסך, רשת רק מאחורי הקלעים)
