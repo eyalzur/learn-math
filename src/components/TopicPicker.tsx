@@ -1,6 +1,12 @@
 import { useState } from "react";
 import type { Topic } from "../data/curriculum";
-import { AUTO_SCROLL_JUMP_LEVELS, HOLD_ZOOM_LEVELS, PAN_SPEED_LEVELS } from "../data/notebook";
+import {
+  AUTO_SCROLL_JUMP_LEVELS,
+  BUTTON_SIZE_LEVELS,
+  HOLD_ZOOM_LEVELS,
+  PAN_SPEED_LEVELS,
+  SUGGESTION_SENSITIVITY_LEVELS,
+} from "../data/notebook";
 import { speechSupported } from "../data/speech";
 
 interface TopicPickerProps {
@@ -39,6 +45,15 @@ interface TopicPickerProps {
    *  there is no student yet, exactly like `holdZoomLevel`. */
   panSpeedLevel?: string;
   onPanSpeedLevelChange?: (levelId: string) => void;
+  /** Which notebook toolbar button size this student is set to — a `BUTTON_SIZE_LEVELS`
+   *  id. Absent when there is no student yet, exactly like `holdZoomLevel`. */
+  buttonSizeLevel?: string;
+  onButtonSizeLevelChange?: (levelId: string) => void;
+  /** Which suggested-next-action sensitivity this student is set to — a
+   *  `SUGGESTION_SENSITIVITY_LEVELS` id. Absent when there is no student yet, exactly like
+   *  `holdZoomLevel`. */
+  suggestionSensitivityLevel?: string;
+  onSuggestionSensitivityLevelChange?: (levelId: string) => void;
 }
 
 export function TopicPicker({
@@ -57,6 +72,10 @@ export function TopicPicker({
   onAutoScrollJumpLevelChange,
   panSpeedLevel,
   onPanSpeedLevelChange,
+  buttonSizeLevel,
+  onButtonSizeLevelChange,
+  suggestionSensitivityLevel,
+  onSuggestionSensitivityLevelChange,
 }: TopicPickerProps) {
   /* Transient and never persisted, so it lives here rather than in App.tsx — the ⚙️ button
      and the dialog are both this component's. The settings *values* keep coming from
@@ -79,11 +98,21 @@ export function TopicPicker({
   // Same "only once a student is chosen" rule as showHoldZoom — the nav buttons
   // themselves are always shown (PR #78), only their speed setting is conditional on this.
   const showPanSpeed = panSpeedLevel !== undefined && onPanSpeedLevelChange !== undefined;
+  // Same "only once a student is chosen" rule as the others.
+  const showButtonSize = buttonSizeLevel !== undefined && onButtonSizeLevelChange !== undefined;
+  const showSuggestionSensitivity =
+    suggestionSensitivityLevel !== undefined && onSuggestionSensitivityLevelChange !== undefined;
   /* Whether there is anything to open a dialog for at all. Written as the union, not as
      `showHoldZoom` alone (which it equals today): the design's invariant is that the ⚙️
      button never leads to an empty dialog, and that stays true if the zoom picker ever
      grows a display condition of its own. */
-  const showSettings = showReadAloud || showHoldZoom || showAutoScrollJump || showPanSpeed;
+  const showSettings =
+    showReadAloud ||
+    showHoldZoom ||
+    showAutoScrollJump ||
+    showPanSpeed ||
+    showButtonSize ||
+    showSuggestionSensitivity;
   return (
     <div className="topic-picker">
       <div className="grade-header">
@@ -282,6 +311,72 @@ export function TopicPicker({
                         className="pan-speed-option"
                         aria-pressed={level.id === panSpeedLevel}
                         onClick={() => onPanSpeedLevelChange(level.id)}
+                      >
+                        {level.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {showButtonSize && (
+                <div className="button-size-setting">
+                  <div className="button-size-header">
+                    <span className="button-size-icon" aria-hidden="true">
+                      🔘
+                    </span>
+                    <span className="read-aloud-text">
+                      <span className="read-aloud-title">גודל כפתורי המחברת</span>
+                      <span className="read-aloud-note">
+                        כמה גדולים כפתורי הזום והכלים
+                      </span>
+                    </span>
+                  </div>
+                  <div
+                    className="button-size-options"
+                    role="group"
+                    aria-label="גודל כפתורי המחברת"
+                  >
+                    {BUTTON_SIZE_LEVELS.map((level) => (
+                      <button
+                        key={level.id}
+                        type="button"
+                        className="button-size-option"
+                        aria-pressed={level.id === buttonSizeLevel}
+                        onClick={() => onButtonSizeLevelChange(level.id)}
+                      >
+                        {level.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {showSuggestionSensitivity && (
+                <div className="suggestion-sensitivity-setting">
+                  <div className="suggestion-sensitivity-header">
+                    <span className="suggestion-sensitivity-icon" aria-hidden="true">
+                      👆
+                    </span>
+                    <span className="read-aloud-text">
+                      <span className="read-aloud-title">רגישות הצעת הפעולה הבאה</span>
+                      <span className="read-aloud-note">
+                        כמה מהר הדף מציע לעבור בין כתיבה להזזה
+                      </span>
+                    </span>
+                  </div>
+                  <div
+                    className="suggestion-sensitivity-options"
+                    role="group"
+                    aria-label="רגישות הצעת הפעולה הבאה"
+                  >
+                    {SUGGESTION_SENSITIVITY_LEVELS.map((level) => (
+                      <button
+                        key={level.id}
+                        type="button"
+                        className="suggestion-sensitivity-option"
+                        aria-pressed={level.id === suggestionSensitivityLevel}
+                        onClick={() => onSuggestionSensitivityLevelChange(level.id)}
                       >
                         {level.label}
                       </button>

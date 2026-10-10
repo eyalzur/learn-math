@@ -904,6 +904,59 @@ button.secondary {
   font-weight: 600;
 }
 
+/* The two notebook-toolbar-redesign settings — same box/wrap behavior as
+   .pan-speed-setting above, just two more option sets. See
+   docs/features/notebook-toolbar-redesign/. */
+.button-size-setting,
+.suggestion-sensitivity-setting {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--code-bg);
+  text-align: right;
+}
+
+.button-size-header,
+.suggestion-sensitivity-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.button-size-icon,
+.suggestion-sensitivity-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.button-size-options,
+.suggestion-sensitivity-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.button-size-option,
+.suggestion-sensitivity-option {
+  padding: 6px 12px;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+
+.button-size-option[aria-pressed="true"],
+.suggestion-sensitivity-option[aria-pressed="true"] {
+  background: var(--accent-bg);
+  border-color: var(--accent-border);
+  color: var(--text-h);
+  font-weight: 600;
+}
+
 .read-aloud-icon {
   font-size: 22px;
   line-height: 1;
@@ -1545,6 +1598,24 @@ button.secondary {
   color: var(--text);
 }
 
+/* Owns the flex sizing that .notebook-stage used to own directly — see the JSX comment
+   above .notebook-stage-frame for why this split exists (the floating button columns
+   need a non-clipped box to live in). Same final size as .notebook-stage always had;
+   .notebook-stage fills it exactly via inset:0, so nothing that measured
+   .notebook-stage's own box (several e2e tests) sees any change. */
+.notebook-stage-frame {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  /* .notebook-screen is a flex column, and flex items paint in document order when
+     z-index is auto — NOT non-positioned-before-positioned like normal block layout. Since
+     .notebook-toolbar comes after this frame in the markup, it would otherwise paint (and
+     win every click) on top of the floating button columns whenever they overlap on a
+     short embedded stage. z-index:1 settles that in the frame's favor, since the floating
+     controls are the thing the student just reached for. */
+  z-index: 1;
+}
+
 /* The viewing window. overflow:hidden and touch-action:none on purpose — there is no
    scrollable element here at all, so there is nothing for the browser to scroll or
    rubber-band on its own; every pan/zoom gesture is handled by hand in
@@ -1554,9 +1625,8 @@ button.secondary {
    gesture then reads as "finger lifted" — see docs/features/notebook-hold-to-zoom/,
    "עדכון סבב ג׳". touch-callout/user-select suppress that native recognition outright. */
 .notebook-stage {
-  position: relative;
-  flex: 1;
-  min-height: 0;
+  position: absolute;
+  inset: 0;
   overflow: hidden;
   background: var(--code-bg);
   touch-action: none;
@@ -1608,7 +1678,7 @@ button.secondary {
 .notebook-minimap {
   position: absolute;
   top: 10px;
-  inset-inline-end: 10px;
+  inset-inline-start: 10px;
   width: 60px;
   height: 80px;
   background: rgba(20, 16, 30, 0.45);
@@ -1624,9 +1694,14 @@ button.secondary {
   background: var(--accent-bg);
 }
 
+/* Pinned top-left (physical — inset-inline-end resolves to the left edge under this app's
+   RTL direction, same mapping already relied on everywhere else in this file), per the
+   redesign: see docs/features/notebook-toolbar-redesign/design.md. Was bottom-anchored
+   before this feature; moved to top so it no longer shares a corner with
+   .notebook-tool-controls/.notebook-pan-controls below. */
 .notebook-zoom-controls {
   position: absolute;
-  bottom: 10px;
+  top: 10px;
   inset-inline-end: 10px;
   display: flex;
   flex-direction: column;
@@ -1634,6 +1709,7 @@ button.secondary {
 }
 
 .notebook-zoom-controls button,
+.notebook-tool-controls button,
 .notebook-pan-grid button {
   padding: 0;
   border-radius: 50%;
@@ -1642,9 +1718,10 @@ button.secondary {
   box-shadow: var(--shadow);
 }
 
-.notebook-zoom-controls button {
-  width: 44px;
-  height: 44px;
+.notebook-zoom-controls button,
+.notebook-tool-controls button {
+  width: var(--notebook-btn-size, 40px);
+  height: var(--notebook-btn-size, 40px);
   font-size: 20px;
 }
 
@@ -1663,15 +1740,14 @@ button.secondary {
   background: var(--accent-bg);
 }
 
-/* The directional pad — the opposite floating corner from .notebook-zoom-controls (same
-   bottom offset, the other inline side), so the notebook's floating controls spread across
-   its corners instead of stacking in one. A 3x3 grid in a cross: up/down centered, left and
-   right flanking an empty middle cell — recognizable as "move this way" without reading a
-   single label, which matters for Mika (grade 1, still learning to read). See
-   docs/features/notebook-nav-buttons/design.md. */
+/* The directional pad — bottom-right (physical), the opposite inline side from
+   .notebook-zoom-controls (top-left) so the two don't share a corner. A 3x3 grid in a
+   cross: up/down centered, left and right flanking an empty middle cell — recognizable as
+   "move this way" without reading a single label, which matters for Mika (grade 1, still
+   learning to read). See docs/features/notebook-nav-buttons/design.md. */
 /* Positioning only, left at the page's inherited RTL direction on purpose — this is what
-   makes inset-inline-start resolve to the physical corner opposite .notebook-zoom-controls
-   (inset-inline-end), the same way those two already read as a matched pair. The grid
+   makes inset-inline-start resolve to the physical right edge, the same mapping
+   .notebook-tool-controls below relies on to sit beside this pad. The grid
    itself (and its own direction override, below) lives one level in, on
    .notebook-pan-grid — direction is inherited by children too, so overriding it here would
    just move the whole cluster to the wrong corner instead of only reordering its columns
@@ -1680,6 +1756,24 @@ button.secondary {
   position: absolute;
   bottom: 10px;
   inset-inline-start: 10px;
+}
+
+/* Tool switcher (hand/pen/eraser) — bottom-right (physical), per
+   docs/features/notebook-toolbar-redesign/design.md ("עמודת כלים — פינה ימנית-תחתונה").
+   Same inline side as .notebook-pan-controls above (inset-inline-start) and the same
+   bottom offset, but shifted further inward (120px = the pad's own 10px offset + its
+   100px width + a 10px gap) so the two sit side by side along the bottom edge instead of
+   stacked on top of each other. Stacking was tried first and looked right on a tall
+   fullscreen stage, but broke on the embedded (non-fullscreen) writing area, which can be
+   short enough that a column stacked above the pad runs into .notebook-minimap at the
+   top — side-by-side has no dependency on the stage's height at all. */
+.notebook-tool-controls {
+  position: absolute;
+  bottom: 10px;
+  inset-inline-start: 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .notebook-pan-grid {
@@ -1717,14 +1811,11 @@ button.secondary {
 }
 
 /* One row, always — never wraps into a second line that eats into the writing area above
-   it. Every button here is icon-only except "שלח למורה" (the one action worth spelling
-   out). Sized as tight as a still-tappable button reasonably goes; draw tools, "נקה דף",
-   "שלח למורה" and prev/next page (the controls actually used while solving a question) are
-   ordered first so they fit without scrolling on a phone-width screen — see the JSX
-   comment above the page-nav markup. Add/remove page (used far less often) come last, so
-   they're the ones a screen too narrow for all nine controls scrolls to reach (nowrap +
-   overflow-x, not a second row) — this app already needs no separate scrollbar affordance,
-   since the buttons scroll into view a nudge at a time. */
+   it. Icon-only throughout. Since the redesign moved the pen/eraser/hand tool group and
+   "נקה דף" into their own floating columns (see docs/features/notebook-toolbar-redesign/),
+   this row now only holds prev/next page and add/remove page — add/remove (used far less
+   often) still sit last, the ones a screen too narrow to fit all four scrolls to reach
+   (nowrap + overflow-x, not a second row). */
 .notebook-toolbar {
   flex-shrink: 0;
   display: flex;
@@ -1737,39 +1828,40 @@ button.secondary {
   border-top: 1px solid var(--border);
 }
 
-.tool-group {
-  flex-shrink: 0;
-  display: flex;
-  gap: 3px;
-  background: var(--code-bg);
-  border-radius: 11px;
-  padding: 2px;
-}
-
-.tool-btn {
-  flex-shrink: 0;
-  min-width: 36px;
-  min-height: 36px;
-  padding: 0 4px;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--text);
-  font-size: 14px;
-}
-
+/* .tool-btn now lives only in .notebook-tool-controls (the old horizontal .tool-group row
+   in .notebook-toolbar is gone — see docs/features/notebook-toolbar-redesign/). Circular,
+   sized by the same --notebook-btn-size variable as the zoom column; width/height/radius/
+   background/box-shadow come from the shared ".notebook-zoom-controls button,
+   .notebook-tool-controls button" rules above. */
 .tool-btn[aria-pressed="true"] {
   background: var(--accent-bg);
-  color: var(--text-h);
 }
 
+/* "נקה דף" moved in from .notebook-toolbar into this column — the small gap (not a
+   dividing line) that sets it apart from the four view buttons above it, per design.md. */
 .notebook-clear-btn {
-  flex-shrink: 0;
-  min-width: 36px;
-  min-height: 36px;
-  padding: 0;
-  background: var(--code-bg);
-  color: var(--text-h);
-  font-size: 14px;
+  margin-top: 8px;
+}
+
+/* The suggested next action (pen or hand) — a pulse distinct from the aria-pressed
+   "selected" treatment above: scale + glow, never background, so a button can show both
+   at once (selected AND suggested — e.g. pen, mid-write, right after a pan ends) without
+   the two states reading as the same thing. Pure CSS, driven by the data-suggested
+   attribute only — no per-frame JS. See docs/features/notebook-toolbar-redesign/. */
+[data-suggested="true"] {
+  animation: notebook-suggest-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes notebook-suggest-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: var(--shadow);
+  }
+  50% {
+    transform: scale(1.18);
+    box-shadow: 0 0 0 8px var(--accent-bg);
+  }
 }
 
 .notebook-page-nav {
@@ -1778,9 +1870,15 @@ button.secondary {
   gap: 3px;
 }
 
-.notebook-page-nav:last-of-type {
-  margin-inline-start: auto;
-}
+/* No longer pushed to the far (inline-end / physical-left) edge — that existed only to
+   keep "הסר דף" far from the pen/eraser/pan tool-group that used to open this row, and
+   that group is gone now (moved to .notebook-tool-controls). Removing the push also fixes
+   a real collision found in testing: physical-left is exactly where
+   .notebook-zoom-controls (now 5 buttons, top-left) can overflow past a short embedded
+   stage, and pushing this row there put "הסר דף" directly under "נקה דף", so a center
+   click on "הסר דף" hit "נקה דף" instead. Now everything in this row clusters at the
+   physical-right edge instead, nowhere near the zoom column. See
+   docs/features/notebook-toolbar-redesign/. */
 
 .notebook-page-nav button {
   flex-shrink: 0;
