@@ -25,8 +25,10 @@ import { test, expect, type Page } from "@playwright/test";
  *
  * `0.85`+ on the x-axis lands on the directional nav-buttons overlay (PR #78, merged after
  * this file was first written), not the canvas — a mouse-down there never starts a stroke.
- * Every "far" x fraction below stays at `0.75`, same as the passing "jumps right" test's own
- * value (gap of ~100 cells, far more than `AUTO_SCROLL_JUMP_GAP_THRESHOLD_CELLS` needs).
+ * `0.78`+ lands on the notebook-toolbar-redesign tool-controls column (hand/pen/eraser,
+ * merged later still, beside that same nav pad) for the same reason. Every "far" x fraction
+ * below stays at `0.75`, same as the passing "jumps right" test's own value (gap of ~100
+ * cells, far more than `AUTO_SCROLL_JUMP_GAP_THRESHOLD_CELLS` needs) — clear of both.
  */
 
 async function openLevel(page: Page) {
@@ -221,7 +223,10 @@ test("a stroke far away on both axes at once jumps the view diagonally, in one m
   const before = await panXY(page);
 
   await drawStrokeAt(page, box, 0.2, 0.2);
-  await drawStrokeAt(page, box, 0.8, 0.8);
+  // 0.8 used to be safe on both axes; the notebook-toolbar-redesign tool-controls column
+  // (bottom-end, beside the nav pad) now occupies x >~0.78 at this y, same reason the file
+  // header's 0.75 convention exists for the nav-buttons overlay — 0.75 clears both.
+  await drawStrokeAt(page, box, 0.75, 0.75);
   await page.waitForTimeout(JUMP_SETTLE_MS);
   const after = await panXY(page);
 

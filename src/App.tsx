@@ -23,8 +23,18 @@ import {
   setAutoScrollJumpLevel,
   panSpeedLevel as panSpeedLevelFor,
   setPanSpeedLevel,
+  buttonSizeLevel as buttonSizeLevelFor,
+  setButtonSizeLevel,
+  suggestionSensitivityLevel as suggestionSensitivityLevelFor,
+  setSuggestionSensitivityLevel,
 } from "./data/preferences";
-import { autoScrollJumpFractionFor, holdZoomFactorFor, panSpeedFor } from "./data/notebook";
+import {
+  autoScrollJumpFractionFor,
+  buttonSizeFor,
+  holdZoomFactorFor,
+  panSpeedFor,
+  suggestionDelayFor,
+} from "./data/notebook";
 import "./App.css";
 
 const STORAGE_KEY = "learn-math:student";
@@ -307,6 +317,10 @@ function App() {
   const autoScrollJumpFraction = autoScrollJumpFractionFor(autoScrollJumpLevel);
   const panSpeedLevel = panSpeedLevelFor(student.id);
   const { stepPx: panStepPx, holdIntervalMs: panHoldIntervalMs } = panSpeedFor(panSpeedLevel);
+  const buttonSizeLevel = buttonSizeLevelFor(student.id);
+  const buttonDiameterPx = buttonSizeFor(buttonSizeLevel);
+  const suggestionSensitivityLevel = suggestionSensitivityLevelFor(student.id);
+  const suggestionDelayMs = suggestionDelayFor(suggestionSensitivityLevel);
 
   function finish(topic: Topic | null, lesson: Lesson, correctCount: number) {
     recordPractice({
@@ -358,6 +372,16 @@ function App() {
         panSpeedLevel={panSpeedLevel}
         onPanSpeedLevelChange={(levelId) => {
           setPanSpeedLevel(student.id, levelId);
+          setPreferencesTick((n) => n + 1);
+        }}
+        buttonSizeLevel={buttonSizeLevel}
+        onButtonSizeLevelChange={(levelId) => {
+          setButtonSizeLevel(student.id, levelId);
+          setPreferencesTick((n) => n + 1);
+        }}
+        suggestionSensitivityLevel={suggestionSensitivityLevel}
+        onSuggestionSensitivityLevelChange={(levelId) => {
+          setSuggestionSensitivityLevel(student.id, levelId);
           setPreferencesTick((n) => n + 1);
         }}
       />
@@ -443,6 +467,8 @@ function App() {
         autoScrollJumpFraction={autoScrollJumpFraction}
         panStepPx={panStepPx}
         panHoldIntervalMs={panHoldIntervalMs}
+        buttonDiameterPx={buttonDiameterPx}
+        suggestionDelayMs={suggestionDelayMs}
         onAnswered={topic?.adaptive ? (correct) => handleAdaptiveAnswered(topic, correct) : undefined}
       />
     );

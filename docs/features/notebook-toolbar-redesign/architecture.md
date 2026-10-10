@@ -116,11 +116,25 @@
     flex-direction:column; gap:` קטן; כל כפתור `width/height:
     var(--notebook-btn-size, 40px); border-radius:50%;` (עיגול אמיתי,
     לא `border-radius:8px` הריבועי-מעוגל הקיים).
-  - `.notebook-tool-controls` ממוקם `position:absolute;
-    inset-inline-end:10px; bottom:10px;` על `.notebook-stage` — הפינה
-    הנגדית בדיוק מ-`.notebook-pan-controls` (שכבר יושב ב-
-    `inset-inline-start`/`bottom` לפי PR #78), בלי התנגשות כי שתי
-    העמודות בפינות תחתונות שונות.
+  - **תיקון מול הארכיטקטורה המקורית שנרשמה כאן** (התגלה בפיתוח): הטיוטה
+    הראשונה של המסמך הזה שמה את `.notebook-tool-controls` ב-
+    `inset-inline-end` (שמאל-תחתונה, הפינה *הנגדית* מ-`.notebook-pan-controls`)
+    — זה סותר ישירות את `design.md` ("עמודת כלים — פינה **ימנית**-תחתונה")
+    ואת בקשת המשתמש המפורשת ("בצד ימין למטה"). התיקון: `.notebook-tool-controls`
+    יושב ב-**אותו** צד כמו `.notebook-pan-controls` (`inset-inline-start`,
+    ימין-תחתונה) — לא בפינה הנגדית. **ניסיון ראשון** הערים אותו מעל
+    הפאד (`bottom:120px`) — זה נראה טוב במסך-מלא (stage גבוה), אבל
+    בתצוגה המוטמעת (לא מסך-מלא) ה-stage יכול להיות נמוך מספיק שהטור
+    המוערם מתנגש עם ה-minimap למעלה (נבדק בפועל בתצוגה מקדימה — ראו
+    `docs/features/notebook-toolbar-redesign/status.md`). **התיקון הסופי:**
+    `.notebook-tool-controls` יושב **לצד** הפאד (אותו `bottom:10px`),
+    עם `inset-inline-start:120px` (= `10px` offset הפאד + `100px` רוחבו
+    + `10px` רווח) — זה לא תלוי כלל בגובה ה-stage. גם
+    `.notebook-zoom-controls` עבר מ-`bottom:10px` ל-`top:10px` (נשאר
+    `inset-inline-end`, שמאל-עליונה) — וה-minimap הקיים (שהיה גם הוא
+    שמאל-עליונה, `top:10px; inset-inline-end:10px`) הועבר ל-
+    `inset-inline-start` (ימין-עליונה, פינה שהייתה ריקה) כדי לא לחפוף
+    עם טור הזום החדש. ראו ה-CSS בפועל להסבר המלא.
   - `.notebook-clear-btn` בתוך `.notebook-zoom-controls` מקבל `margin-top:
     8px` (הרווח-לא-קו מה-design) במקום המיקום הנפרד שהיה לו.
   - `[data-suggested="true"]`: `animation: notebook-suggest-pulse 1.6s
@@ -193,6 +207,36 @@
   אף אחד מהנתיבים שמפעילים `armSuggestion`, הצעה פעילה פשוט נשארת כמו
   שהיא (לא מתנקה, לא מתחדשת) — pinch הוא מחוץ למנגנון הזה לגמרי,
   עקבי עם זה ש-design.md גם לא הזכיר אותו.
+
+## Implementation Notes (found during manual verification)
+- **The embedded (non-fullscreen) stage can be too short for the 5-button zoom column.**
+  Confirmed in a real preview: at a typical ~190px-tall embedded stage, the column (built
+  for ~240px) ran past the stage's own bottom edge. `.notebook-stage` must keep its
+  `overflow:hidden` (several e2e tests rely on it as the clipping pan/zoom viewport — see
+  `tests/e2e/helpers/notebookAnswer.ts`), so the fix was a new non-clipping
+  `.notebook-stage-frame` wrapper: it now owns the `flex:1;min-height:0` sizing, with
+  `.notebook-stage` filling it via `position:absolute;inset:0` (same final box, so nothing
+  that measured `.notebook-stage` changes) and the four floating groups
+  (`.notebook-minimap`/`.notebook-zoom-controls`/`.notebook-pan-controls`/
+  `.notebook-tool-controls`) moved to be the frame's children instead of the stage's.
+- **That alone wasn't enough** — `.notebook-screen` is a flex column, and flex items paint
+  in **document order** when `z-index` is `auto` (not "non-positioned before positioned"
+  like normal block layout). Since `.notebook-toolbar` comes after the frame in the
+  markup, it was winning every click in the overlap area. Fixed with `z-index:1` on
+  `.notebook-stage-frame`, so the floating controls always win a click over the toolbar
+  beneath them when the two visually overlap on a short stage.
+- Even after both fixes, a genuinely short stage still has some *visual* crowding between
+  the zoom column's last button and the toolbar below (not a functional bug — each button
+  keeps a real, correctly-targeted hit area; verified with `elementsFromPoint`). Accepted
+  as-is for this round; fullscreen mode (`⤢`, right above it) has ample room and is
+  always one tap away.
+- **For `qa`:** the suggestion pulse (`[data-suggested="true"] { animation: ... infinite }`)
+  means Playwright's default `click()` actionability check can time out waiting for the
+  element to be "stable" (it never stops moving while pulsing) — tests that click a
+  possibly-pulsing button need `{ force: true }`, same as this phase's own manual
+  verification needed. Confirmed working end-to-end with `force: true`: stroke → wait →
+  hand suggested; clicking the suggested (or any) tool clears it immediately; drag-pan →
+  release → wait → pen suggested; eraser strokes never suggest anything.
 
 ## Risks / Tradeoffs
 - `clearSuggestion()` בתחילת כל קו כתיבה חדש (גם אם זה אותו כלי עט

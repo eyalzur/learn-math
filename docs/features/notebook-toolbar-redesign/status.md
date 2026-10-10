@@ -15,10 +15,26 @@
   בלי פולינג חדש; `data-suggested` נפרד מ-`aria-pressed` לתמיכה במקרה
   "נבחר וגם מוצע". ראו architecture.md, כולל שני נתיבי ה-clearSuggestion
   הנפרדים (גרירה + פאד-ניווט) ב-Implementation Notes)
-- [ ] Implementation — developer — not started
+- [x] Implementation — developer — 2026-10-10 (שני בוררי הגדרה חדשים
+  חוברו קצה-לקצה; מנגנון ההצעה אומת בפועל בתצוגה מקדימה — stroke →
+  המתנה → כפתור היד פועם, `force:true` נדרש ב-Playwright כי האנימציה
+  האינסופית מונעת מ"stable" check רגיל להתייצב; עט/יד מנקים הצעה
+  מיידית, מוחק לעולם לא מציע. **שלוש תקלות אמיתיות נמצאו ותוקנו
+  בריוויו עצמי**: (1) `.notebook-stage`'s `overflow:hidden` הסתיר את
+  כפתור "נקה דף" לגמרי בתצוגה מוטמעת קצרה (~190px) — נפתר בעטיפת
+  `.notebook-stage-frame` לא-חתוכה חדשה; (2) אחרי זה, `.notebook-screen`
+  היותו flex column גרם ל-`.notebook-toolbar` לנצח בלחיצות למרות
+  שהיא "מתחת" — נפתר ב-`z-index:1`; (3) גם אחרי שני אלה, "הסר דף"
+  הצטלב עם "נקה דף" כי שתיהן ישבו פיזית בצד שמאל — נפתר בהסרת
+  `margin-inline-start:auto` הישן על `.notebook-page-nav` שכבר לא
+  נחוץ (קבוצת הכלים שהוא נועד להרחיק ממנה עברה דירה). גם תוקנה
+  תקלת CSS חסר לגמרי (שני הבוררים החדשים הוצגו בלי עיצוב כרטיס).
+  שני מבחני e2e קיימים עודכנו לשקף את הסדר/המיקום החדש במכוון
+  (לא רגרסיה). ראו architecture.md, "Implementation Notes" לפרטים
+  המלאים. `429/429` בדיקות, ריצה בודדת ונקייה)
 - [ ] Tests — qa — not started
 
-**Current phase:** developer
+**Current phase:** developer — ממתין ל-qa
 **Branch:** `feature/notebook-toolbar-redesign`
 **PR:** not opened yet
 
