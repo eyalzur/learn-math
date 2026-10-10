@@ -22,6 +22,11 @@ import { test, expect, type Page } from "@playwright/test";
  *
  * Not automated here, for the same reason as round 1: manual pinch-zoom priority needs two
  * simultaneous pointers, which Playwright's `page.mouse` can't drive.
+ *
+ * `0.85`+ on the x-axis lands on the directional nav-buttons overlay (PR #78, merged after
+ * this file was first written), not the canvas — a mouse-down there never starts a stroke.
+ * Every "far" x fraction below stays at `0.75`, same as the passing "jumps right" test's own
+ * value (gap of ~100 cells, far more than `AUTO_SCROLL_JUMP_GAP_THRESHOLD_CELLS` needs).
  */
 
 async function openLevel(page: Page) {
@@ -166,7 +171,7 @@ test("a stroke that ends clearly to the left of the last one jumps the view left
   // reveal from there. Move right first, the same way notebook-hold-to-zoom.spec.ts's own
   // left/right tests establish room to move back before asserting on the reverse direction.
   await drawStrokeAt(page, box, 0.25, 0.5);
-  await drawStrokeAt(page, box, 0.85, 0.5);
+  await drawStrokeAt(page, box, 0.75, 0.5);
   await page.waitForTimeout(JUMP_SETTLE_MS);
   const afterRight = await panXY(page);
 
@@ -255,7 +260,7 @@ test("repeated strokes that keep moving the same way eventually stop at the page
   const box = await stageBox(page);
 
   // Each iteration draws a near-then-far pair at the same two screen fractions. Since the
-  // view already jumped right after the previous iteration, 0.9 is still clearly to the
+  // view already jumped right after the previous iteration, 0.75 is still clearly to the
   // right of 0.2 *in the current view* every time — so this keeps advancing further right
   // along the page, exactly like a student's writing continuing rightward across a line,
   // until there is no more page left to reveal.
@@ -263,7 +268,7 @@ test("repeated strokes that keep moving the same way eventually stop at the page
   let stable = 0;
   for (let i = 0; i < 10; i++) {
     await drawStrokeAt(page, box, 0.2, 0.5);
-    await drawStrokeAt(page, box, 0.9, 0.5);
+    await drawStrokeAt(page, box, 0.75, 0.5);
     await page.waitForTimeout(JUMP_SETTLE_MS);
     const current = await panXY(page);
     if (current.panX === last.panX) stable++;
@@ -283,9 +288,14 @@ test("panning manually with the הזזה tool moves the view by exactly the drag
   const box = await stageBox(page);
   const before = await panXY(page);
 
+  // Same edge as the "jumps left" test above: the opening view already sits at the page's
+  // own top-left corner, which clampPan() — shared with the nav buttons (PR #78) — treats
+  // as a real boundary for drag too, not only for taps. A drag toward that corner has no
+  // room to move at all, so this drags *away* from it (right-to-left, a modest distance well
+  // under the page/stage size difference) to measure a real, unclamped move.
   const y = box.y + box.height / 2;
-  const startX = box.x + box.width * 0.3;
-  const endX = box.x + box.width * 0.7;
+  const startX = box.x + box.width * 0.6;
+  const endX = box.x + box.width * 0.45;
   await page.mouse.move(startX, y);
   await page.mouse.down();
   await page.mouse.move(endX, y, { steps: 10 });
@@ -320,7 +330,7 @@ test('choosing "כבוי" means no stroke, however far from the last one, ever j
   const before = await panXY(page);
 
   await drawStrokeAt(page, box, 0.15, 0.15);
-  await drawStrokeAt(page, box, 0.85, 0.85);
+  await drawStrokeAt(page, box, 0.75, 0.75);
   await page.waitForTimeout(JUMP_SETTLE_MS);
 
   expect(await panXY(page)).toEqual(before);
@@ -333,7 +343,7 @@ test("a change applies to the very next stroke, with no reload", async ({ page }
   const box = await stageBox(page);
   const before = await panXY(page);
   await drawStrokeAt(page, box, 0.15, 0.5);
-  await drawStrokeAt(page, box, 0.85, 0.5);
+  await drawStrokeAt(page, box, 0.75, 0.5);
   await page.waitForTimeout(JUMP_SETTLE_MS);
   expect(await panXY(page)).toEqual(before); // still off
 
@@ -344,7 +354,7 @@ test("a change applies to the very next stroke, with no reload", async ({ page }
   const box2 = await stageBox(page);
   const before2 = await panXY(page);
   await drawStrokeAt(page, box2, 0.15, 0.5);
-  await drawStrokeAt(page, box2, 0.85, 0.5);
+  await drawStrokeAt(page, box2, 0.75, 0.5);
   await page.waitForTimeout(JUMP_SETTLE_MS);
   expect((await panXY(page)).panX).toBeLessThan(before2.panX);
 });
