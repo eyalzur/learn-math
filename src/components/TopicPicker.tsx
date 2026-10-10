@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Topic } from "../data/curriculum";
-import { HOLD_ZOOM_LEVELS } from "../data/notebook";
+import { HOLD_ZOOM_LEVELS, PAN_SPEED_LEVELS } from "../data/notebook";
 import { speechSupported } from "../data/speech";
 
 interface TopicPickerProps {
@@ -30,6 +30,10 @@ interface TopicPickerProps {
    *  when there is no student yet, exactly like `readAloud`. */
   holdZoomLevel?: string;
   onHoldZoomLevelChange?: (levelId: string) => void;
+  /** Which nav-button speed this student is set to — a `PAN_SPEED_LEVELS` id. Absent when
+   *  there is no student yet, exactly like `holdZoomLevel`. */
+  panSpeedLevel?: string;
+  onPanSpeedLevelChange?: (levelId: string) => void;
 }
 
 export function TopicPicker({
@@ -44,6 +48,8 @@ export function TopicPicker({
   onReadAloudChange,
   holdZoomLevel,
   onHoldZoomLevelChange,
+  panSpeedLevel,
+  onPanSpeedLevelChange,
 }: TopicPickerProps) {
   /* Transient and never persisted, so it lives here rather than in App.tsx — the ⚙️ button
      and the dialog are both this component's. The settings *values* keep coming from
@@ -61,11 +67,14 @@ export function TopicPicker({
   // Same "only once a student is chosen" rule, without the speech check — this one has
   // nothing to do with a voice being available.
   const showHoldZoom = holdZoomLevel !== undefined && onHoldZoomLevelChange !== undefined;
+  // Same "only once a student is chosen" rule as showHoldZoom — the nav buttons
+  // themselves are always shown (PR #78), only their speed setting is conditional on this.
+  const showPanSpeed = panSpeedLevel !== undefined && onPanSpeedLevelChange !== undefined;
   /* Whether there is anything to open a dialog for at all. Written as the union, not as
      `showHoldZoom` alone (which it equals today): the design's invariant is that the ⚙️
      button never leads to an empty dialog, and that stays true if the zoom picker ever
      grows a display condition of its own. */
-  const showSettings = showReadAloud || showHoldZoom;
+  const showSettings = showReadAloud || showHoldZoom || showPanSpeed;
   return (
     <div className="topic-picker">
       <div className="grade-header">
@@ -198,6 +207,39 @@ export function TopicPicker({
                         className="hold-zoom-option"
                         aria-pressed={level.id === holdZoomLevel}
                         onClick={() => onHoldZoomLevelChange(level.id)}
+                      >
+                        {level.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {showPanSpeed && (
+                <div className="pan-speed-setting">
+                  <div className="pan-speed-header">
+                    <span className="pan-speed-icon" aria-hidden="true">
+                      🧭
+                    </span>
+                    <span className="read-aloud-text">
+                      <span className="read-aloud-title">מהירות הזזת התצוגה</span>
+                      <span className="read-aloud-note">
+                        כמה רחוק זזים כפתורי הכיוון, וכמה מהר ממשיכים כשמחזיקים
+                      </span>
+                    </span>
+                  </div>
+                  <div
+                    className="pan-speed-options"
+                    role="group"
+                    aria-label="מהירות הזזת התצוגה"
+                  >
+                    {PAN_SPEED_LEVELS.map((level) => (
+                      <button
+                        key={level.id}
+                        type="button"
+                        className="pan-speed-option"
+                        aria-pressed={level.id === panSpeedLevel}
+                        onClick={() => onPanSpeedLevelChange(level.id)}
                       >
                         {level.label}
                       </button>
