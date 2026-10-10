@@ -5,12 +5,15 @@
 
 ## Progress
 - [x] Product spec — product-manager — 2026-10-10
-- [ ] Design — designer — not started
+- [x] Design — designer — 2026-10-10 (שתי עמודות עגולות — זום/ניקוי
+  5 כפתורים משמאל-למעלה, כלים 3 כפתורים מימין-למטה; הצעה = גדילה+ברק,
+  לא צבע רקע, כדי להישאר נבדלת מ"נבחר"; בורר גודל-כפתורים חדש עם 3
+  אפשרויות בלי "כבוי", לא 6 כמו שאר הבוררים — ראו design.md לנימוק)
 - [ ] Architecture — tech-lead — not started
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** designer
+**Current phase:** tech-lead
 **Branch:** `feature/notebook-toolbar-redesign`
 **PR:** not opened yet
 
