@@ -18,11 +18,21 @@
   המינימפ הקיים, לא מעליו/מתחתיו, כדי לא לחזור על בעיית-גובה-stage-קצר
   שכבר תועדה ב-PR #80. ראו design.md, "הנחת-יסוד" — כל המיקומים מניחים
   ש-PR #80 כבר ב-`main`)
-- [ ] Architecture — tech-lead — not started
+- [x] Architecture — tech-lead — 2026-10-11 (ההחלטה המרכזית: state
+  הדיאלוג (`settingsOpen`) עובר מ-`TopicPicker.tsx` ל-`App.tsx` — ההורה
+  המשותף היחיד בין מסך הנושאים למסך התרגול — כי אין דרך אחרת לפתוח את
+  אותו רכיב דיאלוג משני מסכי-אח נפרדים. זה *לא* סותר את האזהרה התיעודית
+  הקיימת נגד "`key` משתנה על `TopicPicker`" (ראו notebook-hold-to-zoom/
+  architecture.md, "סבב ו׳") — זו אזהרה צרה יותר, וה-state עובר ל-`App`
+  בלי `key` משתנה על אף ילד. הדיאלוג עצמו יוצא לרכיב חדש `SettingsDialog.tsx`.
+  `.notebook-pan-controls` עובר `inset-inline-start`→`inset-inline-end`,
+  עם תוצאת-לוואי נדרשת ב-`.notebook-tool-controls` של PR #80 (שחוזר
+  ל-`10px` במקום `120px` כי כבר אין מה לפנות לו מקום). ראו architecture.md
+  ל-Risks/Tradeoffs המלאים, כולל למה לא רינדור-דיאלוג-יחיד-גלובלי)
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** tech-lead
+**Current phase:** developer
 **Branch:** `feature/notebook-nav-buttons-visibility`
 **PR:** not opened yet
 

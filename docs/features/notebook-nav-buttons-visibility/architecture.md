@@ -1,0 +1,198 @@
+# פאד הניווט במחברת: לצד שמאל, כבוי כברירת מחדל, ונגיש מהדף עצמו — Architecture
+
+## Overview
+שלושה חלקים עצמאיים: (1) `navPadVisible` — שדה בוליאני פשוט ב-`preferences.ts`,
+מראה מדויק של `readAloud` הקיים, לא מערך-דרגות כמו שאר הגדרות המחברת; (2)
+`.notebook-pan-controls` עובר מ-`inset-inline-start` ל-`inset-inline-end`
+ב-`App.css`, וה-JSX שלו ב-`PracticeNotebook.tsx` נכנס תחת `{navPadVisible &&
+(...)}` כדי שלא יהיה ב-DOM בכלל כשכבוי — לא `display:none`; (3) **השינוי
+המרכזי**: דיאלוג ⚙️ שהיום חי כולו בתוך `TopicPicker.tsx` (state מקומי + JSX)
+עובר להיות רכיב עצמאי חדש (`SettingsDialog.tsx`), עם ה-state ("פתוח/סגור")
+עולה ל-`App.tsx` — ההורה המשותף היחיד בין מסך הנושאים למסך התרגול — כדי
+ששני כפתורי ⚙️ (הקיים והחדש) יפתחו *את אותו מופע רכיב בדיוק*.
+
+**הנחת-יסוד (כמו ב-design.md):** נבנה בהנחה ש-[PR #80](https://github.com/eyalzur/learn-math/pull/80)
+כבר ב-`main`. כל התייחסות ל-`.notebook-zoom-controls`/`.notebook-tool-controls`/
+`.notebook-minimap`/`.notebook-stage-frame`/`--notebook-btn-size` למטה מבוססת
+על ה-CSS/JSX בפועל בענף `feature/notebook-toolbar-redesign` (נבדק ישירות דרך
+`git show feature/notebook-toolbar-redesign:src/App.css` ו-`:src/components/PracticeNotebook.tsx`,
+לא ניחוש).
+
+## Affected Files / Components
+
+- **`src/data/preferences.ts`** — שדה חדש `navPadVisible?: Record<string, boolean>`
+  ב-`Preferences`, פלוס `navPadVisible(studentId): boolean` (ברירת מחדל
+  `false`) ו-`setNavPadVisible(studentId, value): void` — מראה מדויק של
+  `readAloud`/`setReadAloud` הקיימים (לא דפוס ה-LEVELS; זו בחירה בינארית
+  אמיתית, אין "דרגות").
+- **`src/App.tsx`** —
+  - `const navPadVisible = navPadVisibleFor(student.id);` (אותו מקום בדיוק
+    כמו `readAloud`/`holdZoomLevel` וכו', ליד שורה ~303).
+  - `const [settingsOpen, setSettingsOpen] = useState(false);` — **state
+    חדש, עולה מ-`TopicPicker.tsx`** (ראו Technical Approach למטה — זו
+    החלטת הארכיטקטורה המרכזית כאן).
+  - מעביר ל-`TopicPicker` (סעיף `screen.name === "home"`): `onOpenSettings`
+    (לא `settingsOpen`/`onSettingsOpenChange` — `TopicPicker` לא צריך
+    לדעת אם הדיאלוג פתוח, רק לבקש לפתוח אותו), ושני ה-props החדשים
+    (`navPadVisible`, `onNavPadVisibleChange`) לבורר עצמו.
+  - מעביר ל-`Practice` (סעיף `screen.name === "practice"`): `navPadVisible`
+    (ערך מוחלט, כמו `holdZoomFactor`/`panStepPx` כבר עוברים — `Practice`/
+    `PracticeNotebook` אף פעם לא מקבלים level+setter גולמיים, רק ערכים
+    פתורים) ו-`onOpenSettings` (אותו callback type בדיוק כמו ב-`TopicPicker`).
+  - שני אתרי ה-`return` (`home` ו-`practice`) עוטפים את מה שהם כבר
+    מחזירים ב-`<>...<SettingsDialog .../></>`, עם `{settingsOpen && (
+    <SettingsDialog ... onClose={() => setSettingsOpen(false)} />)}` —
+    ראו Risks/Tradeoffs לנימוק למה זו כפילות מכוונת של שתי שורות, לא
+    ריפקטור גדול יותר של מבנה ה-`return`-ים המוקדמים הקיימים ב-`App.tsx`.
+- **`src/components/SettingsDialog.tsx`** (קובץ חדש) — כל ה-JSX של הדיאלוג
+  עצמו, מועתק/מועבר כמעט מילה-במילה מ-`TopicPicker.tsx` (השורות שכיום בנויות
+  תחת `settingsOpen && showSettings`, כולל ה-backdrop), פלוס בלוק רביעי/חמישי
+  חדש לבורר `navPadVisible` (toggle, לא שורת-אפשרויות — ראו design.md).
+  Props: כל זוגות level+onChange הקיימים (`readAloud`, `holdZoomLevel`,
+  `autoScrollJumpLevel`, `panSpeedLevel`, ואם PR #80 כבר ב-`main`:
+  `buttonSizeLevel`, `suggestionSensitivityLevel`) פלוס `navPadVisible`/
+  `onNavPadVisibleChange` החדשים, פלוס `open: boolean` ו-`onClose: () =>
+  void`. גם מייצא פונקציית עזר `hasAnySettings(props): boolean` (אותה
+  לוגיקת `showReadAloud || showHoldZoom || ...` שכבר קיימת ב-`TopicPicker`
+  היום, רק מועברת לכאן) — **שני** הצרכנים (`TopicPicker` ו-`PracticeNotebook`)
+  קוראים לה כדי להחליט אם בכלל להציג את כפתור ⚙️ שלהם (דיאלוג ריק אסור
+  להיות נגיש, אותו עיקרון כמו היום).
+- **`src/components/TopicPicker.tsx`** — **הקובץ הכי מצומצם מבחינת שינוי,
+  למרות שזה הרכיב שה-state עבר ממנו**: ה-`useState` המקומי ו-כל ה-JSX
+  של הדיאלוג (שורות ~69, ~154–295 היום) **נמחקים** — מוחלפים בקריאה אחת
+  ל-`<SettingsDialog .../>` ב-`App.tsx` (לא ב-`TopicPicker` עצמו — ראו
+  Technical Approach). `TopicPicker` מקבל `onOpenSettings: () => void`
+  במקום לנהל state בעצמו; כפתור ⚙️ הקיים קורא לו ישירות. משתמש ב-
+  `hasAnySettings()` המיובא כדי להחליט אם להציג את הכפתור (כמו `showSettings`
+  היום).
+- **`src/components/Practice.tsx`** — שני props חדשים (`navPadVisible: boolean`,
+  `onOpenSettings: () => void`), מועברים ללא שינוי ל-`<PracticeNotebook>`
+  (אותו דפוס passthrough כמו `holdZoomFactor` וכו').
+- **`src/components/PracticeNotebook.tsx`** —
+  - שני props חדשים כנ"ל.
+  - `.notebook-pan-controls` (היום תמיד מוצג) עובר ל-`{navPadVisible && (
+    <div className="notebook-pan-controls">...)}` — אותו דפוס בדיוק כמו
+    `{fullscreen && statusSlot}` הקיים בקובץ.
+  - כפתור ⚙️ חדש, `<button aria-label="הגדרות" onClick={onOpenSettings}>`,
+    כ-sibling ישיר אחרי ה-`</div>` הסוגר של `.notebook-minimap` (לפי
+    ה-JSX בפועל ב-`feature/notebook-toolbar-redesign`, תוך
+    `.notebook-stage-frame`) — **לא** בתוך המינימפ עצמו ולא מעליו/מתחתיו,
+    לצידו — ראו CSS למטה. מוצג רק אם `hasAnySettings(...)` עם הערכים
+    הזמינים כאן (`true` תמיד בפועל, כי תלמיד/ה תמיד נבחר/ת במסך הזה —
+    אבל נקרא במפורש, לא מניחים, לעקביות עם `TopicPicker`).
+- **`src/App.css`** —
+  - `.notebook-pan-controls`: `inset-inline-start: 10px` → `inset-inline-end:
+    10px` (נשאר `bottom: 10px`). הערת ה-RTL הקיימת ליד ההגדרה הזו (שמסבירה
+    למה `direction:ltr` יושב רק על `.notebook-pan-grid` הפנימי) נשארת
+    נכונה כמו שהיא — זה לא קשור לאיזה צד הפיזי הקלאסטר כולו יושב בו.
+  - **תוצאת-לוואי נדרשת:** `.notebook-tool-controls` ב-PR #80 יושב היום
+    ב-`inset-inline-start: 120px` (= offset הפאד `10px` + רוחבו `100px`
+    + רווח `10px`) בדיוק *כדי* לשבת לצד הפאד באותו צד. אחרי שהפאד עובר
+    לצד הנגדי, שום דבר כבר לא יושב לצד `.notebook-tool-controls` — הוא
+    חוזר ל-`inset-inline-start: 10px` (צמוד לקצה, במקום דחוף-פנימה
+    בלי צורך). **אם PR #80 עדיין לא ב-`main`** כשהענף הזה נבנה בפועל,
+    שינוי ה-`120px`→`10px` הזה לא רלוונטי (הערך הזה עוד לא קיים) — מי
+    שמיישב את הסדר בפועל (ראו Open Questions ב-product-spec.md) צריך
+    לזכור את התיקון הזה כצעד נלווה.
+  - `.notebook-settings-btn` (מחלקה חדשה) — אותו טיפול כמו כפתורי עמודת
+    הזום: `width/height: var(--notebook-btn-size, 40px); border-radius:
+    50%;` וכו' (אם PR #80 עדיין לא ב-`main`, המשתנה הזה לא קיים עדיין —
+    הכפתור מקבל גודל קבוע סביר, 40px, עד שהוא ממוזג). ממוקם
+    `position:absolute` ביחס ל-`.notebook-stage-frame` (או `.notebook-stage`
+    הישן אם #80 עדיין לא מוזג — ראו הנחת-יסוד), `top: 10px`,
+    `inset-inline-start: 80px` (= רוחב המינימפ `60px` + offset שלו `10px`
+    + רווח `10px`) — לצד המינימפ, לא מעליו.
+
+## Data / State Changes
+- `preferences.ts`: `navPadVisible?: Record<string, boolean>` — בוליאני
+  פשוט, לא level-id. ברירת מחדל `false` (הפוך מכל שאר ה-defaults שהם
+  "דרגה אמצעית" — כאן ברירת המחדל היא ה"off" הלוגי, לפי product-spec.md).
+- `App.tsx`: `settingsOpen: boolean` — **state שעבר ממיקום** (היה ב-
+  `TopicPicker`, עכשיו ב-`App`). שום state חדש מבחינת *מה* הוא מייצג,
+  רק *איפה* הוא יושב.
+- `SettingsDialog.tsx`: אין state פנימי משלו — רכיב מוצג-בלבד (controlled),
+  כל הערכים וה-callbacks מגיעים כ-props מ-`App.tsx`, אותו דפוס כמו
+  `TopicLesson`/`LevelPicker` וכו' הקיימים.
+
+## Technical Approach
+
+### העברת state הדיאלוג — למה, ולמה זה בטוח
+`TopicPicker.tsx` כיום מתעד במפורש (שורות ~61-68) שה-state הזה נשאר
+מקומי **בכוונה**, עם אזהרה ספציפית: "אל תיתנו ל-`<TopicPicker>` ב-`App.tsx`
+`key` משתנה, אחרת כל בחירה תסגור את הדיאלוג" (ראו
+`docs/features/notebook-hold-to-zoom/architecture.md`, "סבב ו׳"). זו לא
+אזהרה כללית נגד להעלות את ה-state — זו אזהרה ספציפית נגד `key` משתנה על
+הרכיב שמחזיק אותו, שגורם ל-React לפרק ולבנות מחדש את הרכיב (ומאפס `useState`
+פנימי). הפיצ'ר הזה **חייב** להעלות את ה-state בכל מקרה: הדיאלוג צריך
+להיות נגיש גם ממסך שאינו `TopicPicker` בכלל (מסך התרגול), ו-`TopicPicker`
+ו-`Practice` הם ענפי `if` נפרדים לגמרי ב-`App.tsx` — אין דרך ש-state
+שיושב בתוך אחד מהם ישפיע על השני. ה-state עובר ל-`App.tsx` עצמו (לא
+ל-`TopicPicker` ולא ל-`Practice`), שכבר מחזיק state ארוך-חיים דומה
+(`screen`, `adaptiveSession`, `preferencesTick`) ללא `key` משתנה על אף
+ילד — אותו עיקרון שכבר עובד שם נכון. developer צריך לוודא בפירוש ש **אף
+`<TopicPicker>`/`<Practice>` לא מקבל `key` prop** (אף אחד מהם לא מקבל
+כזה היום) כדי לא לשבור את ההנחה הזו.
+
+### שני אתרי render לדיאלוג — למה לא render יחיד גלובלי
+`App.tsx` מבנה היום סדרת `if (...) return (...)` מוקדמים (לא עץ-JSX אחד
+עם ענף יחיד בסוף). שינוי המבנה הזה לרינדור-דיאלוג-יחיד-גלובלי (למשל קליטת
+כל ה-return-ים הקיימים למשתנה ואז return בודד בסוף) הוא ריפקטור שחוצה
+חלקים לא-קשורים של הקובץ (`history`/`lesson`/`levels`/`styles`/`result`)
+שאף אחד מהם לא זקוק לדיאלוג הזה כרגע. הבחירה כאן: רק שני אתרי ה-`return`
+הרלוונטיים (`home`, `practice`) עוטפים את עצמם ב-Fragment עם אותו בלוק
+`{settingsOpen && <SettingsDialog ... />}` — שתי שורות JSX כפולות, לא
+ריפקטור מבני. ראו Risks/Tradeoffs לנימוק המלא.
+
+### הדיאלוג עצמו
+`SettingsDialog.tsx` הוא כמעט העתקה ישירה של ה-JSX שכבר קיים ב-`TopicPicker`
+היום (backdrop, כותרת, בלוקי הבוררים, כפתור "סגירה") — התוספת היחידה היא
+בלוק חדש ל-`navPadVisible` (toggle, בדיוק מבנה `.read-aloud-setting` הקיים:
+`<input type="checkbox">` מוסתר + `<span>` עם `role` מתאים, לא רשימת-
+אפשרויות). שום לוגיקת-תצוגה (`showX`) לא משתנה במהות — רק עוברת מהיות
+`const` מקומיים ב-`TopicPicker` להיות הפונקציה המיוצאת `hasAnySettings()`.
+
+### `PracticeNotebook.tsx` — שני מקומות נפרדים
+כפתור ה-⚙️ החדש לא תלוי במנגנון ההצעה/הדגשה מ-PR #80 (`data-suggested`)
+— זה כפתור ניווט-מסך רגיל, לא כלי-כתיבה. אין לו `aria-pressed` (הוא לא
+toggle, הוא פעולה — פותח דיאלוג, לא "נבחר/לא נבחר").
+
+## Edge Cases
+- **הפאד כבוי כברירת מחדל לתלמיד/ה חדש/ה** — `navPadVisibleFor` מחזיר
+  `false` כשאין ערך שמור, אותו דפוס `readAloud` כבר מטפל בו.
+- **מעבר בין תלמידים** — ההגדרה היא per-student (כמו כולן), אין state
+  "דולף" בין תלמיד/ה לתלמיד/ה כי `navPadVisibleFor(student.id)` תמיד
+  נקרא עם ה-`student.id` הנוכחי.
+- **פתיחת ⚙️ מתוך תרגול, ואז מעבר דף/שאלה הבאה בזמן שהדיאלוג פתוח** —
+  לא קורה בפועל: הדיאלוג הוא overlay מעל הכל (`z-index` גבוה כבר קיים
+  ל-backdrop), אין דרך ללחוץ על "הבא"/"שלח למורה" מתחתיו כשהוא פתוח.
+  לא דורש טיפול מיוחד.
+- **הפעלת הפאד תוך כדי תרגול, דרך ⚙️ שנפתח מהתרגול עצמו** — סוגרים את
+  הדיאלוג וחוזרים לאותה שאלה בדיוק; הפאד מופיע/נעלם מיד, בלי לאבד את
+  מה שכתוב על הדף (overlay בלבד, לא ניווט/טעינה-מחדש).
+- **PR #80 טרם מוזג כשהפיתוח בפועל מתחיל** — ראו הערות "הנחת-יסוד" למעלה
+  וב-CSS: הקואורדינטות/המשתנה `--notebook-btn-size` לא יהיו קיימים עדיין;
+  developer צריך להתאים (לרוב: להמתין למיזוג #80 קודם, כפי שגם product-spec.md
+  מציע כברירת מחדל).
+
+## Risks / Tradeoffs
+- **כפילות שתי השורות `{settingsOpen && <SettingsDialog .../>}`** ב-two
+  אתרי `return` ב-`App.tsx`, במקום render-יחיד — נבחר במכוון כדי לא
+  להרחיב את הסקופ של הפיצ'ר הזה לריפקטור של כל מבנה ה-`App.tsx`. הסיכון
+  היחיד: אם מישהו יוסיף בעתיד נקודת-כניסה שלישית לדיאלוג (ממסך נוסף),
+  יהיה צריך להוסיף שורה דומה שם גם — לא אוטומטי. זה סביר לסבב הזה; אם
+  מספר נקודות הכניסה יגדל עוד, שווה לשקול את הריפקטור הגדול יותר אז.
+- **שינוי ה-signature של `TopicPicker`** (מוותר על `settingsOpen`/
+  `setSettingsOpen` הפנימיים, מקבל `onOpenSettings` חדש) — זה שינוי
+  לרכיב קיים שעבר כבר כמה סבבים (ראו `notebook-hold-to-zoom/architecture.md`).
+  הבדיקות הקיימות שמניחות שה-⚙️ פותח/סוגר דיאלוג (למשל ב-
+  `notebook-nav-settings.spec.ts`) לא אמורות להישבר — הן בודקות התנהגות
+  נצפית (קליק פותח דיאלוג, קליק על אפשרות משנה אותה), לא את מיקום ה-
+  state הפנימי. developer צריך לוודא את זה בפועל (build+lint+test
+  מלאים), לא להניח.
+- **ברירת המחדל `false` שונה מכל שאר ה-defaults ב-preferences.ts** (שכולם
+  "דרגה אמצעית", לא "כבוי") — זו החלטת product-spec.md מפורשת, לא בחירה
+  טכנית; מוזכר כאן רק כדי ש-developer לא "יתקן" את זה לעקביות מדומה עם
+  שאר ההגדרות.
+
+## Open Questions
+None.
