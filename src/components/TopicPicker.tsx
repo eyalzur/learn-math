@@ -1,13 +1,5 @@
-import { useState } from "react";
 import type { Topic } from "../data/curriculum";
-import {
-  AUTO_SCROLL_JUMP_LEVELS,
-  BUTTON_SIZE_LEVELS,
-  HOLD_ZOOM_LEVELS,
-  PAN_SPEED_LEVELS,
-  SUGGESTION_SENSITIVITY_LEVELS,
-} from "../data/notebook";
-import { speechSupported } from "../data/speech";
+import { hasAnySettings } from "../lib/settingsVisibility";
 
 interface TopicPickerProps {
   gradeLabel: string;
@@ -54,6 +46,16 @@ interface TopicPickerProps {
    *  `holdZoomLevel`. */
   suggestionSensitivityLevel?: string;
   onSuggestionSensitivityLevelChange?: (levelId: string) => void;
+  /** Whether this student's notebook shows the directional nav pad. Absent when there is
+   *  no student yet, exactly like `holdZoomLevel`. Not rendered here — only used (together
+   *  with the other settings values above) to decide whether the ⚙️ button has anything to
+   *  open at all; the dialog itself now lives in `App.tsx` as `<SettingsDialog>`, reachable
+   *  from both this screen and the notebook practice screen. */
+  navPadVisible?: boolean;
+  onNavPadVisibleChange?: (value: boolean) => void;
+  /** Opens the settings dialog — owned and rendered by `App.tsx`, not this component. See
+   *  docs/features/notebook-nav-buttons-visibility/architecture.md. */
+  onOpenSettings: () => void;
 }
 
 export function TopicPicker({
@@ -76,43 +78,32 @@ export function TopicPicker({
   onButtonSizeLevelChange,
   suggestionSensitivityLevel,
   onSuggestionSensitivityLevelChange,
+  navPadVisible,
+  onNavPadVisibleChange,
+  onOpenSettings,
 }: TopicPickerProps) {
-  /* Transient and never persisted, so it lives here rather than in App.tsx — the ⚙️ button
-     and the dialog are both this component's. The settings *values* keep coming from
-     App.tsx, because those are saved and also feed Practice.
-     Careful: every pick inside the dialog calls back into App.tsx, which bumps its
-     preferences tick and re-renders. That keeps this state only because `TopicPicker`
-     stays at the same place in the tree — do not give the `<TopicPicker>` in App.tsx a
-     changing `key`, or each pick would close the dialog.
-     See docs/features/notebook-hold-to-zoom/architecture.md (סבב ו׳). */
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  // The setting belongs to a student, so it only appears once one is chosen — and only
-  // where a voice exists to honour it.
-  const showReadAloud =
-    readAloud !== undefined && onReadAloudChange !== undefined && speechSupported();
-  // Same "only once a student is chosen" rule, without the speech check — this one has
-  // nothing to do with a voice being available.
-  const showHoldZoom = holdZoomLevel !== undefined && onHoldZoomLevelChange !== undefined;
-  // Same "only once a student is chosen" rule as showHoldZoom, no voice check either.
-  const showAutoScrollJump = autoScrollJumpLevel !== undefined && onAutoScrollJumpLevelChange !== undefined;
-  // Same "only once a student is chosen" rule as showHoldZoom — the nav buttons
-  // themselves are always shown (PR #78), only their speed setting is conditional on this.
-  const showPanSpeed = panSpeedLevel !== undefined && onPanSpeedLevelChange !== undefined;
-  // Same "only once a student is chosen" rule as the others.
-  const showButtonSize = buttonSizeLevel !== undefined && onButtonSizeLevelChange !== undefined;
-  const showSuggestionSensitivity =
-    suggestionSensitivityLevel !== undefined && onSuggestionSensitivityLevelChange !== undefined;
-  /* Whether there is anything to open a dialog for at all. Written as the union, not as
-     `showHoldZoom` alone (which it equals today): the design's invariant is that the ⚙️
-     button never leads to an empty dialog, and that stays true if the zoom picker ever
-     grows a display condition of its own. */
-  const showSettings =
-    showReadAloud ||
-    showHoldZoom ||
-    showAutoScrollJump ||
-    showPanSpeed ||
-    showButtonSize ||
-    showSuggestionSensitivity;
+  /* Whether there is anything to open a dialog for at all — the invariant that the ⚙️
+     button never leads to an empty dialog. Shared with `PracticeNotebook`'s own ⚙️ button
+     and with `SettingsDialog` itself via the same `hasAnySettings()` helper, so the three
+     can never disagree about whether settings exist right now.
+     See docs/features/notebook-nav-buttons-visibility/architecture.md for why the dialog
+     itself (and its open/closed state) no longer lives in this component. */
+  const showSettings = hasAnySettings({
+    readAloud,
+    onReadAloudChange,
+    holdZoomLevel,
+    onHoldZoomLevelChange,
+    autoScrollJumpLevel,
+    onAutoScrollJumpLevelChange,
+    panSpeedLevel,
+    onPanSpeedLevelChange,
+    buttonSizeLevel,
+    onButtonSizeLevelChange,
+    suggestionSensitivityLevel,
+    onSuggestionSensitivityLevelChange,
+    navPadVisible,
+    onNavPadVisibleChange,
+  });
   return (
     <div className="topic-picker">
       <div className="grade-header">
@@ -128,7 +119,7 @@ export function TopicPicker({
             type="button"
             className="settings-button"
             aria-label="הגדרות"
-            onClick={() => setSettingsOpen(true)}
+            onClick={onOpenSettings}
           >
             <span aria-hidden="true">⚙️</span>
           </button>
@@ -179,221 +170,6 @@ export function TopicPicker({
           </div>
         ))}
       </div>
-
-      {settingsOpen && showSettings && (
-        /* Same anatomy as the notebook's confirm dialog, but `dialog` rather than
-           `alertdialog` (nothing here is a warning) and with an explicit close. Clicking
-           the dimmed backdrop closes too; the card stops the click from reaching it, which
-           also covers a tap that lands on the card's own padding. */
-        <div className="settings-backdrop" onClick={() => setSettingsOpen(false)}>
-          <div
-            className="settings-dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="settings-title"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 className="settings-title" id="settings-title">
-              הגדרות
-            </h2>
-
-            <div className="settings-body">
-              {showReadAloud && (
-                <div className="read-aloud-setting">
-                  <span className="read-aloud-icon" aria-hidden="true">
-                    🔊
-                  </span>
-                  <span className="read-aloud-text">
-                    <span className="read-aloud-title">להקריא את השאלות בקול</span>
-                    <span className="read-aloud-note">מומלץ למי שעדיין לומד/ת לקרוא</span>
-                  </span>
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={readAloud}
-                    className={`read-aloud-switch ${readAloud ? "on" : "off"}`}
-                    onClick={() => onReadAloudChange(!readAloud)}
-                  >
-                    <span className="read-aloud-knob" />
-                    <span className="visually-hidden">להקריא את השאלות בקול</span>
-                  </button>
-                </div>
-              )}
-
-              {showHoldZoom && (
-                <div className="hold-zoom-setting">
-                  <div className="hold-zoom-header">
-                    <span className="hold-zoom-icon" aria-hidden="true">
-                      🔍
-                    </span>
-                    <span className="read-aloud-text">
-                      <span className="read-aloud-title">התקרבות כשמחזיקים את האצבע</span>
-                      <span className="read-aloud-note">
-                        כמה הדף מתקרב כשעוצרים לרגע לפני שכותבים
-                      </span>
-                    </span>
-                  </div>
-                  <div
-                    className="hold-zoom-options"
-                    role="group"
-                    aria-label="התקרבות כשמחזיקים את האצבע"
-                  >
-                    {HOLD_ZOOM_LEVELS.map((level) => (
-                      <button
-                        key={level.id}
-                        type="button"
-                        className="hold-zoom-option"
-                        aria-pressed={level.id === holdZoomLevel}
-                        onClick={() => onHoldZoomLevelChange(level.id)}
-                      >
-                        {level.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {showAutoScrollJump && (
-                <div className="auto-scroll-setting">
-                  <div className="auto-scroll-header">
-                    <span className="auto-scroll-icon" aria-hidden="true">
-                      ↔️
-                    </span>
-                    <span className="read-aloud-text">
-                      <span className="read-aloud-title">התצוגה קופצת בין תו לתו</span>
-                      <span className="read-aloud-note">
-                        כשמסיימים לכתוב ספרה או אות, הדף זז קצת כדי לפנות מקום להמשך
-                      </span>
-                    </span>
-                  </div>
-                  <div
-                    className="auto-scroll-options"
-                    role="group"
-                    aria-label="התצוגה קופצת בין תו לתו"
-                  >
-                    {AUTO_SCROLL_JUMP_LEVELS.map((level) => (
-                      <button
-                        key={level.id}
-                        type="button"
-                        className="auto-scroll-option"
-                        aria-pressed={level.id === autoScrollJumpLevel}
-                        onClick={() => onAutoScrollJumpLevelChange(level.id)}
-                      >
-                        {level.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {showPanSpeed && (
-                <div className="pan-speed-setting">
-                  <div className="pan-speed-header">
-                    <span className="pan-speed-icon" aria-hidden="true">
-                      🧭
-                    </span>
-                    <span className="read-aloud-text">
-                      <span className="read-aloud-title">מהירות הזזת התצוגה</span>
-                      <span className="read-aloud-note">
-                        כמה רחוק זזים כפתורי הכיוון, וכמה מהר ממשיכים כשמחזיקים
-                      </span>
-                    </span>
-                  </div>
-                  <div
-                    className="pan-speed-options"
-                    role="group"
-                    aria-label="מהירות הזזת התצוגה"
-                  >
-                    {PAN_SPEED_LEVELS.map((level) => (
-                      <button
-                        key={level.id}
-                        type="button"
-                        className="pan-speed-option"
-                        aria-pressed={level.id === panSpeedLevel}
-                        onClick={() => onPanSpeedLevelChange(level.id)}
-                      >
-                        {level.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {showButtonSize && (
-                <div className="button-size-setting">
-                  <div className="button-size-header">
-                    <span className="button-size-icon" aria-hidden="true">
-                      🔘
-                    </span>
-                    <span className="read-aloud-text">
-                      <span className="read-aloud-title">גודל כפתורי המחברת</span>
-                      <span className="read-aloud-note">
-                        כמה גדולים כפתורי הזום והכלים
-                      </span>
-                    </span>
-                  </div>
-                  <div
-                    className="button-size-options"
-                    role="group"
-                    aria-label="גודל כפתורי המחברת"
-                  >
-                    {BUTTON_SIZE_LEVELS.map((level) => (
-                      <button
-                        key={level.id}
-                        type="button"
-                        className="button-size-option"
-                        aria-pressed={level.id === buttonSizeLevel}
-                        onClick={() => onButtonSizeLevelChange(level.id)}
-                      >
-                        {level.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {showSuggestionSensitivity && (
-                <div className="suggestion-sensitivity-setting">
-                  <div className="suggestion-sensitivity-header">
-                    <span className="suggestion-sensitivity-icon" aria-hidden="true">
-                      👆
-                    </span>
-                    <span className="read-aloud-text">
-                      <span className="read-aloud-title">רגישות הצעת הפעולה הבאה</span>
-                      <span className="read-aloud-note">
-                        כמה מהר הדף מציע לעבור בין כתיבה להזזה
-                      </span>
-                    </span>
-                  </div>
-                  <div
-                    className="suggestion-sensitivity-options"
-                    role="group"
-                    aria-label="רגישות הצעת הפעולה הבאה"
-                  >
-                    {SUGGESTION_SENSITIVITY_LEVELS.map((level) => (
-                      <button
-                        key={level.id}
-                        type="button"
-                        className="suggestion-sensitivity-option"
-                        aria-pressed={level.id === suggestionSensitivityLevel}
-                        onClick={() => onSuggestionSensitivityLevelChange(level.id)}
-                      >
-                        {level.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="settings-actions">
-              <button type="button" className="secondary" onClick={() => setSettingsOpen(false)}>
-                סגירה
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

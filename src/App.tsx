@@ -8,6 +8,7 @@ import { StylePicker } from "./components/StylePicker";
 import { History } from "./components/History";
 import { Practice } from "./components/Practice";
 import { Result } from "./components/Result";
+import { SettingsDialog } from "./components/SettingsDialog";
 import { students, grades, gradeById } from "./data/curriculum";
 import type { Student, Topic, Question } from "./data/curriculum";
 import type { Lesson } from "./data/style";
@@ -27,6 +28,8 @@ import {
   setButtonSizeLevel,
   suggestionSensitivityLevel as suggestionSensitivityLevelFor,
   setSuggestionSensitivityLevel,
+  navPadVisible as navPadVisibleFor,
+  setNavPadVisible,
 } from "./data/preferences";
 import {
   autoScrollJumpFractionFor,
@@ -175,6 +178,16 @@ function App() {
   /** The per-student settings (read-aloud, hold-to-zoom strength) are stored rather than
    *  held in state; this forces a re-read after either of them is written. */
   const [, setPreferencesTick] = useState(0);
+  /** The ⚙️ settings dialog's open/closed state — lives here, not inside `TopicPicker`
+   *  (where it used to), because it must be reachable from two mutually exclusive sibling
+   *  screens (the topic list and the notebook practice screen), and `App` is their one
+   *  shared ancestor. Neither `<TopicPicker>` nor `<Practice>` below is ever given a
+   *  changing `key`, so this survives every re-render exactly like `screen`/`adaptiveSession`
+   *  already do — see docs/features/notebook-nav-buttons-visibility/architecture.md for why
+   *  this is safe despite the "don't lift this" note that used to live in `TopicPicker`
+   *  (docs/features/notebook-hold-to-zoom/architecture.md, "סבב ו׳" — that warning was about
+   *  a changing `key` specifically, not about where the state lives). */
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   /** Live state for a topic's runtime-generated questions — `null` outside one. Not part
    *  of `Screen`, for the same reason `gradeId` isn't: the questions for an adaptive
@@ -321,6 +334,7 @@ function App() {
   const buttonDiameterPx = buttonSizeFor(buttonSizeLevel);
   const suggestionSensitivityLevel = suggestionSensitivityLevelFor(student.id);
   const suggestionDelayMs = suggestionDelayFor(suggestionSensitivityLevel);
+  const navPadVisible = navPadVisibleFor(student.id);
 
   function finish(topic: Topic | null, lesson: Lesson, correctCount: number) {
     recordPractice({
@@ -343,48 +357,65 @@ function App() {
     setScreen({ name: "result", topic, lesson, correctCount });
   }
 
+  // Every settings value/callback pair is shared between whichever screen's own ⚙️ button
+  // decides whether to show itself (via hasAnySettings()) and the dialog that actually
+  // renders them — same props, two different consumers. See
+  // docs/features/notebook-nav-buttons-visibility/architecture.md.
+  const settingsProps = {
+    readAloud,
+    onReadAloudChange: (value: boolean) => {
+      setReadAloud(student.id, value);
+      // The value lives in storage, so a render is needed to pick it back up.
+      setPreferencesTick((n) => n + 1);
+    },
+    holdZoomLevel,
+    onHoldZoomLevelChange: (levelId: string) => {
+      setHoldZoomLevel(student.id, levelId);
+      setPreferencesTick((n) => n + 1);
+    },
+    autoScrollJumpLevel,
+    onAutoScrollJumpLevelChange: (levelId: string) => {
+      setAutoScrollJumpLevel(student.id, levelId);
+      setPreferencesTick((n) => n + 1);
+    },
+    panSpeedLevel,
+    onPanSpeedLevelChange: (levelId: string) => {
+      setPanSpeedLevel(student.id, levelId);
+      setPreferencesTick((n) => n + 1);
+    },
+    buttonSizeLevel,
+    onButtonSizeLevelChange: (levelId: string) => {
+      setButtonSizeLevel(student.id, levelId);
+      setPreferencesTick((n) => n + 1);
+    },
+    suggestionSensitivityLevel,
+    onSuggestionSensitivityLevelChange: (levelId: string) => {
+      setSuggestionSensitivityLevel(student.id, levelId);
+      setPreferencesTick((n) => n + 1);
+    },
+    navPadVisible,
+    onNavPadVisibleChange: (value: boolean) => {
+      setNavPadVisible(student.id, value);
+      setPreferencesTick((n) => n + 1);
+    },
+  };
+
   if (screen.name === "home") {
     return (
-      <TopicPicker
-        gradeLabel={`שלום ${student.name}! · ${grade.label}`}
-        topics={grade.topicSets}
-        onSelect={enterTopic}
-        onLesson={enterLesson}
-        onBack={() => chooseGrade(null)}
-        backLabel="← חזרה"
-        onHistory={() => setScreen({ name: "history" })}
-        readAloud={readAloud}
-        onReadAloudChange={(value) => {
-          setReadAloud(student.id, value);
-          // The value lives in storage, so a render is needed to pick it back up.
-          setPreferencesTick((n) => n + 1);
-        }}
-        holdZoomLevel={holdZoomLevel}
-        onHoldZoomLevelChange={(levelId) => {
-          setHoldZoomLevel(student.id, levelId);
-          setPreferencesTick((n) => n + 1);
-        }}
-        autoScrollJumpLevel={autoScrollJumpLevel}
-        onAutoScrollJumpLevelChange={(levelId) => {
-          setAutoScrollJumpLevel(student.id, levelId);
-          setPreferencesTick((n) => n + 1);
-        }}
-        panSpeedLevel={panSpeedLevel}
-        onPanSpeedLevelChange={(levelId) => {
-          setPanSpeedLevel(student.id, levelId);
-          setPreferencesTick((n) => n + 1);
-        }}
-        buttonSizeLevel={buttonSizeLevel}
-        onButtonSizeLevelChange={(levelId) => {
-          setButtonSizeLevel(student.id, levelId);
-          setPreferencesTick((n) => n + 1);
-        }}
-        suggestionSensitivityLevel={suggestionSensitivityLevel}
-        onSuggestionSensitivityLevelChange={(levelId) => {
-          setSuggestionSensitivityLevel(student.id, levelId);
-          setPreferencesTick((n) => n + 1);
-        }}
-      />
+      <>
+        <TopicPicker
+          gradeLabel={`שלום ${student.name}! · ${grade.label}`}
+          topics={grade.topicSets}
+          onSelect={enterTopic}
+          onLesson={enterLesson}
+          onBack={() => chooseGrade(null)}
+          backLabel="← חזרה"
+          onHistory={() => setScreen({ name: "history" })}
+          onOpenSettings={() => setSettingsOpen(true)}
+          {...settingsProps}
+        />
+        {settingsOpen && <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} {...settingsProps} />}
+      </>
     );
   }
 
@@ -455,22 +486,27 @@ function App() {
         ? { title: topic.title, questions: adaptiveSession.questions }
         : screen.lesson;
     return (
-      <Practice
-        lesson={lesson}
-        onFinish={(correctCount) => finish(topic, lesson, correctCount)}
-        onExit={() => {
-          setAdaptiveSession(null);
-          setScreen(insideTopic(topic));
-        }}
-        readAloud={readAloud}
-        holdZoomFactor={holdZoomFactor}
-        autoScrollJumpFraction={autoScrollJumpFraction}
-        panStepPx={panStepPx}
-        panHoldIntervalMs={panHoldIntervalMs}
-        buttonDiameterPx={buttonDiameterPx}
-        suggestionDelayMs={suggestionDelayMs}
-        onAnswered={topic?.adaptive ? (correct) => handleAdaptiveAnswered(topic, correct) : undefined}
-      />
+      <>
+        <Practice
+          lesson={lesson}
+          onFinish={(correctCount) => finish(topic, lesson, correctCount)}
+          onExit={() => {
+            setAdaptiveSession(null);
+            setScreen(insideTopic(topic));
+          }}
+          readAloud={readAloud}
+          holdZoomFactor={holdZoomFactor}
+          autoScrollJumpFraction={autoScrollJumpFraction}
+          panStepPx={panStepPx}
+          panHoldIntervalMs={panHoldIntervalMs}
+          buttonDiameterPx={buttonDiameterPx}
+          suggestionDelayMs={suggestionDelayMs}
+          navPadVisible={navPadVisible}
+          onOpenSettings={() => setSettingsOpen(true)}
+          onAnswered={topic?.adaptive ? (correct) => handleAdaptiveAnswered(topic, correct) : undefined}
+        />
+        {settingsOpen && <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} {...settingsProps} />}
+      </>
     );
   }
 
@@ -494,6 +530,7 @@ function App() {
     onBack={() => chooseGrade(null)}
     backLabel="← חזרה"
     onHistory={() => setScreen({ name: "history" })}
+    onOpenSettings={() => setSettingsOpen(true)}
   />;
 }
 

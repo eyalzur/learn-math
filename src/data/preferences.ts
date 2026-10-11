@@ -43,6 +43,11 @@ interface Preferences {
   /** Student id → which suggested-next-action sensitivity (a `SUGGESTION_SENSITIVITY_LEVELS`
    *  id, "off" included). Same id-not-number reasoning as `holdZoomLevel` above. */
   suggestionSensitivityLevel?: Record<string, string>;
+  /** Student id → show the directional nav pad (▲▼◀▶) at all. Off unless turned on — unlike
+   *  every other notebook setting here, whose default is a middle strength, this one's
+   *  default is the feature being absent entirely (docs/features/notebook-nav-buttons-visibility/
+   *  product-spec.md). Plain boolean, not a level id: there is no scale to retune. */
+  navPadVisible?: Record<string, boolean>;
 }
 
 /**
@@ -183,6 +188,23 @@ export function setSuggestionSensitivityLevel(studentId: string, levelId: string
         ...all,
         suggestionSensitivityLevel: { ...all.suggestionSensitivityLevel, [studentId]: levelId },
       }),
+    );
+  } catch {
+    // ignore
+  }
+}
+
+/** Whether this student's notebook shows the directional nav pad. Off unless turned on. */
+export function navPadVisible(studentId: string): boolean {
+  return readAll().navPadVisible?.[studentId] === true;
+}
+
+export function setNavPadVisible(studentId: string, value: boolean): void {
+  try {
+    const all = readAll();
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ ...all, navPadVisible: { ...all.navPadVisible, [studentId]: value } }),
     );
   } catch {
     // ignore

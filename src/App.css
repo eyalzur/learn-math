@@ -1694,6 +1694,26 @@ button.secondary {
   background: var(--accent-bg);
 }
 
+/* Reaches the ⚙️ dialog without leaving the question in progress — see docs/features/
+   notebook-nav-buttons-visibility/. Sits beside .notebook-minimap (inset-inline-start:
+   80px = the minimap's own 10px offset + its 60px width + a 10px gap), not above or below
+   it — stacking vertically on a short embedded stage is exactly the bug
+   docs/features/notebook-toolbar-redesign/ already hit and fixed for .notebook-zoom-controls,
+   and side-by-side has no dependency on the stage's height at all. */
+.notebook-settings-btn {
+  position: absolute;
+  top: 10px;
+  inset-inline-start: 80px;
+  padding: 0;
+  width: var(--notebook-btn-size, 40px);
+  height: var(--notebook-btn-size, 40px);
+  border-radius: 50%;
+  background: var(--bg);
+  color: var(--text-h);
+  box-shadow: var(--shadow);
+  font-size: 20px;
+}
+
 /* Pinned top-left (physical — inset-inline-end resolves to the left edge under this app's
    RTL direction, same mapping already relied on everywhere else in this file), per the
    redesign: see docs/features/notebook-toolbar-redesign/design.md. Was bottom-anchored
@@ -1740,37 +1760,35 @@ button.secondary {
   background: var(--accent-bg);
 }
 
-/* The directional pad — bottom-right (physical), the opposite inline side from
-   .notebook-zoom-controls (top-left) so the two don't share a corner. A 3x3 grid in a
+/* The directional pad — bottom-left (physical), off by default and reachable only via the
+   ⚙️ setting added in docs/features/notebook-nav-buttons-visibility/. Was bottom-right
+   (inset-inline-start) through PR #78/#80; moved to the opposite inline side so it never
+   shares a corner with .notebook-tool-controls (bottom-right, below), freeing that corner
+   to sit flush at its own edge instead of making room beside the pad. A 3x3 grid in a
    cross: up/down centered, left and right flanking an empty middle cell — recognizable as
    "move this way" without reading a single label, which matters for Mika (grade 1, still
    learning to read). See docs/features/notebook-nav-buttons/design.md. */
-/* Positioning only, left at the page's inherited RTL direction on purpose — this is what
-   makes inset-inline-start resolve to the physical right edge, the same mapping
-   .notebook-tool-controls below relies on to sit beside this pad. The grid
-   itself (and its own direction override, below) lives one level in, on
-   .notebook-pan-grid — direction is inherited by children too, so overriding it here would
-   just move the whole cluster to the wrong corner instead of only reordering its columns
-   (this shipped once already, caught in review: both clusters landed on the same side). */
+/* Positioning only — the grid itself (and its own direction override, below) lives one
+   level in, on .notebook-pan-grid — direction is inherited by children too, so overriding
+   it here would just move the whole cluster to the wrong corner instead of only reordering
+   its columns (this shipped once already, caught in review: both clusters landed on the
+   same side). */
 .notebook-pan-controls {
   position: absolute;
   bottom: 10px;
-  inset-inline-start: 10px;
+  inset-inline-end: 10px;
 }
 
 /* Tool switcher (hand/pen/eraser) — bottom-right (physical), per
    docs/features/notebook-toolbar-redesign/design.md ("עמודת כלים — פינה ימנית-תחתונה").
-   Same inline side as .notebook-pan-controls above (inset-inline-start) and the same
-   bottom offset, but shifted further inward (120px = the pad's own 10px offset + its
-   100px width + a 10px gap) so the two sit side by side along the bottom edge instead of
-   stacked on top of each other. Stacking was tried first and looked right on a tall
-   fullscreen stage, but broke on the embedded (non-fullscreen) writing area, which can be
-   short enough that a column stacked above the pad runs into .notebook-minimap at the
-   top — side-by-side has no dependency on the stage's height at all. */
+   Flush at the edge (inset-inline-start: 10px) rather than shifted inward — that extra
+   offset existed only to sit beside .notebook-pan-controls when both lived on this same
+   side; the pad moved to the opposite side in docs/features/notebook-nav-buttons-visibility/,
+   so nothing shares this corner with it any more. */
 .notebook-tool-controls {
   position: absolute;
   bottom: 10px;
-  inset-inline-start: 120px;
+  inset-inline-start: 10px;
   display: flex;
   flex-direction: column;
   gap: 8px;

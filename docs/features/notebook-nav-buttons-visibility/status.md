@@ -29,10 +29,20 @@
   עם תוצאת-לוואי נדרשת ב-`.notebook-tool-controls` של PR #80 (שחוזר
   ל-`10px` במקום `120px` כי כבר אין מה לפנות לו מקום). ראו architecture.md
   ל-Risks/Tradeoffs המלאים, כולל למה לא רינדור-דיאלוג-יחיד-גלובלי)
-- [ ] Implementation — developer — not started
+- [x] Implementation — developer — 2026-10-11 (כל התוכנית מומשה; שתי
+  סטיות מתועדות: כפתור ⚙️ החדש ב-`PracticeNotebook` לא קורא
+  ל-`hasAnySettings()` כמתוכנן — זה היה דורש להעביר 12 props של הגדרות
+  דרך `Practice.tsx` רק לבדוק תנאי שתמיד אמת שם (מסך תרגול תמיד עם
+  תלמיד/ה נבחר/ת) — מוצג תמיד ללא תנאי; ו-`hasAnySettings()` עצמה עברה
+  מ-`SettingsDialog.tsx` ל-`src/lib/settingsVisibility.ts` חדש כי
+  `oxlint` התריע על שבירת Fast Refresh מ-export שני באותו קובץ קומפוננטה.
+  אומת בתצוגה מקדימה בפועל: הפאד נעדר לגמרי מה-DOM כברירת מחדל, גיאומטריית
+  RTL נכונה (לא רק לפי היגיון CSS), תוכן שצויר שורד פתיחה/סגירה של ⚙️
+  מתוך תרגול, ואותו דיאלוג בדיוק נפתח משני המקומות. `build`/`lint` נקיים.
+  גרסה `1.37.0→1.38.0`. ראו architecture.md, "Implementation Notes")
 - [ ] Tests — qa — not started
 
-**Current phase:** developer
+**Current phase:** qa
 **Branch:** `feature/notebook-nav-buttons-visibility`
 **PR:** not opened yet
 
