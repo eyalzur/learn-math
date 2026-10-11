@@ -59,12 +59,16 @@ async function enterPractice(page: Page) {
  *  land on the style screen rather than the topic one, so the number of steps isn't fixed.
  *  Same technique notebook-hold-to-zoom.spec.ts's own `backToTopics` uses. */
 async function backToTopics(page: Page) {
-  const gear = settingsButton(page);
-  for (let i = 0; i < 3 && (await gear.count()) === 0; i++) {
+  // .topic-grid, not the "הגדרות" gear button — docs/features/notebook-nav-buttons-visibility/
+  // added a second button with that exact aria-label inside the practice screen itself
+  // (deliberately, same label for the same action), so "a button called הגדרות exists" no
+  // longer uniquely identifies the topic screen the way it used to.
+  const onTopics = () => page.locator(".topic-grid").count();
+  for (let i = 0; i < 3 && (await onTopics()) === 0; i++) {
     await page.getByRole("button", { name: "← חזרה" }).first().click();
     await page.waitForTimeout(150);
   }
-  await expect(gear).toBeVisible();
+  await expect(page.locator(".topic-grid")).toBeVisible();
 }
 
 function settingsButton(page: Page) {

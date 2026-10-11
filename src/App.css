@@ -1760,12 +1760,23 @@ button.secondary {
   background: var(--accent-bg);
 }
 
-/* The directional pad — bottom-left (physical), off by default and reachable only via the
+/* The directional pad — left side (physical), off by default and reachable only via the
    ⚙️ setting added in docs/features/notebook-nav-buttons-visibility/. Was bottom-right
-   (inset-inline-start) through PR #78/#80; moved to the opposite inline side so it never
-   shares a corner with .notebook-tool-controls (bottom-right, below), freeing that corner
-   to sit flush at its own edge instead of making room beside the pad. A 3x3 grid in a
-   cross: up/down centered, left and right flanking an empty middle cell — recognizable as
+   (inset-inline-start) through PR #78/#80; moved to the opposite inline side per the
+   product request.
+   Top-anchored, beside .notebook-zoom-controls, NOT bottom-anchored below it — measured on
+   the real embedded stage at the standard test viewport (1280x720): the stage is only
+   ~190px tall there, while the zoom column (5 buttons, up to 240px at default sizing) is
+   top-anchored and overflows the whole stage height. A bottom-anchored pad on the same
+   inline side landed entirely inside the zoom column's own vertical range — not an edge
+   case, a total overlap — so e.g. the center of "הקטן" actually hit "הזז שמאלה" instead
+   (confirmed via document.elementFromPoint). Putting the pad beside the zoom column
+   instead of below it removes the collision regardless of stage height — the same
+   "side-by-side beats stacking" fix already used for .notebook-tool-controls vs. this same
+   pad in docs/features/notebook-toolbar-redesign/, and again here for the same reason.
+   inset-inline-end: 68px = the zoom column's own 10px offset + its 48px max button width +
+   a 10px gap, so the two clusters never touch regardless of which is taller. A 3x3 grid in
+   a cross: up/down centered, left and right flanking an empty middle cell — recognizable as
    "move this way" without reading a single label, which matters for Mika (grade 1, still
    learning to read). See docs/features/notebook-nav-buttons/design.md. */
 /* Positioning only — the grid itself (and its own direction override, below) lives one
@@ -1775,8 +1786,8 @@ button.secondary {
    same side). */
 .notebook-pan-controls {
   position: absolute;
-  bottom: 10px;
-  inset-inline-end: 10px;
+  top: 10px;
+  inset-inline-end: 68px;
 }
 
 /* Tool switcher (hand/pen/eraser) — bottom-right (physical), per

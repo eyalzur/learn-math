@@ -40,9 +40,21 @@
   RTL נכונה (לא רק לפי היגיון CSS), תוכן שצויר שורד פתיחה/סגירה של ⚙️
   מתוך תרגול, ואותו דיאלוג בדיוק נפתח משני המקומות. `build`/`lint` נקיים.
   גרסה `1.37.0→1.38.0`. ראו architecture.md, "Implementation Notes")
-- [ ] Tests — qa — not started
+- [x] Tests — qa — 2026-10-11 (13 בדיקות חדשות ב-
+  `notebook-nav-buttons-visibility.spec.ts`, לפי קריטריוני הקבלה
+  ב-product-spec.md. הרצת הסוויטה המלאה חשפה כשל אמיתי, לא בבדיקות
+  החדשות אלא בקיימות: חפיפה גיאומטרית אמיתית בין `.notebook-pan-controls`
+  ל-`.notebook-zoom-controls` על ה-stage הקצר (~190px) בתצוגת הבדיקה —
+  לחיצה על "הקטן" נתפסה בפועל ע"י "הזז שמאלה". תוקן ע"י העברת הפאד
+  מעיגון תחתון לעיגון עליון, לצד עמודת הזום (לא מתחתיה) — אותו עיקרון
+  "לצד, לא ערימה" שכבר הוכח פעמיים השנה לאותה סיבת-שורש. אומת במדידה
+  ישירה (`boundingBox`, `elementFromPoint`) לא רק בהיגיון. גם תוקנו
+  4 קבצי בדיקה קיימים שהנחותיהם נשברו ע"י ברירת-המחדל-כבויה ו/או ה-
+  `aria-label` המשותף לשני כפתורי ⚙️ (לא רגרסיה — עדכון setup, ראו
+  tests.md). `459/459` בסוויטה המלאה, ריצה בודדת ונקייה (`npm run build
+  && npm run lint && npm run test:e2e`))
 
-**Current phase:** qa
+**Current phase:** done — ready to open PR
 **Branch:** `feature/notebook-nav-buttons-visibility`
 **PR:** not opened yet
 

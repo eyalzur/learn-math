@@ -225,12 +225,16 @@ async function enterPractice(page: Page) {
  *  number of steps isn't fixed — climb until the ⚙️ button is actually there. Leaves the
  *  settings closed; callers that need the picker follow with `openSettings`. */
 async function backToTopics(page: Page) {
-  const gear = settingsButton(page);
-  for (let i = 0; i < 3 && (await gear.count()) === 0; i++) {
+  // .topic-grid, not the "הגדרות" gear button — docs/features/notebook-nav-buttons-visibility/
+  // added a second button with that exact aria-label inside the practice screen itself
+  // (deliberately, same label for the same action), so "a button called הגדרות exists" no
+  // longer uniquely identifies the topic screen the way it used to.
+  const onTopics = () => page.locator(".topic-grid").count();
+  for (let i = 0; i < 3 && (await onTopics()) === 0; i++) {
     await page.getByRole("button", { name: "← חזרה" }).first().click();
     await page.waitForTimeout(150);
   }
-  await expect(gear).toBeVisible();
+  await expect(page.locator(".topic-grid")).toBeVisible();
 }
 
 /** The one thing the topic screen shows for settings since סבב ו׳ — named by its

@@ -54,12 +54,16 @@ function settingsButton(page: Page) {
  *  screen rather than the student picker, so this never re-clicks `.student-card`. Same
  *  technique notebook-auto-scroll.spec.ts's own `backToTopics` uses. */
 async function backToTopics(page: Page) {
-  const gear = settingsButton(page);
-  for (let i = 0; i < 3 && (await gear.count()) === 0; i++) {
+  // .topic-grid, not the "הגדרות" gear button — docs/features/notebook-nav-buttons-visibility/
+  // added a second button with that exact aria-label inside the practice screen itself
+  // (deliberately, same label for the same action), so "a button called הגדרות exists" no
+  // longer uniquely identifies the topic screen the way it used to.
+  const onTopics = () => page.locator(".topic-grid").count();
+  for (let i = 0; i < 3 && (await onTopics()) === 0; i++) {
     await page.getByRole("button", { name: "← חזרה" }).first().click();
     await page.waitForTimeout(150);
   }
-  await expect(gear).toBeVisible();
+  await expect(page.locator(".topic-grid")).toBeVisible();
 }
 
 async function openSettings(page: Page) {
@@ -77,6 +81,15 @@ async function closeSettings(page: Page) {
 async function setSuggestionSensitivity(page: Page, label: string) {
   await openSettings(page);
   await page.locator(".suggestion-sensitivity-option", { hasText: new RegExp(`^${label}$`) }).click();
+  await closeSettings(page);
+}
+
+/** docs/features/notebook-nav-buttons-visibility/ turned the directional nav pad off by
+ *  default (it used to always render) — must be called on the topic-list screen, same
+ *  caller requirement as `setSuggestionSensitivity` above. */
+async function turnOnNavPad(page: Page) {
+  await openSettings(page);
+  await page.locator(".read-aloud-setting", { hasText: "הצגת פאד הניווט" }).locator(".read-aloud-switch").click();
   await closeSettings(page);
 }
 
@@ -218,7 +231,9 @@ test("choosing a tool from the new column behaves exactly as before: pen draws, 
 });
 
 test("the directional nav pad still works, unchanged by the redesign", async ({ page }) => {
-  await openLevel(page);
+  await openTopics(page);
+  await turnOnNavPad(page);
+  await enterPractice(page);
   const upButton = page.getByRole("button", { name: "הזז למעלה" });
   await expect(upButton).toBeVisible();
   const before = await panXY(page);
@@ -278,6 +293,7 @@ test("starting a real pan (drag) clears the hand suggestion immediately", async 
 test("pressing a nav-pad button also clears a pending hand suggestion", async ({ page }) => {
   await openTopics(page);
   await setSuggestionSensitivity(page, "מהיר מאוד");
+  await turnOnNavPad(page);
   await enterPractice(page);
 
   await drawOnCanvas(page);
