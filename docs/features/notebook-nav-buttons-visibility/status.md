@@ -11,12 +11,18 @@
   "שקוף"; (3) נקודת כניסה חדשה ל-⚙️ מתוך מסך התרגול עצמו — אותו דיאלוג
   בדיוק, לא גרסה נפרדת. ראו Open Questions לתלות סדר-מיזוג מול PR #80
   שעדיין פתוח)
-- [ ] Design — designer — not started
+- [x] Design — designer — 2026-10-11 (פאד עובר ל-`inset-inline-end`
+  — פינה שמאלית-תחתונה, הפינה היחידה הפנויה בפריסת PR #80; בורר חדש
+  הוא toggle בינארי, לא שורת-אפשרויות, כי זו בחירה אמת-או-שקר — אותו
+  מנגנון כמו "להקריא את השאלות בקול" הקיים; כפתור ⚙️ חדש יושב **לצד**
+  המינימפ הקיים, לא מעליו/מתחתיו, כדי לא לחזור על בעיית-גובה-stage-קצר
+  שכבר תועדה ב-PR #80. ראו design.md, "הנחת-יסוד" — כל המיקומים מניחים
+  ש-PR #80 כבר ב-`main`)
 - [ ] Architecture — tech-lead — not started
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** designer
+**Current phase:** tech-lead
 **Branch:** `feature/notebook-nav-buttons-visibility`
 **PR:** not opened yet
 
