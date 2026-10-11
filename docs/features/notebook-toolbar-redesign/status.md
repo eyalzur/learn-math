@@ -42,9 +42,9 @@
   בקובץ הבדיקות זזה *מהפינה והלאה*. `17/17` בקובץ, `446/446` בסוויטה
   המלאה, ריצה בודדת ונקייה)
 
-**Current phase:** done — ממתין ל-PR ולריוויו
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `feature/notebook-toolbar-redesign`
-**PR:** not opened yet
+**PR:** [#80](https://github.com/eyalzur/learn-math/pull/80) — מוזג 2026-10-11
 
 ## Open questions / blockers
 None.
