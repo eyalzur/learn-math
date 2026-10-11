@@ -75,9 +75,9 @@
   של הפרויקט כולו לא בודקת מובייל בכלל — ראו architecture.md, "תיקון
   רביעי")
 
-**Current phase:** done — ready to open PR
+**Current phase:** done — ממתין לריוויו ולמיזוג
 **Branch:** `feature/notebook-nav-buttons-visibility`
-**PR:** not opened yet
+**PR:** [#81](https://github.com/eyalzur/learn-math/pull/81)
 
 ## Open questions / blockers
 - **Product (נפתר 2026-10-11):** תלות סדר מיזוג מול PR #80 — הספק הניח
