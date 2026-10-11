@@ -43,6 +43,12 @@ interface PracticeProps {
    *  through to the notebook, same as `holdZoomFactor`. */
   panStepPx: number;
   panHoldIntervalMs: number | null;
+  /** This student's notebook toolbar button diameter, already resolved to pixels. See
+   *  docs/features/notebook-toolbar-redesign/. */
+  buttonDiameterPx: number;
+  /** How long after a stroke/pan ends before the suggested-next-action animation starts, or
+   *  `null` when the student has it switched off. */
+  suggestionDelayMs: number | null;
   /** Fires once per question, right after right/wrong is decided — before the child even
    *  sees the feedback or explanation. Only an adaptive lesson supplies this; every other
    *  lesson leaves it unset and nothing here changes for it. */
@@ -58,6 +64,8 @@ export function Practice({
   autoScrollJumpFraction,
   panStepPx,
   panHoldIntervalMs,
+  buttonDiameterPx,
+  suggestionDelayMs,
   onAnswered,
 }: PracticeProps) {
   const [index, setIndex] = useState(0);
@@ -724,6 +732,8 @@ export function Practice({
         autoScrollJumpFraction={autoScrollJumpFraction}
         panStepPx={panStepPx}
         panHoldIntervalMs={panHoldIntervalMs}
+        buttonDiameterPx={buttonDiameterPx}
+        suggestionDelayMs={suggestionDelayMs}
       />
       {!fullscreen && sendState === "error" && (
         <p className="notebook-send-error" aria-live="polite">

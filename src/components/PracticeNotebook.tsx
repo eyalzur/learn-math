@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import type { DrawTool, NotebookPage, PanZoom } from "../data/notebook";
 import {
@@ -71,6 +71,12 @@ interface PracticeNotebookProps {
    *  holding still performs the one step the press itself already did, it just never
    *  repeats on its own. */
   panHoldIntervalMs: number | null;
+  /** This student's notebook toolbar button diameter, already resolved to pixels. See
+   *  docs/features/notebook-toolbar-redesign/. */
+  buttonDiameterPx: number;
+  /** How long after a stroke/pan ends before the suggested-next-action animation starts, or
+   *  `null` when the student has it switched off (the mechanic doesn't exist at all then). */
+  suggestionDelayMs: number | null;
 }
 
 /**
@@ -141,6 +147,8 @@ export function PracticeNotebook({
   autoScrollJumpFraction,
   panStepPx,
   panHoldIntervalMs,
+  buttonDiameterPx,
+  suggestionDelayMs,
 }: PracticeNotebookProps) {
   const [tool, setTool] = useState<DrawTool | "pan">("pen");
   /** Which destructive action, if any, is waiting on confirmation — "remove" (a whole page)
@@ -159,6 +167,10 @@ export function PracticeNotebook({
    *  restores: the exact zoom/pan from right before the first press, not a re-derived guess. */
   const [viewingWholePage, setViewingWholePage] = useState(false);
   const savedTransform = useRef<PanZoom | null>(null);
+  /** Which button (if any) the "suggested next action" animation currently points at — a
+   *  real React state, not a ref, because it drives a CSS attribute in the JSX (`pan`/`pen`
+   *  only; the eraser is never suggested). See docs/features/notebook-toolbar-redesign/. */
+  const [suggestedTool, setSuggestedTool] = useState<"pan" | "pen" | null>(null);
 
   // Drawing mutates currentPage.filledCells directly through refs, on purpose (see the
   // comment on panZoomRef above) — a pointermove can fire dozens of times a second, and
@@ -195,6 +207,9 @@ export function PracticeNotebook({
   } | null>(null);
   const recordingCells = useRef<string[] | null>(null);
   const recordingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Suggested-next-action — see docs/features/notebook-toolbar-redesign/architecture.md.
+  const suggestTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Hold-to-zoom state — see the constants above and
   // docs/features/notebook-hold-to-zoom/architecture.md for the full mechanism.
@@ -380,6 +395,7 @@ export function PracticeNotebook({
       if (transitionClearTimer.current) clearTimeout(transitionClearTimer.current);
       if (panHoldTimer.current) clearTimeout(panHoldTimer.current);
       if (panHoldInterval.current) clearInterval(panHoldInterval.current);
+      if (suggestTimer.current) clearTimeout(suggestTimer.current);
     };
   }, []);
 
@@ -545,6 +561,26 @@ export function PracticeNotebook({
     animateTransformTo({ panX: nextPanX, panY: nextPanY, zoom }, AUTO_SCROLL_JUMP_TRANSITION_MS);
   }
 
+  /** Schedules the "suggested next action" pulse on the hand or pen button, after
+   *  `suggestionDelayMs` of stillness — called when a pen stroke just ended (target "pan")
+   *  or a pan just ended (target "pen"). "off" (`suggestionDelayMs === null`) never arms
+   *  anything, same reasoning as `holdZoomFactorRef`'s own "off" check elsewhere. */
+  function armSuggestion(target: "pan" | "pen") {
+    if (suggestTimer.current) clearTimeout(suggestTimer.current);
+    if (suggestionDelayMs === null) return;
+    suggestTimer.current = setTimeout(() => setSuggestedTool(target), suggestionDelayMs);
+  }
+
+  /** Cancels any pending or active suggestion immediately — real movement started, or a
+   *  tool button was pressed, so whatever the page was suggesting is no longer relevant. */
+  function clearSuggestion() {
+    if (suggestTimer.current) {
+      clearTimeout(suggestTimer.current);
+      suggestTimer.current = null;
+    }
+    setSuggestedTool(null);
+  }
+
   function startRecording() {
     recordingCells.current = [];
     if (recordingTimer.current) clearTimeout(recordingTimer.current);
@@ -586,6 +622,9 @@ export function PracticeNotebook({
     activePointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (activePointers.current.size === 1) {
       if (toolRef.current === "pan") {
+        // Real movement is starting — whatever was suggested (if anything) no longer
+        // applies. See docs/features/notebook-toolbar-redesign/architecture.md.
+        clearSuggestion();
         singlePanStart.current = {
           x: e.clientX,
           y: e.clientY,
@@ -595,6 +634,10 @@ export function PracticeNotebook({
       } else if (!lockedRef.current) {
         // Once the page has been checked, pen/eraser stop marking it — but panning and
         // pinch-zoom (below) stay live so the student can still look the page over.
+        // A new stroke starting also clears any pending suggestion, even the same tool's
+        // own — see architecture.md's Risks/Tradeoffs for why this goes beyond what
+        // design.md spelled out explicitly.
+        clearSuggestion();
         drawing.current = true;
         lastPoint.current = null;
         strokeBoundsRef.current = null;
@@ -720,6 +763,7 @@ export function PracticeNotebook({
       holdZoomDownPos.current = null;
     }
     const wasDrawing = drawing.current;
+    const wasPanning = singlePanStart.current !== null;
     const finishedStrokeBounds = strokeBoundsRef.current;
     activePointers.current.delete(e.pointerId);
     drawing.current = false;
@@ -733,6 +777,15 @@ export function PracticeNotebook({
       // restored base view rather than being overwritten by it — see architecture.md.
       maybeJumpForNewStroke(finishedStrokeBounds, lastStrokeBoundsRef.current);
       lastStrokeBoundsRef.current = finishedStrokeBounds;
+    }
+    // Suggest the next action — a pan that just ended suggests the pen (even over a pen
+    // stroke that also just ended, which can't happen on the same pointer anyway); a pen
+    // stroke ending on its own suggests the hand. The eraser never arms a suggestion. See
+    // docs/features/notebook-toolbar-redesign/architecture.md.
+    if (wasPanning) {
+      armSuggestion("pen");
+    } else if (wasDrawing && toolRef.current === "pen") {
+      armSuggestion("pan");
     }
     if (activePointers.current.size === 1) {
       const [, p] = Array.from(activePointers.current.entries())[0];
@@ -792,13 +845,18 @@ export function PracticeNotebook({
 
   /** A quick tap: onClick fires once from the button itself. A hold firing this already
    *  means the click that follows release is the same press, not a second one — skip it
-   *  rather than panning one extra step. */
+   *  rather than panning one extra step. Also the only suggestion-clearing path a keyboard
+   *  activation (Enter/Space, no pointerdown at all) ever goes through — see
+   *  architecture.md — so it clears on entry and re-arms "pen" on its own, not only via
+   *  `stopPanHold`. */
   function panButtonClick(dx: number, dy: number) {
+    clearSuggestion();
     if (panHoldFired.current) {
       panHoldFired.current = false;
       return;
     }
     panButton(dx, dy);
+    armSuggestion("pen");
   }
 
   /** Arms on pointerdown: after PAN_HOLD_DELAY_MS of still holding, starts repeating the
@@ -808,6 +866,7 @@ export function PracticeNotebook({
    *  to silently absorb it. "off" (`panHoldIntervalMs === null`) doesn't arm anything at
    *  all — the press's own onClick already moved one step, and that's all "off" promises. */
   function startPanHold(dx: number, dy: number) {
+    clearSuggestion();
     if (panHoldIntervalMs === null) return;
     panHoldFired.current = false;
     panHoldTimer.current = setTimeout(() => {
@@ -831,6 +890,9 @@ export function PracticeNotebook({
       clearInterval(panHoldInterval.current);
       panHoldInterval.current = null;
     }
+    // Fired on every release (tap or end-of-hold) — the nav-pad equivalent of the drag
+    // path's "pan just ended" branch in endPointer. See architecture.md.
+    armSuggestion("pen");
   }
 
   /** Toggle for "הצג את כל הדף" — zooms out to fit the entire page (reusing
@@ -906,27 +968,57 @@ export function PracticeNotebook({
         <span className="notebook-zoom-readout">{zoomPercent}%</span>
       </div>
 
-      <div className="notebook-stage" ref={stageRef} onWheel={handleWheel}>
-        <div className="notebook-stack" ref={stackRef}>
-          <canvas
-            ref={canvasRef}
-            className="notebook-canvas"
-            aria-label="דף כתיבה במחברת"
-            onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={endPointer}
-            onPointerCancel={endPointer}
-            // Some Android browsers show a context menu on a long press even with
-            // touch-action:none — left uncaught, that native menu is one more way a
-            // held touch can get interrupted mid hold-to-zoom. See
-            // docs/features/notebook-hold-to-zoom/, "עדכון סבב ג׳".
-            onContextMenu={(e) => e.preventDefault()}
-          />
+      {/* .notebook-stage itself stays exactly the clipping pan/zoom viewport it always
+          was (several e2e tests already treat it as that — see
+          tests/e2e/helpers/notebookAnswer.ts's comment on .notebook-stage{overflow:hidden}
+          — so its own class, size and behavior must not change). This outer frame exists
+          only so the floating button columns below (siblings of .notebook-stage, not
+          children of it) are free to extend past the stage's own box on a short embedded
+          view without being clipped to invisible — found during manual verification of
+          this feature: the embedded (non-fullscreen) stage can be as short as ~190px,
+          too short for the new 5-button zoom column, and .notebook-stage's overflow:hidden
+          silently clipped it there, landing its click target on "הסר דף" underneath. See
+          docs/features/notebook-toolbar-redesign/status.md. */}
+      <div className="notebook-stage-frame">
+        <div className="notebook-stage" ref={stageRef} onWheel={handleWheel}>
+          <div className="notebook-stack" ref={stackRef}>
+            <canvas
+              ref={canvasRef}
+              className="notebook-canvas"
+              aria-label="דף כתיבה במחברת"
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={endPointer}
+              onPointerCancel={endPointer}
+              // Some Android browsers show a context menu on a long press even with
+              // touch-action:none — left uncaught, that native menu is one more way a
+              // held touch can get interrupted mid hold-to-zoom. See
+              // docs/features/notebook-hold-to-zoom/, "עדכון סבב ג׳".
+              onContextMenu={(e) => e.preventDefault()}
+            />
+          </div>
         </div>
+        {/* Moved to the opposite top corner from .notebook-zoom-controls (below) — the
+            zoom column takes over top-left per the redesign, so the minimap (purely
+            informational, not interactive) moves to top-right instead of stacking under
+            it. See docs/features/notebook-toolbar-redesign/. */}
         <div className="notebook-minimap" ref={minimapRef} aria-hidden="true">
           <div className="notebook-minimap-view" ref={minimapViewRef} />
         </div>
-        <div className="notebook-zoom-controls">
+        {/* Zoom/fullscreen/whole-page/clear, now one column pinned top-left — see
+            docs/features/notebook-toolbar-redesign/design.md for the exact icon order
+            (fullscreen first, clear last behind a small gap, not a line). */}
+        <div
+          className="notebook-zoom-controls"
+          style={{ "--notebook-btn-size": `${buttonDiameterPx}px` } as CSSProperties}
+        >
+          <button
+            type="button"
+            onClick={onToggleFullscreen}
+            aria-label={fullscreen ? "צאו ממסך מלא" : "הגדילו את המחברת למסך מלא"}
+          >
+            {fullscreen ? "✕" : "⤢"}
+          </button>
           <button type="button" onClick={() => zoomButton(1.3)} aria-label="הגדל">
             +
           </button>
@@ -941,12 +1033,9 @@ export function PracticeNotebook({
           >
             ⛶
           </button>
-          <button
-            type="button"
-            onClick={onToggleFullscreen}
-            aria-label={fullscreen ? "צאו ממסך מלא" : "הגדילו את המחברת למסך מלא"}
-          >
-            {fullscreen ? "✕" : "⤢"}
+          {/* Moved in from .notebook-toolbar — see docs/features/notebook-toolbar-redesign/. */}
+          <button type="button" className="notebook-clear-btn" onClick={requestClearPage} aria-label="נקה דף">
+            🧹
           </button>
         </div>
         {/* Spatial, not reading-order: these pan the view by its screen-visible direction
@@ -1010,17 +1099,38 @@ export function PracticeNotebook({
             </button>
           </div>
         </div>
-      </div>
-
-      {fullscreen && statusSlot}
-
-      <div className="notebook-toolbar">
-        <div className="tool-group" role="group" aria-label="כלי כתיבה">
+        {/* Tool switcher, moved out of .notebook-toolbar into its own corner column — see
+            docs/features/notebook-toolbar-redesign/. Same bottom-end corner as
+            .notebook-pan-controls (per design.md), positioned beside it rather than
+            stacked above it — see the CSS for why. */}
+        <div
+          className="notebook-tool-controls"
+          role="group"
+          aria-label="כלי כתיבה"
+          style={{ "--notebook-btn-size": `${buttonDiameterPx}px` } as CSSProperties}
+        >
+          <button
+            type="button"
+            className="tool-btn"
+            aria-pressed={tool === "pan"}
+            data-suggested={suggestedTool === "pan"}
+            onClick={() => {
+              clearSuggestion();
+              setTool("pan");
+            }}
+            aria-label="הזזה"
+          >
+            ✋
+          </button>
           <button
             type="button"
             className="tool-btn"
             aria-pressed={tool === "pen"}
-            onClick={() => setTool("pen")}
+            data-suggested={suggestedTool === "pen"}
+            onClick={() => {
+              clearSuggestion();
+              setTool("pen");
+            }}
             aria-label="עט"
           >
             ✏️
@@ -1029,24 +1139,22 @@ export function PracticeNotebook({
             type="button"
             className="tool-btn"
             aria-pressed={tool === "eraser"}
-            onClick={() => setTool("eraser")}
+            onClick={() => {
+              clearSuggestion();
+              setTool("eraser");
+            }}
             aria-label="מחק"
           >
             🧽
           </button>
-          <button
-            type="button"
-            className="tool-btn"
-            aria-pressed={tool === "pan"}
-            onClick={() => setTool("pan")}
-            aria-label="הזזה"
-          >
-            ✋
-          </button>
         </div>
-        {/* Prev/next stay right after the tool group — the page-nav actions actually used while
-            solving. Add/remove page (below) come last: used far less often, so they're the
-            ones that scroll out of view first if the row doesn't fully fit. */}
+      </div>
+
+      {fullscreen && statusSlot}
+
+      <div className="notebook-toolbar">
+        {/* Prev/next page-nav, add-page and remove-page only — the pen/eraser/pan tool group
+            moved to .notebook-tool-controls above. See docs/features/notebook-toolbar-redesign/. */}
         <div className="notebook-page-nav">
           <button
             type="button"
@@ -1070,16 +1178,11 @@ export function PracticeNotebook({
             +
           </button>
         </div>
-        {/* Furthest from the pen/eraser/pan tool-group on purpose — increasingly destructive
-            actions least likely to be hit by accident while reaching for the writing tools.
-            The page-nav group above already sits at this same far edge (see
-            .notebook-page-nav:last-of-type's margin-inline-start:auto), so placing these
-            after it keeps them at that same edge with no extra CSS. "נקה דף" (clears this
-            page's content) sits before "הסר דף" (removes the whole page, the more severe
-            of the two) — the more severe action is the very last, hardest-to-reach button. */}
-        <button type="button" className="notebook-clear-btn" onClick={requestClearPage} aria-label="נקה דף">
-          🧹
-        </button>
+        {/* "נקה דף" moved to .notebook-zoom-controls (see above) — "הסר דף" is the more
+            destructive of the two and stays here, furthest from the writing tools. The
+            page-nav group above already sits at this far edge (see
+            .notebook-page-nav:last-of-type's margin-inline-start:auto), so placing it after
+            them keeps it at that same edge with no extra CSS. */}
         <button
           type="button"
           className="notebook-remove-btn"

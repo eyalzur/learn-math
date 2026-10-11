@@ -8,11 +8,15 @@
  */
 import {
   AUTO_SCROLL_JUMP_LEVELS,
+  BUTTON_SIZE_LEVELS,
   DEFAULT_AUTO_SCROLL_JUMP_LEVEL,
+  DEFAULT_BUTTON_SIZE_LEVEL,
   DEFAULT_HOLD_ZOOM_LEVEL,
   DEFAULT_PAN_SPEED_LEVEL,
+  DEFAULT_SUGGESTION_SENSITIVITY_LEVEL,
   HOLD_ZOOM_LEVELS,
   PAN_SPEED_LEVELS,
+  SUGGESTION_SENSITIVITY_LEVELS,
 } from "./notebook";
 
 const STORAGE_KEY = "learn-math:preferences";
@@ -33,6 +37,12 @@ interface Preferences {
   /** Student id → which pan-button speed (a `PAN_SPEED_LEVELS` id, "off" included) — same
    *  id-not-number reasoning as `holdZoomLevel` above. */
   panSpeedLevel?: Record<string, string>;
+  /** Student id → which notebook toolbar button size (a `BUTTON_SIZE_LEVELS` id, no "off" —
+   *  a button always has some size). Same id-not-number reasoning as the others. */
+  buttonSizeLevel?: Record<string, string>;
+  /** Student id → which suggested-next-action sensitivity (a `SUGGESTION_SENSITIVITY_LEVELS`
+   *  id, "off" included). Same id-not-number reasoning as `holdZoomLevel` above. */
+  suggestionSensitivityLevel?: Record<string, string>;
 }
 
 /**
@@ -126,6 +136,53 @@ export function setPanSpeedLevel(studentId: string, levelId: string): void {
     localStorage.setItem(
       STORAGE_KEY,
       JSON.stringify({ ...all, panSpeedLevel: { ...all.panSpeedLevel, [studentId]: levelId } }),
+    );
+  } catch {
+    // ignore
+  }
+}
+
+/**
+ * Which notebook toolbar button size this student is set to. Same validation-with-fallback
+ * as `holdZoomLevel` above.
+ */
+export function buttonSizeLevel(studentId: string): string {
+  const stored = readAll().buttonSizeLevel?.[studentId];
+  return BUTTON_SIZE_LEVELS.some((level) => level.id === stored) ? stored! : DEFAULT_BUTTON_SIZE_LEVEL;
+}
+
+export function setButtonSizeLevel(studentId: string, levelId: string): void {
+  try {
+    const all = readAll();
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ ...all, buttonSizeLevel: { ...all.buttonSizeLevel, [studentId]: levelId } }),
+    );
+  } catch {
+    // ignore
+  }
+}
+
+/**
+ * Which suggested-next-action sensitivity this student is set to. Same
+ * validation-with-fallback as `holdZoomLevel` above.
+ */
+export function suggestionSensitivityLevel(studentId: string): string {
+  const stored = readAll().suggestionSensitivityLevel?.[studentId];
+  return SUGGESTION_SENSITIVITY_LEVELS.some((level) => level.id === stored)
+    ? stored!
+    : DEFAULT_SUGGESTION_SENSITIVITY_LEVEL;
+}
+
+export function setSuggestionSensitivityLevel(studentId: string, levelId: string): void {
+  try {
+    const all = readAll();
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        ...all,
+        suggestionSensitivityLevel: { ...all.suggestionSensitivityLevel, [studentId]: levelId },
+      }),
     );
   } catch {
     // ignore
