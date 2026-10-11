@@ -6,6 +6,7 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
+| פאד הניווט במחברת: לצד שמאל, כבוי כברירת מחדל, ונגיש מהדף עצמו | 🟡 in design | [status](./notebook-nav-buttons-visibility/status.md) |
 | גלילה אוטומטית במחברת לפי כיוון הכתיבה | 🟢 done — מוזג ל-main | [status](./notebook-auto-scroll/status.md) |
 | הגדרת מהירות כפתורי הניווט במחברת | 🟢 done — מוזג ל-main | [status](./notebook-nav-settings/status.md) |
 | כפתורי ניווט במחברת — פאד כיוונים | 🟢 done — מוזג ל-main | [status](./notebook-nav-buttons/status.md) |
