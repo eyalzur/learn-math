@@ -1800,14 +1800,21 @@ button.secondary {
 
 /* Tool switcher (hand/pen/eraser) — bottom-right (physical), per
    docs/features/notebook-toolbar-redesign/design.md ("עמודת כלים — פינה ימנית-תחתונה").
-   Flush at the edge (inset-inline-start: 10px) rather than shifted inward — that extra
-   offset existed only to sit beside .notebook-pan-controls when both lived on this same
-   side; the pad moved to the opposite side in docs/features/notebook-nav-buttons-visibility/,
-   so nothing shares this corner with it any more. */
+   NOT flush at the edge (inset-inline-start: 10px, like .notebook-zoom-controls on the
+   opposite side) — that was tried and broke on a real mobile viewport (iPhone/Pixel-size,
+   narrow AND short, never checked until the user explicitly asked — this app's whole e2e
+   suite only ever runs at the desktop default). .notebook-minimap sits top-anchored on
+   this exact same physical side (inset-inline-start: 10px, top: 10px, 82px tall); on a
+   mobile-height embedded stage, minimap (82px, top) and a flush bottom-anchored tool
+   column (136px) together need 218px+ and the real stage is shorter than that — same
+   mechanism as .notebook-zoom-controls overflowing past .notebook-pan-controls, just on
+   the opposite side and against the minimap instead of the zoom column. inset-inline-
+   start: 82px (= minimap's own 10px offset + its 62px width + a 10px gap) clears it
+   horizontally instead, so it no longer depends on the stage's height at all. */
 .notebook-tool-controls {
   position: absolute;
   bottom: 10px;
-  inset-inline-start: 10px;
+  inset-inline-start: 82px;
   display: flex;
   flex-direction: column;
   gap: 8px;
