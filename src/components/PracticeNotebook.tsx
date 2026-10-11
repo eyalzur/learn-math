@@ -1015,10 +1015,9 @@ export function PracticeNotebook({
           <div className="notebook-minimap-view" ref={minimapViewRef} />
         </div>
         {/* Reaches the same ⚙️ dialog as the topic-list screen, without leaving the
-            question in progress — sits beside the minimap, not above/below it, for the
-            same short-embedded-stage reason .notebook-tool-controls sits beside
-            .notebook-pan-controls rather than stacked on it. See docs/features/
-            notebook-nav-buttons-visibility/. */}
+            question in progress — left side, at the bottom, per explicit user feedback on
+            the preview (was beside the minimap at first). See docs/features/
+            notebook-nav-buttons-visibility/, App.css's .notebook-settings-btn. */}
         <button
           type="button"
           className="notebook-settings-btn"

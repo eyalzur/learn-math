@@ -1695,15 +1695,23 @@ button.secondary {
 }
 
 /* Reaches the ⚙️ dialog without leaving the question in progress — see docs/features/
-   notebook-nav-buttons-visibility/. Sits beside .notebook-minimap (inset-inline-start:
-   80px = the minimap's own 10px offset + its 60px width + a 10px gap), not above or below
-   it — stacking vertically on a short embedded stage is exactly the bug
-   docs/features/notebook-toolbar-redesign/ already hit and fixed for .notebook-zoom-controls,
-   and side-by-side has no dependency on the stage's height at all. */
+   notebook-nav-buttons-visibility/. Left side, at the bottom (physical — inset-inline-end
+   resolves to the left edge under this app's RTL direction, same mapping as
+   .notebook-zoom-controls above), per explicit user feedback on the preview. Was beside
+   .notebook-minimap (top-right) at first.
+   NOT flush at inset-inline-end:10px (the raw edge, same as .notebook-zoom-controls) —
+   measured on the real embedded stage (1280x720 test viewport, frame ~190px tall): the
+   zoom column (240px, top-anchored) overflows ~60px past the frame's own bottom edge, so
+   a bottom-anchored element flush at that same edge still lands inside the zoom column's
+   footprint even though the two are anchored to opposite corners — confirmed via a real
+   click-interception failure ("הצגת כל הדף" swallowing clicks meant for ⚙️). Same
+   inset-inline-end: 68px lane as .notebook-pan-controls (10px zoom offset + 48px max
+   button width + 10px gap) clears the zoom column horizontally instead, and bottom vs.
+   the pad's top keeps the two apart from each other too. */
 .notebook-settings-btn {
   position: absolute;
-  top: 10px;
-  inset-inline-start: 80px;
+  bottom: 10px;
+  inset-inline-end: 68px;
   padding: 0;
   width: var(--notebook-btn-size, 40px);
   height: var(--notebook-btn-size, 40px);
