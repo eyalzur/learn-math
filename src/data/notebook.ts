@@ -315,3 +315,66 @@ export const DEFAULT_AUTO_SCROLL_JUMP_LEVEL = "medium";
 export function autoScrollJumpFractionFor(levelId: string): number | null {
   return AUTO_SCROLL_JUMP_LEVELS.find((level) => level.id === levelId)?.jumpFraction ?? null;
 }
+
+/**
+ * How big the notebook's circular toolbar buttons (the zoom/clear column and the
+ * hand/pen/eraser column, both see docs/features/notebook-toolbar-redesign/) render, as a
+ * per-student choice. No "off" here — a button always has some size, unlike the other
+ * pickers, which toggle a behavior on or off.
+ */
+export interface ButtonSizeLevel {
+  id: string;
+  label: string;
+  diameterPx: number;
+}
+
+export const BUTTON_SIZE_LEVELS: ButtonSizeLevel[] = [
+  { id: "small", label: "קטן", diameterPx: 32 },
+  { id: "medium", label: "בינוני", diameterPx: 40 },
+  { id: "large", label: "גדול", diameterPx: 48 },
+];
+
+/** Close to the existing `.tool-btn` footprint (36px) so the default doesn't change the
+ *  feel drastically for a student who never opens the setting. */
+export const DEFAULT_BUTTON_SIZE_LEVEL = "medium";
+
+/** The diameter for a stored level id, falling back to the default level's diameter when
+ *  the id is unknown-but-somehow-present — same shape as `panSpeedFor`. */
+export function buttonSizeFor(levelId: string): number {
+  const level =
+    BUTTON_SIZE_LEVELS.find((l) => l.id === levelId) ??
+    BUTTON_SIZE_LEVELS.find((l) => l.id === DEFAULT_BUTTON_SIZE_LEVEL)!;
+  return level.diameterPx;
+}
+
+/**
+ * How long after a stroke ends (or a pan ends) before the "suggested next action" animation
+ * starts on the hand/pen button — a per-student choice, six options mirroring
+ * `HOLD_ZOOM_LEVELS`: "off" first, then five rising speeds. "off" disables the suggestion
+ * mechanic entirely, in both directions. See docs/features/notebook-toolbar-redesign/.
+ */
+export interface SuggestionSensitivityLevel {
+  id: string;
+  label: string;
+  /** Milliseconds of stillness before the suggestion appears, or `null` for "off". */
+  delayMs: number | null;
+}
+
+export const SUGGESTION_SENSITIVITY_LEVELS: SuggestionSensitivityLevel[] = [
+  { id: "off", label: "כבוי", delayMs: null },
+  { id: "verySlow", label: "איטי מאוד", delayMs: 3000 },
+  { id: "slow", label: "איטי", delayMs: 2200 },
+  { id: "medium", label: "בינוני", delayMs: 1500 },
+  { id: "fast", label: "מהיר", delayMs: 900 },
+  { id: "veryFast", label: "מהיר מאוד", delayMs: 500 },
+];
+
+/** No level here has real-device evidence behind it yet, same reasoning as
+ *  `DEFAULT_AUTO_SCROLL_JUMP_LEVEL` — the default is the middle of the scale. */
+export const DEFAULT_SUGGESTION_SENSITIVITY_LEVEL = "medium";
+
+/** The delay for a stored level id, or `null` when the level is "off" *or* the id is
+ *  unknown-but-somehow-present. */
+export function suggestionDelayFor(levelId: string): number | null {
+  return SUGGESTION_SENSITIVITY_LEVELS.find((level) => level.id === levelId)?.delayMs ?? null;
+}

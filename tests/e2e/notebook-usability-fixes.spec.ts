@@ -269,17 +269,18 @@ test("a flagged-but-correct answer still counts as correct in the final score", 
 // Acceptance criteria under test: product-spec.md, "Acceptance Criteria — עדכון (סבב
 // רוויזיה א׳)".
 
-test('"הסר דף" sits at the very far edge of the toolbar, past "נקה דף"', async ({ page }) => {
+test('"הסר דף" sits at the far edge of the toolbar, past "דף חדש"', async ({ page }) => {
+  // Updated by notebook-toolbar-redesign: "נקה דף" and the pen/eraser/pan group it used to
+  // sit near both moved out of .notebook-toolbar entirely (into .notebook-zoom-controls and
+  // .notebook-tool-controls respectively), so this toolbar's own "most destructive action
+  // furthest along" ordering is now just page-nav → "דף חדש" → "הסר דף".
   await openLevel(page);
   const removeBox = await page.getByRole("button", { name: "הסר דף" }).boundingBox();
-  const clearBox = await page.getByRole("button", { name: "נקה דף" }).boundingBox();
-  const penBox = await page.getByRole("button", { name: "עט" }).boundingBox();
-  if (!removeBox || !clearBox || !penBox) throw new Error("toolbar button not found");
-  // RTL row: the pen/eraser/pan group sits at the row's start (largest x), and each button
-  // further from it is further along in reading order (smaller x) — "הסר דף" is the very
-  // last one, "נקה דף" the second-to-last.
-  expect(clearBox.x).toBeLessThan(penBox.x);
-  expect(removeBox.x).toBeLessThan(clearBox.x);
+  const addPageBox = await page.getByRole("button", { name: "דף חדש" }).boundingBox();
+  if (!removeBox || !addPageBox) throw new Error("toolbar button not found");
+  // RTL row: earlier-in-reading-order items sit at larger x, so "הסר דף" (last) has a
+  // smaller x than "דף חדש" (second-to-last).
+  expect(removeBox.x).toBeLessThan(addPageBox.x);
 });
 
 test("the page opens at a fixed 70% zoom with its top-left corner aligned to the stage's top-left corner, not centered", async ({
@@ -326,8 +327,10 @@ test('"הצג את כל הדף" zooms out to fit the whole page, and a second pr
 
   // Located by position, not by its own accessible name: that name flips between "הצגת כל
   // הדף" and "חזרה לזום הקודם" depending on state, so a locator built from one of those
-  // names stops matching the moment the state (and the name) changes.
-  const wholePageButton = page.locator(".notebook-zoom-controls button").nth(2);
+  // names stops matching the moment the state (and the name) changes. Index 3, not 2 —
+  // notebook-toolbar-redesign reordered this column to ⤢,+,−,⛶,🧹 (fullscreen first, per
+  // design.md), so the whole-page toggle moved from index 2 to index 3.
+  const wholePageButton = page.locator(".notebook-zoom-controls button").nth(3);
   await expect(wholePageButton).toHaveAccessibleName("הצגת כל הדף");
   await wholePageButton.click();
   await expect(wholePageButton).toHaveAttribute("aria-pressed", "true");
