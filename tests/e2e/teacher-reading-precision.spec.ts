@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { generateEquationsQuestion } from "../../src/data/adaptiveEquations";
 import { answerViaNotebook } from "./helpers/notebookAnswer";
 
 /**
@@ -15,18 +16,57 @@ import { answerViaNotebook } from "./helpers/notebookAnswer";
  *   existing errorPointer-display tests) — it would say nothing about whether the real
  *   model picks the right register for a real page. See tests.md for what was verified by
  *   hand instead (the developer phase's own prompt-string check).
- * - **Varied analogies for `x + A = B` / `x − A = B`** IS fully deterministic and testable:
- *   this file generates additive-equation questions through the real notebook flow (mocking
- *   only /read-page, per the existing `answerViaNotebook` helper — never a real, paid
- *   Claude call) and checks the analogy shown for each.
- *
- * A single practice session on this topic holds exactly 20 questions
- * (`EQUATIONS_QUESTION_COUNT`, confirmed by the on-screen "שאלה N מתוך 20" counter and by
- * the "סיום" button replacing "הבא" on the last one — found by running the real app, not by
- * reading the generator's source) — every additive-equation sample this file needs is
- * collected in one such session instead of three, both for speed and to avoid the one real
- * trap here: clicking past "סיום" lands on a results screen with no more questions to read.
+ * - **Varied analogies for `x + A = B` / `x − A = B`** IS fully deterministic and testable —
+ *   in two complementary ways:
+ *   1. One small end-to-end UI test proves the real notebook flow actually renders an
+ *      analogy on screen in the "unknown starting amount, solved backwards" shape (mocking
+ *      only /read-page, never a real paid Claude call).
+ *   2. A bulk, data-level check — calling the real `generateEquationsQuestion` directly
+ *      (the same function `tests/e2e/content.spec.ts` already imports this way for every
+ *      other adaptive generator's content rules, not a reimplementation) — proves variety
+ *      and that the original analogies are kept, with enough draws that the result is
+ *      actually deterministic rather than hoping one random UI session happens to be lucky.
+ *      A first attempt did this entirely through one live 20-question UI session; it was
+ *      flaky by construction (with only a handful of draws per direction among 4 uniformly
+ *      random options, a perfectly healthy run has a real chance of never landing on the
+ *      original one) and failed exactly that way in CI — this version fixes that.
  */
+
+function additiveDirection(prompt: string): "plus" | "minus" | null {
+  if (/^x\s*\+\s*\d+\s*=\s*-?\d+/.test(prompt)) return "plus";
+  if (/^x\s*[−-]\s*\d+\s*=\s*-?\d+/.test(prompt)) return "minus";
+  return null;
+}
+
+test("bulk: additive-equation analogies vary per direction and keep the original options", () => {
+  const plusAnalogies: string[] = [];
+  const minusAnalogies: string[] = [];
+
+  // 1000 draws at the easiest difficulty (where every wrong answer in the UI test below
+  // stays) is enough to make "never landing on a specific 1-of-4 option" astronomically
+  // unlikely for a healthy implementation, instead of a real chance for a small live sample.
+  for (let i = 0; i < 1000; i++) {
+    const q = generateEquationsQuestion(1, Math.random);
+    const direction = additiveDirection(q.prompt);
+    if (direction === "plus") plusAnalogies.push(q.analogy);
+    else if (direction === "minus") minusAnalogies.push(q.analogy);
+  }
+
+  expect(plusAnalogies.length, "no x+A=B draws at all in 1000 tries").toBeGreaterThan(0);
+  expect(minusAnalogies.length, "no x−A=B draws at all in 1000 tries").toBeGreaterThan(0);
+
+  expect(new Set(plusAnalogies).size, `+ analogies: ${[...new Set(plusAnalogies)].join(" | ")}`).toBeGreaterThan(1);
+  expect(new Set(minusAnalogies).size, `− analogies: ${[...new Set(minusAnalogies)].join(" | ")}`).toBeGreaterThan(1);
+
+  expect(plusAnalogies.some((a) => a.includes("חסכת")), "original + analogy ('חסכת...') missing").toBe(true);
+  expect(minusAnalogies.some((a) => a.includes("הוצאת")), "original − analogy ('הוצאת...') missing").toBe(true);
+
+  // Every analogy in both pools follows the "unknown starting amount, solved backwards"
+  // shape design.md requires — not just the original two.
+  for (const analogy of [...new Set(plusAnalogies), ...new Set(minusAnalogies)]) {
+    expect(analogy, analogy).toMatch(/מלכתחילה|בהתחלה/);
+  }
+});
 
 async function openEquationsTopic(page: Page) {
   await page.goto("/learn-math/");
@@ -35,21 +75,6 @@ async function openEquationsTopic(page: Page) {
   await page.locator(".student-card", { hasText: "עומר" }).click();
   await page.locator(".grade-card", { hasText: "כיתה ח" }).click();
   await page.locator(".topic-card", { hasText: "משוואות" }).first().click();
-}
-
-function additiveDirection(prompt: string): "plus" | "minus" | null {
-  if (/^x\s*\+\s*\d+\s*=\s*-?\d+/.test(prompt)) return "plus";
-  if (/^x\s*[−-]\s*\d+\s*=\s*-?\d+/.test(prompt)) return "minus";
-  return null;
-}
-
-/** Answers the current question (deliberately wrong, so the explanation — and its analogy
- *  — appears) and reads the analogy text shown underneath the explanation. */
-async function readAnalogyForCurrentQuestion(page: Page): Promise<string> {
-  await answerViaNotebook(page, -1); // never a real equation's answer, always "wrong"
-  const analogy = page.locator(".explanation-analogy");
-  await analogy.waitFor({ state: "visible" });
-  return (await analogy.textContent())?.trim() ?? "";
 }
 
 /** Clicks "הבא"/"סיום" and reports which one it was — "סיום" ends the session (moves to a
@@ -61,50 +86,32 @@ async function goToNextQuestion(page: Page): Promise<"next" | "finished"> {
   return label === "סיום" ? "finished" : "next";
 }
 
-test("additive-equation analogies: vary across questions, keep the original options, and keep the 'unknown starting amount' shape", async ({
+test("end-to-end: an additive-equation analogy actually renders on screen, in the real notebook flow", async ({
   page,
 }) => {
-  test.setTimeout(120_000);
+  test.setTimeout(60_000);
   await openEquationsTopic(page);
 
-  const plusAnalogies: string[] = [];
-  const minusAnalogies: string[] = [];
-
+  // A single practice session on this topic holds exactly 20 questions
+  // (EQUATIONS_QUESTION_COUNT, confirmed by the on-screen "שאלה N מתוך 20" counter and by
+  // "סיום" replacing "הבא" on the last one — found by running the real app, not by reading
+  // the generator's source). The easiest difficulty (where every wrong answer here keeps
+  // it) draws additive-pattern questions often enough in practice that one such session
+  // reliably includes at least one — this test only needs one to prove the real rendering
+  // path works; the bulk test above owns variety/originality with a sample large enough to
+  // be reliable.
   for (let i = 0; i < 20; i++) {
     const prompt = (await page.locator(".problem-box").innerText()).trim();
-    const direction = additiveDirection(prompt);
-    if (direction === "plus") plusAnalogies.push(await readAnalogyForCurrentQuestion(page));
-    else if (direction === "minus") minusAnalogies.push(await readAnalogyForCurrentQuestion(page));
-
+    if (additiveDirection(prompt)) {
+      await answerViaNotebook(page, -1); // never a real equation's answer, always "wrong"
+      const analogy = page.locator(".explanation-analogy");
+      await analogy.waitFor({ state: "visible" });
+      const text = (await analogy.textContent())?.trim() ?? "";
+      expect(text, text).toMatch(/מלכתחילה|בהתחלה/);
+      return;
+    }
     if ((await goToNextQuestion(page)) === "finished") break;
   }
 
-  // Every sample follows the "unknown starting amount, solved backwards" shape — product-
-  // spec.md's requirement that this stays true for every analogy in the new pools, not just
-  // the original two.
-  for (const analogy of [...plusAnalogies, ...minusAnalogies]) {
-    expect(analogy, analogy).toMatch(/מלכתחילה|בהתחלה/);
-  }
-
-  // Varied, not always the same sentence. Gated on at least 4 draws per direction (not just
-  // 2) on purpose: each draw picks uniformly among 4 templates, so with only 2 draws a
-  // perfectly healthy random session has a real 1-in-4 chance of landing on the same one
-  // twice and failing this honestly, not flakily. At 4+ draws that chance drops to 1-in-64 —
-  // and this topic's easiest difficulty (where every wrong answer here keeps it) draws
-  // additive-pattern questions often enough in practice that a 20-question session routinely
-  // clears this bar for both directions; skip only if an unusually lopsided session didn't.
-  if (plusAnalogies.length >= 4) {
-    expect(new Set(plusAnalogies).size, `+ analogies seen: ${plusAnalogies.join(" | ")}`).toBeGreaterThan(1);
-  }
-  if (minusAnalogies.length >= 4) {
-    expect(new Set(minusAnalogies).size, `− analogies seen: ${minusAnalogies.join(" | ")}`).toBeGreaterThan(1);
-  }
-
-  // The original savings/spent analogies are kept, not removed, among the new pool.
-  expect(plusAnalogies.some((a) => a.includes("חסכת")) || plusAnalogies.length === 0).toBe(true);
-  expect(minusAnalogies.some((a) => a.includes("הוצאת")) || minusAnalogies.length === 0).toBe(true);
-
-  // Sanity: this topic's easiest difficulty draws additive questions often enough that a
-  // single 20-question session is a meaningful sample, not an accidental near-empty one.
-  expect(plusAnalogies.length + minusAnalogies.length).toBeGreaterThan(0);
+  throw new Error("no x+A=B/x−A=B question appeared in a full 20-question session");
 });
