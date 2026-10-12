@@ -1694,6 +1694,46 @@ button.secondary {
   background: var(--accent-bg);
 }
 
+/* Reaches the ⚙️ dialog without leaving the question in progress — see docs/features/
+   notebook-nav-buttons-visibility/. Left side, at the bottom (physical — inset-inline-end
+   resolves to the left edge under this app's RTL direction, same mapping as
+   .notebook-zoom-controls above), per explicit user feedback on the preview. Was beside
+   .notebook-minimap (top-right) at first.
+   NOT flush at inset-inline-end:10px (the raw edge, same as .notebook-zoom-controls) —
+   measured on the real embedded stage (1280x720 test viewport, frame ~190px tall): the
+   zoom column (240px, top-anchored) overflows ~60px past the frame's own bottom edge, so
+   a bottom-anchored element flush at that same edge still lands inside the zoom column's
+   footprint even though the two are anchored to opposite corners — confirmed via a real
+   click-interception failure ("הצגת כל הדף" swallowing clicks meant for ⚙️). Same
+   inset-inline-end: 68px lane as .notebook-pan-controls (10px zoom offset + 48px max
+   button width + 10px gap) clears the zoom column horizontally instead, and bottom vs.
+   the pad's top keeps the two apart from each other too. */
+.notebook-settings-btn {
+  position: absolute;
+  bottom: 10px;
+  inset-inline-end: 68px;
+  padding: 0;
+  width: var(--notebook-btn-size, 40px);
+  height: var(--notebook-btn-size, 40px);
+  border-radius: 50%;
+  background: var(--bg);
+  color: var(--text-h);
+  box-shadow: var(--shadow);
+  font-size: 20px;
+}
+
+/* Fullscreen only — flush at the same edge as .notebook-zoom-controls (inset-inline-end:
+   10px, not the embedded view's 68px inward offset), per explicit user feedback on a real
+   phone: "the settings button should be at the other edge, aligned with the zoom buttons
+   and the rest on the left." The 68px offset exists only to clear .notebook-zoom-controls
+   on the short embedded stage (see the comment above .notebook-pan-controls below) — the
+   fullscreen stage is tall enough (400px+ on a real phone, measured) that the zoom
+   column's own bottom edge sits well above a flush bottom-anchored button, so the offset
+   is pure unused space here, not a safety margin. */
+.notebook-screen.fullscreen .notebook-settings-btn {
+  inset-inline-end: 10px;
+}
+
 /* Pinned top-left (physical — inset-inline-end resolves to the left edge under this app's
    RTL direction, same mapping already relied on everywhere else in this file), per the
    redesign: see docs/features/notebook-toolbar-redesign/design.md. Was bottom-anchored
@@ -1740,40 +1780,67 @@ button.secondary {
   background: var(--accent-bg);
 }
 
-/* The directional pad — bottom-right (physical), the opposite inline side from
-   .notebook-zoom-controls (top-left) so the two don't share a corner. A 3x3 grid in a
-   cross: up/down centered, left and right flanking an empty middle cell — recognizable as
+/* The directional pad — left side (physical), off by default and reachable only via the
+   ⚙️ setting added in docs/features/notebook-nav-buttons-visibility/. Was bottom-right
+   (inset-inline-start) through PR #78/#80; moved to the opposite inline side per the
+   product request.
+   Top-anchored, beside .notebook-zoom-controls, NOT bottom-anchored below it — measured on
+   the real embedded stage at the standard test viewport (1280x720): the stage is only
+   ~190px tall there, while the zoom column (5 buttons, up to 240px at default sizing) is
+   top-anchored and overflows the whole stage height. A bottom-anchored pad on the same
+   inline side landed entirely inside the zoom column's own vertical range — not an edge
+   case, a total overlap — so e.g. the center of "הקטן" actually hit "הזז שמאלה" instead
+   (confirmed via document.elementFromPoint). Putting the pad beside the zoom column
+   instead of below it removes the collision regardless of stage height — the same
+   "side-by-side beats stacking" fix already used for .notebook-tool-controls vs. this same
+   pad in docs/features/notebook-toolbar-redesign/, and again here for the same reason.
+   inset-inline-end: 68px = the zoom column's own 10px offset + its 48px max button width +
+   a 10px gap, so the two clusters never touch regardless of which is taller. A 3x3 grid in
+   a cross: up/down centered, left and right flanking an empty middle cell — recognizable as
    "move this way" without reading a single label, which matters for Mika (grade 1, still
    learning to read). See docs/features/notebook-nav-buttons/design.md. */
-/* Positioning only, left at the page's inherited RTL direction on purpose — this is what
-   makes inset-inline-start resolve to the physical right edge, the same mapping
-   .notebook-tool-controls below relies on to sit beside this pad. The grid
-   itself (and its own direction override, below) lives one level in, on
-   .notebook-pan-grid — direction is inherited by children too, so overriding it here would
-   just move the whole cluster to the wrong corner instead of only reordering its columns
-   (this shipped once already, caught in review: both clusters landed on the same side). */
+/* Positioning only — the grid itself (and its own direction override, below) lives one
+   level in, on .notebook-pan-grid — direction is inherited by children too, so overriding
+   it here would just move the whole cluster to the wrong corner instead of only reordering
+   its columns (this shipped once already, caught in review: both clusters landed on the
+   same side). */
 .notebook-pan-controls {
   position: absolute;
-  bottom: 10px;
-  inset-inline-start: 10px;
+  top: 10px;
+  inset-inline-end: 68px;
 }
 
 /* Tool switcher (hand/pen/eraser) — bottom-right (physical), per
    docs/features/notebook-toolbar-redesign/design.md ("עמודת כלים — פינה ימנית-תחתונה").
-   Same inline side as .notebook-pan-controls above (inset-inline-start) and the same
-   bottom offset, but shifted further inward (120px = the pad's own 10px offset + its
-   100px width + a 10px gap) so the two sit side by side along the bottom edge instead of
-   stacked on top of each other. Stacking was tried first and looked right on a tall
-   fullscreen stage, but broke on the embedded (non-fullscreen) writing area, which can be
-   short enough that a column stacked above the pad runs into .notebook-minimap at the
-   top — side-by-side has no dependency on the stage's height at all. */
+   NOT flush at the edge (inset-inline-start: 10px, like .notebook-zoom-controls on the
+   opposite side) — that was tried and broke on a real mobile viewport (iPhone/Pixel-size,
+   narrow AND short, never checked until the user explicitly asked — this app's whole e2e
+   suite only ever runs at the desktop default). .notebook-minimap sits top-anchored on
+   this exact same physical side (inset-inline-start: 10px, top: 10px, 82px tall); on a
+   mobile-height embedded stage, minimap (82px, top) and a flush bottom-anchored tool
+   column (136px) together need 218px+ and the real stage is shorter than that — same
+   mechanism as .notebook-zoom-controls overflowing past .notebook-pan-controls, just on
+   the opposite side and against the minimap instead of the zoom column. inset-inline-
+   start: 82px (= minimap's own 10px offset + its 62px width + a 10px gap) clears it
+   horizontally instead, so it no longer depends on the stage's height at all. */
 .notebook-tool-controls {
   position: absolute;
   bottom: 10px;
-  inset-inline-start: 120px;
+  inset-inline-start: 82px;
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+/* Fullscreen only — flush at the real edge (inset-inline-start: 10px, not the embedded
+   view's 82px-in-from-.notebook-minimap offset), per the same user feedback as
+   .notebook-settings-btn above: "the buttons on the right need to be at the screen edge."
+   The 82px offset exists only to clear .notebook-minimap on the short embedded stage —
+   fullscreen's own stage is tall enough (measured 400px+ on a real phone) that minimap
+   (82px, top-anchored) and a flush bottom-anchored tool column (136px) never come close
+   to meeting, so the offset only pushes the buttons in from the edge for no reason here. */
+.notebook-screen.fullscreen .notebook-tool-controls {
+  inset-inline-start: 10px;
 }
 
 .notebook-pan-grid {

@@ -77,6 +77,13 @@ interface PracticeNotebookProps {
   /** How long after a stroke/pan ends before the suggested-next-action animation starts, or
    *  `null` when the student has it switched off (the mechanic doesn't exist at all then). */
   suggestionDelayMs: number | null;
+  /** Whether this student's notebook shows the directional nav pad. When `false`, the pad
+   *  is not rendered at all (not just visually hidden) — see docs/features/
+   *  notebook-nav-buttons-visibility/design.md. */
+  navPadVisible: boolean;
+  /** Opens the ⚙️ settings dialog — owned and rendered by `App.tsx`. Lets a student (or the
+   *  adult with them) reach settings without leaving the question in progress. */
+  onOpenSettings: () => void;
 }
 
 /**
@@ -149,6 +156,8 @@ export function PracticeNotebook({
   panHoldIntervalMs,
   buttonDiameterPx,
   suggestionDelayMs,
+  navPadVisible,
+  onOpenSettings,
 }: PracticeNotebookProps) {
   const [tool, setTool] = useState<DrawTool | "pan">("pen");
   /** Which destructive action, if any, is waiting on confirmation — "remove" (a whole page)
@@ -1005,6 +1014,19 @@ export function PracticeNotebook({
         <div className="notebook-minimap" ref={minimapRef} aria-hidden="true">
           <div className="notebook-minimap-view" ref={minimapViewRef} />
         </div>
+        {/* Reaches the same ⚙️ dialog as the topic-list screen, without leaving the
+            question in progress — left side, at the bottom, per explicit user feedback on
+            the preview (was beside the minimap at first). See docs/features/
+            notebook-nav-buttons-visibility/, App.css's .notebook-settings-btn. */}
+        <button
+          type="button"
+          className="notebook-settings-btn"
+          onClick={onOpenSettings}
+          aria-label="הגדרות"
+          style={{ "--notebook-btn-size": `${buttonDiameterPx}px` } as CSSProperties}
+        >
+          <span aria-hidden="true">⚙️</span>
+        </button>
         {/* Zoom/fullscreen/whole-page/clear, now one column pinned top-left — see
             docs/features/notebook-toolbar-redesign/design.md for the exact icon order
             (fullscreen first, clear last behind a small gap, not a line). */}
@@ -1038,71 +1060,77 @@ export function PracticeNotebook({
             🧹
           </button>
         </div>
-        {/* Spatial, not reading-order: these pan the view by its screen-visible direction
-            (◀ always shows more of the page's visual left), unlike the ◀/▶ page-nav buttons
-            in the toolbar below, which follow page order. The cross shape (not a row) plus
-            the separate cluster from page-nav keeps the two meanings from colliding — see
-            docs/features/notebook-nav-buttons/design.md. */}
-        <div className="notebook-pan-controls">
-          <div className="notebook-pan-grid" role="group" aria-label="הזזת התצוגה">
-            <button
-              type="button"
-              className="notebook-pan-up"
-              onClick={() => panButtonClick(0, panStepPx)}
-              onPointerDown={() => startPanHold(0, panStepPx)}
-              onPointerUp={stopPanHold}
-              onPointerLeave={stopPanHold}
-              onPointerCancel={stopPanHold}
-              disabled={panDisabled(0, panStepPx)}
-              aria-label="הזז למעלה"
-            >
-              ▲
-            </button>
-            <button
-              type="button"
-              className="notebook-pan-left"
-              onClick={() => panButtonClick(panStepPx, 0)}
-              onPointerDown={() => startPanHold(panStepPx, 0)}
-              onPointerUp={stopPanHold}
-              onPointerLeave={stopPanHold}
-              onPointerCancel={stopPanHold}
-              disabled={panDisabled(panStepPx, 0)}
-              aria-label="הזז שמאלה"
-            >
-              ◀
-            </button>
-            <button
-              type="button"
-              className="notebook-pan-right"
-              onClick={() => panButtonClick(-panStepPx, 0)}
-              onPointerDown={() => startPanHold(-panStepPx, 0)}
-              onPointerUp={stopPanHold}
-              onPointerLeave={stopPanHold}
-              onPointerCancel={stopPanHold}
-              disabled={panDisabled(-panStepPx, 0)}
-              aria-label="הזז ימינה"
-            >
-              ▶
-            </button>
-            <button
-              type="button"
-              className="notebook-pan-down"
-              onClick={() => panButtonClick(0, -panStepPx)}
-              onPointerDown={() => startPanHold(0, -panStepPx)}
-              onPointerUp={stopPanHold}
-              onPointerLeave={stopPanHold}
-              onPointerCancel={stopPanHold}
-              disabled={panDisabled(0, -panStepPx)}
-              aria-label="הזז למטה"
-            >
-              ▼
-            </button>
+        {/* Off by default (docs/features/notebook-nav-buttons-visibility/) — not rendered
+            at all when off, not just visually hidden, so it's unreachable by mouse,
+            touch, keyboard and screen reader alike until a setting turns it on. */}
+        {navPadVisible && (
+          /* Spatial, not reading-order: these pan the view by its screen-visible direction
+             (◀ always shows more of the page's visual left), unlike the ◀/▶ page-nav
+             buttons in the toolbar below, which follow page order. The cross shape (not a
+             row) plus the separate cluster from page-nav keeps the two meanings from
+             colliding — see docs/features/notebook-nav-buttons/design.md. */
+          <div className="notebook-pan-controls">
+            <div className="notebook-pan-grid" role="group" aria-label="הזזת התצוגה">
+              <button
+                type="button"
+                className="notebook-pan-up"
+                onClick={() => panButtonClick(0, panStepPx)}
+                onPointerDown={() => startPanHold(0, panStepPx)}
+                onPointerUp={stopPanHold}
+                onPointerLeave={stopPanHold}
+                onPointerCancel={stopPanHold}
+                disabled={panDisabled(0, panStepPx)}
+                aria-label="הזז למעלה"
+              >
+                ▲
+              </button>
+              <button
+                type="button"
+                className="notebook-pan-left"
+                onClick={() => panButtonClick(panStepPx, 0)}
+                onPointerDown={() => startPanHold(panStepPx, 0)}
+                onPointerUp={stopPanHold}
+                onPointerLeave={stopPanHold}
+                onPointerCancel={stopPanHold}
+                disabled={panDisabled(panStepPx, 0)}
+                aria-label="הזז שמאלה"
+              >
+                ◀
+              </button>
+              <button
+                type="button"
+                className="notebook-pan-right"
+                onClick={() => panButtonClick(-panStepPx, 0)}
+                onPointerDown={() => startPanHold(-panStepPx, 0)}
+                onPointerUp={stopPanHold}
+                onPointerLeave={stopPanHold}
+                onPointerCancel={stopPanHold}
+                disabled={panDisabled(-panStepPx, 0)}
+                aria-label="הזז ימינה"
+              >
+                ▶
+              </button>
+              <button
+                type="button"
+                className="notebook-pan-down"
+                onClick={() => panButtonClick(0, -panStepPx)}
+                onPointerDown={() => startPanHold(0, -panStepPx)}
+                onPointerUp={stopPanHold}
+                onPointerLeave={stopPanHold}
+                onPointerCancel={stopPanHold}
+                disabled={panDisabled(0, -panStepPx)}
+                aria-label="הזז למטה"
+              >
+                ▼
+              </button>
+            </div>
           </div>
-        </div>
+        )}
         {/* Tool switcher, moved out of .notebook-toolbar into its own corner column — see
-            docs/features/notebook-toolbar-redesign/. Same bottom-end corner as
-            .notebook-pan-controls (per design.md), positioned beside it rather than
-            stacked above it — see the CSS for why. */}
+            docs/features/notebook-toolbar-redesign/. Bottom-right regardless of whether
+            the nav pad (now bottom-left, docs/features/notebook-nav-buttons-visibility/)
+            is on screen — the two no longer share a corner, so this always sits flush at
+            the edge rather than making room beside the pad. */}
         <div
           className="notebook-tool-controls"
           role="group"

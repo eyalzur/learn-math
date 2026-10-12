@@ -28,12 +28,16 @@ async function enterPractice(page: Page) {
 }
 
 async function backToTopics(page: Page) {
-  const gear = settingsButton(page);
-  for (let i = 0; i < 3 && (await gear.count()) === 0; i++) {
+  // .topic-grid, not the "הגדרות" gear button — docs/features/notebook-nav-buttons-visibility/
+  // added a second button with that exact aria-label inside the practice screen itself
+  // (deliberately, same label for the same action), so "a button called הגדרות exists" no
+  // longer uniquely identifies the topic screen the way it used to.
+  const onTopics = () => page.locator(".topic-grid").count();
+  for (let i = 0; i < 3 && (await onTopics()) === 0; i++) {
     await page.getByRole("button", { name: "← חזרה" }).first().click();
     await page.waitForTimeout(150);
   }
-  await expect(gear).toBeVisible();
+  await expect(page.locator(".topic-grid")).toBeVisible();
 }
 
 function settingsButton(page: Page) {
@@ -57,6 +61,17 @@ function speedOption(page: Page, label: string) {
 async function chooseSpeed(page: Page, label: string) {
   await openSettings(page);
   await speedOption(page, label).click();
+  await closeSettings(page);
+}
+
+/** docs/features/notebook-nav-buttons-visibility/ turned the pad off by default (it used
+ *  to always render) — every test below that actually presses a directional button needs
+ *  this first. A separate round trip from `chooseSpeed`, not folded into it: that helper
+ *  is called once per speed under comparison in some tests, and toggling a switch on each
+ *  call would flip it back off again. */
+async function turnOnNavPad(page: Page) {
+  await openSettings(page);
+  await page.locator(".read-aloud-setting", { hasText: "הצגת פאד הניווט" }).locator(".read-aloud-switch").click();
   await closeSettings(page);
 }
 
@@ -110,7 +125,10 @@ test("opening the settings shows the pan-speed picker alongside the other two, s
   await openSettings(page);
 
   const dialog = page.getByRole("dialog");
-  await expect(dialog.locator(".read-aloud-setting")).toBeVisible();
+  // Not a bare ".read-aloud-setting" — docs/features/notebook-nav-buttons-visibility/
+  // reuses that same class for its own nav-pad-visible toggle (same anatomy, deliberately),
+  // so the class alone now matches two blocks in this dialog.
+  await expect(dialog.locator(".read-aloud-setting", { hasText: "להקריא" })).toBeVisible();
   await expect(dialog.locator(".hold-zoom-setting")).toBeVisible();
   await expect(dialog.locator(".pan-speed-setting")).toBeVisible();
 
@@ -142,6 +160,7 @@ test("a faster level moves the view further with a single press than a slower on
   page,
 }) => {
   await openTopics(page);
+  await turnOnNavPad(page);
   await chooseSpeed(page, "אטי מאוד");
   await enterPractice(page);
   await zoomInALot(page);
@@ -162,6 +181,7 @@ test('choosing "כבוי" means holding a directional button down still moves on
   page,
 }) => {
   await openTopics(page);
+  await turnOnNavPad(page);
   await chooseSpeed(page, "כבוי");
   await enterPractice(page);
   await zoomInALot(page);
@@ -177,6 +197,7 @@ test("a level other than כבוי keeps repeating on a hold, same as before this
   page,
 }) => {
   await openTopics(page);
+  await turnOnNavPad(page);
   await chooseSpeed(page, "בינוני");
   await enterPractice(page);
   await zoomInALot(page);
@@ -191,6 +212,7 @@ test("a faster level repeats more during the same hold duration than a slower on
   page,
 }) => {
   await openTopics(page);
+  await turnOnNavPad(page);
   await chooseSpeed(page, "אטי מאוד");
   await enterPractice(page);
   await zoomInALot(page);

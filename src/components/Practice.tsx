@@ -49,6 +49,12 @@ interface PracticeProps {
   /** How long after a stroke/pan ends before the suggested-next-action animation starts, or
    *  `null` when the student has it switched off. */
   suggestionDelayMs: number | null;
+  /** Whether this student's notebook shows the directional nav pad. See
+   *  docs/features/notebook-nav-buttons-visibility/. */
+  navPadVisible: boolean;
+  /** Opens the ⚙️ settings dialog — owned and rendered by `App.tsx`. Passed straight
+   *  through to the notebook's own settings-entry button. */
+  onOpenSettings: () => void;
   /** Fires once per question, right after right/wrong is decided — before the child even
    *  sees the feedback or explanation. Only an adaptive lesson supplies this; every other
    *  lesson leaves it unset and nothing here changes for it. */
@@ -66,6 +72,8 @@ export function Practice({
   panHoldIntervalMs,
   buttonDiameterPx,
   suggestionDelayMs,
+  navPadVisible,
+  onOpenSettings,
   onAnswered,
 }: PracticeProps) {
   const [index, setIndex] = useState(0);
@@ -734,6 +742,8 @@ export function Practice({
         panHoldIntervalMs={panHoldIntervalMs}
         buttonDiameterPx={buttonDiameterPx}
         suggestionDelayMs={suggestionDelayMs}
+        navPadVisible={navPadVisible}
+        onOpenSettings={onOpenSettings}
       />
       {!fullscreen && sendState === "error" && (
         <p className="notebook-send-error" aria-live="polite">

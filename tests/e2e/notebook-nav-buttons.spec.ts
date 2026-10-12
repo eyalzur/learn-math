@@ -10,6 +10,10 @@ import { test, expect, type Page } from "@playwright/test";
  * Enter) rather than a screen-reader audit — this suite has no screen-reader harness
  * anywhere else either; `aria-label` presence is covered implicitly, since every test here
  * locates the buttons by that label.
+ *
+ * docs/features/notebook-nav-buttons-visibility/ turned this pad off by default (it used
+ * to always render) — `openLevel` below turns it on via the ⚙️ dialog before every test in
+ * this file, since this whole file is specifically about the pad itself.
  */
 
 async function openLevel(page: Page) {
@@ -18,6 +22,12 @@ async function openLevel(page: Page) {
   await page.goto("/learn-math/");
   await page.locator(".student-card").first().click();
   await page.locator(".grade-card").first().click();
+  await page.getByRole("button", { name: "הגדרות" }).click();
+  await page
+    .locator(".read-aloud-setting", { hasText: "הצגת פאד הניווט" })
+    .locator(".read-aloud-switch")
+    .click();
+  await page.getByRole("button", { name: "סגירה" }).click();
   await page.locator(".topic-card").first().click();
   await page.locator(".style-card").first().click();
 }
