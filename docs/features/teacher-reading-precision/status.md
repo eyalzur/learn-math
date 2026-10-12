@@ -66,9 +66,9 @@
   לא קשור לנושא הזה (זוויות/משולשים כיתה ח׳, לא משוואות/שרת), אושר
   מחדש כ-flake בריצה מבודדת של הקובץ (`12/12` עברו))
 
-**Current phase:** done — ready to open PR
+**Current phase:** done — ממתין לריוויו ולמיזוג
 **Branch:** `feature/teacher-reading-precision`
-**PR:** not opened yet
+**PR:** [#82](https://github.com/eyalzur/learn-math/pull/82)
 
 ## Open questions / blockers
 None.
