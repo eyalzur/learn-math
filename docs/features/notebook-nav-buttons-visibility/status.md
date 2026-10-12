@@ -88,9 +88,9 @@
   צילומי מסך תואמים בדיוק את מה שהמשתמש ביקש. `82/82` בסט הקבצים
   המושפע, `459/459` בסוויטה המלאה)
 
-**Current phase:** done — ממתין לריוויו ולמיזוג
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `feature/notebook-nav-buttons-visibility`
-**PR:** [#81](https://github.com/eyalzur/learn-math/pull/81)
+**PR:** [#81](https://github.com/eyalzur/learn-math/pull/81) — מוזג 2026-10-12
 
 ## Open questions / blockers
 - **Product (נפתר 2026-10-11):** תלות סדר מיזוג מול PR #80 — הספק הניח
