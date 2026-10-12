@@ -34,8 +34,21 @@
   בחירת-הרגיסטר אינה ניתנת-לבדיקה אוטומטית (כמו ב-`notebook-default-practice`
   המקורי) — qa בודק/ת זרימת UI עם מוק, לא איכות הסקה; גיוון הדימויים כן
   דטרמיניסטי ובר-בדיקה ישירה)
+- [x] Implementation — developer — 2026-10-12 (שני השינויים מומשו בדיוק
+  כמתוכנן, ללא סטיות. `server/` הוא תת-פרויקט נפרד עם `npm run build` משלו
+  (`tsc -b`) — הותקן `node_modules` (לא היה קיים) ורץ נקי. אומת בפועל, לא
+  רק עיון: המחרוזת המלאה של `teacherSystemPrompt()` עם `expectedPrompt="x
+  + 12 = 30"` הורצה בסקריפט חד-פעמי (לא נשמר) — קריאה, גרשיים-אחוריים
+  תקינים. **לא נקראה ה-API האמיתי של Claude** (עלות כסף אמיתית) — זו
+  מגבלת-בדיקה ידועה ומתועדת, לא פספוס. גיוון הדימויים אומת ישירות מול
+  `generateEquationsQuestion()` **האמיתי** (לא חיקוי) דרך `import()` דינמי
+  מהדפדפן אל שרת הפיתוח, RNG דטרמיניסטי, 400 הרצות — כל שמונת התבניות
+  (4 לכל כיוון) הופיעו עם ערכים מוצבים נכון. `build`/`lint` נקיים
+  (אפליקציה + `server/`). `tests/e2e/content.spec.ts` (42/42, כולל הכלל
+  שמכסה את שנים-עשר נושאי levels-as-practice) עבר. גרסה `1.38.0→1.39.0`.
+  ראו architecture.md, "Implementation Notes")
 
-**Current phase:** developer
+**Current phase:** qa
 **Branch:** `feature/teacher-reading-precision`
 **PR:** not opened yet
 
