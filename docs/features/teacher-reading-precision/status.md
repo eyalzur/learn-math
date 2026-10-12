@@ -47,8 +47,26 @@
   (אפליקציה + `server/`). `tests/e2e/content.spec.ts` (42/42, כולל הכלל
   שמכסה את שנים-עשר נושאי levels-as-practice) עבר. גרסה `1.38.0→1.39.0`.
   ראו architecture.md, "Implementation Notes")
+- [x] Tests — qa — 2026-10-12 (בדיקה אחת, `tests/e2e/teacher-reading-precision.spec.ts`,
+  עוברת סשן תרגול אמיתי אחד (20 שאלות) דרך זרימת המחברת האמיתית — מוקינג
+  רק ל-`/read-page`, אפס קריאות אמיתיות/בתשלום. **מלכודת אמיתית נתפסה
+  ותוקנה תוך כדי כתיבת הבדיקה**: הסשן מוגבל ל-20 שאלות בדיוק (נגלה בהרצה
+  חיה — "שאלה N מתוך 20", "סיום" מחליף "הבא" בשאלה ה-20), ולולאה שממשיכה
+  אחרי "סיום" נתקעת על מסך תוצאות בלי `.problem-box`. תוקן: הלולאה עוצרת
+  מיד על "סיום". קריטריוני `errorPointer` **אינם ניתנים לבדיקת e2e
+  אוטומטית** (הסקת-AI אמיתית, לא זרימת UI — אותה מגבלה כבר מתועדת
+  ב-`notebook-default-practice/architecture.md`) — מתועד במפורש ב-tests.md
+  במקום דילוג שקט או בדיקה מזויפת. אומת יציב על פני 4 הרצות עוקבות (אין
+  seed קבוע). קבצים קשורים (`notebook-usability-fixes`,
+  `notebook-default-practice`, `notebook-teacher-feedback`,
+  `teacher-misread-log`, `content.spec.ts`) — `92/92`, ללא רגרסיה. ריצה
+  מלאה (`build && lint && test:e2e`): `459/460`, הכשל היחיד
+  (`grade8-angles-congruence.spec.ts`, שאלת-זווית-חיצונית לא נדגמה)
+  — אותו flake קיים-מראש שתועד כבר ב-CLAUDE.md ("מה פתוח", PR #77) —
+  לא קשור לנושא הזה (זוויות/משולשים כיתה ח׳, לא משוואות/שרת), אושר
+  מחדש כ-flake בריצה מבודדת של הקובץ (`12/12` עברו))
 
-**Current phase:** qa
+**Current phase:** done — ready to open PR
 **Branch:** `feature/teacher-reading-precision`
 **PR:** not opened yet
 
