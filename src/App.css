@@ -1722,6 +1722,18 @@ button.secondary {
   font-size: 20px;
 }
 
+/* Fullscreen only — flush at the same edge as .notebook-zoom-controls (inset-inline-end:
+   10px, not the embedded view's 68px inward offset), per explicit user feedback on a real
+   phone: "the settings button should be at the other edge, aligned with the zoom buttons
+   and the rest on the left." The 68px offset exists only to clear .notebook-zoom-controls
+   on the short embedded stage (see the comment above .notebook-pan-controls below) — the
+   fullscreen stage is tall enough (400px+ on a real phone, measured) that the zoom
+   column's own bottom edge sits well above a flush bottom-anchored button, so the offset
+   is pure unused space here, not a safety margin. */
+.notebook-screen.fullscreen .notebook-settings-btn {
+  inset-inline-end: 10px;
+}
+
 /* Pinned top-left (physical — inset-inline-end resolves to the left edge under this app's
    RTL direction, same mapping already relied on everywhere else in this file), per the
    redesign: see docs/features/notebook-toolbar-redesign/design.md. Was bottom-anchored
@@ -1818,6 +1830,17 @@ button.secondary {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+/* Fullscreen only — flush at the real edge (inset-inline-start: 10px, not the embedded
+   view's 82px-in-from-.notebook-minimap offset), per the same user feedback as
+   .notebook-settings-btn above: "the buttons on the right need to be at the screen edge."
+   The 82px offset exists only to clear .notebook-minimap on the short embedded stage —
+   fullscreen's own stage is tall enough (measured 400px+ on a real phone) that minimap
+   (82px, top-anchored) and a flush bottom-anchored tool column (136px) never come close
+   to meeting, so the offset only pushes the buttons in from the edge for no reason here. */
+.notebook-screen.fullscreen .notebook-tool-controls {
+  inset-inline-start: 10px;
 }
 
 .notebook-pan-grid {
