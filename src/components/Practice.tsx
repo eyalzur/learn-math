@@ -440,9 +440,15 @@ export function Practice({
       {speakingBox === "question" ? "⏹" : "🔊"}
     </button>
   );
-  const questionBox = (
-    <div className={`problem-box ${isWordProblem ? "box-rtl" : "box-ltr"}`}>
-      <span className={`problem-text ${isWordProblem ? "prompt-rtl" : "prompt-ltr"}`}>
+  /** The question, written on the notebook page itself — rendered inside
+   *  `.notebook-stack` by `PracticeNotebook`, which has no idea what it is (same split as
+   *  `primaryAction`/`topSlot`). Same prompt-parsing/LTR-isolation logic `.problem-box`
+   *  always used, just a different wrapper — `TopicLesson.tsx` keeps using `.problem-box`/
+   *  `box-rtl`/`box-ltr` on its own, unrelated screen. See
+   *  docs/features/notebook-question-on-page/. */
+  const questionHeader = (
+    <div className={`notebook-question-header ${isWordProblem ? "qh-rtl" : "qh-ltr"}`}>
+      <span className={isWordProblem ? "qh-text-rtl" : "qh-text-ltr"}>
         {isWordProblem ? (
           promptSegments(question.prompt).map((segment, i) =>
             segment.kind === "math" ? (
@@ -473,11 +479,13 @@ export function Practice({
    *  other topic, so this is a no-op everywhere else, same as `clockSlot`. */
   const angleSlot = bundle.angle ? <AngleShape shape={bundle.angle} label={bundle.angle.srLabel} /> : null;
 
-  /** What the notebook shows above the writing surface while it fills the screen: the
-   *  question (so writing it down never means forgetting what's being solved) plus a way
-   *  back out, replacing the regular header/title/hint-button that fullscreen hides — see
-   *  design.md, מצב F. Rendered by PracticeNotebook, which has no idea what it is (same
-   *  split as primaryAction). Null outside fullscreen: the regular header below covers it. */
+  /** What the notebook shows above the writing surface while it fills the screen: a way
+   *  back out, plus any clock/angle diagram — the question itself no longer needs a copy
+   *  here, since it's written on the page itself now (`questionHeader`, passed to
+   *  `PracticeNotebook` directly) and stays visible exactly the same way in fullscreen. See
+   *  docs/features/notebook-question-on-page/design.md. Rendered by PracticeNotebook, which
+   *  has no idea what it is (same split as primaryAction). Null outside fullscreen: the
+   *  regular header below covers it. */
   const topSlot = fullscreen ? (
     <div className="notebook-fullscreen-topbar">
       <button
@@ -491,10 +499,8 @@ export function Practice({
       >
         ✕
       </button>
-      {questionBox}
       {clockSlot}
       {angleSlot}
-      {speechSupported() && questionSpeakButton}
     </div>
   ) : null;
 
@@ -561,9 +567,9 @@ export function Practice({
 
   return (
     <div className="practice">
-      {/* The regular header/title/hint-button hide while the notebook fills the screen —
-          fullscreen's topSlot above carries a compact replacement for the one part of this
-          (the question) that still has to stay visible. See design.md, מצב F. */}
+      {/* The regular header/title hide while the notebook fills the screen — the question
+          itself no longer needs a chrome copy in either state, since it's written on the
+          notebook page directly now. See docs/features/notebook-question-on-page/design.md. */}
       {!fullscreen && (
         <>
           <div className="practice-header">
@@ -581,10 +587,6 @@ export function Practice({
             </span>
           </div>
           <h2>{lesson.title}</h2>
-          {/* Outside .problem-box on purpose: that box forces a direction, and a button
-              inside it would join the isolated context and shift the expression's alignment. */}
-          {speechSupported() && <div className="question-speech">{questionSpeakButton}</div>}
-          {questionBox}
           {clockSlot}
           {angleSlot}
         </>
@@ -744,6 +746,8 @@ export function Practice({
         suggestionDelayMs={suggestionDelayMs}
         navPadVisible={navPadVisible}
         onOpenSettings={onOpenSettings}
+        questionHeader={questionHeader}
+        speakButton={speechSupported() ? questionSpeakButton : null}
       />
       {!fullscreen && sendState === "error" && (
         <p className="notebook-send-error" aria-live="polite">

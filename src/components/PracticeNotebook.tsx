@@ -84,6 +84,15 @@ interface PracticeNotebookProps {
   /** Opens the ⚙️ settings dialog — owned and rendered by `App.tsx`. Lets a student (or the
    *  adult with them) reach settings without leaving the question in progress. */
   onOpenSettings: () => void;
+  /** The question, pre-rendered by the caller (same split as `primaryAction`/`topSlot` —
+   *  this component has no idea what it is) — rendered inside `.notebook-stack` so it pans
+   *  and zooms with the page itself, like a student's own copied-down question. See
+   *  docs/features/notebook-question-on-page/. */
+  questionHeader: ReactNode;
+  /** The read-aloud toggle for the question, pre-rendered by the caller — rendered in
+   *  `.notebook-topbar`, the one place it now lives for both embedded and fullscreen (see
+   *  docs/features/notebook-question-on-page/design.md, "מיקום חדש אחד לשני המצבים"). */
+  speakButton: ReactNode;
 }
 
 /**
@@ -158,6 +167,8 @@ export function PracticeNotebook({
   suggestionDelayMs,
   navPadVisible,
   onOpenSettings,
+  questionHeader,
+  speakButton,
 }: PracticeNotebookProps) {
   const [tool, setTool] = useState<DrawTool | "pan">("pen");
   /** Which destructive action, if any, is waiting on confirmation — "remove" (a whole page)
@@ -971,9 +982,12 @@ export function PracticeNotebook({
     <div className={`notebook-screen${fullscreen ? " fullscreen" : ""}`}>
       {fullscreen && topSlot}
       <div className="notebook-topbar">
-        <span className="notebook-page-indicator">
-          דף {currentPageIndex + 1} מתוך {pages.length}
-        </span>
+        <div className="notebook-topbar-start">
+          <span className="notebook-page-indicator">
+            דף {currentPageIndex + 1} מתוך {pages.length}
+          </span>
+          {speakButton}
+        </div>
         <span className="notebook-zoom-readout">{zoomPercent}%</span>
       </div>
 
@@ -1005,6 +1019,7 @@ export function PracticeNotebook({
               // docs/features/notebook-hold-to-zoom/, "עדכון סבב ג׳".
               onContextMenu={(e) => e.preventDefault()}
             />
+            {questionHeader}
           </div>
         </div>
         {/* Moved to the opposite top corner from .notebook-zoom-controls (below) — the

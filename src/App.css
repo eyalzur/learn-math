@@ -1013,15 +1013,6 @@ button.secondary {
   transform: translateX(-22px);
 }
 
-/* The question's speaker sits above the problem box, never inside it: that box forces a
-   direction, and a button joining its isolated context shifts the expression's alignment. */
-.question-speech {
-  display: flex;
-  justify-content: flex-start;
-  max-width: 420px;
-  margin: 0 auto 8px;
-}
-
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -1556,19 +1547,6 @@ button.secondary {
   border-bottom: 1px solid var(--border);
 }
 
-.notebook-fullscreen-topbar .problem-box {
-  margin: 0;
-  flex: 1;
-  min-width: 0;
-}
-
-/* Deliberately smaller than the regular 40px prompt (App.css .prompt-ltr): this strip is a
-   compact stand-in for the full question header while the notebook fills the screen, and
-   26px still crowded out the writing surface on a phone. */
-.notebook-fullscreen-topbar .prompt-ltr {
-  font-size: 18px;
-}
-
 .notebook-fullscreen-exit {
   flex-shrink: 0;
   background: none;
@@ -1590,6 +1568,16 @@ button.secondary {
   gap: 8px;
   padding: 10px 16px;
   border-bottom: 1px solid var(--border);
+}
+
+/* Groups the page indicator with the question's read-aloud button — now the one place that
+   button lives, embedded or fullscreen (see docs/features/notebook-question-on-page/) — so
+   .notebook-topbar's existing space-between still works with two groups, not three loose
+   items spread evenly across the bar. */
+.notebook-topbar-start {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .notebook-page-indicator,
@@ -1673,6 +1661,64 @@ button.secondary {
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
+}
+
+/* The question, written on the page itself — a sibling of .notebook-canvas inside the same
+   transformed .notebook-stack, so it pans/zooms with the page exactly like the grid and the
+   student's own ink. After the canvas in markup order (paints on top; z-index below is
+   explicit insurance, not load-bearing on its own) and pointer-events:none so a stroke that
+   starts over it still reaches the canvas underneath — it's never ink, never erasable, and
+   never part of filledCells. Deliberately NOT aria-hidden (unlike .notebook-minimap, which
+   is purely decorative): this is real, meaningful content for a screen reader. See
+   docs/features/notebook-question-on-page/. */
+.notebook-question-header {
+  position: absolute;
+  z-index: 1;
+  top: 24px;
+  /* Physical left, not a logical inset — the page itself always opens panned to its
+     physical top-left corner (computeInitialTransform in notebook.ts, "a student starts
+     writing at the top of the page... not in the middle of a canvas they have to scroll to
+     orient themselves on"), regardless of the student's own reading direction. A box
+     anchored toward the page's physical *right* edge instead (inset-inline-start under
+     direction:rtl) sits mostly or entirely outside that default view on any stage narrower
+     than the full page width at the opening zoom — the normal case, not an edge case, since
+     zoom/pan exists precisely because the stage usually doesn't show the whole page. */
+  left: 56px;
+  pointer-events: none;
+  padding-bottom: 16px;
+  border-bottom: 1px solid color-mix(in srgb, var(--notebook-grid) 70%, transparent);
+}
+
+.notebook-question-header.qh-ltr {
+  direction: ltr;
+  text-align: center;
+  right: 56px;
+}
+
+.notebook-question-header.qh-rtl {
+  direction: rtl;
+  text-align: right;
+  /* Anchored to a fixed width from the left edge (not spanning to the page's right edge
+     like .qh-ltr) — see the comment above: right-aligned text inside a box that reaches
+     toward the page's physical right would start past the default visible window. 760px
+     matches .qh-text-rtl's own max-width (design.md) exactly, so the box never has slack
+     the text doesn't use. */
+  width: 760px;
+}
+
+.qh-text-ltr {
+  font-size: 44px;
+  font-weight: 600;
+  color: var(--notebook-question-ink);
+}
+
+.qh-text-rtl {
+  display: inline-block;
+  max-width: 760px;
+  font-size: 26px;
+  line-height: 150%;
+  font-weight: 600;
+  color: var(--notebook-question-ink);
 }
 
 .notebook-minimap {
