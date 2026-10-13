@@ -139,7 +139,9 @@ test("the arithmetic is spoken as Hebrew words, not skipped symbols", async ({ p
   await fresh(page);
   await openStudent(page, 0);
   await startHintedLevel(page);
-  await expect(page.locator(".problem-text")).toContainText("12");
+  // The question now lives on the notebook page itself, not a separate .problem-box — see
+  // docs/features/notebook-question-on-page/.
+  await expect(page.locator(".notebook-question-header")).toContainText("12");
 
   await speakButton(page).click();
   await expect.poll(() => spokenText(page)).not.toHaveLength(0);
@@ -286,7 +288,8 @@ test("a browser with no speech engine shows no setting and no button", async ({ 
 
   await startHintedLevel(page);
   await expect(page.locator(".speak-button")).toHaveCount(0);
-  // And the rest of the screen is untouched.
-  await expect(page.locator(".problem-text")).toBeVisible();
+  // And the rest of the screen is untouched. The question now lives on the notebook page
+  // itself, not a separate .problem-box — see docs/features/notebook-question-on-page/.
+  await expect(page.locator(".notebook-question-header")).toBeVisible();
   await expect(page.locator("canvas")).toBeVisible();
 });
