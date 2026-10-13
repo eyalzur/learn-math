@@ -6,7 +6,7 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
-| השאלה כתובה על דף המחברת עצמו | 🟡 in design | [status](./notebook-question-on-page/status.md) |
+| השאלה כתובה על דף המחברת עצמו | 🟡 in architecture | [status](./notebook-question-on-page/status.md) |
 | פאד הניווט במחברת: לצד שמאל, כבוי כברירת מחדל, ונגיש מהדף עצמו | 🟢 done — מוזג ל-main | [status](./notebook-nav-buttons-visibility/status.md) |
 | מחברת: עמודת כפתורים ממוקדת + הצעת הפעולה הבאה | 🟢 done — מוזג ל-main | [status](./notebook-toolbar-redesign/status.md) |
 | גלילה אוטומטית במחברת לפי כיוון הכתיבה | 🟢 done — מוזג ל-main | [status](./notebook-auto-scroll/status.md) |
