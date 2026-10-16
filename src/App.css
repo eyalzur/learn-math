@@ -1675,16 +1675,13 @@ button.secondary {
   position: absolute;
   z-index: 1;
   top: 24px;
-  /* Physical left, not a logical inset — the page itself always opens panned to its
-     physical top-left corner (computeInitialTransform in notebook.ts, "a student starts
-     writing at the top of the page... not in the middle of a canvas they have to scroll to
-     orient themselves on"), regardless of the student's own reading direction. A box
-     anchored toward the page's physical *right* edge instead (inset-inline-start under
-     direction:rtl) sits mostly or entirely outside that default view on any stage narrower
-     than the full page width at the opening zoom — the normal case, not an edge case, since
-     zoom/pan exists precisely because the stage usually doesn't show the whole page. `left`
-     itself is set per-variant below, not here — the two directions need different margins
-     (see each one's own comment). */
+  /* Physical left/right, never a logical inset — which corner the page opens anchored to
+     now itself depends on this question (anchorPanX in notebook.ts: an equation opens
+     top-left, a Hebrew word problem opens top-**right**, see PracticeNotebook.tsx's
+     anchorRight prop), so a logical inset tied to document direction would be solving the
+     wrong variable here anyway. `left`/`right` themselves are set per-variant below, not
+     here — the two directions anchor from opposite physical edges. See docs/features/
+     notebook-question-on-page/design.md, "עיגון פיזי, לא לוגי — סבב ג׳". */
   pointer-events: none;
   padding-bottom: 16px;
   border-bottom: 1px solid color-mix(in srgb, var(--notebook-grid) 70%, transparent);
@@ -1710,24 +1707,24 @@ button.secondary {
 .notebook-question-header.qh-rtl {
   direction: rtl;
   text-align: right;
-  /* Right-aligned text, same reasoning as a geometry question that writes its given data on
-     the right and draws on the left in Hebrew — a word problem should read as starting from
-     the right, not the left. The box's own left edge stays at the page's standard 56px
-     margin (nothing actually touches it — the text hugs the box's *right* edge instead, so
-     it doesn't collide with the zoom-button column the way .qh-ltr's left-aligned text
-     would). */
-  left: 56px;
-  /* 300px, not 760px: measured against the real visible page-space width at the fixed
-     opening zoom on an actual small phone (iPhone-SE-class, 320px viewport) — only about
-     386px of the page is visible there at all, so a 760px-wide box reaching toward the
-     page's physical right edge was still clipped on a real phone, the exact bug this was
-     supposed to fix, just not caught the first time because the viewport used to verify it
-     was accidentally desktop-sized (1000px), not phone-sized. 300px (+56px left margin =
-     356px) stays inside the ~386px visible on the smallest realistic phone, with margin to
-     spare. A longer question simply wraps into more lines — the header's height is already
-     dynamic by design, not a fixed budget. See architecture.md, "Implementation Notes —
-     סבב ב׳". */
-  width: 300px;
+  /* Right-aligned text, hugging the page's own physical *right* edge — not a compromise
+     anymore. The page itself now opens anchored to its physical-right corner whenever the
+     question on it is a word problem (anchorRight prop, PracticeNotebook.tsx), so what's in
+     view by default is exactly the area this box lives in, the same way .qh-ltr's left
+     margin lines up with the page's default left-anchored view. 80px (not a flush 56px) —
+     measured against the real floating minimap, fixed screen-space chrome at the stage's
+     own top-right corner regardless of pan/zoom — clears its footprint with room to spare,
+     the same reasoning as .qh-ltr's 96px against the zoom column on the opposite side. See
+     docs/features/notebook-question-on-page/design.md, "עיגון פיזי, לא לוגי — סבב ג׳". */
+  right: 110px;
+  /* A longer question simply wraps into more lines — the header's height is already dynamic
+     by design, not a fixed budget. 260px, not something larger: measured against the real
+     visible stage width on the smallest verified phone (320px viewport, ~270px stage) —
+     110px of right margin (clearing the minimap, see above) plus the box's own width have to
+     both fit inside that, or the box's *left* edge runs off the stage's own left edge
+     instead (caught by an earlier, too-wide attempt during this same round — see
+     architecture.md, "Implementation Notes — סבב ג׳"). */
+  width: 260px;
 }
 
 .qh-text-ltr {
@@ -1738,7 +1735,7 @@ button.secondary {
 
 .qh-text-rtl {
   display: inline-block;
-  max-width: 300px;
+  max-width: 260px;
   font-size: 26px;
   line-height: 150%;
   font-weight: 600;

@@ -9,6 +9,7 @@ import {
   PAGE_HEIGHT,
   PAGE_WIDTH,
   PEN_CELLS,
+  anchorPanX,
   clampFollowPanX,
   clampFollowPanY,
   clampPan,
@@ -89,6 +90,13 @@ interface PracticeNotebookProps {
    *  and zooms with the page itself, like a student's own copied-down question. See
    *  docs/features/notebook-question-on-page/. */
   questionHeader: ReactNode;
+  /** Whether the page currently shown should open anchored to its top-**right** corner
+   *  instead of top-left — true for a Hebrew word problem, false for a bare equation. Drives
+   *  which side of the page is actually in view (see `anchorPanX` in notebook.ts and
+   *  docs/features/notebook-question-on-page/design.md, "עיגון פיזי, לא לוגי — סבב ג׳") —
+   *  this component doesn't itself know what the question says, same split as
+   *  `questionHeader`. */
+  anchorRight: boolean;
   /** The read-aloud toggle for the question, pre-rendered by the caller — rendered in
    *  `.notebook-topbar`, the one place it now lives for both embedded and fullscreen (see
    *  docs/features/notebook-question-on-page/design.md, "מיקום חדש אחד לשני המצבים"). */
@@ -168,6 +176,7 @@ export function PracticeNotebook({
   navPadVisible,
   onOpenSettings,
   questionHeader,
+  anchorRight,
   speakButton,
 }: PracticeNotebookProps) {
   const [tool, setTool] = useState<DrawTool | "pan">("pen");
@@ -423,15 +432,32 @@ export function PracticeNotebook({
   // out from under the currently-viewed index). Also drops out of "הצג את כל הדף" — a
   // memory of "the zoom/pan before I zoomed out" that belongs to the page it was captured
   // on, not to whichever page happens to be visible when the button is pressed again.
+  //
+  // Also re-anchors panX to whichever physical side this page's own question reads from
+  // (anchorPanX — see notebook.ts and docs/features/notebook-question-on-page/design.md,
+  // "עיגון פיזי, לא לוגי — סבב ג׳"). This runs on mount too (not just later navigation),
+  // which is what sets panX for the very first page. Deliberately keeps the *current* zoom
+  // (including on mount, where it's already INITIAL_ZOOM from the effect above) rather than
+  // resetting it — only which side is in view changes, not how close the student is zoomed.
   useEffect(() => {
     if (currentPage) redrawFromPage(currentPage);
+    const stageRect = stageRef.current?.getBoundingClientRect();
+    const stageWidth = stageRect?.width ?? 0;
+    const stageHeight = stageRect?.height ?? 0;
+    const zoom = panZoomRef.current.zoom;
+    panZoomRef.current = clampPan(
+      { zoom, panX: anchorPanX(anchorRight, zoom, stageWidth), panY: 0 },
+      stageWidth,
+      stageHeight,
+    );
+    applyTransform();
     setViewingWholePage(false);
     savedTransform.current = null;
     // The previous page's last stroke is not something a stroke on this page should ever be
     // compared against — the first stroke on a newly-visited/newly-created page never jumps.
     lastStrokeBoundsRef.current = null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage]);
+  }, [currentPage, anchorRight]);
 
   useEffect(() => {
     // A resize (window resize, or most commonly a phone rotating) never recomputes zoom —

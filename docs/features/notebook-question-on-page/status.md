@@ -97,6 +97,17 @@
   (`bump:feature`). ראו architecture.md/design.md, "Implementation
   Notes — סבב ב׳" / "עיגון פיזי, לא לוגי" לפירוט המלא, ו-tests.md
   לעדכון ה-Status.
+- [x] סבב ג׳ — 2026-10-16, לפי בקשת המשתמש "תהיה יצירתי": הדף עצמו
+  עכשיו פותח מעוגן לפינה הימנית-הפיזית כששאלת אותו דף מילולית (לא רק
+  קופסה-צרה-משמאל כפי שסבב ב׳ הציע כפשרה) — `anchorPanX()` חדש,
+  `PracticeNotebook`'s `anchorRight` prop. הזום הנוכחי נשמר, רק הצד
+  מתעדכן, על כל שינוי דף. `.qh-rtl` עוגן אמיתי ל-`right` (לא `left`).
+  נתפס ותוקן בדרך: ניסיון ראשון (`right:80/width:420`) גלש מחוץ למסך
+  ב-`320px`; תוקן ל-`right:110/width:260` אחרי מדידה אמיתית —
+  `visibleFraction=1.00` בכל רוחב שנבדק. שבע בדיקות שהניחו `panX:0`
+  קבוע בפתיחה תוקנו (עברו לפתוח נושא קבוע/LTR). 468/468, ריצה נקייה
+  פעמיים. גרסה `1.40.0 → 1.41.0`. ראו architecture.md, "Implementation
+  Notes — סבב ג׳".
 
 **Current phase:** ready for review
 **Branch:** `feature/notebook-question-on-page`

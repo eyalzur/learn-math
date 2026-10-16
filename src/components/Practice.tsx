@@ -771,6 +771,7 @@ export function Practice({
         navPadVisible={navPadVisible}
         onOpenSettings={onOpenSettings}
         questionHeader={questionHeader}
+        anchorRight={displayedQuestionIsWordProblem}
         speakButton={speechSupported() ? questionSpeakButton : null}
       />
       {!fullscreen && sendState === "error" && (
