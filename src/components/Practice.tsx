@@ -99,6 +99,15 @@ export function Practice({
    */
   const [pages, setPages] = useState<NotebookPage[]>(() => [createBlankPage()]);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
+  /** Which question's index each page in `pages` was written for — a parallel array, kept
+   *  in lockstep with `pages` in every place `pages` changes. Needed because "which page is
+   *  being *viewed*" (`currentPageIndex`, driven by the ◀/▶ page-nav buttons) and "which
+   *  question is currently *live*" (`index`, driven only by `next()`) are two different
+   *  things once a student navigates back to an earlier page: the page itself doesn't
+   *  change, but without this, the written-question header had no way to know which
+   *  question that page was actually for, and silently showed the live one instead. See
+   *  docs/features/notebook-question-on-page/architecture.md, "Implementation Notes". */
+  const [pageQuestionIndex, setPageQuestionIndex] = useState<number[]>(() => [0]);
 
   /** Talking to the teacher: idle (nothing sent yet, or a previous reading is showing),
    *  sending (waiting on the server), or error (the call itself failed — network/server,
@@ -377,6 +386,7 @@ export function Practice({
     // it means a locked, already-checked page can never end up being "the current page"
     // when a new question loads. At the page cap, reuse the last page instead of growing
     // past it (see docs/features/notebook-default-practice/architecture.md, Edge Cases).
+    const nextQuestionIndex = index + 1;
     if (pages.length >= MAX_PAGES) {
       setPages((prev) => {
         const updated = [...prev];
@@ -384,9 +394,15 @@ export function Practice({
         return updated;
       });
       setCurrentPageIndex(pages.length - 1);
+      setPageQuestionIndex((prev) => {
+        const updated = [...prev];
+        updated[updated.length - 1] = nextQuestionIndex;
+        return updated;
+      });
     } else {
       setPages((prev) => [...prev, createBlankPage()]);
       setCurrentPageIndex(pages.length);
+      setPageQuestionIndex((prev) => [...prev, nextQuestionIndex]);
     }
   }
 
@@ -440,6 +456,14 @@ export function Practice({
       {speakingBox === "question" ? "⏹" : "🔊"}
     </button>
   );
+  /** The question whose page is actually being *viewed* right now — not necessarily the
+   *  live `question` being answered. Navigating back to an earlier page (◀) must keep
+   *  showing what was written there, not whatever's currently being answered. Falls back to
+   *  `index` only if `pageQuestionIndex` hasn't caught up yet (never observed in practice,
+   *  since both are seeded/updated together, but a missing page index must never crash). */
+  const displayedQuestion = lesson.questions[pageQuestionIndex[currentPageIndex] ?? index];
+  const displayedQuestionIsWordProblem = isHebrewPrompt(displayedQuestion.prompt);
+
   /** The question, written on the notebook page itself — rendered inside
    *  `.notebook-stack` by `PracticeNotebook`, which has no idea what it is (same split as
    *  `primaryAction`/`topSlot`). Same prompt-parsing/LTR-isolation logic `.problem-box`
@@ -447,10 +471,10 @@ export function Practice({
    *  `box-rtl`/`box-ltr` on its own, unrelated screen. See
    *  docs/features/notebook-question-on-page/. */
   const questionHeader = (
-    <div className={`notebook-question-header ${isWordProblem ? "qh-rtl" : "qh-ltr"}`}>
-      <span className={isWordProblem ? "qh-text-rtl" : "qh-text-ltr"}>
-        {isWordProblem ? (
-          promptSegments(question.prompt).map((segment, i) =>
+    <div className={`notebook-question-header ${displayedQuestionIsWordProblem ? "qh-rtl" : "qh-ltr"}`}>
+      <span className={`problem-text ${displayedQuestionIsWordProblem ? "qh-text-rtl" : "qh-text-ltr"}`}>
+        {displayedQuestionIsWordProblem ? (
+          promptSegments(displayedQuestion.prompt).map((segment, i) =>
             segment.kind === "math" ? (
               <span key={i} className="prompt-math">
                 {segment.value}
@@ -460,7 +484,7 @@ export function Practice({
             ),
           )
         ) : (
-          <>{promptWithEquals(question.prompt)}</>
+          <>{promptWithEquals(displayedQuestion.prompt)}</>
         )}
       </span>
     </div>

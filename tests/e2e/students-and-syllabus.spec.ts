@@ -198,8 +198,12 @@ test("a bare expression is shown left-to-right with a trailing equals sign", asy
   // which are RTL by design and covered by the sibling test above.
   await openLevels(page, 0, 1);
 
-  const box = page.locator(".problem-box");
-  await expect(box).toHaveClass(/box-ltr/);
+  // The question now lives on the notebook page itself, not a separate .problem-box — see
+  // docs/features/notebook-question-on-page/. Same direction check, new class scheme
+  // (qh-ltr instead of box-ltr — kept independent so TopicLesson.tsx's own .problem-box is
+  // unaffected).
+  const box = page.locator(".notebook-question-header");
+  await expect(box).toHaveClass(/qh-ltr/);
   await expect(box).toHaveCSS("direction", "ltr");
   await expect(page.locator(".problem-text")).toContainText("=");
 });

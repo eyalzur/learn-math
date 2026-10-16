@@ -86,7 +86,9 @@ for (const title of ["כפל וחילוק", "צורות וגופים"]) {
 test("a כפל וחילוק question is a bare expression, shown left-to-right", async ({ page }) => {
   await openTopic(page, "כפל וחילוק");
 
-  const box = page.locator(".problem-box");
+  // The question now lives on the notebook page itself, not a separate .problem-box — see
+  // docs/features/notebook-question-on-page/.
+  const box = page.locator(".notebook-question-header");
   await expect(box).toBeVisible();
   await expect(box).toHaveCSS("direction", "ltr");
   await expect(page.locator(".problem-text")).toContainText("×");
@@ -98,9 +100,11 @@ test("a צורות וגופים question is a plain Hebrew sentence, with no ari
 }) => {
   await openTopic(page, "צורות וגופים");
 
-  const box = page.locator(".problem-box");
+  // Same direction check, new class scheme (qh-rtl instead of box-rtl — kept independent so
+  // TopicLesson.tsx's own .problem-box is unaffected).
+  const box = page.locator(".notebook-question-header");
   await expect(box).toBeVisible();
-  await expect(box).not.toHaveClass(/box-ltr/);
+  await expect(box).not.toHaveClass(/qh-ltr/);
   await expect(box).toHaveCSS("direction", "rtl");
   await expect(page.locator(".problem-text")).toContainText("?");
 });

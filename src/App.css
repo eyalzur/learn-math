@@ -1682,8 +1682,9 @@ button.secondary {
      anchored toward the page's physical *right* edge instead (inset-inline-start under
      direction:rtl) sits mostly or entirely outside that default view on any stage narrower
      than the full page width at the opening zoom — the normal case, not an edge case, since
-     zoom/pan exists precisely because the stage usually doesn't show the whole page. */
-  left: 56px;
+     zoom/pan exists precisely because the stage usually doesn't show the whole page. `left`
+     itself is set per-variant below, not here — the two directions need different margins
+     (see each one's own comment). */
   pointer-events: none;
   padding-bottom: 16px;
   border-bottom: 1px solid color-mix(in srgb, var(--notebook-grid) 70%, transparent);
@@ -1691,19 +1692,42 @@ button.secondary {
 
 .notebook-question-header.qh-ltr {
   direction: ltr;
-  text-align: center;
-  right: 56px;
+  text-align: left;
+  /* 96px, not the 56px a plain "not flush" margin would suggest — measured against the real
+     floating zoom/fullscreen/clear button column, which is fixed screen-space chrome (not
+     part of the page) sitting at the stage's own top-left corner regardless of pan/zoom. At
+     the fixed opening zoom (0.7) that column's right edge sits ~71px into the page's own
+     coordinate space; 96px (4 grid cells) clears it with room to spare instead of landing
+     text half-behind a button, which 56px alone did. See docs/features/
+     notebook-question-on-page/architecture.md, "Implementation Notes — סבב ב׳". */
+  left: 96px;
+  /* Hugs its own content instead of stretching to a fixed width — a bare equation reads
+     top-left, not flush against the edge and not centered across the page. See
+     docs/features/notebook-question-on-page/design.md, "מיקום לפי כיוון קריאה". */
+  width: fit-content;
 }
 
 .notebook-question-header.qh-rtl {
   direction: rtl;
   text-align: right;
-  /* Anchored to a fixed width from the left edge (not spanning to the page's right edge
-     like .qh-ltr) — see the comment above: right-aligned text inside a box that reaches
-     toward the page's physical right would start past the default visible window. 760px
-     matches .qh-text-rtl's own max-width (design.md) exactly, so the box never has slack
-     the text doesn't use. */
-  width: 760px;
+  /* Right-aligned text, same reasoning as a geometry question that writes its given data on
+     the right and draws on the left in Hebrew — a word problem should read as starting from
+     the right, not the left. The box's own left edge stays at the page's standard 56px
+     margin (nothing actually touches it — the text hugs the box's *right* edge instead, so
+     it doesn't collide with the zoom-button column the way .qh-ltr's left-aligned text
+     would). */
+  left: 56px;
+  /* 300px, not 760px: measured against the real visible page-space width at the fixed
+     opening zoom on an actual small phone (iPhone-SE-class, 320px viewport) — only about
+     386px of the page is visible there at all, so a 760px-wide box reaching toward the
+     page's physical right edge was still clipped on a real phone, the exact bug this was
+     supposed to fix, just not caught the first time because the viewport used to verify it
+     was accidentally desktop-sized (1000px), not phone-sized. 300px (+56px left margin =
+     356px) stays inside the ~386px visible on the smallest realistic phone, with margin to
+     spare. A longer question simply wraps into more lines — the header's height is already
+     dynamic by design, not a fixed budget. See architecture.md, "Implementation Notes —
+     סבב ב׳". */
+  width: 300px;
 }
 
 .qh-text-ltr {
@@ -1714,7 +1738,7 @@ button.secondary {
 
 .qh-text-rtl {
   display: inline-block;
-  max-width: 760px;
+  max-width: 300px;
   font-size: 26px;
   line-height: 150%;
   font-weight: 600;
