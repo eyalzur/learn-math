@@ -37,10 +37,19 @@
   הערה עברית (RTL) בתוך `.qh-ltr` שהוריו `direction: ltr` — חובה לצלם ולוודא
   שזה לא "נבלע" בכיוון ההורה, אותה מלכודת-RTL שהפרויקט כבר תפס שלוש פעמים.
   אין שאלות פתוחות חוסמות.)
-- [ ] Implementation — developer — not started
+- [x] Implementation — developer — 2026-10-17 (מומש כמתוכנן, ללא סטיות
+  אמיתיות. אומת ידנית נגד שרת-dev אמיתי (לא תמונה סטטית) עם
+  `VITE_NOTEBOOK_SERVER_URL` מוגדר ומיקוק `/read-page` (אותו דפוס כמו
+  ה-e2e tests הקיימים) — צילומי-מסך אמיתיים ב-`320px` לשלושת הצבעים:
+  ירוק (RTL תקין בתוך `.qh-ltr`'s הורה `direction:ltr`, לא "נבלע"), ענבר
+  (`getComputedStyle` אימת `rgb(180,83,9)` בדיוק, לא רק קריאה חזותית —
+  `.feedback.correct-flagged`'s הסמנטיקה הקיימת מכובדת, לא "נדרס" לירוק),
+  אדום עם `errorPointer` ארוך (נמדד `boundingBox` בפועל — בלי גלישה מחוץ
+  ל-`.notebook-stage`), וגם שאלה מילולית (RTL) + מצב-חושך. `build`/`lint`
+  נקיים. גרסה `1.40.0 → 1.41.0`. ראו architecture.md, "Implementation Notes".)
 - [ ] Tests — qa — not started
 
-**Current phase:** developer
+**Current phase:** qa
 **Branch:** `feature/notebook-teacher-marks`
 **PR:** not opened yet
 

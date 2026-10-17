@@ -1742,6 +1742,41 @@ button.secondary {
   color: var(--notebook-question-ink);
 }
 
+/* The teacher's note, written below the question — always a Hebrew sentence, so always its
+   own RTL block even inside .qh-ltr's direction:ltr parent (an equation question). See
+   docs/features/notebook-teacher-marks/architecture.md. */
+.notebook-teacher-mark {
+  direction: rtl;
+  text-align: right;
+  margin-top: 8px;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 140%;
+}
+
+/* .qh-ltr's own width is fit-content (hugs the short equation above it) — without a cap
+   here, a long Hebrew sentence would stretch that box arbitrarily wide. 280px matches the
+   safe width already established for RTL text at the narrowest verified phone (320px) in
+   notebook-question-on-page/architecture.md. .qh-rtl already has a fixed 260px width from
+   the box the mark sits inside, so no separate cap is needed there. */
+.qh-ltr .notebook-teacher-mark {
+  max-width: 280px;
+}
+
+/* Same three literals already used by .feedback.correct/.correct-flagged/.wrong — not a
+   new CSS variable, on purpose: none of those three is a token today either. */
+.notebook-teacher-mark-green {
+  color: #16a34a;
+}
+
+.notebook-teacher-mark-amber {
+  color: #b45309;
+}
+
+.notebook-teacher-mark-red {
+  color: #dc2626;
+}
+
 .notebook-minimap {
   position: absolute;
   top: 10px;
