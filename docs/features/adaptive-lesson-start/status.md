@@ -18,11 +18,17 @@
   ל"המשכנו מאיפה שהפסקת" — שום מקום באפליקציה לא מודיע על שינוי-קושי כבר היום, ומיקה
   עדיין לומדת לקרוא (טקסט נוסף הוא עלות בלי תועלת לילד/ה). אין שינוי מסכים, אין טקסט
   חדש, אין נגיעת-RTL.)
-- [ ] Architecture — tech-lead — not started
+- [x] Architecture — tech-lead — 2026-10-17 (מאגר `localStorage` חדש ונפרד
+  (`src/data/adaptiveProgress.ts`), מפתח משולש `studentId:gradeId:topicId` (הגנה על
+  עתיד — מזהי-נושא ייחודיים היום בלבד, לא namespaced). כתיבה אחרי **כל** תשובה (לא רק
+  בסיום/יציאה) — מכסה את שני המקרים בנתיב-קוד אחד, עמיד גם לרענון-אגרסיבי. קריאה
+  מקולאמפת לטווח-הקושי הנוכחי של הנושא, מגינה מפני תוכן שהשתנה בין גרסאות. שינוי קוד
+  מרוכז ב-`App.tsx` בלבד (3 פונקציות) — אין נגיעה ב-`progress.ts`, ב-`curriculum.ts`,
+  או ב-`Practice.tsx`.)
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** tech-lead
+**Current phase:** developer
 **Branch:** `feature/adaptive-lesson-start`
 **PR:** not opened yet
 
