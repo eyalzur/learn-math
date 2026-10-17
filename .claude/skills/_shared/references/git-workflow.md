@@ -61,6 +61,18 @@ npm run bump:fix       # fixing behavior — minor + 1
 
 `major` is never raised by a script. It's a deliberate decision, edited by hand.
 
+**Run the bump exactly once per branch, not once per round.** The check compares your
+branch's version against `origin/main`'s — it wants "main's middle+1, minor reset" (or
+"main's minor+1" for a fix), a single fixed target, not "one bump per push." A branch
+that goes through several live-iteration rounds (bug fixes after qa, revisions after
+review) still only bumps once, in whichever commit first touched `src/`/`public/`/
+`index.html` — later rounds on the same branch touch code again but don't re-run
+`bump:feature`/`bump:fix` on top of the version that's already there. This has tripped
+up more than one round in this exact project already (`notebook-question-on-page`,
+`notebook-teacher-marks`) — if the version-bump check fails with "expected: X" after a
+later round, the fix is almost always to set `package.json` back to X by hand, not to
+run the bump script again.
+
 Which one you run follows the branch you're on: `feature/<slug>` → `bump:feature`,
 `fix/<slug>` → `bump:fix`. A PR that changes the app without a matching bump fails the
 **Version bump check** workflow, so this isn't something to remember so much as something
