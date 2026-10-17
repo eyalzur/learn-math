@@ -47,9 +47,14 @@
   אדום עם `errorPointer` ארוך (נמדד `boundingBox` בפועל — בלי גלישה מחוץ
   ל-`.notebook-stage`), וגם שאלה מילולית (RTL) + מצב-חושך. `build`/`lint`
   נקיים. גרסה `1.40.0 → 1.41.0`. ראו architecture.md, "Implementation Notes".)
-- [ ] Tests — qa — not started
+- [x] Tests — qa — 2026-10-17 (12 בדיקות חדשות, אחת לכל קריטריון-קבלה —
+  כולל בעלות-דף (ניווט ל"דף קודם" מציג את ההערה הנכונה), תיקון-מחליף-לא-מצטבר,
+  ואי-אפשרות-למחיקה. נתפסה ותוקנה רגרסיה אמיתית בקובץ קיים-ולא-קשור
+  (`notebook-question-on-page.spec.ts`: בדיקה שהניחה שהכותרת מכילה רק טקסט-
+  שאלה, תוקנה לבדוק `.problem-text` במקום את כל `.notebook-question-header`
+  — ראו tests.md ל-Status המלא). ריצה מלאה בודדת ונקייה: **482/482 עברו**.)
 
-**Current phase:** qa
+**Current phase:** ready for review
 **Branch:** `feature/notebook-teacher-marks`
 **PR:** not opened yet
 
