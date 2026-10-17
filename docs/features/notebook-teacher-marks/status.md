@@ -67,12 +67,15 @@
   `cx`/`cy`/`x2`/`y2` נמדדו בפועל מול הערכים הצפויים, לשני כיווני-העיגון.
   **דיוק-המיקום מול Claude אמיתי לא אומת** (אי אפשר בלי קריאה בתשלום) —
   מתועד כסיכון ידוע, כמו שכבר קרה ל-`notebook-teacher-understanding`.
-  4 בדיקות e2e חדשות. ריצה מלאה בודדת ונקייה: **486/486 עברו**. גרסה
-  `1.41.0 → 1.42.0`. ראו architecture.md, "Implementation Notes — סבב ב׳".)
+  4 בדיקות e2e חדשות. ריצה מלאה בודדת ונקייה: **486/486 עברו**. גרסה נשארת
+  `1.41.0` (בוצע bump מקרי שני פעמים על הבראנץ' הזה — תוקן בחזרה, ראו
+  architecture.md, "תיקון גרסה"). ראו architecture.md, "Implementation Notes — סבב ב׳".)
+- [x] מיזוג — 2026-10-17, אחרי אישור מפורש של המשתמש על התצוגה המקדימה
+  המתוקנת: "לא יודע אם זה מה שהתכוונת, אבל זה כבר טוב יותר, אז תמזג."
 
-**Current phase:** ready for review
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `feature/notebook-teacher-marks`
-**PR:** [#85](https://github.com/eyalzur/learn-math/pull/85)
+**PR:** [#85](https://github.com/eyalzur/learn-math/pull/85) — מוזג 2026-10-17
 
 ## Open questions / blockers
 None.

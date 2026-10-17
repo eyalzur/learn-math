@@ -6,12 +6,12 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
-| המורה כותבת על הדף באדום/ירוק, בכתב-יד + סימון מרחבי | 🟡 ready for review — 486/486, PR #85 | [status](./notebook-teacher-marks/status.md) |
 | דיוק בתיאור טעות התהליך + גיוון דימוי במשוואות חיבוריות | 🟢 done — מוזג ל-main | [status](./teacher-reading-precision/status.md) |
 | השאלה כתובה על דף המחברת עצמו + מיקום לפי כיוון כתיבה | 🟢 done — מוזג ל-main | [status](./notebook-question-on-page/status.md) |
 | פאד הניווט במחברת: לצד שמאל, כבוי כברירת מחדל, ונגיש מהדף עצמו | 🟢 done — מוזג ל-main | [status](./notebook-nav-buttons-visibility/status.md) |
 | מחברת: עמודת כפתורים ממוקדת + הצעת הפעולה הבאה | 🟢 done — מוזג ל-main | [status](./notebook-toolbar-redesign/status.md) |
 | גלילה אוטומטית במחברת לפי כיוון הכתיבה | 🟢 done — מוזג ל-main | [status](./notebook-auto-scroll/status.md) |
+| המורה כותבת על הדף באדום/ירוק, בכתב-יד + סימון מרחבי | 🟢 done — מוזג ל-main | [status](./notebook-teacher-marks/status.md) |
 | הגדרת מהירות כפתורי הניווט במחברת | 🟢 done — מוזג ל-main | [status](./notebook-nav-settings/status.md) |
 | כפתורי ניווט במחברת — פאד כיוונים | 🟢 done — מוזג ל-main | [status](./notebook-nav-buttons/status.md) |
 | כפתורי פעולה מחוץ לסרגל הכלים + מסך מלא שנשאר | 🟢 done — מוזג ל-main | [status](./notebook-toolbar-actions/status.md) |
