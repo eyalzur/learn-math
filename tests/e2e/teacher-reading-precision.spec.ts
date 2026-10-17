@@ -101,7 +101,9 @@ test("end-to-end: an additive-equation analogy actually renders on screen, in th
   // path works; the bulk test above owns variety/originality with a sample large enough to
   // be reliable.
   for (let i = 0; i < 20; i++) {
-    const prompt = (await page.locator(".problem-box").innerText()).trim();
+    // The question now lives on the notebook page itself, not a separate .problem-box — see
+    // docs/features/notebook-question-on-page/.
+    const prompt = (await page.locator(".notebook-question-header").innerText()).trim();
     if (additiveDirection(prompt)) {
       await answerViaNotebook(page, -1); // never a real equation's answer, always "wrong"
       const analogy = page.locator(".explanation-analogy");
