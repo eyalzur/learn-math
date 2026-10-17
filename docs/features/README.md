@@ -6,7 +6,7 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
-| המורה כותבת על הדף באדום/ירוק | 🟡 in design | [status](./notebook-teacher-marks/status.md) |
+| המורה כותבת על הדף באדום/ירוק | 🟡 in architecture | [status](./notebook-teacher-marks/status.md) |
 | דיוק בתיאור טעות התהליך + גיוון דימוי במשוואות חיבוריות | 🟢 done — מוזג ל-main | [status](./teacher-reading-precision/status.md) |
 | השאלה כתובה על דף המחברת עצמו + מיקום לפי כיוון כתיבה | 🟢 done — מוזג ל-main | [status](./notebook-question-on-page/status.md) |
 | פאד הניווט במחברת: לצד שמאל, כבוי כברירת מחדל, ונגיש מהדף עצמו | 🟢 done — מוזג ל-main | [status](./notebook-nav-buttons-visibility/status.md) |
