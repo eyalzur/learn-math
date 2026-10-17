@@ -1013,15 +1013,6 @@ button.secondary {
   transform: translateX(-22px);
 }
 
-/* The question's speaker sits above the problem box, never inside it: that box forces a
-   direction, and a button joining its isolated context shifts the expression's alignment. */
-.question-speech {
-  display: flex;
-  justify-content: flex-start;
-  max-width: 420px;
-  margin: 0 auto 8px;
-}
-
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -1556,19 +1547,6 @@ button.secondary {
   border-bottom: 1px solid var(--border);
 }
 
-.notebook-fullscreen-topbar .problem-box {
-  margin: 0;
-  flex: 1;
-  min-width: 0;
-}
-
-/* Deliberately smaller than the regular 40px prompt (App.css .prompt-ltr): this strip is a
-   compact stand-in for the full question header while the notebook fills the screen, and
-   26px still crowded out the writing surface on a phone. */
-.notebook-fullscreen-topbar .prompt-ltr {
-  font-size: 18px;
-}
-
 .notebook-fullscreen-exit {
   flex-shrink: 0;
   background: none;
@@ -1590,6 +1568,16 @@ button.secondary {
   gap: 8px;
   padding: 10px 16px;
   border-bottom: 1px solid var(--border);
+}
+
+/* Groups the page indicator with the question's read-aloud button — now the one place that
+   button lives, embedded or fullscreen (see docs/features/notebook-question-on-page/) — so
+   .notebook-topbar's existing space-between still works with two groups, not three loose
+   items spread evenly across the bar. */
+.notebook-topbar-start {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .notebook-page-indicator,
@@ -1673,6 +1661,85 @@ button.secondary {
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
+}
+
+/* The question, written on the page itself — a sibling of .notebook-canvas inside the same
+   transformed .notebook-stack, so it pans/zooms with the page exactly like the grid and the
+   student's own ink. After the canvas in markup order (paints on top; z-index below is
+   explicit insurance, not load-bearing on its own) and pointer-events:none so a stroke that
+   starts over it still reaches the canvas underneath — it's never ink, never erasable, and
+   never part of filledCells. Deliberately NOT aria-hidden (unlike .notebook-minimap, which
+   is purely decorative): this is real, meaningful content for a screen reader. See
+   docs/features/notebook-question-on-page/. */
+.notebook-question-header {
+  position: absolute;
+  z-index: 1;
+  top: 24px;
+  /* Physical left/right, never a logical inset — which corner the page opens anchored to
+     now itself depends on this question (anchorPanX in notebook.ts: an equation opens
+     top-left, a Hebrew word problem opens top-**right**, see PracticeNotebook.tsx's
+     anchorRight prop), so a logical inset tied to document direction would be solving the
+     wrong variable here anyway. `left`/`right` themselves are set per-variant below, not
+     here — the two directions anchor from opposite physical edges. See docs/features/
+     notebook-question-on-page/design.md, "עיגון פיזי, לא לוגי — סבב ג׳". */
+  pointer-events: none;
+  padding-bottom: 16px;
+  border-bottom: 1px solid color-mix(in srgb, var(--notebook-grid) 70%, transparent);
+}
+
+.notebook-question-header.qh-ltr {
+  direction: ltr;
+  text-align: left;
+  /* 96px, not the 56px a plain "not flush" margin would suggest — measured against the real
+     floating zoom/fullscreen/clear button column, which is fixed screen-space chrome (not
+     part of the page) sitting at the stage's own top-left corner regardless of pan/zoom. At
+     the fixed opening zoom (0.7) that column's right edge sits ~71px into the page's own
+     coordinate space; 96px (4 grid cells) clears it with room to spare instead of landing
+     text half-behind a button, which 56px alone did. See docs/features/
+     notebook-question-on-page/architecture.md, "Implementation Notes — סבב ב׳". */
+  left: 96px;
+  /* Hugs its own content instead of stretching to a fixed width — a bare equation reads
+     top-left, not flush against the edge and not centered across the page. See
+     docs/features/notebook-question-on-page/design.md, "מיקום לפי כיוון קריאה". */
+  width: fit-content;
+}
+
+.notebook-question-header.qh-rtl {
+  direction: rtl;
+  text-align: right;
+  /* Right-aligned text, hugging the page's own physical *right* edge — not a compromise
+     anymore. The page itself now opens anchored to its physical-right corner whenever the
+     question on it is a word problem (anchorRight prop, PracticeNotebook.tsx), so what's in
+     view by default is exactly the area this box lives in, the same way .qh-ltr's left
+     margin lines up with the page's default left-anchored view. 80px (not a flush 56px) —
+     measured against the real floating minimap, fixed screen-space chrome at the stage's
+     own top-right corner regardless of pan/zoom — clears its footprint with room to spare,
+     the same reasoning as .qh-ltr's 96px against the zoom column on the opposite side. See
+     docs/features/notebook-question-on-page/design.md, "עיגון פיזי, לא לוגי — סבב ג׳". */
+  right: 110px;
+  /* A longer question simply wraps into more lines — the header's height is already dynamic
+     by design, not a fixed budget. 260px, not something larger: measured against the real
+     visible stage width on the smallest verified phone (320px viewport, ~270px stage) —
+     110px of right margin (clearing the minimap, see above) plus the box's own width have to
+     both fit inside that, or the box's *left* edge runs off the stage's own left edge
+     instead (caught by an earlier, too-wide attempt during this same round — see
+     architecture.md, "Implementation Notes — סבב ג׳"). */
+  width: 260px;
+}
+
+.qh-text-ltr {
+  font-size: 44px;
+  font-weight: 600;
+  color: var(--notebook-question-ink);
+}
+
+.qh-text-rtl {
+  display: inline-block;
+  max-width: 260px;
+  font-size: 26px;
+  line-height: 150%;
+  font-weight: 600;
+  color: var(--notebook-question-ink);
 }
 
 .notebook-minimap {

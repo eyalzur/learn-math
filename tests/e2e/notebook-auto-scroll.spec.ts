@@ -37,8 +37,16 @@ async function openLevel(page: Page) {
   await page.goto("/learn-math/");
   await page.locator(".student-card").first().click();
   await page.locator(".grade-card").first().click();
-  await page.locator(".topic-card").first().click();
-  await page.locator(".style-card").first().click();
+  // Topic 3 ("חיבור וחיסור עד 20"), not 0 — bare-equation questions (LTR), so the page
+  // opens anchored to its physical-left corner, same as before this topic choice changed
+  // (see docs/features/notebook-question-on-page/, "עיגון פיזי, לא לוגי — סבב ג׳"). A written
+  // level, not adaptive, so a fixed question list the rest of this file's replay helpers
+  // can rely on — unlike topic 1, which is adaptive and randomizes.
+  await page.locator(".topic-card").nth(3).click();
+  const byStyle = page.locator(".style-card");
+  const byLevel = page.locator(".level-card");
+  if (await byStyle.count()) await byStyle.first().click();
+  else if (await byLevel.count()) await byLevel.first().click();
 }
 
 async function openTopics(page: Page, studentName?: string) {
@@ -51,8 +59,16 @@ async function openTopics(page: Page, studentName?: string) {
 }
 
 async function enterPractice(page: Page) {
-  await page.locator(".topic-card").first().click();
-  await page.locator(".style-card").first().click();
+  // Topic 3 ("חיבור וחיסור עד 20"), not 0 — bare-equation questions (LTR), so the page
+  // opens anchored to its physical-left corner, same as before this topic choice changed
+  // (see docs/features/notebook-question-on-page/, "עיגון פיזי, לא לוגי — סבב ג׳"). A written
+  // level, not adaptive, so a fixed question list the rest of this file's replay helpers
+  // can rely on — unlike topic 1, which is adaptive and randomizes.
+  await page.locator(".topic-card").nth(3).click();
+  const byStyle = page.locator(".style-card");
+  const byLevel = page.locator(".level-card");
+  if (await byStyle.count()) await byStyle.first().click();
+  else if (await byLevel.count()) await byLevel.first().click();
 }
 
 /** Walks back up to the topic screen, wherever we are — a reload or leaving practice can

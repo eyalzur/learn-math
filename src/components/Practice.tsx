@@ -99,6 +99,15 @@ export function Practice({
    */
   const [pages, setPages] = useState<NotebookPage[]>(() => [createBlankPage()]);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
+  /** Which question's index each page in `pages` was written for — a parallel array, kept
+   *  in lockstep with `pages` in every place `pages` changes. Needed because "which page is
+   *  being *viewed*" (`currentPageIndex`, driven by the ◀/▶ page-nav buttons) and "which
+   *  question is currently *live*" (`index`, driven only by `next()`) are two different
+   *  things once a student navigates back to an earlier page: the page itself doesn't
+   *  change, but without this, the written-question header had no way to know which
+   *  question that page was actually for, and silently showed the live one instead. See
+   *  docs/features/notebook-question-on-page/architecture.md, "Implementation Notes". */
+  const [pageQuestionIndex, setPageQuestionIndex] = useState<number[]>(() => [0]);
 
   /** Talking to the teacher: idle (nothing sent yet, or a previous reading is showing),
    *  sending (waiting on the server), or error (the call itself failed — network/server,
@@ -377,6 +386,7 @@ export function Practice({
     // it means a locked, already-checked page can never end up being "the current page"
     // when a new question loads. At the page cap, reuse the last page instead of growing
     // past it (see docs/features/notebook-default-practice/architecture.md, Edge Cases).
+    const nextQuestionIndex = index + 1;
     if (pages.length >= MAX_PAGES) {
       setPages((prev) => {
         const updated = [...prev];
@@ -384,9 +394,15 @@ export function Practice({
         return updated;
       });
       setCurrentPageIndex(pages.length - 1);
+      setPageQuestionIndex((prev) => {
+        const updated = [...prev];
+        updated[updated.length - 1] = nextQuestionIndex;
+        return updated;
+      });
     } else {
       setPages((prev) => [...prev, createBlankPage()]);
       setCurrentPageIndex(pages.length);
+      setPageQuestionIndex((prev) => [...prev, nextQuestionIndex]);
     }
   }
 
@@ -440,11 +456,25 @@ export function Practice({
       {speakingBox === "question" ? "⏹" : "🔊"}
     </button>
   );
-  const questionBox = (
-    <div className={`problem-box ${isWordProblem ? "box-rtl" : "box-ltr"}`}>
-      <span className={`problem-text ${isWordProblem ? "prompt-rtl" : "prompt-ltr"}`}>
-        {isWordProblem ? (
-          promptSegments(question.prompt).map((segment, i) =>
+  /** The question whose page is actually being *viewed* right now — not necessarily the
+   *  live `question` being answered. Navigating back to an earlier page (◀) must keep
+   *  showing what was written there, not whatever's currently being answered. Falls back to
+   *  `index` only if `pageQuestionIndex` hasn't caught up yet (never observed in practice,
+   *  since both are seeded/updated together, but a missing page index must never crash). */
+  const displayedQuestion = lesson.questions[pageQuestionIndex[currentPageIndex] ?? index];
+  const displayedQuestionIsWordProblem = isHebrewPrompt(displayedQuestion.prompt);
+
+  /** The question, written on the notebook page itself — rendered inside
+   *  `.notebook-stack` by `PracticeNotebook`, which has no idea what it is (same split as
+   *  `primaryAction`/`topSlot`). Same prompt-parsing/LTR-isolation logic `.problem-box`
+   *  always used, just a different wrapper — `TopicLesson.tsx` keeps using `.problem-box`/
+   *  `box-rtl`/`box-ltr` on its own, unrelated screen. See
+   *  docs/features/notebook-question-on-page/. */
+  const questionHeader = (
+    <div className={`notebook-question-header ${displayedQuestionIsWordProblem ? "qh-rtl" : "qh-ltr"}`}>
+      <span className={`problem-text ${displayedQuestionIsWordProblem ? "qh-text-rtl" : "qh-text-ltr"}`}>
+        {displayedQuestionIsWordProblem ? (
+          promptSegments(displayedQuestion.prompt).map((segment, i) =>
             segment.kind === "math" ? (
               <span key={i} className="prompt-math">
                 {segment.value}
@@ -454,7 +484,7 @@ export function Practice({
             ),
           )
         ) : (
-          <>{promptWithEquals(question.prompt)}</>
+          <>{promptWithEquals(displayedQuestion.prompt)}</>
         )}
       </span>
     </div>
@@ -473,11 +503,13 @@ export function Practice({
    *  other topic, so this is a no-op everywhere else, same as `clockSlot`. */
   const angleSlot = bundle.angle ? <AngleShape shape={bundle.angle} label={bundle.angle.srLabel} /> : null;
 
-  /** What the notebook shows above the writing surface while it fills the screen: the
-   *  question (so writing it down never means forgetting what's being solved) plus a way
-   *  back out, replacing the regular header/title/hint-button that fullscreen hides — see
-   *  design.md, מצב F. Rendered by PracticeNotebook, which has no idea what it is (same
-   *  split as primaryAction). Null outside fullscreen: the regular header below covers it. */
+  /** What the notebook shows above the writing surface while it fills the screen: a way
+   *  back out, plus any clock/angle diagram — the question itself no longer needs a copy
+   *  here, since it's written on the page itself now (`questionHeader`, passed to
+   *  `PracticeNotebook` directly) and stays visible exactly the same way in fullscreen. See
+   *  docs/features/notebook-question-on-page/design.md. Rendered by PracticeNotebook, which
+   *  has no idea what it is (same split as primaryAction). Null outside fullscreen: the
+   *  regular header below covers it. */
   const topSlot = fullscreen ? (
     <div className="notebook-fullscreen-topbar">
       <button
@@ -491,10 +523,8 @@ export function Practice({
       >
         ✕
       </button>
-      {questionBox}
       {clockSlot}
       {angleSlot}
-      {speechSupported() && questionSpeakButton}
     </div>
   ) : null;
 
@@ -561,9 +591,9 @@ export function Practice({
 
   return (
     <div className="practice">
-      {/* The regular header/title/hint-button hide while the notebook fills the screen —
-          fullscreen's topSlot above carries a compact replacement for the one part of this
-          (the question) that still has to stay visible. See design.md, מצב F. */}
+      {/* The regular header/title hide while the notebook fills the screen — the question
+          itself no longer needs a chrome copy in either state, since it's written on the
+          notebook page directly now. See docs/features/notebook-question-on-page/design.md. */}
       {!fullscreen && (
         <>
           <div className="practice-header">
@@ -581,10 +611,6 @@ export function Practice({
             </span>
           </div>
           <h2>{lesson.title}</h2>
-          {/* Outside .problem-box on purpose: that box forces a direction, and a button
-              inside it would join the isolated context and shift the expression's alignment. */}
-          {speechSupported() && <div className="question-speech">{questionSpeakButton}</div>}
-          {questionBox}
           {clockSlot}
           {angleSlot}
         </>
@@ -744,6 +770,9 @@ export function Practice({
         suggestionDelayMs={suggestionDelayMs}
         navPadVisible={navPadVisible}
         onOpenSettings={onOpenSettings}
+        questionHeader={questionHeader}
+        anchorRight={displayedQuestionIsWordProblem}
+        speakButton={speechSupported() ? questionSpeakButton : null}
       />
       {!fullscreen && sendState === "error" && (
         <p className="notebook-send-error" aria-live="polite">

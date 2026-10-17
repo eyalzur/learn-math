@@ -37,12 +37,14 @@ test.describe("main action outside the toolbar", () => {
   });
 
   test("after a reading, 'הבא' is outside the toolbar and moves on to the next question", async ({ page }) => {
-    const before = await page.locator(".problem-box").first().innerText();
+    // The question now lives on the notebook page itself, not a separate .problem-box — see
+    // docs/features/notebook-question-on-page/.
+    const before = await page.locator(".notebook-question-header").first().innerText();
     await answerViaNotebook(page, 1);
     await expect(page.locator(".notebook-toolbar").getByRole("button", { name: "הבא", exact: true })).toHaveCount(0);
     await expect(nextButton(page)).toBeVisible();
     await nextButton(page).click();
-    await expect(page.locator(".problem-box").first()).not.toHaveText(before);
+    await expect(page.locator(".notebook-question-header").first()).not.toHaveText(before);
   });
 
   test("the toolbar's other controls still work (page add, tools)", async ({ page }) => {
