@@ -25,10 +25,16 @@
   מקולאמפת לטווח-הקושי הנוכחי של הנושא, מגינה מפני תוכן שהשתנה בין גרסאות. שינוי קוד
   מרוכז ב-`App.tsx` בלבד (3 פונקציות) — אין נגיעה ב-`progress.ts`, ב-`curriculum.ts`,
   או ב-`Practice.tsx`.)
-- [ ] Implementation — developer — not started
+- [x] Implementation — developer — 2026-10-17 (מומש כמתוכנן, ללא סטיות. `build`/`lint`
+  נקיים. גרסה `1.41.0 → 1.42.0`. אומת ידנית מול שרת-dev אמיתי (Playwright, רק
+  `/read-page` ממוקק): ביקור ראשון מתחיל קל ללא שינוי; 10 תשובות נכונות מעלות ושומרות
+  רמה (`localStorage` מציג `{"mika:2:add100":8}`); יציאה ב"חזרה" (לא סיום) וכניסה
+  חזרה לאותו נושא מתחילה מהרמה השמורה (`745 + 88`, לא `80ish`); נושא אחר של אותה
+  תלמידה מתחיל מרמה קלה עצמאית, לא "יורש" את רמת הנושא הראשון. ראו architecture.md,
+  "Implementation Notes".)
 - [ ] Tests — qa — not started
 
-**Current phase:** developer
+**Current phase:** qa
 **Branch:** `feature/adaptive-lesson-start`
 **PR:** not opened yet
 
