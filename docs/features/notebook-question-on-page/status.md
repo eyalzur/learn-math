@@ -93,10 +93,9 @@
   שה-RTL `760px` הקודם מעולם לא נבדק באמת ברוחב-נייד אמיתי ונחתך בפועל
   — תוקן יחד. שארית ידועה ומתועדת: חפיפה קלה עם המינימאפ ב-`320px`
   בלבד (לא מ-`375px` ומעלה). ריצה מלאה בודדת ונקייה, פעמיים: **468/468
-  עברו** (כולל שתי הבדיקות שחסמו קודם). גרסה `1.39.0 → 1.40.0`
-  (`bump:feature`). ראו architecture.md/design.md, "Implementation
-  Notes — סבב ב׳" / "עיגון פיזי, לא לוגי" לפירוט המלא, ו-tests.md
-  לעדכון ה-Status.
+  עברו** (כולל שתי הבדיקות שחסמו קודם). ראו architecture.md/design.md,
+  "Implementation Notes — סבב ב׳" / "עיגון פיזי, לא לוגי" לפירוט המלא,
+  ו-tests.md לעדכון ה-Status.
 - [x] סבב ג׳ — 2026-10-16, לפי בקשת המשתמש "תהיה יצירתי": הדף עצמו
   עכשיו פותח מעוגן לפינה הימנית-הפיזית כששאלת אותו דף מילולית (לא רק
   קופסה-צרה-משמאל כפי שסבב ב׳ הציע כפשרה) — `anchorPanX()` חדש,
@@ -106,12 +105,13 @@
   ב-`320px`; תוקן ל-`right:110/width:260` אחרי מדידה אמיתית —
   `visibleFraction=1.00` בכל רוחב שנבדק. שבע בדיקות שהניחו `panX:0`
   קבוע בפתיחה תוקנו (עברו לפתוח נושא קבוע/LTR). 468/468, ריצה נקייה
-  פעמיים. גרסה `1.40.0 → 1.41.0`. ראו architecture.md, "Implementation
-  Notes — סבב ג׳".
+  פעמיים. גרסה (בפועל, אחרי תיקון CI על bump שהורץ שוב בטעות בכל סבב):
+  `1.38.0 → 1.39.0`, פעם אחת בלבד לכל הפיצ'ר. ראו architecture.md,
+  "Implementation Notes — סבב ג׳".
 
-**Current phase:** ready for review
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `feature/notebook-question-on-page`
-**PR:** not opened yet
+**PR:** [#83](https://github.com/eyalzur/learn-math/pull/83) — מוזג 2026-10-17
 
 ## Open questions / blockers
 None.
