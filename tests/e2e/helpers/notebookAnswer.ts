@@ -110,7 +110,16 @@ export async function mockTeacherCommunicationFailure(page: Page) {
  */
 export async function mockTeacherReadingSequence(
   page: Page,
-  readings: ({ certain: false } | { certain: true; processReflection: string; errorPointer?: string; finalAnswer: number })[],
+  readings: (
+    | { certain: false }
+    | {
+        certain: true;
+        processReflection: string;
+        errorPointer?: string;
+        errorLocation?: { x: number; y: number };
+        finalAnswer: number;
+      }
+  )[],
 ) {
   await page.unroute("**/read-page").catch(() => {});
   let call = 0;

@@ -155,17 +155,20 @@ test("each new page shows its own question, and navigating back still shows what
 }) => {
   await openEquationsTopic(page);
 
-  const firstQuestionText = (await page.locator(".notebook-question-header").innerText()).trim();
+  // Scoped to .problem-text (the question itself), not the whole header — the header can
+  // also hold a teacher's note once a page has been sent (docs/features/notebook-teacher-marks/),
+  // which the question's own identity shouldn't be sensitive to.
+  const firstQuestionText = (await page.locator(".problem-text").innerText()).trim();
 
   await answerViaNotebook(page, 0);
   await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
   await page.locator(".notebook-question-header").waitFor({ state: "visible" });
 
-  const secondQuestionText = (await page.locator(".notebook-question-header").innerText()).trim();
+  const secondQuestionText = (await page.locator(".problem-text").innerText()).trim();
   expect(secondQuestionText).not.toBe(firstQuestionText);
 
   await page.getByRole("button", { name: "דף קודם" }).click();
-  await expect(page.locator(".notebook-question-header")).toHaveText(firstQuestionText);
+  await expect(page.locator(".problem-text")).toHaveText(firstQuestionText);
 });
 
 test("a Hebrew word problem's arithmetic stays left-to-right, and the question is visible at the page's default view", async ({

@@ -4,7 +4,7 @@ import { isHebrewPrompt, promptSegments, promptWithEquals } from "../data/curric
 import type { Diagnosis } from "../data/diagnose";
 import { diagnose } from "../data/diagnose";
 import type { NotebookPage } from "../data/notebook";
-import { createBlankPage, MAX_PAGES, pageHasContent } from "../data/notebook";
+import { createBlankPage, MAX_PAGES, PAGE_HEIGHT, PAGE_WIDTH, pageHasContent } from "../data/notebook";
 import type { PageReading } from "../lib/notebookServer";
 import { readPageWithTeacher } from "../lib/notebookServer";
 import { buildExplanation, explanationSpeechParts } from "../data/questionExplanation";
@@ -20,6 +20,17 @@ import { primeVoices, speak, speechParts, speechSupported, stopSpeaking } from "
  * on all of them while only one is being read.
  */
 type SpeakingBox = "question" | "diagnosis" | "explanation" | "teacher" | null;
+
+/** What the teacher wrote directly on the notebook page after reading it — see
+ *  docs/features/notebook-teacher-marks/. */
+interface TeacherMark {
+  color: "green" | "amber" | "red";
+  text: string;
+  /** A rough estimate (0–1 fraction of the page) of where the errorPointer issue was
+   *  written — only ever set alongside an errorPointer-derived text, never on its own. See
+   *  "עדכון סבב ב׳" in this feature's docs. */
+  location?: { x: number; y: number };
+}
 
 interface PracticeProps {
   /**
@@ -108,6 +119,15 @@ export function Practice({
    *  question that page was actually for, and silently showed the live one instead. See
    *  docs/features/notebook-question-on-page/architecture.md, "Implementation Notes". */
   const [pageQuestionIndex, setPageQuestionIndex] = useState<number[]>(() => [0]);
+
+  /** A page-space, page-owned companion to `teacherNote` below, not a replacement for it
+   *  (the panel keeps using `teacherNote`/`feedback` exactly as before). Derived once, in
+   *  `handleTeacherReading`, from the same reading that already sets `teacherNote`/`feedback`
+   *  — not a second source of truth. Updated in lockstep with `pageQuestionIndex` (same two
+   *  call sites in `next()`, same per-page indexing) for the same reason: a page's own mark
+   *  must stay with that page when navigating back to it, not follow whichever question is
+   *  currently live. See docs/features/notebook-teacher-marks/architecture.md. */
+  const [pageTeacherMarks, setPageTeacherMarks] = useState<(TeacherMark | null)[]>(() => [null]);
 
   /** Talking to the teacher: idle (nothing sent yet, or a previous reading is showing),
    *  sending (waiting on the server), or error (the call itself failed — network/server,
@@ -265,6 +285,11 @@ export function Practice({
       setUncertain(true);
       setTeacherNote(null);
       setFeedback(null);
+      setPageTeacherMarks((prev) => {
+        const updated = [...prev];
+        updated[currentPageIndex] = null;
+        return updated;
+      });
       if (questionCountedRef.current) {
         setCorrectCount((c) => c - 1);
         questionCountedRef.current = false;
@@ -275,6 +300,20 @@ export function Practice({
     setTeacherNote({ reflection: reading.processReflection, errorPointer: reading.errorPointer });
     const isCorrect = reading.finalAnswer === question.answer;
     setFeedback(isCorrect ? "correct" : "wrong");
+    const mark: TeacherMark = reading.errorPointer
+      ? {
+          color: isCorrect ? "amber" : "red",
+          text: `${isCorrect ? "✓" : "✗"} ${reading.errorPointer}`,
+          ...(reading.errorLocation ? { location: reading.errorLocation } : {}),
+        }
+      : isCorrect
+        ? { color: "green", text: "✓ יפה מאוד!" }
+        : { color: "red", text: "✗ כדאי לבדוק שוב." };
+    setPageTeacherMarks((prev) => {
+      const updated = [...prev];
+      updated[currentPageIndex] = mark;
+      return updated;
+    });
 
     if (isCorrect && !questionCountedRef.current) {
       setCorrectCount((c) => c + 1);
@@ -399,10 +438,16 @@ export function Practice({
         updated[updated.length - 1] = nextQuestionIndex;
         return updated;
       });
+      setPageTeacherMarks((prev) => {
+        const updated = [...prev];
+        updated[updated.length - 1] = null;
+        return updated;
+      });
     } else {
       setPages((prev) => [...prev, createBlankPage()]);
       setCurrentPageIndex(pages.length);
       setPageQuestionIndex((prev) => [...prev, nextQuestionIndex]);
+      setPageTeacherMarks((prev) => [...prev, null]);
     }
   }
 
@@ -463,13 +508,18 @@ export function Practice({
    *  since both are seeded/updated together, but a missing page index must never crash). */
   const displayedQuestion = lesson.questions[pageQuestionIndex[currentPageIndex] ?? index];
   const displayedQuestionIsWordProblem = isHebrewPrompt(displayedQuestion.prompt);
+  /** The teacher's mark for the page actually being *viewed* — same "viewed page, not live
+   *  question" split as `displayedQuestion` above. See docs/features/notebook-teacher-marks/. */
+  const displayedTeacherMark = pageTeacherMarks[currentPageIndex] ?? null;
 
   /** The question, written on the notebook page itself — rendered inside
    *  `.notebook-stack` by `PracticeNotebook`, which has no idea what it is (same split as
    *  `primaryAction`/`topSlot`). Same prompt-parsing/LTR-isolation logic `.problem-box`
    *  always used, just a different wrapper — `TopicLesson.tsx` keeps using `.problem-box`/
    *  `box-rtl`/`box-ltr` on its own, unrelated screen. See
-   *  docs/features/notebook-question-on-page/. */
+   *  docs/features/notebook-question-on-page/. The teacher's mark (if any) is a second,
+   *  independent child here — not a new prop to PracticeNotebook, which still only sees one
+   *  opaque `questionHeader` node. See docs/features/notebook-teacher-marks/. */
   const questionHeader = (
     <div className={`notebook-question-header ${displayedQuestionIsWordProblem ? "qh-rtl" : "qh-ltr"}`}>
       <span className={`problem-text ${displayedQuestionIsWordProblem ? "qh-text-rtl" : "qh-text-ltr"}`}>
@@ -487,8 +537,33 @@ export function Practice({
           <>{promptWithEquals(displayedQuestion.prompt)}</>
         )}
       </span>
+      {displayedTeacherMark && (
+        <p className={`notebook-teacher-mark notebook-teacher-mark-${displayedTeacherMark.color}`}>
+          {segmented(displayedTeacherMark.text)}
+        </p>
+      )}
     </div>
   );
+
+  /** A rough circle+line pointing from roughly where the teacher's errorPointer issue was
+   *  written toward the note above — a kept, labeled deviation from `questionHeader`'s
+   *  "everything folds into one opaque node" rule: this draws anywhere on the page (the
+   *  circle can land far below the header), not just inside the header block, so it needs
+   *  its own prop. See docs/features/notebook-teacher-marks/architecture.md, "סבב ב׳".
+   *  The line's target end is a fixed page-space point, not a measured DOM position (the
+   *  mark's own height is dynamic) — it points toward the header's own corner, not at the
+   *  mark's exact text. */
+  const teacherPointer = displayedTeacherMark?.location ? (
+    <svg className="notebook-teacher-pointer" viewBox={`0 0 ${PAGE_WIDTH} ${PAGE_HEIGHT}`}>
+      <line
+        x1={displayedTeacherMark.location.x * PAGE_WIDTH}
+        y1={displayedTeacherMark.location.y * PAGE_HEIGHT}
+        x2={displayedQuestionIsWordProblem ? PAGE_WIDTH - 110 : 96}
+        y2={60}
+      />
+      <circle cx={displayedTeacherMark.location.x * PAGE_WIDTH} cy={displayedTeacherMark.location.y * PAGE_HEIGHT} r={40} />
+    </svg>
+  ) : null;
 
   /** The one diagram in the app that renders next to the question itself instead of only
    *  inside `QuestionExplanation` — see docs/features/grade2-clock/design.md. `bundle.clock`
@@ -771,6 +846,7 @@ export function Practice({
         navPadVisible={navPadVisible}
         onOpenSettings={onOpenSettings}
         questionHeader={questionHeader}
+        teacherPointer={teacherPointer}
         anchorRight={displayedQuestionIsWordProblem}
         speakButton={speechSupported() ? questionSpeakButton : null}
       />

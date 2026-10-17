@@ -19,7 +19,17 @@ const SERVER_URL: string = import.meta.env.VITE_NOTEBOOK_SERVER_URL ?? "";
  * shown to the student is fixed client-side copy, not anything the model wrote.
  */
 export type PageReading =
-  | { certain: true; processReflection: string; errorPointer?: string; finalAnswer: number }
+  | {
+      certain: true;
+      processReflection: string;
+      errorPointer?: string;
+      /** A rough estimate (0–1 fraction of the page's own width/height) of where the
+       *  errorPointer issue was written — only meaningful alongside errorPointer, never a
+       *  precise pixel/cell location. See docs/features/notebook-teacher-marks/, "עדכון
+       *  סבב ב׳". */
+      errorLocation?: { x: number; y: number };
+      finalAnswer: number;
+    }
   | { certain: false };
 
 export interface TeacherReading {

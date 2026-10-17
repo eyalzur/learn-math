@@ -90,6 +90,13 @@ interface PracticeNotebookProps {
    *  and zooms with the page itself, like a student's own copied-down question. See
    *  docs/features/notebook-question-on-page/. */
   questionHeader: ReactNode;
+  /** A rough circle+line pointing at roughly where a flagged mistake was written, if any —
+   *  pre-rendered by the caller, same "this component has no idea what it is" split as
+   *  `questionHeader`. A deliberate, separate prop rather than folded into `questionHeader`:
+   *  it draws anywhere on the page (the circle can land far below the header), not just
+   *  inside the header block. See docs/features/notebook-teacher-marks/architecture.md,
+   *  "סבב ב׳". `null` when there's nothing to point at. */
+  teacherPointer: ReactNode;
   /** Whether the page currently shown should open anchored to its top-**right** corner
    *  instead of top-left — true for a Hebrew word problem, false for a bare equation. Drives
    *  which side of the page is actually in view (see `anchorPanX` in notebook.ts and
@@ -176,6 +183,7 @@ export function PracticeNotebook({
   navPadVisible,
   onOpenSettings,
   questionHeader,
+  teacherPointer,
   anchorRight,
   speakButton,
 }: PracticeNotebookProps) {
@@ -1046,6 +1054,7 @@ export function PracticeNotebook({
               onContextMenu={(e) => e.preventDefault()}
             />
             {questionHeader}
+            {teacherPointer}
           </div>
         </div>
         {/* Moved to the opposite top corner from .notebook-zoom-controls (below) — the
