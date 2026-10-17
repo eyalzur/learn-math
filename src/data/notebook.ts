@@ -220,11 +220,29 @@ export function computeFitTransform(viewportWidth: number, viewportHeight: numbe
  *  regardless of viewport size — deliberately a separate function rather than a fixed-zoom
  *  branch inside `computeFitTransform`, which is also used to fit the whole page on demand
  *  (see `computeFitTransform`'s own doc) and still needs to center. This one anchors the
- *  page's own top-left corner to the viewport's top-left corner instead: a student starts
- *  writing at the top of the page, like a real notebook, not in the middle of a canvas they
- *  have to scroll to orient themselves on. */
+ *  page's own top corner to the viewport's top edge instead: a student starts writing at
+ *  the top of the page, like a real notebook, not in the middle of a canvas they have to
+ *  scroll to orient themselves on. */
 export function computeInitialTransform(): PanZoom {
   return { zoom: INITIAL_ZOOM, panX: 0, panY: 0 };
+}
+
+/**
+ * Which physical corner of the page a given question's own writing starts at, top-anchored
+ * either way. An equation reads left-to-right, so the page opens with its top-**left**
+ * corner at the viewport's near edge (same as `computeInitialTransform`'s panX: 0) — a
+ * Hebrew word problem reads right-to-left, so the page instead opens with its top-**right**
+ * corner there, at the current zoom level and viewport width. This is what makes a page
+ * whose question reads the other way open already showing where that question actually is,
+ * instead of a single fixed side regardless of content (see
+ * docs/features/notebook-question-on-page/design.md, "עיגון פיזי, לא לוגי — סבב ג׳").
+ * Called for the very first page at the zoom this opens the session with
+ * (`INITIAL_ZOOM`), and again on every later page change (a new page, or navigating to an
+ * existing one) at *that* moment's current zoom — so a deliberate zoom-in isn't silently
+ * reset just because the next question happens to read the other way.
+ */
+export function anchorPanX(anchorRight: boolean, zoom: number, stageWidth: number): number {
+  return anchorRight ? stageWidth - PAGE_WIDTH * zoom : 0;
 }
 
 /** The highlighted rectangle in the minimap, in the minimap's own pixel space. */

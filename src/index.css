@@ -11,6 +11,10 @@
      independent of --accent-border (the app's purple accent, which the grid borrowed by
      coincidence rather than by design). */
   --notebook-grid: #b8d4f0;
+  /* The question written on the notebook page: a distinct "printed ink" blue, deliberately
+     different from both --text-h (the student's own ink) and --notebook-grid (too light to
+     read as text). See docs/features/notebook-question-on-page/design.md. */
+  --notebook-question-ink: #2c5282;
   --social-bg: rgba(244, 243, 236, 0.5);
   --shadow:
     rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
@@ -45,6 +49,7 @@
     --accent-bg: rgba(192, 132, 252, 0.15);
     --accent-border: rgba(192, 132, 252, 0.5);
     --notebook-grid: #3a5578;
+    --notebook-question-ink: #8fb8e8;
     --social-bg: rgba(47, 48, 58, 0.5);
     --shadow:
       rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;

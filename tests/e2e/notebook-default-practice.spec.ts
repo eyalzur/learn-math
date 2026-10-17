@@ -103,7 +103,9 @@ test("the notebook is ready to write in the moment a question loads — no separ
   page,
 }) => {
   await openLevel(page);
-  await expect(page.locator(".problem-box")).toBeVisible();
+  // The question now lives on the notebook page itself, not a separate .problem-box — see
+  // docs/features/notebook-question-on-page/.
+  await expect(page.locator(".notebook-question-header")).toBeVisible();
   await expect(page.locator("canvas")).toBeVisible();
   await expect(page.locator(".answer-input")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "📝 מחברת" })).toHaveCount(0);
@@ -373,12 +375,16 @@ test('the "⤢" button expands the notebook box itself to cover (almost) the who
   expect(after.height).toBeGreaterThanOrEqual(viewport.height - 2);
 });
 
-test("in fullscreen, the regular header and hint button disappear, and the question stays visible through a compact strip instead", async ({
+test("in fullscreen, the regular header and hint button disappear, and the question stays visible — written on the page itself", async ({
   page,
 }) => {
+  // The question no longer lives in a separate .problem-box, and fullscreen no longer
+  // carries its own copy of it either — it's written directly on the notebook page
+  // (.notebook-question-header, inside .notebook-stack), which stays visible in both modes
+  // without needing a chrome copy. See docs/features/notebook-question-on-page/.
   await openLevel(page);
   await expect(page.locator(".practice-header")).toBeVisible();
-  const questionText = await page.locator(".problem-box").innerText();
+  const questionText = await page.locator(".notebook-question-header").innerText();
 
   await page.getByRole("button", { name: "הגדילו את המחברת למסך מלא" }).click();
 
@@ -386,7 +392,7 @@ test("in fullscreen, the regular header and hint button disappear, and the quest
   await expect(page.locator(".hint-button")).toHaveCount(0);
   const strip = page.locator(".notebook-fullscreen-topbar");
   await expect(strip).toBeVisible();
-  await expect(strip.locator(".problem-box")).toHaveText(questionText);
+  await expect(page.locator(".notebook-question-header")).toHaveText(questionText);
 });
 
 test("a confident reading that arrives while fullscreen is on exits it automatically — fullscreen is a writing mode, not a result screen", async ({

@@ -139,7 +139,9 @@ test("every topic offers hints, not just the one they were written for first", a
   // topic that was never part of the original hint work offers them all the same.
   await openTopic(page, "חיבור עד 10");
 
-  await expect(page.locator(".problem-box")).toBeVisible();
+  // The question now lives on the notebook page itself, not a separate .problem-box — see
+  // docs/features/notebook-question-on-page/.
+  await expect(page.locator(".notebook-question-header")).toBeVisible();
   await expect(page.locator(".hint-button")).toBeVisible();
 
   await page.locator(".hint-button").click();
