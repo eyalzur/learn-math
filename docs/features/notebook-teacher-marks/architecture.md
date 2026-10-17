@@ -235,3 +235,117 @@ None.
 `build`/`lint` נקיים. גרסה `1.40.0 → 1.41.0`. כל ארבעת הצילומים לא נשמרו
 בריפו — כלי-עזר זמניים (סקריפטי Playwright מקומיים, שרת-dev זמני) נמחקו/
 נעצרו בתום הבדיקה.
+
+## Architecture — סבב ב׳ (כתב-יד + סימון מרחבי)
+
+ראו product-spec.md/design.md, "עדכון סבב ב׳" לנימוקים המלאים. שני שינויים
+עצמאיים — פונט (לקוח-בלבד) וסימון-מרחבי (שרת+לקוח) — יחד כי שניהם נגעו
+לבקשה אחת מהמשתמש ולאותו קובץ (`Practice.tsx`/`App.css`).
+
+### פונט כתב-יד (`Playpen Sans Hebrew`)
+- **`index.html`**: `<link>` ל-Google Fonts (`preconnect` + `family=Playpen+Sans+Hebrew:wght@400;700`)
+  — הפונט-החיצוני-הראשון בפרויקט הזה. `font-display: swap` (ברירת המחדל של
+  ה-URL של Google Fonts) כדי שטקסט לא ייעלם בזמן טעינה.
+- **`src/App.css`**: `.notebook-teacher-mark` מקבל `font-family: "Playpen Sans Hebrew", var(--sans)`
+  (נופל חזרה לפונט הרגיל אם הטעינה נכשלת — לא "בלי טקסט"). שום כלל CSS אחר
+  לא נוגע בפונט.
+
+### סימון מרחבי — שינוי טיפוס + פרומפט (שרת)
+- **`server/src/pageReading.ts`**: שדה אופציונלי חדש על `PageReadingSchema`:
+  ```ts
+  errorLocation: z.object({ x: z.number().min(0).max(1), y: z.number().min(0).max(1) }).optional(),
+  ```
+  `x`/`y` הם **שברים** (0 = קצה עליון/שמאלי של הדף, 1 = קצה תחתון/ימני) —
+  לא פיקסלים ולא קואורדינטת-תא — כדי לא לדרוש מהמודל דיוק-פיקסל שהוא לא
+  יכול לספק (ראו design.md, "קירוב, לא דיוק"). מוסיפים את השדה ל-union-טיפוס
+  `PageReading` (ב-`server/src/pageReading.ts` **וגם** ב-`src/lib/notebookServer.ts`
+  הלקוח — שני המקומות שכבר מגדירים את אותו טיפוס במקביל, אותו דפוס שכבר קיים
+  ל-`errorPointer`).
+- **`server/src/readPage.ts`**: `teacherSystemPrompt()`'s סעיף 2 (`errorPointer`)
+  מתרחב בפסקה נוספת: **רק כש-`errorPointer` כן מופיע**, לבקש גם הערכה גסה
+  (שבר 0–1 לרוחב ולגובה) של **איפה בערך** בדף נכתב החלק הבעייתי — ומפורשות:
+  "זו הערכה גסה, לא מדידה מדויקת — אם אינכם בטוחים איפה בערך, השמיטו את
+  השדה הזה לגמרי, אל תנחשו". אותו עיקרון בדיוק שכבר מנחה את `errorPointer`
+  עצמו ("אל תמציאו טעות") — לא מוסיפים דרישת-וודאות נמוכה יותר רק כי זה שדה
+  חדש.
+- **`server/src/index.ts`**: מיפוי-התשובה המוצלחת (שכבר מעביר `errorPointer`
+  בתנאי) מעביר גם `errorLocation` באותו תנאי (`parsed.errorLocation ? {...} : {}`).
+
+### סימון מרחבי — רינדור (לקוח)
+- **`src/components/Practice.tsx`**:
+  - `TeacherMark` מקבל שדה רביעי אופציונלי: `location?: { x: number; y: number }`,
+    מועתק מ-`reading.errorLocation` ב-`handleTeacherReading` (אותו רגע
+    שכבר בונה את שאר ה-`TeacherMark`) — רק כש-`errorPointer` קיים (אם השרת
+    אי-פעם מחזיר `errorLocation` בלי `errorPointer` זה נחשב קלט-תקול, מתעלמים
+    מהמיקום).
+  - `questionHeader`'s עץ-ה-JSX מקבל ילד שלישי: אלמנט SVG חדש
+    (`<svg className="notebook-teacher-pointer">`) שמצויר **רק** כש-
+    `displayedTeacherMark?.location` קיים — עיגול (`<circle>`) במיקום
+    `location.x * PAGE_WIDTH, location.y * PAGE_HEIGHT` (page-space px,
+    `PAGE_WIDTH`/`PAGE_HEIGHT` כבר מיובאים מ-`notebook.ts`), וקו (`<line>`)
+    מאותה נקודה לנקודת-היעד הקבועה (ראו design.md — `(96,60)` לעיגון-שמאל,
+    `(PAGE_WIDTH-110, 60)` לעיגון-ימין, נגזר מ-`displayedQuestionIsWordProblem`
+    הקיים, לא דגל חדש).
+  - **לא** ילד בתוך `.notebook-question-header` עצמו (בניגוד להערת-הטקסט) —
+    ה-SVG צריך לצייר בכל מקום על פני הדף (העיגול יכול להיות בתחתית הדף),
+    לא רק באזור הכותרת. הוא אלמנט-אח **נפרד**, ישירות בתוך `.notebook-stack`,
+    **אחרי** הקנבס וה-`questionHeader` (מעליהם בסדר-הציור) — דורש prop
+    **חדש** ל-`PracticeNotebook` (`teacherPointer: ReactNode`, אופציונלי,
+    `null` כברירת מחדל) — חריגה מכוונת מהעיקרון "הכל נכנס ל-`questionHeader`"
+    שסבב א׳ קבע, כי כאן התוכן **באמת** שונה-בסוג (ציור-חופשי-על-כל-הדף, לא
+    טקסט-בכותרת) ולא רק תוספת-באותו-מקום. מתועד כסטייה מכוונת, לא שכחה.
+- **`src/App.css`**: `.notebook-teacher-pointer` — `position: absolute; inset: 0;
+  pointer-events: none; z-index: 1` (אותה שכבה כמו `questionHeader`/הקנבס).
+  `circle`/`line` בצבע `#dc2626` (אותו ליטרל-אדום כמו `.notebook-teacher-mark-red`),
+  `fill: none` על העיגול (רק מתאר, לא מלא), `stroke-width` סביר (`3px`
+  page-space).
+
+## Edge Cases — סבב ב׳
+- **`errorLocation` בלי `errorPointer`** — לא אמור לקרות (הפרומפט מבקש מיקום
+  *רק* בתוך סעיף ה-`errorPointer`), אבל אם זה קורה בכל זאת (תגובת-מודל
+  לא-צפויה), הלקוח מתעלם מ-`location` כש-`errorPointer` עצמו חסר — לא מצייר
+  עיגול-בלי-הקשר.
+- **`x`/`y` מחוץ לטווח `0–1`** (באג-מודל אפשרי) — `Zod`'s `.min(0).max(1)`
+  כבר דוחה תגובה כזו בשלב ה-validation בשרת (כמו כל שדה אחר שנכשל
+  ב-validation — התנהגות קיימת, `parsed_output` יוצא `null`, הלקוח מקבל
+  `certain: false` דה-פקטו דרך אותה נפילה-בטוחה הקיימת).
+- **זום/פאן** — העיגול/קו חיים בתוך `.notebook-stack`, אז הם עוברים את אותו
+  transform כמו הכל שם; שום מתמטיקה חדשה.
+
+## Risks / Tradeoffs — סבב ב׳
+- **דיוק-המיקום מול Claude אמיתי לא אומת** — אין דרך לבדוק את זה בלי קריאה
+  אמיתית (בתשלום) למודל; בדיקות e2e יכולות לאמת רק "כש-`errorLocation`
+  נתון X מהשרת, העיגול מצויר בפיקסל Y" — לא "האם X שהמודל *באמת* מחזיר
+  תואם את מה שבאמת נכתב". ראו product-spec.md, "עדכון סבב ב׳" — זה אותו
+  סוג-סיכון בדיוק שכבר תועד ואומת בדיעבד ל-`notebook-teacher-understanding`.
+- **`teacherPointer` כ-prop חדש ל-`PracticeNotebook`** — סטייה מהעיקרון
+  שסבב א׳ קבע ("הכל נכנס ל-`questionHeader`"); מתועדת כהחלטה מודעת, לא
+  שכחה (ראו למעלה).
+
+## Implementation Notes — סבב ב׳
+
+מומש כמתוכנן. פונט: נבדקה השוואה חזותית אמיתית (צילום-מסך, לא רק קריאת-שם)
+בין `Playpen Sans Hebrew` ו-`Gveret Levin` לפני ההחלטה — `Gveret Levin` יותר
+קורסיבי-מסוגנן אבל פחות קריא, סיכון אמיתי למיקה; `Playpen Sans Hebrew` נבחר.
+
+**סימון מרחבי — אומת נגד שרת-dev אמיתי** (לא תמונה סטטית), עם מיקוק
+`/read-page` באותו דפוס כמו סבב א׳:
+- `getComputedStyle` אימת `font-family` כולל `"Playpen Sans Hebrew"` בפועל,
+  לא רק הנחה שה-`<link>` ב-`index.html` נטען.
+- עיגול+קו: נמדדו `cx`/`cy`/`x2`/`y2` בפועל מול הערכים הצפויים — לא רק
+  קריאה חזותית. `errorLocation: {x:0.2, y:0.15}` → `circle` ב-`(240, 240)`
+  page-space (`0.2*1200`, `0.15*1600`) — מדויק. אומת גם עוגן-היעד לשני
+  הכיוונים: `qh-ltr` → `x2=96`, `qh-rtl` → `x2=1090` (`PAGE_WIDTH-110`) —
+  שניהם נבדקו בפועל, לא רק האחד.
+- אומת שהעיגול/קו **נעדרים** כש-`errorLocation` חסר (גם כש-`errorPointer`
+  כן קיים) וגם כש-`errorPointer` עצמו חסר — שני המקרים שה-Edge Cases כבר
+  צפו.
+- `pointer`'s `boundingBox()` גדול מ-`stage`'s (840×1120 מול 340×190.8
+  בצילום אחד) — **לא** באג: בדיוק כמו הקנבס, ה-SVG מרונדר במידותיו
+  המלאות (`PAGE_WIDTH×PAGE_HEIGHT` כפול הזום) ו-`.notebook-stage`'s
+  `overflow:hidden` **חותך** אותו חזותית — נבדק ישירות (צילום-מסך מראה
+  רק את מה שבאמת גלוי, לא יותר).
+
+`build`/`lint` נקיים (גם `npm run build` בלקוח וגם `npm run build` ב-
+`server/`). גרסה `1.41.0 → 1.42.0`. 16 בדיקות e2e חדשות נוספו (ראו
+tests.md). ריצה מלאה בודדת ונקייה: **486/486 עברו**.

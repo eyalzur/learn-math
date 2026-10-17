@@ -201,3 +201,63 @@ test("arithmetic quoted inside the note stays left-to-right, isolated from the s
   expect(await mathRun.evaluate((el) => getComputedStyle(el).direction)).toBe("ltr");
   expect(await mathRun.evaluate((el) => getComputedStyle(el).unicodeBidi)).toBe("isolate");
 });
+
+/**
+ * Acceptance criteria added 2026-10-17 ("עדכון סבב ב׳" in product-spec.md/design.md):
+ * a handwriting-style font for the note, and a rough red circle+line pointing from an
+ * approximate error location toward the note, when the teacher's reading supplies one.
+ */
+
+test("the note is rendered in the handwriting-style font, not the app's regular sans", async ({
+  page,
+}) => {
+  await openEquationTopic(page);
+  const correct = await currentCorrectAnswer(page);
+  await answerViaNotebook(page, correct);
+  const fontFamily = await teacherMark(page).evaluate((el) => getComputedStyle(el).fontFamily);
+  expect(fontFamily).toContain("Playpen Sans Hebrew");
+});
+
+test("an errorPointer with a location shows a red circle and line pointing toward the note", async ({
+  page,
+}) => {
+  await openEquationTopic(page);
+  await mockTeacherReadingSequence(page, [
+    {
+      certain: true,
+      processReflection: "ראיתי את התשובה.",
+      errorPointer: "ראיתי שחישבת `23 - 8` וקיבלת `17`.",
+      errorLocation: { x: 0.3, y: 0.4 },
+      finalAnswer: -1,
+    },
+  ]);
+  await drawOnCanvas(page);
+  await page.getByRole("button", { name: "שלח למורה" }).click();
+  await page.locator(".teacher-reading").waitFor({ state: "visible" });
+
+  const pointer = page.locator(".notebook-teacher-pointer");
+  await expect(pointer.locator("circle")).toHaveCount(1);
+  await expect(pointer.locator("line")).toHaveCount(1);
+  const circle = pointer.locator("circle");
+  expect(await circle.getAttribute("cx")).toBe(String(0.3 * 1200));
+  expect(await circle.getAttribute("cy")).toBe(String(0.4 * 1600));
+});
+
+test("an errorPointer with no location shows no circle or line", async ({ page }) => {
+  await openEquationTopic(page);
+  await mockTeacherReadingSequence(page, [
+    { certain: true, processReflection: "ראיתי את התשובה.", errorPointer: "ראיתי שחישבת `23 - 8` וקיבלת `17`.", finalAnswer: -1 },
+  ]);
+  await drawOnCanvas(page);
+  await page.getByRole("button", { name: "שלח למורה" }).click();
+  await page.locator(".teacher-reading").waitFor({ state: "visible" });
+
+  await expect(page.locator(".notebook-teacher-pointer")).toHaveCount(0);
+});
+
+test("a plain green or red note (no errorPointer) shows no circle or line", async ({ page }) => {
+  await openEquationTopic(page);
+  const correct = await currentCorrectAnswer(page);
+  await answerViaNotebook(page, correct);
+  await expect(page.locator(".notebook-teacher-pointer")).toHaveCount(0);
+});

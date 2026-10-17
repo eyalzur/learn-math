@@ -53,10 +53,26 @@
   (`notebook-question-on-page.spec.ts`: בדיקה שהניחה שהכותרת מכילה רק טקסט-
   שאלה, תוקנה לבדוק `.problem-text` במקום את כל `.notebook-question-header`
   — ראו tests.md ל-Status המלא). ריצה מלאה בודדת ונקייה: **482/482 עברו**.)
+- [x] סבב ב׳ — 2026-10-17, לפי משוב המשתמש על התצוגה המקדימה: "אני לא
+  אוהב את הכיתוב הזה, צריך לכתוב בכתב יד. לסמן בעיגול אדום או חץ אדום
+  מהטעות בכיתוב של התלמיד למקום שהמורה כותב בו." שני שינויים: (1) פונט
+  כתב-יד (`Playpen Sans Hebrew`, אחרי השוואה חזותית אמיתית מול `Gveret
+  Levin` — נבחר כי קריא יותר למיקה). (2) שדה חדש `errorLocation`
+  (`x`/`y`, שבר 0–1 מרוחב/גובה הדף — **קירוב גס, לא קואורדינטת-פיקסל**,
+  המודל מתבקש להשמיט אם לא בטוח, אותו עיקרון כמו `errorPointer`) שהשרת
+  מבקש מהמורה רק כש-`errorPointer` קיים; הלקוח מצייר עיגול+קו אדומים
+  ב-SVG חדש (`teacherPointer`, prop חדש ל-`PracticeNotebook` — סטייה
+  מכוונת-ומתועדת מהעיקרון ש"הכל נכנס ל-questionHeader" של סבב א׳, כי
+  כאן התוכן מצויר על כל הדף, לא רק בכותרת). אומת נגד שרת-dev אמיתי:
+  `cx`/`cy`/`x2`/`y2` נמדדו בפועל מול הערכים הצפויים, לשני כיווני-העיגון.
+  **דיוק-המיקום מול Claude אמיתי לא אומת** (אי אפשר בלי קריאה בתשלום) —
+  מתועד כסיכון ידוע, כמו שכבר קרה ל-`notebook-teacher-understanding`.
+  4 בדיקות e2e חדשות. ריצה מלאה בודדת ונקייה: **486/486 עברו**. גרסה
+  `1.41.0 → 1.42.0`. ראו architecture.md, "Implementation Notes — סבב ב׳".)
 
 **Current phase:** ready for review
 **Branch:** `feature/notebook-teacher-marks`
-**PR:** not opened yet
+**PR:** [#85](https://github.com/eyalzur/learn-math/pull/85)
 
 ## Open questions / blockers
 None.

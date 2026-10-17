@@ -13,13 +13,30 @@
 
 import { z } from "zod";
 
+/** A rough estimate of where on the page the `errorPointer` issue was written, as a
+ *  fraction of the page's own width/height (0 = top/left edge, 1 = bottom/right edge) —
+ *  never a pixel or cell coordinate, since the model has no reliable way to be that
+ *  precise. Only meaningful alongside `errorPointer`; see docs/features/notebook-teacher-marks/,
+ *  "עדכון סבב ב׳". */
+const ErrorLocationSchema = z.object({
+  x: z.number().min(0).max(1),
+  y: z.number().min(0).max(1),
+});
+
 export const PageReadingSchema = z.object({
   certain: z.boolean(),
   processReflection: z.string().optional(),
   errorPointer: z.string().optional(),
+  errorLocation: ErrorLocationSchema.optional(),
   finalAnswer: z.number().optional(),
 });
 
 export type PageReading =
-  | { certain: true; processReflection: string; errorPointer?: string; finalAnswer: number }
+  | {
+      certain: true;
+      processReflection: string;
+      errorPointer?: string;
+      errorLocation?: { x: number; y: number };
+      finalAnswer: number;
+    }
   | { certain: false };

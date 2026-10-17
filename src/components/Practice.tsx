@@ -4,7 +4,7 @@ import { isHebrewPrompt, promptSegments, promptWithEquals } from "../data/curric
 import type { Diagnosis } from "../data/diagnose";
 import { diagnose } from "../data/diagnose";
 import type { NotebookPage } from "../data/notebook";
-import { createBlankPage, MAX_PAGES, pageHasContent } from "../data/notebook";
+import { createBlankPage, MAX_PAGES, PAGE_HEIGHT, PAGE_WIDTH, pageHasContent } from "../data/notebook";
 import type { PageReading } from "../lib/notebookServer";
 import { readPageWithTeacher } from "../lib/notebookServer";
 import { buildExplanation, explanationSpeechParts } from "../data/questionExplanation";
@@ -26,6 +26,10 @@ type SpeakingBox = "question" | "diagnosis" | "explanation" | "teacher" | null;
 interface TeacherMark {
   color: "green" | "amber" | "red";
   text: string;
+  /** A rough estimate (0–1 fraction of the page) of where the errorPointer issue was
+   *  written — only ever set alongside an errorPointer-derived text, never on its own. See
+   *  "עדכון סבב ב׳" in this feature's docs. */
+  location?: { x: number; y: number };
 }
 
 interface PracticeProps {
@@ -297,7 +301,11 @@ export function Practice({
     const isCorrect = reading.finalAnswer === question.answer;
     setFeedback(isCorrect ? "correct" : "wrong");
     const mark: TeacherMark = reading.errorPointer
-      ? { color: isCorrect ? "amber" : "red", text: `${isCorrect ? "✓" : "✗"} ${reading.errorPointer}` }
+      ? {
+          color: isCorrect ? "amber" : "red",
+          text: `${isCorrect ? "✓" : "✗"} ${reading.errorPointer}`,
+          ...(reading.errorLocation ? { location: reading.errorLocation } : {}),
+        }
       : isCorrect
         ? { color: "green", text: "✓ יפה מאוד!" }
         : { color: "red", text: "✗ כדאי לבדוק שוב." };
@@ -536,6 +544,26 @@ export function Practice({
       )}
     </div>
   );
+
+  /** A rough circle+line pointing from roughly where the teacher's errorPointer issue was
+   *  written toward the note above — a kept, labeled deviation from `questionHeader`'s
+   *  "everything folds into one opaque node" rule: this draws anywhere on the page (the
+   *  circle can land far below the header), not just inside the header block, so it needs
+   *  its own prop. See docs/features/notebook-teacher-marks/architecture.md, "סבב ב׳".
+   *  The line's target end is a fixed page-space point, not a measured DOM position (the
+   *  mark's own height is dynamic) — it points toward the header's own corner, not at the
+   *  mark's exact text. */
+  const teacherPointer = displayedTeacherMark?.location ? (
+    <svg className="notebook-teacher-pointer" viewBox={`0 0 ${PAGE_WIDTH} ${PAGE_HEIGHT}`}>
+      <line
+        x1={displayedTeacherMark.location.x * PAGE_WIDTH}
+        y1={displayedTeacherMark.location.y * PAGE_HEIGHT}
+        x2={displayedQuestionIsWordProblem ? PAGE_WIDTH - 110 : 96}
+        y2={60}
+      />
+      <circle cx={displayedTeacherMark.location.x * PAGE_WIDTH} cy={displayedTeacherMark.location.y * PAGE_HEIGHT} r={40} />
+    </svg>
+  ) : null;
 
   /** The one diagram in the app that renders next to the question itself instead of only
    *  inside `QuestionExplanation` — see docs/features/grade2-clock/design.md. `bundle.clock`
@@ -818,6 +846,7 @@ export function Practice({
         navPadVisible={navPadVisible}
         onOpenSettings={onOpenSettings}
         questionHeader={questionHeader}
+        teacherPointer={teacherPointer}
         anchorRight={displayedQuestionIsWordProblem}
         speakButton={speechSupported() ? questionSpeakButton : null}
       />

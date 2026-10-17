@@ -1749,9 +1749,15 @@ button.secondary {
   direction: rtl;
   text-align: right;
   margin-top: 8px;
-  font-size: 20px;
-  font-weight: 600;
-  line-height: 140%;
+  /* "Playpen Sans Hebrew" (loaded in index.html) — falls back to the app's regular sans if
+     the web font fails to load, never to no text at all. A handwriting-style font reads
+     smaller than a regular sans at the same nominal size, so this is larger (22px, not
+     20px) and more open (150%, not 140%) than the plain-text version this replaced — see
+     docs/features/notebook-teacher-marks/, "עדכון סבב ב׳". */
+  font-family: "Playpen Sans Hebrew", var(--sans);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 150%;
 }
 
 /* .qh-ltr's own width is fit-content (hugs the short equation above it) — without a cap
@@ -1775,6 +1781,30 @@ button.secondary {
 
 .notebook-teacher-mark-red {
   color: #dc2626;
+}
+
+/* A rough circle+line pointing at roughly where a flagged mistake was written, toward the
+   note above — page-space (viewBox matches PAGE_WIDTH/PAGE_HEIGHT exactly, so coordinates
+   passed in from Practice.tsx need no conversion). Same layer/z-index/pointer-events
+   treatment as .notebook-question-header — never the student's own ink, never captures a
+   stroke. See docs/features/notebook-teacher-marks/architecture.md, "סבב ב׳". */
+.notebook-teacher-pointer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.notebook-teacher-pointer circle {
+  fill: none;
+  stroke: #dc2626;
+  stroke-width: 3px;
+}
+
+.notebook-teacher-pointer line {
+  stroke: #dc2626;
+  stroke-width: 3px;
+  stroke-linecap: round;
 }
 
 .notebook-minimap {

@@ -31,11 +31,21 @@
 - RTL/bidi של חשבון מוטמע בתוך ההערה → `arithmetic quoted inside the note
   stays left-to-right, isolated from the surrounding Hebrew`
 
+סבב ב׳ (2026-10-17, כתב-יד + סימון מרחבי):
+- "ההערה כתובה בפונט שנראה כמו כתב-יד" → `the note is rendered in the
+  handwriting-style font, not the app's regular sans`
+- "כש-errorPointer קיים, מופיע סימון חזותי (עיגול/חץ) אדום" → `an
+  errorPointer with a location shows a red circle and line pointing toward
+  the note`
+- "כש-errorPointer לא קיים... אין סימון מרחבי" → `an errorPointer with no
+  location shows no circle or line` + `a plain green or red note (no
+  errorPointer) shows no circle or line`
+
 ## How to run
 `npx playwright test tests/e2e/notebook-teacher-marks.spec.ts`
 (או כחלק מ-`npm run test:e2e` המלא)
 
-## Status — 🟢 ירוק, 482/482 בסוויטה המלאה
+## Status — 🟢 ירוק, 486/486 בסוויטה המלאה (אחרי סבב ב׳)
 
 12/12 בדיקות הפיצ'ר עצמן עברו בריצה ראשונה. בריצה המלאה (הסוויטה כולה)
 נתפסה **רגרסיה אמיתית אחת** בקובץ קיים ולא-קשור:
@@ -49,3 +59,6 @@ question, and navigating back still shows what was there" בדק
 התכוונה לבדוק. לא נגעתי בשום דבר אחר בקובץ הזה.
 
 ריצה מלאה בודדת ונקייה, **אחרי** התיקון: **482/482 עברו**. אין flake ידוע.
+
+**עדכון סבב ב׳**: 4 בדיקות חדשות (פונט, עיגול/קו עם/בלי `errorLocation`).
+ריצה מלאה בודדת ונקייה: **486/486 עברו**. אין flake ידוע.
