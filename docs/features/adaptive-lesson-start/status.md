@@ -32,9 +32,14 @@
   חזרה לאותו נושא מתחילה מהרמה השמורה (`745 + 88`, לא `80ish`); נושא אחר של אותה
   תלמידה מתחיל מרמה קלה עצמאית, לא "יורש" את רמת הנושא הראשון. ראו architecture.md,
   "Implementation Notes".)
-- [ ] Tests — qa — not started
+- [x] Tests — qa — 2026-10-17 (5 בדיקות חדשות, אחת לכל קריטריון-קבלה — כולל כיסוי
+  נפרד ל"יציאה מוקדמת" ול"סיום מלא", ולהיסטוריה-ישנה-בלי-רמה-שמורה. ריצה מלאה בודדת
+  ונקייה: **490/491 עברו**. הכשל היחיד הוא flake קיים-מראש ולא קשור
+  (`grade8-angles-congruence.spec.ts`, מתועד כבר ב-CLAUDE.md/PR #77) — אושר כזה בריצה
+  חוזרת מבודדת שנכשלה שוב אבל על assert אחר, תואם את הסיבה השורשית המתועדת. ראו
+  tests.md ל-Status המלא.)
 
-**Current phase:** qa
+**Current phase:** ready for review
 **Branch:** `feature/adaptive-lesson-start`
 **PR:** not opened yet
 
@@ -45,3 +50,5 @@
 ## Docs
 - [Product spec](./product-spec.md)
 - [Design](./design.md)
+- [Architecture](./architecture.md)
+- [Tests](./tests.md)
