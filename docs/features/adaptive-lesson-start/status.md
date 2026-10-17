@@ -41,7 +41,7 @@
 
 **Current phase:** ready for review
 **Branch:** `feature/adaptive-lesson-start`
-**PR:** not opened yet
+**PR:** [#88](https://github.com/eyalzur/learn-math/pull/88)
 
 ## Open questions / blockers
 - **לא חוסם, לעתיד:** אם יידרש להציג רמת-קושי שמורה למבוגר/הורה, מסך ההיסטוריה הקיים
