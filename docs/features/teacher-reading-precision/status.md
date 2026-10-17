@@ -72,9 +72,9 @@
   לא קשור לנושא הזה (זוויות/משולשים כיתה ח׳, לא משוואות/שרת), אושר
   מחדש כ-flake בריצה מבודדת של הקובץ (`12/12` עברו))
 
-**Current phase:** done — ממתין לריוויו ולמיזוג
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `feature/teacher-reading-precision`
-**PR:** [#82](https://github.com/eyalzur/learn-math/pull/82)
+**PR:** [#82](https://github.com/eyalzur/learn-math/pull/82) — מוזג 2026-10-17
 
 ## Open questions / blockers
 None.
