@@ -13,6 +13,20 @@ import { type Rng, randInt, pick, makeFreshId, wantsDecimal, round2 } from "./ad
 
 const freshId = makeFreshId("g8-equations-adaptive");
 
+const ADDITIVE_PLUS_ANALOGIES = [
+  (a: number, c: number) => `חסכת סכום כלשהו, קיבלת עוד ${a} שקל ועכשיו יש לך ${c} — כמה חסכת מלכתחילה?`,
+  (a: number, c: number) => `היו לך כמה גולות, קיבלת עוד ${a} ועכשיו יש לך ${c} — כמה היו לך מלכתחילה?`,
+  (a: number, c: number) => `היו בקופסה כמה מדבקות, הוסיפו עוד ${a} ועכשיו יש ${c} — כמה היו בהתחלה?`,
+  (a: number, c: number) => `קראת כמה עמודים בספר, ואז עוד ${a} עמודים, ועכשיו קראת ${c} עמודים בסך הכל — כמה עמודים קראת בהתחלה?`,
+];
+
+const ADDITIVE_MINUS_ANALOGIES = [
+  (a: number, c: number) => `היה לך סכום כלשהו, הוצאת ${a} ונשארו לך ${c} — כמה היה לך מלכתחילה?`,
+  (a: number, c: number) => `היו לך כמה קלפים, נתת ${a} לחבר/ה ונשארו לך ${c} — כמה היו לך מלכתחילה?`,
+  (a: number, c: number) => `היו בעציץ כמה פרחים, קטפו ${a} ונשארו ${c} — כמה היו בהתחלה?`,
+  (a: number, c: number) => `היו לך כמה מדבקות באלבום, הדבקת ${a} על דף אחר ונשארו ${c} באלבום — כמה היו באלבום בהתחלה?`,
+];
+
 function makeQuestion(
   prompt: string,
   answer: number,
@@ -44,8 +58,8 @@ function additiveEquation(rng: Rng): Question {
       { label: "", math: `x = ${x}` },
     ],
     isPlus
-      ? `חסכת סכום כלשהו, קיבלת עוד ${a} שקל ועכשיו יש לך ${c} — כמה חסכת מלכתחילה?`
-      : `היה לך סכום כלשהו, הוצאת ${a} ונשארו לך ${c} — כמה היה לך מלכתחילה?`,
+      ? pick(ADDITIVE_PLUS_ANALOGIES, rng)(a, c)
+      : pick(ADDITIVE_MINUS_ANALOGIES, rng)(a, c),
     rng,
   );
 }
