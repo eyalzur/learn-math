@@ -25,11 +25,22 @@
   `#b45309`, ולא נדון ב-spec), אדום (שגוי). סימני `✓`/`✗` בתחילת כל הערה.
   RTL: `segmented()` הקיים בדיוק, אותו מנגנון כבר-מוכח ל-`.teacher-reading-line`
   — אין מנגנון bidi חדש. אין שאלות פתוחות חוסמות.)
-- [ ] Architecture — tech-lead — not started
+- [x] Architecture — tech-lead — 2026-10-17 (מערך-מקביל חדש, `pageTeacherMarks`,
+  **באותו דפוס בדיוק** כמו `pageQuestionIndex` הקיים — מעודכן באותם מקומות
+  (`handleTeacherReading`'s שני ענפים, `next()`'s שני ענפי-עדכון-דף) כדי למנוע
+  מראש את מחלקת-הבאג ש"באג 1" של `notebook-question-on-page` כבר תפס שם
+  (הערה שנשארה תלויה ב-state חי במקום בדף-הנצפה). ה-JSX מתווסף כילד נוסף
+  בתוך `questionHeader` הקיים — `PracticeNotebook` לא מקבל prop חדש, ממשיך
+  "לא לדעת כלום". שלושת הצבעים (ירוק/ענבר/אדום) הם אותם ליטרלים-הקסה-בדיוק
+  שכבר קיימים ב-`.feedback.correct`/`.correct-flagged`/`.wrong` — לא טוקן
+  חדש, בכוונה (אף אחד מהם כבר לא טוקן היום). אימות-ידני מפורש נדרש מ-developer:
+  הערה עברית (RTL) בתוך `.qh-ltr` שהוריו `direction: ltr` — חובה לצלם ולוודא
+  שזה לא "נבלע" בכיוון ההורה, אותה מלכודת-RTL שהפרויקט כבר תפס שלוש פעמים.
+  אין שאלות פתוחות חוסמות.)
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** tech-lead
+**Current phase:** developer
 **Branch:** `feature/notebook-teacher-marks`
 **PR:** not opened yet
 
