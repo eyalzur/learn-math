@@ -40,11 +40,6 @@ async function enterAdd100(page: Page) {
   await page.locator(".topic-card", { hasText: "חיבור עד 1000" }).click();
 }
 
-async function enterSub100(page: Page) {
-  await toGradeB(page);
-  await page.locator(".topic-card", { hasText: "חיסור עד 1000" }).click();
-}
-
 function addOperands(prompt: string): [number, number] {
   const m = prompt.trim().match(/^(\d+)\s*\+\s*(\d+)\s*=?$/);
   if (!m) throw new Error(`not a bare addition: "${prompt}"`);

@@ -39,9 +39,9 @@
   חוזרת מבודדת שנכשלה שוב אבל על assert אחר, תואם את הסיבה השורשית המתועדת. ראו
   tests.md ל-Status המלא.)
 
-**Current phase:** ready for review
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `feature/adaptive-lesson-start`
-**PR:** [#88](https://github.com/eyalzur/learn-math/pull/88)
+**PR:** [#88](https://github.com/eyalzur/learn-math/pull/88) — מוזג 2026-10-18
 
 ## Open questions / blockers
 - **לא חוסם, לעתיד:** אם יידרש להציג רמת-קושי שמורה למבוגר/הורה, מסך ההיסטוריה הקיים
