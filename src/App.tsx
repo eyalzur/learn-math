@@ -15,6 +15,7 @@ import type { Lesson } from "./data/style";
 import { hasStyleLessons, stylesOf } from "./data/style";
 import { speak, speechParts } from "./data/speech";
 import { recordPractice } from "./data/progress";
+import { loadAdaptiveTier, saveAdaptiveTier } from "./data/adaptiveProgress";
 import {
   readAloud as readAloudFor,
   setReadAloud,
@@ -125,13 +126,18 @@ function insideTopic(topic: Topic | null): Screen {
   return hasStyleLessons(topic) ? { name: "styles", topic } : { name: "levels", topic };
 }
 
-/** A fresh set of questions at the topic's starting difficulty, one per question count. */
-function freshAdaptiveSession(topic: Topic & { adaptive: NonNullable<Topic["adaptive"]> }) {
+/** A fresh set of questions at the given starting difficulty, one per question count —
+ *  the caller decides that starting point: `adaptive.initialDifficulty` for a first-ever
+ *  visit, or a resumed tier from `adaptiveProgress.ts` for a returning one. */
+function freshAdaptiveSession(
+  topic: Topic & { adaptive: NonNullable<Topic["adaptive"]> },
+  startingDifficulty: number,
+) {
   const { adaptive } = topic;
   const questions = Array.from({ length: adaptive.questionCount }, () =>
-    adaptive.generate(adaptive.initialDifficulty),
+    adaptive.generate(startingDifficulty),
   );
-  return { difficulty: adaptive.initialDifficulty, streak: 0, answeredCount: 0, questions };
+  return { difficulty: startingDifficulty, streak: 0, answeredCount: 0, questions };
 }
 
 /**
@@ -232,7 +238,16 @@ function App() {
   function enterTopic(topic: Topic) {
     if (topic.adaptive) {
       if (student && gradeId) rememberMenuPosition(student.id, { gradeId });
-      const session = freshAdaptiveSession(topic as Topic & { adaptive: NonNullable<Topic["adaptive"]> });
+      const { adaptive } = topic;
+      const savedTier = student && gradeId ? loadAdaptiveTier(student.id, gradeId, topic.id) : null;
+      const startingDifficulty =
+        savedTier === null
+          ? adaptive.initialDifficulty
+          : Math.min(adaptive.maxDifficulty, Math.max(adaptive.minDifficulty, savedTier));
+      const session = freshAdaptiveSession(
+        topic as Topic & { adaptive: NonNullable<Topic["adaptive"]> },
+        startingDifficulty,
+      );
       setAdaptiveSession(session);
       setScreen({ name: "practice", topic, lesson: { title: topic.title, questions: session.questions } });
       return;
@@ -284,11 +299,15 @@ function App() {
    *  alone — only what the child hasn't reached yet ever changes under them. */
   function handleAdaptiveAnswered(topic: Topic, correct: boolean) {
     const adaptive = topic.adaptive;
-    if (!adaptive) return;
+    if (!adaptive || !adaptiveSession) return;
+    const streak = correct ? adaptiveSession.streak + 1 : 0;
+    const difficulty = adaptive.nextDifficulty(adaptiveSession.difficulty, correct, streak);
+    // Written on every answer, not only at the end of a session — this is also the save
+    // point for a session abandoned via "חזרה" (there is no separate save there), see
+    // docs/features/adaptive-lesson-start/architecture.md.
+    if (student && gradeId) saveAdaptiveTier(student.id, gradeId, topic.id, difficulty);
     setAdaptiveSession((prev) => {
       if (!prev) return prev;
-      const streak = correct ? prev.streak + 1 : 0;
-      const difficulty = adaptive.nextDifficulty(prev.difficulty, correct, streak);
       const answeredCount = prev.answeredCount + 1;
       const questions = prev.questions.map((q, i) =>
         i >= answeredCount ? adaptive.generate(difficulty) : q,
@@ -351,8 +370,9 @@ function App() {
       correct: correctCount,
       total: lesson.questions.length,
     });
-    // No difficulty carries between visits — Out of Scope in product-spec.md — so the
-    // session ends the moment a practice does, win or leave.
+    // The reached difficulty itself was already saved after the last answer (see
+    // handleAdaptiveAnswered) — clearing this in-memory session doesn't lose it, see
+    // docs/features/adaptive-lesson-start/architecture.md.
     setAdaptiveSession(null);
     setScreen({ name: "result", topic, lesson, correctCount });
   }
