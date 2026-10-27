@@ -48,7 +48,7 @@
 
 **Current phase:** ready for review
 **Branch:** `feature/pwa-install`
-**PR:** not opened yet
+**PR:** [#89](https://github.com/eyalzur/learn-math/pull/89)
 
 ## Open questions / blockers
 None.
