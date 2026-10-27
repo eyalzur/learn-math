@@ -38,9 +38,15 @@
   Pages: כל הקבצים (`manifest.json`, 5 PNG, `index.html`) מגיבים `200`,
   דפדפן headless קרא את ה-manifest בהצלחה. `build`/`lint` נקיים. גרסה
   `1.42.0 → 1.43.0`. ראו architecture.md, "Implementation Notes".)
-- [ ] Tests — qa — not started
+- [x] Tests — qa — 2026-10-27 (5 בדיקות חדשות, אחת לכל קריטריון-קבלה — מניפסט,
+  איקונים, תגיות-iOS, צבע-זהות, ורגרסיה שהאפליקציה הקיימת ממשיכה לעבוד. אין
+  בדיקה לזרימת-ההתקנה עצמה — אינטראקציית מערכת-הפעלה שאין דרך לכונן ב-
+  Playwright, מתועד כ"לא נבדק בכוונה" ב-tests.md. ריצה מלאה בודדת ונקייה:
+  **495/496 עברו**. הכשל היחיד הוא flake קיים-מראש ולא קשור
+  (`grade8-angles-congruence.spec.ts`, אותו assert כמו ב-PR #88). ראו
+  tests.md.)
 
-**Current phase:** qa
+**Current phase:** ready for review
 **Branch:** `feature/pwa-install`
 **PR:** not opened yet
 
@@ -51,3 +57,4 @@ None.
 - [Product spec](./product-spec.md)
 - [Design](./design.md)
 - [Architecture](./architecture.md)
+- [Tests](./tests.md)
