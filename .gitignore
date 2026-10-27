@@ -31,6 +31,8 @@ dist-ssr
 
 # stray screenshots from manual verification runs
 *.png
+# ...except real app assets that belong in the repo (docs/features/pwa-install/)
+!public/icons/*.png
 
 
 # throwaway standalone-component preview harnesses (built, not shipped)
