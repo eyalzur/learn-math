@@ -18,11 +18,21 @@
   נשמרות בגדלים הקטנים/maskable, ואם לא — לפשט לצורה המרכזית החדה בלבד, לא
   להמציא איור חדש. grep אישר: אין תלות בכרום-דפדפן (`history.back`, פתיחת-חלון)
   בקוד הקיים — מצב standalone לא שובר שום דבר.)
-- [ ] Architecture — tech-lead — not started
+- [x] Architecture — tech-lead — 2026-10-27 (קבצים סטטיים בלבד — `public/manifest.json`,
+  חמישה PNG ב-`public/icons/`, שורות `<link>`/`<meta>` נוספות ב-`index.html`.
+  אין build-step חדש, אין נגיעה ב-`vite.config.ts`/`src/`. הכרעה טכנית חשובה:
+  נתיבי `index.html` נכתבים יחסיים-לשורש (Vite מתרגם אוטומטית ל-`/learn-math/`
+  בבנייה, בדיוק כמו ה-favicon הקיים), אבל נתיבי `manifest.json` עצמו (`start_url`/
+  `scope`/`icons[].src`) חייבים לכלול `/learn-math/` ביד — Vite לא מעבד JSON.
+  `apple-mobile-web-app-title` נפרד מ-`<title>` כדי שאייפון יציג "חשבון" ולא
+  "לומדים חשבון" חתוך. `status-bar-style: "default"` נבחר כדי לא לדרוש עבודת
+  safe-area שלא קיימת היום. אין `sharp` בפרויקט, יש `convert` (ImageMagick) —
+  developer צריך לבדוק בפועל אם זה מניב איכות מספקת מ-`favicon.svg`, ואם לא
+  לעבור לגרסה מפושטת שdesign.md כבר אישר מראש.)
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** tech-lead
+**Current phase:** developer
 **Branch:** `feature/pwa-install`
 **PR:** not opened yet
 
@@ -32,3 +42,4 @@ None.
 ## Docs
 - [Product spec](./product-spec.md)
 - [Design](./design.md)
+- [Architecture](./architecture.md)
