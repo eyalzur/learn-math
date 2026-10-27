@@ -5,6 +5,16 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>לומדים חשבון</title>
+    <!-- PWA install (docs/features/pwa-install/) — icon on the home screen on
+         iPhone/Android, standalone display (no browser address bar). -->
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="theme-color" content="#aa3bff" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <!-- iOS doesn't read the manifest's short_name for the home-screen label —
+         without this it falls back to the full <title> above, which gets cut off. -->
+    <meta name="apple-mobile-web-app-title" content="חשבון" />
     <!-- Only used for .notebook-teacher-mark (docs/features/notebook-teacher-marks/,
          "עדכון סבב ב׳") — the first external font this app loads. Picked over the more
          cursive "Gveret Levin" after a real screenshot comparison showed it clearly more

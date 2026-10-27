@@ -29,10 +29,18 @@
   safe-area שלא קיימת היום. אין `sharp` בפרויקט, יש `convert` (ImageMagick) —
   developer צריך לבדוק בפועל אם זה מניב איכות מספקת מ-`favicon.svg`, ואם לא
   לעבור לגרסה מפושטת שdesign.md כבר אישר מראש.)
-- [ ] Implementation — developer — not started
+- [x] Implementation — developer — 2026-10-27 (מומש כמתוכנן; `rsvg-convert` לא
+  היה מותקן בפועל, נעשה שימוש ב-Chromium headless לרינדור, נאמנות גבוהה יותר.
+  האיקונים **נבדקו ויזואלית בפועל** (לא רק נבנו): שכבות-הטשטוש של
+  `favicon.svg` לא נמעכות בגדלים הקטנים — לא נדרשה הגרסה המפושטת שdesign.md
+  אישר כגיבוי. תיקון לא-מתוכנן: כלל `*.png` גורף ב-`.gitignore` חסם בשוגג את
+  האיקונים, נוסף חריג מפורש. אומת בפועל מול שרת שמדמה את תת-הנתיב של GitHub
+  Pages: כל הקבצים (`manifest.json`, 5 PNG, `index.html`) מגיבים `200`,
+  דפדפן headless קרא את ה-manifest בהצלחה. `build`/`lint` נקיים. גרסה
+  `1.42.0 → 1.43.0`. ראו architecture.md, "Implementation Notes".)
 - [ ] Tests — qa — not started
 
-**Current phase:** developer
+**Current phase:** qa
 **Branch:** `feature/pwa-install`
 **PR:** not opened yet
 
