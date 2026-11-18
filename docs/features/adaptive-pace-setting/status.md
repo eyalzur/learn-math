@@ -6,16 +6,17 @@
 ## Progress
 - [x] Product spec — product-manager — 2026-11-18
 - [x] Design — designer — 2026-11-18
-- [ ] Architecture — tech-lead — not started
+- [x] Architecture — tech-lead — 2026-11-18
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** tech-lead
+**Current phase:** developer
 **Branch:** `feature/adaptive-pace-setting`
 **PR:** not opened yet
 
 ## Open questions / blockers
-None.
+None. **הערה לא-חוסמת (tech-lead):** ההגדרה מאוחסנת פר-תלמיד/ה, לא גלובלית כפי
+שנכתב מילולית ב-product-spec.md — ראו architecture.md, Risks/Tradeoffs, לנימוק.
 
 ## Docs
 - [Product spec](./product-spec.md)
