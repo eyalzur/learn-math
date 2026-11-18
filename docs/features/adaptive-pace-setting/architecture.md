@@ -248,3 +248,38 @@ switch styling.
 
 ## Open Questions
 None.
+
+## Implementation Notes
+
+Built exactly as planned, with one deviation:
+
+- **CSS: separate `.pace-*` classes, not a reuse of `.pan-speed-*`.** The plan said
+  to reuse `.pan-speed-option` etc directly. That broke two existing e2e suites
+  (`notebook-nav-settings.spec.ts`, `notebook-nav-buttons-visibility.spec.ts`) the
+  moment both built: both settings are now rendered in the same ⚙️ dialog at once,
+  so `.pan-speed-option[aria-pressed="true"]` matched two buttons (the real pan-speed
+  one and the new pace one) instead of one, and Playwright's strict-mode locator
+  failed. Fixed by giving the pace block its own classes (`.pace-setting`/
+  `.pace-header`/`.pace-icon`/`.pace-options`/`.pace-option`) and folding them into
+  the existing shared CSS rule group that `.button-size-*`/`.suggestion-sensitivity-*`
+  already use for the identical visual shape (`src/App.css`, the comma-selector
+  block right after `.pan-speed-option[aria-pressed="true"]`) — same pixels, distinct
+  selectors. The lesson generalizes: two settings visible in the dialog at the same
+  time can never share a class, only the dialog's single-setting-at-a-time ones
+  (like the read-aloud switch, reused safely because nothing else in the dialog has
+  its exact shape) can.
+- Everything else matches architecture.md exactly: `src/data/adaptivePace.ts` is new;
+  all 19 `adaptive*.ts` topic files' `next*Difficulty` now delegate to
+  `nextAdaptiveDifficulty`; `curriculum.ts`'s `AdaptiveConfig.nextDifficulty` type
+  gained the `pace` parameter; `App.tsx`'s `handleAdaptiveAnswered` computes a signed
+  streak and reads `paceLevel` per student; `preferences.ts` stores it per student id,
+  same shape as every other ⚙️ setting; `settingsVisibility.ts` and
+  `SettingsDialog.tsx` wire it into the shared dialog.
+- Version bumped `1.42.0 → 1.43.0` (`npm run bump:feature`).
+- `npm run build` and `npm run lint` are clean. Full single-run `npm run test:e2e`:
+  **490/491 passing** — the one failure is the pre-existing
+  `grade8-angles-congruence.spec.ts` flake (same one already documented against PR
+  #88/#89, unrelated to this change — confirmed by diffing against a clean run of the
+  same suite before these edits, which hit the same single failure).
+- Playwright's Chromium browser was not installed on this machine
+  (`npx playwright install chromium` — one-time, unrelated to this feature's code).

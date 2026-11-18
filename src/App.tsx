@@ -31,7 +31,10 @@ import {
   setSuggestionSensitivityLevel,
   navPadVisible as navPadVisibleFor,
   setNavPadVisible,
+  paceLevel as paceLevelFor,
+  setPaceLevel,
 } from "./data/preferences";
+import type { PaceLevel } from "./data/adaptivePace";
 import {
   autoScrollJumpFractionFor,
   buttonSizeFor,
@@ -300,8 +303,14 @@ function App() {
   function handleAdaptiveAnswered(topic: Topic, correct: boolean) {
     const adaptive = topic.adaptive;
     if (!adaptive || !adaptiveSession) return;
-    const streak = correct ? adaptiveSession.streak + 1 : 0;
-    const difficulty = adaptive.nextDifficulty(adaptiveSession.difficulty, correct, streak);
+    const streak = correct
+      ? adaptiveSession.streak > 0
+        ? adaptiveSession.streak + 1
+        : 1
+      : adaptiveSession.streak < 0
+        ? adaptiveSession.streak - 1
+        : -1;
+    const difficulty = adaptive.nextDifficulty(adaptiveSession.difficulty, correct, streak, paceLevel);
     // Written on every answer, not only at the end of a session — this is also the save
     // point for a session abandoned via "חזרה" (there is no separate save there), see
     // docs/features/adaptive-lesson-start/architecture.md.
@@ -354,6 +363,7 @@ function App() {
   const suggestionSensitivityLevel = suggestionSensitivityLevelFor(student.id);
   const suggestionDelayMs = suggestionDelayFor(suggestionSensitivityLevel);
   const navPadVisible = navPadVisibleFor(student.id);
+  const paceLevel = paceLevelFor(student.id);
 
   function finish(topic: Topic | null, lesson: Lesson, correctCount: number) {
     recordPractice({
@@ -416,6 +426,11 @@ function App() {
     navPadVisible,
     onNavPadVisibleChange: (value: boolean) => {
       setNavPadVisible(student.id, value);
+      setPreferencesTick((n) => n + 1);
+    },
+    paceLevel,
+    onPaceLevelChange: (levelId: string) => {
+      setPaceLevel(student.id, levelId as PaceLevel);
       setPreferencesTick((n) => n + 1);
     },
   };

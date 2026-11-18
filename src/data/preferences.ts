@@ -18,6 +18,7 @@ import {
   PAN_SPEED_LEVELS,
   SUGGESTION_SENSITIVITY_LEVELS,
 } from "./notebook";
+import { DEFAULT_PACE_LEVEL, PACE_LEVELS, type PaceLevel } from "./adaptivePace";
 
 const STORAGE_KEY = "learn-math:preferences";
 
@@ -48,6 +49,9 @@ interface Preferences {
    *  default is the feature being absent entirely (docs/features/notebook-nav-buttons-visibility/
    *  product-spec.md). Plain boolean, not a level id: there is no scale to retune. */
   navPadVisible?: Record<string, boolean>;
+  /** Student id → how fast adaptive difficulty climbs/drops (a `PACE_LEVELS` id). Same
+   *  id-not-number reasoning as `holdZoomLevel` above. */
+  paceLevel?: Record<string, string>;
 }
 
 /**
@@ -205,6 +209,25 @@ export function setNavPadVisible(studentId: string, value: boolean): void {
     localStorage.setItem(
       STORAGE_KEY,
       JSON.stringify({ ...all, navPadVisible: { ...all.navPadVisible, [studentId]: value } }),
+    );
+  } catch {
+    // ignore
+  }
+}
+
+/** How fast adaptive difficulty climbs/drops for this student. Same
+ *  validation-with-fallback as `holdZoomLevel` above. */
+export function paceLevel(studentId: string): PaceLevel {
+  const stored = readAll().paceLevel?.[studentId];
+  return PACE_LEVELS.some((level) => level.id === stored) ? (stored as PaceLevel) : DEFAULT_PACE_LEVEL;
+}
+
+export function setPaceLevel(studentId: string, levelId: PaceLevel): void {
+  try {
+    const all = readAll();
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ ...all, paceLevel: { ...all.paceLevel, [studentId]: levelId } }),
     );
   } catch {
     // ignore

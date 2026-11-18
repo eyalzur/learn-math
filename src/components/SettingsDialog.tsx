@@ -5,6 +5,7 @@ import {
   PAN_SPEED_LEVELS,
   SUGGESTION_SENSITIVITY_LEVELS,
 } from "../data/notebook";
+import { PACE_LEVELS } from "../data/adaptivePace";
 import { speechSupported } from "../data/speech";
 import type { SettingsValues } from "../lib/settingsVisibility";
 
@@ -38,6 +39,8 @@ export function SettingsDialog({
   onSuggestionSensitivityLevelChange,
   navPadVisible,
   onNavPadVisibleChange,
+  paceLevel,
+  onPaceLevelChange,
   open,
   onClose,
 }: SettingsDialogProps) {
@@ -49,10 +52,11 @@ export function SettingsDialog({
   const showSuggestionSensitivity =
     suggestionSensitivityLevel !== undefined && onSuggestionSensitivityLevelChange !== undefined;
   const showNavPadVisible = navPadVisible !== undefined && onNavPadVisibleChange !== undefined;
+  const showPaceLevel = paceLevel !== undefined && onPaceLevelChange !== undefined;
 
   if (!open) return null;
   if (!showReadAloud && !showHoldZoom && !showAutoScrollJump && !showPanSpeed && !showButtonSize &&
-      !showSuggestionSensitivity && !showNavPadVisible) {
+      !showSuggestionSensitivity && !showNavPadVisible && !showPaceLevel) {
     return null;
   }
 
@@ -227,6 +231,33 @@ export function SettingsDialog({
                     className="suggestion-sensitivity-option"
                     aria-pressed={level.id === suggestionSensitivityLevel}
                     onClick={() => onSuggestionSensitivityLevelChange!(level.id)}
+                  >
+                    {level.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {showPaceLevel && (
+            <div className="pace-setting">
+              <div className="pace-header">
+                <span className="pace-icon" aria-hidden="true">
+                  🎯
+                </span>
+                <span className="read-aloud-text">
+                  <span className="read-aloud-title">קצב שינוי הקושי</span>
+                  <span className="read-aloud-note">כמה מהר רמת הקושי עולה ויורדת</span>
+                </span>
+              </div>
+              <div className="pace-options" role="group" aria-label="קצב שינוי הקושי">
+                {PACE_LEVELS.map((level) => (
+                  <button
+                    key={level.id}
+                    type="button"
+                    className="pace-option"
+                    aria-pressed={level.id === paceLevel}
+                    onClick={() => onPaceLevelChange!(level.id)}
                   >
                     {level.label}
                   </button>

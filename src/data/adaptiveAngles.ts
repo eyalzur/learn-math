@@ -1,5 +1,6 @@
 import type { Question } from "./curriculum";
 import { type Rng, pick, randInt, makeFreshId, withoutLeakingHints } from "./adaptiveHelpers";
+import { nextAdaptiveDifficulty, type PaceLevel } from "./adaptivePace";
 
 /**
  * "זוויות וחפיפת משולשים" (עומר, כיתה ח׳), built at runtime — see
@@ -264,7 +265,11 @@ export const ANGLES_MAX_DIFFICULTY = TIERS.length;
 export const ANGLES_INITIAL_DIFFICULTY = 1;
 export const ANGLES_QUESTION_COUNT = 20;
 
-export function nextAnglesDifficulty(current: number, wasCorrect: boolean, streak: number): number {
-  if (!wasCorrect) return Math.max(ANGLES_MIN_DIFFICULTY, current - 1);
-  return streak >= 2 ? Math.min(ANGLES_MAX_DIFFICULTY, current + 1) : current;
+export function nextAnglesDifficulty(
+  current: number,
+  wasCorrect: boolean,
+  streak: number,
+  pace: PaceLevel,
+): number {
+  return nextAdaptiveDifficulty(current, wasCorrect, streak, ANGLES_MIN_DIFFICULTY, ANGLES_MAX_DIFFICULTY, pace);
 }

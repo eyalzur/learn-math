@@ -1,4 +1,5 @@
 import type { Question } from "./curriculum";
+import { nextAdaptiveDifficulty, type PaceLevel } from "./adaptivePace";
 
 /**
  * "צורות וגופים", built at runtime instead of only the 30 written questions in
@@ -262,7 +263,11 @@ export const SHAPES_QUESTION_COUNT = 20;
  * Same pace as every other adaptive topic — two in a row before pushing harder, one wrong
  * answer backs off immediately.
  */
-export function nextShapesDifficulty(current: number, wasCorrect: boolean, streak: number): number {
-  if (!wasCorrect) return Math.max(SHAPES_MIN_DIFFICULTY, current - 1);
-  return streak >= 2 ? Math.min(SHAPES_MAX_DIFFICULTY, current + 1) : current;
+export function nextShapesDifficulty(
+  current: number,
+  wasCorrect: boolean,
+  streak: number,
+  pace: PaceLevel,
+): number {
+  return nextAdaptiveDifficulty(current, wasCorrect, streak, SHAPES_MIN_DIFFICULTY, SHAPES_MAX_DIFFICULTY, pace);
 }

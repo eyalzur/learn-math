@@ -1,5 +1,6 @@
 import type { Question } from "./curriculum";
 import { type Rng, randInt, pick, makeFreshId, sup, withoutLeakingHints } from "./adaptiveHelpers";
+import { nextAdaptiveDifficulty, type PaceLevel } from "./adaptivePace";
 
 /**
  * "חזקות ושורשים" (עומר, כיתה ח׳), built at runtime — see
@@ -162,7 +163,11 @@ export const POWERS_MAX_DIFFICULTY = 5;
 export const POWERS_INITIAL_DIFFICULTY = 1;
 export const POWERS_QUESTION_COUNT = 20;
 
-export function nextPowersDifficulty(current: number, wasCorrect: boolean, streak: number): number {
-  if (!wasCorrect) return Math.max(POWERS_MIN_DIFFICULTY, current - 1);
-  return streak >= 2 ? Math.min(POWERS_MAX_DIFFICULTY, current + 1) : current;
+export function nextPowersDifficulty(
+  current: number,
+  wasCorrect: boolean,
+  streak: number,
+  pace: PaceLevel,
+): number {
+  return nextAdaptiveDifficulty(current, wasCorrect, streak, POWERS_MIN_DIFFICULTY, POWERS_MAX_DIFFICULTY, pace);
 }

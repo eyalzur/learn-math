@@ -904,11 +904,16 @@ button.secondary {
   font-weight: 600;
 }
 
-/* The two notebook-toolbar-redesign settings — same box/wrap behavior as
-   .pan-speed-setting above, just two more option sets. See
+/* The two notebook-toolbar-redesign settings, and the pace-of-difficulty setting —
+   same box/wrap behavior as .pan-speed-setting above, just more option sets. A
+   separate class per setting (not a shared one) — see
+   docs/features/adaptive-pace-setting/architecture.md: two settings rendered in the
+   same dialog at once can't share a class, or `.foo-option[aria-pressed="true"]`
+   matches both and breaks anything that expects exactly one. See
    docs/features/notebook-toolbar-redesign/. */
 .button-size-setting,
-.suggestion-sensitivity-setting {
+.suggestion-sensitivity-setting,
+.pace-setting {
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -920,27 +925,31 @@ button.secondary {
 }
 
 .button-size-header,
-.suggestion-sensitivity-header {
+.suggestion-sensitivity-header,
+.pace-header {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
 .button-size-icon,
-.suggestion-sensitivity-icon {
+.suggestion-sensitivity-icon,
+.pace-icon {
   font-size: 22px;
   line-height: 1;
 }
 
 .button-size-options,
-.suggestion-sensitivity-options {
+.suggestion-sensitivity-options,
+.pace-options {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
 
 .button-size-option,
-.suggestion-sensitivity-option {
+.suggestion-sensitivity-option,
+.pace-option {
   padding: 6px 12px;
   font-size: 14px;
   color: var(--text);
@@ -950,7 +959,8 @@ button.secondary {
 }
 
 .button-size-option[aria-pressed="true"],
-.suggestion-sensitivity-option[aria-pressed="true"] {
+.suggestion-sensitivity-option[aria-pressed="true"],
+.pace-option[aria-pressed="true"] {
   background: var(--accent-bg);
   border-color: var(--accent-border);
   color: var(--text-h);

@@ -1,5 +1,6 @@
 import type { Question } from "./curriculum";
 import { type Rng, randInt, pick, makeFreshId, withoutLeakingHints } from "./adaptiveHelpers";
+import { nextAdaptiveDifficulty, type PaceLevel } from "./adaptivePace";
 
 /**
  * "שברים פשוטים" (רותם, כיתה ו׳), built at runtime — see
@@ -183,7 +184,11 @@ export const FRACTIONS_MAX_DIFFICULTY = 5;
 export const FRACTIONS_INITIAL_DIFFICULTY = 1;
 export const FRACTIONS_QUESTION_COUNT = 20;
 
-export function nextFractionsDifficulty(current: number, wasCorrect: boolean, streak: number): number {
-  if (!wasCorrect) return Math.max(FRACTIONS_MIN_DIFFICULTY, current - 1);
-  return streak >= 2 ? Math.min(FRACTIONS_MAX_DIFFICULTY, current + 1) : current;
+export function nextFractionsDifficulty(
+  current: number,
+  wasCorrect: boolean,
+  streak: number,
+  pace: PaceLevel,
+): number {
+  return nextAdaptiveDifficulty(current, wasCorrect, streak, FRACTIONS_MIN_DIFFICULTY, FRACTIONS_MAX_DIFFICULTY, pace);
 }

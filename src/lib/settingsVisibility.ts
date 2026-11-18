@@ -22,6 +22,8 @@ export interface SettingsValues {
   onSuggestionSensitivityLevelChange?: (levelId: string) => void;
   navPadVisible?: boolean;
   onNavPadVisibleChange?: (value: boolean) => void;
+  paceLevel?: string;
+  onPaceLevelChange?: (levelId: string) => void;
 }
 
 /**
@@ -40,6 +42,7 @@ export function hasAnySettings(props: SettingsValues): boolean {
   const showSuggestionSensitivity =
     props.suggestionSensitivityLevel !== undefined && props.onSuggestionSensitivityLevelChange !== undefined;
   const showNavPadVisible = props.navPadVisible !== undefined && props.onNavPadVisibleChange !== undefined;
+  const showPaceLevel = props.paceLevel !== undefined && props.onPaceLevelChange !== undefined;
   return (
     showReadAloud ||
     showHoldZoom ||
@@ -47,6 +50,7 @@ export function hasAnySettings(props: SettingsValues): boolean {
     showPanSpeed ||
     showButtonSize ||
     showSuggestionSensitivity ||
-    showNavPadVisible
+    showNavPadVisible ||
+    showPaceLevel
   );
 }

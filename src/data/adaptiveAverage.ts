@@ -1,5 +1,6 @@
 import type { Question } from "./curriculum";
 import { type Rng, randInt, makeFreshId, withoutLeakingHints } from "./adaptiveHelpers";
+import { nextAdaptiveDifficulty, type PaceLevel } from "./adaptivePace";
 
 /**
  * "ממוצע" (רותם, כיתה ו׳), built at runtime — see
@@ -142,7 +143,11 @@ export const AVERAGE_MAX_DIFFICULTY = 5;
 export const AVERAGE_INITIAL_DIFFICULTY = 1;
 export const AVERAGE_QUESTION_COUNT = 20;
 
-export function nextAverageDifficulty(current: number, wasCorrect: boolean, streak: number): number {
-  if (!wasCorrect) return Math.max(AVERAGE_MIN_DIFFICULTY, current - 1);
-  return streak >= 2 ? Math.min(AVERAGE_MAX_DIFFICULTY, current + 1) : current;
+export function nextAverageDifficulty(
+  current: number,
+  wasCorrect: boolean,
+  streak: number,
+  pace: PaceLevel,
+): number {
+  return nextAdaptiveDifficulty(current, wasCorrect, streak, AVERAGE_MIN_DIFFICULTY, AVERAGE_MAX_DIFFICULTY, pace);
 }
