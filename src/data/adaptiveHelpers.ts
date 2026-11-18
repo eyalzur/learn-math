@@ -75,3 +75,18 @@ export function withoutLeakingHints(build: () => Question): Question {
   }
   return question;
 }
+
+/** Wraps a generator so the question it returns never repeats the prompt that came right
+ *  before it in the same session (docs/features/no-repeat-consecutive-questions/) — same
+ *  bounded "check with teeth, retry rather than lie" shape as `withoutLeakingHints` above,
+ *  and the same fallback: after 20 failed attempts, return the last draw anyway rather than
+ *  loop forever. `previousPrompt: null` (the session's first question, nothing to collide
+ *  with) skips the check entirely. */
+export function withoutRepeatingPrompt(build: () => Question, previousPrompt: string | null): Question {
+  if (previousPrompt === null) return build();
+  let question = build();
+  for (let i = 0; i < 20 && question.prompt === previousPrompt; i++) {
+    question = build();
+  }
+  return question;
+}

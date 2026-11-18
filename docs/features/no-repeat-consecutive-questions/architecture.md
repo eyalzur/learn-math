@@ -90,3 +90,19 @@
 
 ## Open Questions
 None.
+
+## Implementation Notes
+
+Built exactly as planned, no deviations.
+
+- `src/data/adaptiveHelpers.ts`: added `withoutRepeatingPrompt`, right below
+  `withoutLeakingHints`.
+- `src/App.tsx`: `handleAdaptiveAnswered`'s regeneration `.map` now special-cases
+  `i === answeredCount` to wrap the `generate` call in `withoutRepeatingPrompt`,
+  comparing against `prev.questions[answeredCount - 1].prompt`. Every other index
+  (`< answeredCount` kept as-is, `> answeredCount` regenerated plain) is unchanged.
+- Version bumped `1.42.0 → 1.42.1` (`npm run bump:fix` — this is a `fix/` branch).
+- `npm run build` and `npm run lint` are clean. Full single-run `npm run test:e2e`:
+  **490/491 passing** — the one failure is the pre-existing
+  `grade8-angles-congruence.spec.ts` flake (same one already documented against
+  PR #88/#89/#90, unrelated to this change).
