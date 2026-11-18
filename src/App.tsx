@@ -234,12 +234,18 @@ function App() {
   /** Entering a topic from its card — unchanged from before docs/features/topic-lesson
    *  existed. An adaptive topic skips the level screen entirely — there is nothing to
    *  pick, so a fresh set of questions is generated immediately and practice starts on
-   *  it. Every other topic is unaffected: `insideTopic` alone decides where it lands. */
-  function enterTopic(topic: Topic) {
+   *  it. Every other topic is unaffected: `insideTopic` alone decides where it lands.
+   *
+   *  Takes `forGradeId` explicitly rather than reading the `gradeId` state closure over —
+   *  docs/features/struggle-diagnosis/ needs to enter a topic that belongs to a grade that
+   *  isn't (yet, or ever becomes, synchronously) the selected one, e.g. from the history
+   *  screen reached before any grade was chosen. `enterTopic` below is every existing
+   *  caller's unchanged entry point, now just a thin wrapper over this. */
+  function enterTopicInGrade(topic: Topic, forGradeId: string) {
     if (topic.adaptive) {
-      if (student && gradeId) rememberMenuPosition(student.id, { gradeId });
+      if (student) rememberMenuPosition(student.id, { gradeId: forGradeId });
       const { adaptive } = topic;
-      const savedTier = student && gradeId ? loadAdaptiveTier(student.id, gradeId, topic.id) : null;
+      const savedTier = student ? loadAdaptiveTier(student.id, forGradeId, topic.id) : null;
       const startingDifficulty =
         savedTier === null
           ? adaptive.initialDifficulty
@@ -253,15 +259,29 @@ function App() {
       return;
     }
     const dest = insideTopic(topic);
-    if (student && gradeId) {
+    if (student) {
       rememberMenuPosition(
         student.id,
         dest.name === "styles" || dest.name === "levels"
-          ? { gradeId, topic: { id: topic.id, kind: dest.name } }
-          : { gradeId },
+          ? { gradeId: forGradeId, topic: { id: topic.id, kind: dest.name } }
+          : { gradeId: forGradeId },
       );
     }
     setScreen(dest);
+  }
+
+  function enterTopic(topic: Topic) {
+    if (!gradeId) return;
+    enterTopicInGrade(topic, gradeId);
+  }
+
+  /** "לתרגל עכשיו" on a struggle-diagnosis card (docs/features/struggle-diagnosis/) — the
+   *  topic can belong to a grade other than whatever's currently selected (or none yet, if
+   *  history was reached before picking a grade), so this also switches `gradeId` rather
+   *  than assuming `enterTopic`'s closure value is already right. */
+  function startStuckTopic(topic: Topic, forGradeId: string) {
+    setGradeId(forGradeId);
+    enterTopicInGrade(topic, forGradeId);
   }
 
   /** The topic's card also offers "שיעור" as a secondary action (see
@@ -325,7 +345,7 @@ function App() {
   // — clicking it sets `screen` to "history", but `gradeId` is still null, so the gate
   // below would just render the grade picker again and swallow the click.
   if (screen.name === "history") {
-    return <History student={student} onBack={() => setScreen({ name: "home" })} />;
+    return <History student={student} onBack={() => setScreen({ name: "home" })} onStartTopic={startStuckTopic} />;
   }
 
   // Every student picks a grade before anything else — this is deliberately not folded

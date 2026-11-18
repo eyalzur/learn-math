@@ -90,3 +90,39 @@ export function stuckTopicsFor(studentId: string): StuckTopic[]
 
 ## Open Questions
 None.
+
+## Implementation Notes
+
+Built exactly as planned, no deviations.
+
+- `src/data/struggleDiagnosis.ts` (new): `stuckTopicsFor`, `STUCK_MIN_PRACTICES`,
+  `STUCK_SCORE_THRESHOLD`, keyed by `(gradeLabel, topicTitle)` together so two
+  same-named topics in different grades never share a streak. Order falls out of
+  `Map` insertion order for free, since `historyFor` is already newest-first —
+  no separate sort needed.
+- `src/components/History.tsx`: new `onStartTopic` prop, renders `.stuck-topics`
+  above the existing `.history-list` when `stuckTopicsFor` returns anything.
+- `src/App.tsx`: `enterTopic` split into `enterTopicInGrade(topic, forGradeId)`
+  (the real logic, parameterized) + a thin `enterTopic(topic)` wrapper for every
+  existing caller (unchanged behavior — confirmed by the full e2e run below,
+  which exercises `enterTopic` throughout and stayed green). New
+  `startStuckTopic(topic, forGradeId)` sets `gradeId` and calls
+  `enterTopicInGrade` with the explicit id in the same tick, not the
+  not-yet-updated state.
+- `src/App.css`: new `.stuck-topics`/`.stuck-topic-card`/`.stuck-topic-icon`/
+  `.stuck-topic-text` rules, reusing the `--accent-bg`/`--accent-border` tokens
+  the ⚙️ dialog's selected-option state already uses, for the same soft
+  (not alarming) highlight design.md asked for. The "לתרגל עכשיו" button is a
+  plain unclassed `<button>` — already the app's primary/accent style
+  (`src/App.css`, the base `button` rule), no new button variant needed.
+- Manually verified in the dev server with seeded `localStorage` history (three
+  sub-70% "אחוזים" records for רותם): the card renders correctly, and clicking
+  "לתרגל עכשיו" **before any grade was ever selected** (from the grade-picker
+  screen's own "ההתקדמות שלי" link) correctly lands straight on that topic's
+  practice screen — the exact cross-grade/no-grade-yet case this architecture
+  was built for. No console errors.
+- Version bumped `1.42.0 → 1.43.0` (`npm run bump:feature`).
+- `npm run build` and `npm run lint` are clean. Full single-run `npm run test:e2e`:
+  **490/491 passing** — the one failure is the pre-existing
+  `grade8-angles-congruence.spec.ts` flake (unrelated, already documented against
+  PR #88/#89/#90/#91).
