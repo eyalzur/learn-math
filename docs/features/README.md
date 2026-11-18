@@ -6,6 +6,7 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
+| שתי שאלות זהות לא יוצאות ברצף | 🟡 in design | [status](./no-repeat-consecutive-questions/status.md) |
 | תרגול אדפטיבי מתחיל לפי היסטוריה, לא מאפס בכל פעם | 🟢 done — מוזג ל-main | [status](./adaptive-lesson-start/status.md) |
 | דיוק בתיאור טעות התהליך + גיוון דימוי במשוואות חיבוריות | 🟢 done — מוזג ל-main | [status](./teacher-reading-precision/status.md) |
 | השאלה כתובה על דף המחברת עצמו + מיקום לפי כיוון כתיבה | 🟢 done — מוזג ל-main | [status](./notebook-question-on-page/status.md) |
