@@ -8,9 +8,9 @@
 - [x] Design — designer — 2026-11-18
 - [x] Architecture — tech-lead — 2026-11-18
 - [x] Implementation — developer — 2026-11-18
-- [ ] Tests — qa — not started
+- [x] Tests — qa — 2026-11-18
 
-**Current phase:** qa
+**Current phase:** ready for review
 **Branch:** `feature/adaptive-pace-setting`
 **PR:** not opened yet
 
