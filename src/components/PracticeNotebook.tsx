@@ -499,6 +499,19 @@ export function PracticeNotebook({
   useEffect(() => {
     if (prevFullscreen.current === fullscreen) return;
     prevFullscreen.current = fullscreen;
+    // Still deliberately not a recompute (docs/features/notebook-usability-fixes/, "סבב
+    // רוויזיה א׳") — but a session that opened already in fullscreen (docs/features/
+    // practice-fullscreen-start/) anchors panX to the large fullscreen stage width before
+    // the student ever interacts with it, and exiting straight back to the much narrower
+    // embedded stage can leave that panX entirely out of bounds for a right-anchored page
+    // (anchorPanX puts its near edge at `stageWidth - PAGE_WIDTH*zoom`, which swings deeply
+    // negative once stageWidth shrinks) — the page then sits off-screen, outside the stage's
+    // clipped viewport, invisible. Clamping to the *new* stage size on every toggle fixes
+    // that without reintroducing a jump: clampPan only pulls an out-of-bounds pan back in,
+    // so a pan that's already valid for the new size (the ordinary mid-session toggle this
+    // effect was written for) is left untouched.
+    const stageRect = stageRef.current?.getBoundingClientRect();
+    panZoomRef.current = clampPan(panZoomRef.current, stageRect?.width ?? 0, stageRect?.height ?? 0);
     applyTransform();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fullscreen]);
