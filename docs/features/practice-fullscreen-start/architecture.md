@@ -54,3 +54,9 @@ display) בתוך עץ קבוע. המשמעות: `useState(true)` מתאפס מ�
 
 ## Open Questions
 None.
+
+## Implementation Notes
+בדיוק כפי שתוכנן — שני `useState(false)` ב-`src/components/Practice.tsx`
+הפכו ל-`useState(true)` (`fullscreen`, `fullscreenWanted`), בלי שינוי נוסף.
+`npm run bump:feature` → `1.42.0 → 1.43.0`. `npm run build` ו-`npm run lint`
+נקיים.

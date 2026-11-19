@@ -163,11 +163,13 @@ export function Practice({
   /** The notebook box expanded to (almost) the whole screen — a writing-mode toggle, not a
    *  result mode: see the effect below, which drops it the moment a reading comes back
    *  confident (design.md, מצב F). */
-  const [fullscreen, setFullscreen] = useState(false);
+  const [fullscreen, setFullscreen] = useState(true);
   // What the student asked for, as opposed to what is showing right now: a reading or the
   // correction form drops fullscreen temporarily, and "הבא" brings it back. Only the toggle
-  // and the ✕ change this — see docs/features/notebook-toolbar-actions/.
-  const [fullscreenWanted, setFullscreenWanted] = useState(false);
+  // and the ✕ change this — see docs/features/notebook-toolbar-actions/. Starts true so a
+  // freshly-opened practice session begins in fullscreen — see docs/features/
+  // practice-fullscreen-start/.
+  const [fullscreenWanted, setFullscreenWanted] = useState(true);
 
   // Voices load asynchronously, so warm the list before the first press.
   useEffect(primeVoices, []);
