@@ -149,3 +149,47 @@ export function statsByDifficulty(studentId: string): { label: string; correct: 
 
 ## Open Questions
 None.
+
+## Implementation Notes
+נבנה כפי שתוכנן. סדר העבודה בפועל:
+
+1. **הסרה**: `PracticeNotebook.tsx`, `notebook.ts`, `notebookServer.ts`, `server/` כולו,
+   `.github/workflows/deploy-server.yml`. ב-`preferences.ts` הוסרו חמש ההגדרות
+   (hold-zoom/auto-scroll/pan-speed/button-size/suggestion-sensitivity) — נשאר רק
+   `readAloud`. `SettingsDialog.tsx`/`TopicPicker.tsx`/`src/lib/settingsVisibility.ts`
+   צומצמו בהתאם (ה-⚙️ עכשיו פותח רק את הגדרת ההקראה בקול).
+2. **`Practice.tsx` נכתב מחדש** (מ-881 שורות לכ-320): שאלה מוצגת בדפוס `.problem-box`/
+   `.problem-text` של `TopicLesson.tsx` (לא גרסה חדשה — אותו `promptWithEquals`/
+   `segmented` בדיוק), שדה `<input type="text" inputMode="decimal">` אחד לתשובה,
+   `diagnose`/`QuestionExplanation`/רמזים נשארו ללא שינוי בהתנהגות. מעבר אוטומטי
+   אחרי תשובה נכונה דרך `useEffect` שמאזין ל-`feedback === "correct"` (לא `setTimeout`
+   בתוך ה-handler עצמו) — כדי ש-`next()` יקרא את `correctCount` המעודכן, לא את הערך
+   הישן מלפני ה-`setState`.
+3. **`progress.ts`**: `PracticeRecord` קיבל `difficultyLabel?: string`, ונוספו
+   `statsByTopic`/`statsByDifficulty` — פונקציות גזירה טהורות מעל `historyFor`
+   הקיים, בלי מפתח `localStorage` חדש. `App.tsx`'s `finish()` כותב
+   `difficultyLabel: \`רמה ${adaptiveSession?.difficulty}\`` רק לנושא אדפטיבי.
+4. **`History.tsx`** קיבל `StatsSection` (רכיב קטן פנימי) שמרנדר את שתי הרשימות
+   החדשות מעל רשימת הסשנים הקיימת, שלא השתנתה.
+5. **ניקוי `App.css`**: כל סעיף "---- practice notebook ----" (כ-310 שורות) הוסר
+   כגוש אחד, יחד עם ארבעת סעיפי ההגדרות המוסרות. נוספו `.answer-row`/
+   `.answer-input` (האחרון כבר היה קיים חלקית מהעידן הקודם, לפני שהמחברת הפכה
+   לברירת המחדל היחידה — אבל בלי `direction: ltr` מפורש; זה תוקן, ראו Edge Cases
+   למטה) ו-`.history-stats*` לסעיפי הסטטיסטיקה החדשים.
+
+**תיקון RTL תוך כדי כתיבה (לא רק עיוני — זה כבר נבדק שלוש פעמים לפני בפרויקט):**
+`.answer-input` הקיים ב-App.css (שריד מהמנגנון הישן) לא הגדיר `direction: ltr`
+במפורש — רק `text-align: center`. נוסף במפורש, לפני שזה הפך לבאג אמיתי.
+
+**אומת חי בדפדפן**: שאלה מוצגת נכון (LTR), תשובה נכונה ("5 × 2 = 10") עברה מיד
+לשאלה הבאה; תשובה שגויה ("2 × 4 = 99") הציגה "לא נכון. התשובה היא 8" + פאנל
+"איך פותרים?" מלא (כולל אנלוגיה), וכפתור "הבא" ידני. דיאלוג ⚙️ מציג רק הקראה
+בקול. מסך "ההתקדמות שלי" (עם רשומות היסטוריה מדומות שהוזרקו ל-localStorage
+לבדיקה) הציג נכון גם "סיכום לפי נושא" (כולל איחוד שתי רשומות של אותו נושא, אחת
+עם `levelTitle` ואחת עם `difficultyLabel`) וגם "סיכום לפי רמת קושי" (שלוש שורות
+נפרדות) מעל רשימת הסשנים הקיימת, ללא שינוי בה. אין שגיאות קונסול.
+
+`npm run build` ו-`npm run lint` נקיים. `npm run bump:feature` → `1.42.0 → 1.43.0`.
+
+**לא נגעתי** ב-`diagnose.ts`, ב-`adaptiveProgress.ts`/הקושי האדפטיבי, או
+ב-`speech.ts` — כולם כבר היו עצמאיים מהמחברת, כפי שחשד architecture.md.

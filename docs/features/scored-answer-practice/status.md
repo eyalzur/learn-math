@@ -8,10 +8,10 @@
 - [x] Product spec — product-manager — 2026-11-20
 - [x] Design — designer — 2026-11-20
 - [x] Architecture — tech-lead — 2026-11-20
-- [ ] Implementation — developer — not started
+- [x] Implementation — developer — 2026-11-20
 - [ ] Tests — qa — not started
 
-**Current phase:** developer
+**Current phase:** qa
 **Branch:** `feature/scored-answer-practice`
 **PR:** not opened yet
 
