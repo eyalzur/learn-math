@@ -7,9 +7,9 @@
 - [x] Design — designer — 2026-11-19
 - [x] Architecture — tech-lead — 2026-11-19
 - [x] Implementation — developer — 2026-11-19
-- [ ] Tests — qa — not started
+- [x] Tests — qa — 2026-11-19
 
-**Current phase:** qa
+**Current phase:** done, awaiting PR review
 **Branch:** `feature/version-log`
 **PR:** not opened yet
 
