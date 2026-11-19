@@ -157,6 +157,9 @@ test("a hint is read too — help that cannot be read is not help", async ({ pag
   await openStudent(page, 0);
   await toggleReadAloud(page);
   await startHintedLevel(page);
+  // Starts in fullscreen by default (docs/features/practice-fullscreen-start/), which hides
+  // the hint button — exit first, same as a student would to reach it.
+  await page.locator(".notebook-fullscreen-exit").click();
 
   await expect.poll(() => spokenText(page)).not.toHaveLength(0);
   const beforeHint = (await spokenText(page)).length;

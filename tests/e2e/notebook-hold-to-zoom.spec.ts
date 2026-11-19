@@ -179,6 +179,10 @@ test("triggers the same way with the pan tool selected, not only with the pen", 
 
 test("still triggers on a page that's already locked (answered and checked)", async ({ page }) => {
   await openLevel(page);
+  // Starts in fullscreen by default (docs/features/practice-fullscreen-start/) — exit first
+  // so answering below doesn't also trigger the separate confident-reading auto-exit
+  // transition, which this test isn't about.
+  await page.locator(".notebook-fullscreen-exit").click();
   await answerViaNotebook(page, 999999);
   await expect(page.locator(".teacher-reading")).toBeVisible();
 
@@ -229,6 +233,10 @@ async function backToTopics(page: Page) {
   // added a second button with that exact aria-label inside the practice screen itself
   // (deliberately, same label for the same action), so "a button called הגדרות exists" no
   // longer uniquely identifies the topic screen the way it used to.
+  // Starts in fullscreen by default (docs/features/practice-fullscreen-start/), which hides
+  // the back button this loop clicks below — exit first if still there.
+  const exitFullscreen = page.locator(".notebook-fullscreen-exit");
+  if (await exitFullscreen.count()) await exitFullscreen.click();
   const onTopics = () => page.locator(".topic-grid").count();
   for (let i = 0; i < 3 && (await onTopics()) === 0; i++) {
     await page.getByRole("button", { name: "← חזרה" }).first().click();

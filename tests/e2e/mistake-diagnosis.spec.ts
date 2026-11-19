@@ -147,6 +147,10 @@ test("the next question is reachable mid-conversation, without answering", async
   // rather than name a number — what matters is that it advanced by exactly one.
   const before = Number((await page.locator(".progress").innerText()).match(/\d+/)![0]);
   await page.getByRole("button", { name: "הבא", exact: true }).click();
+  // fullscreenWanted stayed true (default — docs/features/practice-fullscreen-start/) even
+  // though the previous reading auto-dropped fullscreen temporarily, so the next question
+  // restores it — exit again to reach .progress, same as a student would.
+  await page.locator(".notebook-fullscreen-exit").click();
   await expect(page.locator(".progress")).toContainText(`שאלה ${before + 1}`);
   // Nothing carried over from the abandoned conversation.
   await expect(page.locator(".followup")).toHaveCount(0);

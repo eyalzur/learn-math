@@ -151,6 +151,9 @@ test("the version appears on the first screen only", async ({ page }) => {
   await page.locator(".style-card, .level-card").first().click();
   await expect(page.locator("canvas")).toBeVisible();
   await expect(version).toHaveCount(0);
+  // Starts in fullscreen by default (docs/features/practice-fullscreen-start/), which hides
+  // .progress — exit first, same as a student would.
+  await page.locator(".notebook-fullscreen-exit").click();
 
   // Result, after working through the lesson — however many questions it holds.
   const total = Number((await page.locator(".progress").innerText()).match(/(\d+)\s*$/)![1]);

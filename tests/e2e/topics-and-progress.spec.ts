@@ -26,6 +26,9 @@ async function open(page: Page) {
 }
 
 async function playLevel(page: Page, answerWith: string) {
+  // Starts in fullscreen by default (docs/features/practice-fullscreen-start/), which hides
+  // .progress — exit first, same as a student would.
+  await page.locator(".notebook-fullscreen-exit").click();
   const total = Number((await page.locator(".progress").innerText()).match(/מתוך (\d+)/)![1]);
   for (let i = 0; i < total; i++) {
     await answerViaNotebook(page, answerWith);
@@ -86,6 +89,9 @@ test("grade 1 has three levels of ten questions for every topic", async ({ page 
         // No style, no level: an adaptive topic (docs/features/mika-adaptive-difficulty)
         // lands straight on practice instead.
         await expect(page.locator(".problem-text")).toBeVisible();
+        // Starts in fullscreen by default (docs/features/practice-fullscreen-start/), which
+        // hides the back button clicked below — exit first, same as a student would.
+        await page.locator(".notebook-fullscreen-exit").click();
       }
       await page.getByRole("button", { name: "← חזרה" }).click();
       continue;

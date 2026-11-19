@@ -123,6 +123,10 @@ test("the nav pad is absent by default — not just hidden, not reachable at all
 
 test("other ways to move the view keep working while the pad is off", async ({ page }) => {
   await openLevel(page);
+  // Starts in fullscreen by default (docs/features/practice-fullscreen-start/), which moves
+  // the tool-controls column this test's drag coordinates are tuned around — exit so the
+  // embedded geometry it was written against is what's actually on screen.
+  await page.locator(".notebook-fullscreen-exit").click();
   await page.getByRole("button", { name: "הזזה" }).click();
   const before = await panXY(page);
   await dragAwayFromStartCorner(page);
@@ -171,7 +175,7 @@ test("the pad's position holds in fullscreen too", async ({ page }) => {
   await turnOnNavPad(page);
   await enterPractice(page);
 
-  await page.getByRole("button", { name: "הגדילו את המחברת למסך מלא" }).click();
+  // Already in fullscreen by default (docs/features/practice-fullscreen-start/).
   const pad = page.locator(".notebook-pan-controls");
   await expect(pad).toBeVisible();
   const padBox = await pad.boundingBox();
@@ -219,6 +223,9 @@ test("each student keeps their own nav-pad-visible choice", async ({ page }) => 
 
 test("a settings button exists on the practice screen itself, embedded and in fullscreen", async ({ page }) => {
   await openLevel(page);
+  // Starts in fullscreen by default (docs/features/practice-fullscreen-start/) — exit first
+  // to check the embedded state too.
+  await page.locator(".notebook-fullscreen-exit").click();
   const btn = page.locator(".notebook-settings-btn");
   await expect(btn).toBeVisible();
 

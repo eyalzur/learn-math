@@ -32,6 +32,10 @@ async function backToTopics(page: Page) {
   // added a second button with that exact aria-label inside the practice screen itself
   // (deliberately, same label for the same action), so "a button called הגדרות exists" no
   // longer uniquely identifies the topic screen the way it used to.
+  // Starts in fullscreen by default (docs/features/practice-fullscreen-start/), which hides
+  // the back button this loop clicks below — exit first if still there.
+  const exitFullscreen = page.locator(".notebook-fullscreen-exit");
+  if (await exitFullscreen.count()) await exitFullscreen.click();
   const onTopics = () => page.locator(".topic-grid").count();
   for (let i = 0; i < 3 && (await onTopics()) === 0; i++) {
     await page.getByRole("button", { name: "← חזרה" }).first().click();

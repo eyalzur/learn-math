@@ -101,7 +101,7 @@ test("fullscreen shows the same written question — no separate duplicate copy"
 
   const headerBefore = (await page.locator(".notebook-question-header").innerText()).trim();
 
-  await page.getByRole("button", { name: "הגדילו את המחברת למסך מלא" }).click();
+  // Already in fullscreen by default (docs/features/practice-fullscreen-start/).
   await page.locator(".notebook-fullscreen-topbar").waitFor({ state: "visible" });
 
   // Exactly one header exists, showing the same question — fullscreen never had its own copy.
@@ -217,8 +217,8 @@ test("the question's read-aloud button lives in one shared place and still works
     .poll(() => page.evaluate(() => (window as unknown as { __spoken: Spoken[] }).__spoken.length))
     .toBeGreaterThan(0);
 
-  // Same single button in fullscreen too — not a second copy.
-  await page.getByRole("button", { name: "הגדילו את המחברת למסך מלא" }).click();
+  // Same single button in fullscreen too — not a second copy. Already in fullscreen by
+  // default (docs/features/practice-fullscreen-start/).
   await expect(page.locator(".speak-button")).toHaveCount(1);
 });
 

@@ -96,6 +96,9 @@ test("an adaptive topic never resumes inside an active practice session", async 
   await studentCard(page, 0).click();
   await page.locator(".grade-card").first().click(); // grade א׳
   await page.locator(".topic-card").nth(1).click(); // "חיבור עד 10" — adaptive, straight to practice
+  // Starts in fullscreen by default (docs/features/practice-fullscreen-start/), which hides
+  // the regular header (and with it .progress) — exit first, same as a student would.
+  await page.locator(".notebook-fullscreen-exit").click();
   await expect(page.locator(".progress")).toBeVisible();
 
   await page.reload();

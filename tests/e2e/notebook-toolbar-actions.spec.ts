@@ -17,7 +17,7 @@ async function openLevel(page: Page) {
   await page.locator(".style-card").first().click();
 }
 
-const enterFullscreen = (page: Page) => page.getByRole("button", { name: "הגדילו את המחברת למסך מלא" }).click();
+const exitFullscreen = (page: Page) => page.locator(".notebook-screen.fullscreen .notebook-fullscreen-exit").click();
 const fullscreenScreen = (page: Page) => page.locator(".notebook-screen.fullscreen");
 const nextButton = (page: Page) => page.getByRole("button", { name: "הבא", exact: true });
 
@@ -55,7 +55,7 @@ test.describe("main action outside the toolbar", () => {
   });
 
   test("in fullscreen the button is visible without scrolling and the toolbar still has no action", async ({ page }) => {
-    await enterFullscreen(page);
+    // A new session now starts in fullscreen by default — docs/features/practice-fullscreen-start/.
     await expect(fullscreenScreen(page)).toBeVisible();
     const send = page.getByRole("button", { name: "שלח למורה" });
     await expect(send).toBeInViewport();
@@ -66,8 +66,8 @@ test.describe("main action outside the toolbar", () => {
 test.describe("fullscreen carries over to the next question", () => {
   test.beforeEach(async ({ page }) => openLevel(page));
 
-  test("chose fullscreen → the next question starts in fullscreen", async ({ page }) => {
-    await enterFullscreen(page);
+  test("default fullscreen (docs/features/practice-fullscreen-start/) carries into the next question", async ({ page }) => {
+    await expect(fullscreenScreen(page)).toBeVisible();
     await answerViaNotebook(page, 1);
     // The result is shown in the regular layout.
     await expect(fullscreenScreen(page)).toHaveCount(0);
@@ -75,16 +75,8 @@ test.describe("fullscreen carries over to the next question", () => {
     await expect(fullscreenScreen(page)).toBeVisible();
   });
 
-  test("never chose fullscreen → the next question is not in fullscreen", async ({ page }) => {
-    await answerViaNotebook(page, 1);
-    await nextButton(page).click();
-    await expect(fullscreenScreen(page)).toHaveCount(0);
-    await expect(page.getByRole("button", { name: "שלח למורה" })).toBeVisible();
-  });
-
   test("left fullscreen by hand (✕) → the next question is not in fullscreen", async ({ page }) => {
-    await enterFullscreen(page);
-    await fullscreenScreen(page).locator(".notebook-fullscreen-exit").click();
+    await exitFullscreen(page);
     await expect(fullscreenScreen(page)).toHaveCount(0);
     await answerViaNotebook(page, 1);
     await nextButton(page).click();

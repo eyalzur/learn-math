@@ -125,6 +125,9 @@ test("entering a style produces questions of that same kind", async ({ page }) =
 test("the lesson holds the whole style, and is titled with it", async ({ page }) => {
   await openTopic(page, MIKA, NUMBERS);
   await page.locator(".style-card").filter({ hasText: "מה נמצא באמצע" }).click();
+  // Starts in fullscreen by default (docs/features/practice-fullscreen-start/), which hides
+  // the regular header (title, .progress) — exit first, same as a student would.
+  await page.locator(".notebook-fullscreen-exit").click();
 
   await expect(page.locator("h2")).toHaveText("מה נמצא באמצע");
   // Four questions, because that is how many the style holds — not padded to ten.
@@ -154,6 +157,9 @@ test("leaving a lesson returns to the styles, not to the levels", async ({ page 
   await openTopic(page, MIKA, NUMBERS);
   await page.locator(".style-card").first().click();
   await expect(page.locator(".problem-text")).toBeVisible();
+  // Starts in fullscreen by default (docs/features/practice-fullscreen-start/), which hides
+  // the back button — exit first, same as a student would.
+  await page.locator(".notebook-fullscreen-exit").click();
 
   await page.locator(".link-button").first().click();
   await expect(page.locator(".style-card")).toHaveCount(5);

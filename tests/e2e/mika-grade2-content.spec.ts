@@ -83,6 +83,9 @@ test("חיבור עד 1000 and חיסור עד 1000 are both adaptive, entered d
   for (const title of ["חיבור עד 1000", "חיסור עד 1000"]) {
     await page.locator(".topic-card", { hasText: title }).click();
     await expect(page.locator(".level-card")).toHaveCount(0);
+    // Starts in fullscreen by default (docs/features/practice-fullscreen-start/), which
+    // hides the regular header (.progress, back button) — exit first, same as a student would.
+    await page.locator(".notebook-fullscreen-exit").click();
     await expect(page.locator(".progress")).toContainText("מתוך 20");
     await page.locator(".link-button").first().click(); // ← חזרה, back to the topics list
   }

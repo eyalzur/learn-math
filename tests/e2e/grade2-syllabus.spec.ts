@@ -43,6 +43,10 @@ async function toGradeB(page: Page) {
 async function openTopic(page: Page, name: string) {
   await toGradeB(page);
   await page.locator(".topic-card", { hasText: name }).click();
+  // Every topic here is adaptive and lands straight on practice, which starts in fullscreen
+  // by default (docs/features/practice-fullscreen-start/) — exit first, same as a student
+  // would, so the regular header (back button, hint button, .progress) is reachable.
+  await page.locator(".notebook-fullscreen-exit").click();
 }
 
 async function nextOrFinish(page: Page) {

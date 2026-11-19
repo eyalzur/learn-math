@@ -97,6 +97,9 @@ for (const topic of TOPICS) {
 
     await expect(page.locator(".level-card")).toHaveCount(0);
     await expect(page.locator(".problem-text")).toBeVisible();
+    // Starts in fullscreen by default (docs/features/practice-fullscreen-start/), which
+    // hides the regular header (and with it .progress) — exit first, same as a student would.
+    await page.locator(".notebook-fullscreen-exit").click();
     await expect(page.locator(".progress")).toContainText("מתוך 20");
   });
 
@@ -137,6 +140,9 @@ for (const topic of TOPICS) {
     page,
   }) => {
     await enterTopic(page, topic);
+    // Starts in fullscreen by default (docs/features/practice-fullscreen-start/), which hides
+    // the hint button — exit first, same as a student would to reach it.
+    await page.locator(".notebook-fullscreen-exit").click();
 
     await expect(page.locator(".hint-button")).toBeVisible();
     await page.locator(".hint-button").click();
@@ -161,6 +167,9 @@ for (const topic of TOPICS) {
     for (let i = 0; i < 6; i++) {
       await page.locator(".topic-card", { hasText: topic.name }).click();
       seen.add((await page.locator(".problem-text").innerText()).trim());
+      // Starts in fullscreen by default (docs/features/practice-fullscreen-start/), which
+      // hides the back button — exit first, same as a student would.
+      await page.locator(".notebook-fullscreen-exit").click();
       await page.locator(".link-button").first().click(); // ← חזרה
     }
     expect(seen.size, "every fresh entry showed the exact same first question").toBeGreaterThan(1);

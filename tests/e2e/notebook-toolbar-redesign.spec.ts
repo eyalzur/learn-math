@@ -46,6 +46,10 @@ async function enterPractice(page: Page) {
   const byLevel = page.locator(".level-card");
   if (await byStyle.count()) await byStyle.first().click();
   else if (await byLevel.count()) await byLevel.first().click();
+  // Starts in fullscreen by default (docs/features/practice-fullscreen-start/), which moves
+  // the toolbar column this file's drag/overlay-position assumptions are tuned around —
+  // exit so the embedded geometry these tests were written against is on screen.
+  await page.locator(".notebook-fullscreen-exit").click();
 }
 
 async function openLevel(page: Page) {

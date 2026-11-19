@@ -348,6 +348,9 @@ test("the writing surface fills most of the free screen height by default, with 
 }) => {
   await page.setViewportSize({ width: 390, height: 700 });
   await openLevel(page);
+  // Starts in fullscreen by default (docs/features/practice-fullscreen-start/) — exit so
+  // this measures the regular, non-fullscreen writing surface, same as before this feature.
+  await page.locator(".notebook-fullscreen-exit").click();
 
   const viewport = page.viewportSize()!;
   const box = (await page.locator(".notebook-screen").boundingBox())!;
@@ -364,6 +367,9 @@ test('the "⤢" button expands the notebook box itself to cover (almost) the who
 }) => {
   await page.setViewportSize({ width: 390, height: 700 });
   await openLevel(page);
+  // A session now starts in fullscreen by default (docs/features/practice-fullscreen-start/)
+  // — exit first so "before" captures the regular, non-fullscreen layout.
+  await page.locator(".notebook-fullscreen-exit").click();
   const before = (await page.locator(".notebook-screen").boundingBox())!;
 
   await page.getByRole("button", { name: "הגדילו את המחברת למסך מלא" }).click();
@@ -383,6 +389,9 @@ test("in fullscreen, the regular header and hint button disappear, and the quest
   // (.notebook-question-header, inside .notebook-stack), which stays visible in both modes
   // without needing a chrome copy. See docs/features/notebook-question-on-page/.
   await openLevel(page);
+  // Starts in fullscreen by default (docs/features/practice-fullscreen-start/) — exit first
+  // so the assertions below can tell the regular and fullscreen states apart.
+  await page.locator(".notebook-fullscreen-exit").click();
   await expect(page.locator(".practice-header")).toBeVisible();
   const questionText = await page.locator(".notebook-question-header").innerText();
 
@@ -399,7 +408,7 @@ test("a confident reading that arrives while fullscreen is on exits it automatic
   page,
 }) => {
   await openLevel(page);
-  await page.getByRole("button", { name: "הגדילו את המחברת למסך מלא" }).click();
+  // Already in fullscreen by default (docs/features/practice-fullscreen-start/).
   await expect(page.locator(".notebook-fullscreen-topbar")).toBeVisible();
 
   await answerViaNotebook(page, 7);
@@ -413,7 +422,7 @@ test("an uncertain reading that arrives while fullscreen is on does not exit it 
   page,
 }) => {
   await openLevel(page);
-  await page.getByRole("button", { name: "הגדילו את המחברת למסך מלא" }).click();
+  // Already in fullscreen by default (docs/features/practice-fullscreen-start/).
 
   await answerUncertainly(page);
 
@@ -426,7 +435,7 @@ test("the exit button on the compact strip returns to the regular layout — a r
   page,
 }) => {
   await openLevel(page);
-  await page.getByRole("button", { name: "הגדילו את המחברת למסך מלא" }).click();
+  // Already in fullscreen by default (docs/features/practice-fullscreen-start/).
   await expect(page.locator(".notebook-screen.fullscreen")).toBeVisible();
 
   await page.locator(".notebook-fullscreen-exit").click();

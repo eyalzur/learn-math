@@ -91,6 +91,9 @@ test("שעון וזמן skips the level picker and lands straight on a 20-questi
   await enterClock(page);
   await expect(page.locator(".level-card")).toHaveCount(0);
   await expect(page.locator(".problem-text")).toBeVisible();
+  // Starts in fullscreen by default (docs/features/practice-fullscreen-start/), which hides
+  // the regular header (and with it .progress) — exit first, same as a student would.
+  await page.locator(".notebook-fullscreen-exit").click();
   await expect(page.locator(".progress")).toContainText("מתוך 20");
 });
 

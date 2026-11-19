@@ -36,6 +36,9 @@ async function openTopic(page: Page, topicTitle: string) {
   const byLevel = page.locator(".level-card");
   if (await byStyle.count()) await byStyle.first().click();
   else if (await byLevel.count()) await byLevel.first().click();
+  // Starts in fullscreen by default (docs/features/practice-fullscreen-start/), which hides
+  // the hint button — exit first, same as a student would to reach it.
+  await page.locator(".notebook-fullscreen-exit").click();
 }
 
 const openHinted = (page: Page) => openTopic(page, "חיבור וחיסור עד 20");

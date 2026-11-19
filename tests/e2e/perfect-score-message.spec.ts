@@ -62,6 +62,9 @@ async function startLesson(page: Page, studentIndex: number, index: number): Pro
   const byStyle = page.locator(".style-card");
   if (await byStyle.count()) await byStyle.nth(index).click();
   else await page.locator(".level-card").nth(index).click();
+  // Starts in fullscreen by default (docs/features/practice-fullscreen-start/), which hides
+  // .progress — exit first, same as a student would.
+  await page.locator(".notebook-fullscreen-exit").click();
   const progress = await page.locator(".progress").innerText();
   return Number(progress.match(/(\d+)\s*$/)![1]);
 }

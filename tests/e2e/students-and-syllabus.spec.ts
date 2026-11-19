@@ -122,6 +122,11 @@ test("picking a topic runs a full practice and ends on a score summary", async (
   await openLevels(page, 0, 1);
 
   for (let i = 1; i <= 20; i++) {
+    // The session starts in fullscreen by default (docs/features/practice-fullscreen-start/),
+    // which hides .progress — exit once, same as a student would; it stays exited for the
+    // rest of this session (docs/features/notebook-toolbar-actions/), so later iterations
+    // don't have the button to click any more.
+    if (i === 1) await page.locator(".notebook-fullscreen-exit").click();
     await expect(page.locator(".progress")).toContainText(`שאלה ${i} מתוך 20`);
     await answerViaNotebook(page, 0);
     await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
@@ -178,6 +183,9 @@ test("a Hebrew sentence keeps its own direction while the maths inside stays LTR
   await pickStudent(page, 0);
   await page.locator(".topic-card", { hasText: "חיבור וחיסור עד 20" }).click();
   await page.locator(".style-card").first().click();
+  // Starts in fullscreen by default (docs/features/practice-fullscreen-start/), which hides
+  // the hint button — exit first, same as a student would to reach it.
+  await page.locator(".notebook-fullscreen-exit").click();
 
   await page.getByRole("button", { name: "רמז 💡" }).click();
   await page.getByRole("button", { name: "עוד רמז 💡" }).click();

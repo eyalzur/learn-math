@@ -32,8 +32,7 @@ async function openLevel(page: Page) {
   await page.locator(".style-card").first().click();
 }
 
-const enterFullscreen = (page: Page) =>
-  page.getByRole("button", { name: "הגדילו את המחברת למסך מלא" }).click();
+const exitFullscreen = (page: Page) => page.locator(".notebook-fullscreen-exit").click();
 
 function panButton(page: Page, label: "הזז למעלה" | "הזז למטה" | "הזז ימינה" | "הזז שמאלה") {
   return page.getByRole("button", { name: label });
@@ -69,6 +68,9 @@ async function zoomInALot(page: Page) {
 
 test("four directional buttons sit beside the existing zoom controls, embedded", async ({ page }) => {
   await openLevel(page);
+  // Starts in fullscreen by default (docs/features/practice-fullscreen-start/) — exit to
+  // check the embedded layout specifically.
+  await exitFullscreen(page);
   for (const label of ["הזז למעלה", "הזז למטה", "הזז ימינה", "הזז שמאלה"] as const) {
     await expect(panButton(page, label)).toBeVisible();
   }
@@ -79,7 +81,7 @@ test("four directional buttons sit beside the existing zoom controls, embedded",
 
 test("the four directional buttons are also present in fullscreen", async ({ page }) => {
   await openLevel(page);
-  await enterFullscreen(page);
+  // Already in fullscreen by default (docs/features/practice-fullscreen-start/).
   for (const label of ["הזז למעלה", "הזז למטה", "הזז ימינה", "הזז שמאלה"] as const) {
     await expect(panButton(page, label)).toBeVisible();
   }

@@ -71,6 +71,9 @@ test("חיבור עד 1000 skips the level picker and lands straight on practice
 
   await expect(page.locator(".level-card")).toHaveCount(0);
   await expect(page.locator(".problem-text")).toBeVisible();
+  // Starts in fullscreen by default (docs/features/practice-fullscreen-start/), which hides
+  // the regular header (and with it .progress) — exit first, same as a student would.
+  await page.locator(".notebook-fullscreen-exit").click();
   await expect(page.locator(".progress")).toContainText("מתוך 20");
 });
 
@@ -107,6 +110,9 @@ test("a generated question still has two hints and shows a real explanation afte
   page,
 }) => {
   await enterAdd100(page);
+  // Starts in fullscreen by default (docs/features/practice-fullscreen-start/), which hides
+  // the hint button — exit first, same as a student would to reach it.
+  await page.locator(".notebook-fullscreen-exit").click();
 
   await expect(page.locator(".hint-button")).toBeVisible();
   await page.locator(".hint-button").click();
@@ -129,6 +135,9 @@ test("questions vary between sessions, even at the same starting difficulty", as
   for (let i = 0; i < 6; i++) {
     await page.locator(".topic-card", { hasText: "חיבור עד 1000" }).click();
     seen.add((await page.locator(".problem-text").innerText()).trim());
+    // Starts in fullscreen by default (docs/features/practice-fullscreen-start/), which
+    // hides the back button — exit first, same as a student would.
+    await page.locator(".notebook-fullscreen-exit").click();
     await page.locator(".link-button").first().click(); // ← חזרה
   }
   expect(seen.size, "every fresh entry showed the exact same first question").toBeGreaterThan(1);

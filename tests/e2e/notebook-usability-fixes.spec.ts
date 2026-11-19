@@ -62,6 +62,9 @@ async function harvestFirstAnswer(page: Page): Promise<string> {
  *  retired version of this helper, which this one is ported from). */
 async function harvestAllAnswers(page: Page): Promise<string[]> {
   await openLevel(page);
+  // Starts in fullscreen by default (docs/features/practice-fullscreen-start/), which hides
+  // .progress — exit first, same as a student would.
+  await page.locator(".notebook-fullscreen-exit").click();
   const total = Number((await page.locator(".progress").innerText()).match(/(\d+)\s*$/)![1]);
   const answers: string[] = [];
   for (let i = 0; i < total; i++) {
@@ -188,6 +191,9 @@ test("a correct answer does not advance on its own — the practice screen waits
   await expect(page.locator(".feedback.correct")).toBeVisible();
 
   await nextButton(page).click();
+  // fullscreenWanted stayed true (default — docs/features/practice-fullscreen-start/), so
+  // the next question restores fullscreen — exit again to reach .progress.
+  await page.locator(".notebook-fullscreen-exit").click();
   await expect(page.locator(".progress")).toContainText("שאלה 2 מתוך");
 });
 
@@ -310,6 +316,9 @@ test("the page opens at a fixed 70% zoom with its top-left corner aligned to the
 
 test("zoom and position are preserved across entering and leaving fullscreen", async ({ page }) => {
   await openLevel(page);
+  // Starts in fullscreen by default (docs/features/practice-fullscreen-start/) — exit first
+  // so entering it below is a real embedded → fullscreen transition.
+  await page.locator(".notebook-fullscreen-exit").click();
   // Zoom in once so the level is distinguishable from the 70% every question opens at —
   // otherwise "preserved" and "recomputed to the same default" would look identical.
   await page.getByRole("button", { name: "הגדל" }).click();

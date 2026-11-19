@@ -47,6 +47,10 @@ async function openLevel(page: Page) {
   const byLevel = page.locator(".level-card");
   if (await byStyle.count()) await byStyle.first().click();
   else if (await byLevel.count()) await byLevel.first().click();
+  // Starts in fullscreen by default (docs/features/practice-fullscreen-start/), which moves
+  // the toolbar/nav-pad overlays this file's "far" x-fractions are tuned around — exit so
+  // the embedded geometry these tests were written against is what's actually on screen.
+  await page.locator(".notebook-fullscreen-exit").click();
 }
 
 async function openTopics(page: Page, studentName?: string) {
@@ -69,6 +73,10 @@ async function enterPractice(page: Page) {
   const byLevel = page.locator(".level-card");
   if (await byStyle.count()) await byStyle.first().click();
   else if (await byLevel.count()) await byLevel.first().click();
+  // Starts in fullscreen by default (docs/features/practice-fullscreen-start/), which moves
+  // the toolbar/nav-pad overlays this file's "far" x-fractions are tuned around — exit so
+  // the embedded geometry these tests were written against is what's actually on screen.
+  await page.locator(".notebook-fullscreen-exit").click();
 }
 
 /** Walks back up to the topic screen, wherever we are — a reload or leaving practice can
@@ -79,6 +87,10 @@ async function backToTopics(page: Page) {
   // added a second button with that exact aria-label inside the practice screen itself
   // (deliberately, same label for the same action), so "a button called הגדרות exists" no
   // longer uniquely identifies the topic screen the way it used to.
+  // Starts in fullscreen by default (docs/features/practice-fullscreen-start/), which hides
+  // the back button this loop clicks below — exit first if still there.
+  const exitFullscreen = page.locator(".notebook-fullscreen-exit");
+  if (await exitFullscreen.count()) await exitFullscreen.click();
   const onTopics = () => page.locator(".topic-grid").count();
   for (let i = 0; i < 3 && (await onTopics()) === 0; i++) {
     await page.getByRole("button", { name: "← חזרה" }).first().click();

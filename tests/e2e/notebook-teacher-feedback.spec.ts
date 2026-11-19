@@ -290,7 +290,7 @@ test("the correction link stays reachable in fullscreen for an uncertain reading
   page,
 }) => {
   await openLevel(page);
-  await page.getByRole("button", { name: "הגדילו את המחברת למסך מלא" }).click();
+  // Already in fullscreen by default (docs/features/practice-fullscreen-start/).
   await answerUncertainly(page);
 
   const fullscreenBox = page.locator(".notebook-screen.fullscreen");

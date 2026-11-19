@@ -89,6 +89,9 @@ test("the last page's '→ לתרגול' enters practice for the same topic", as
     await page.getByRole("button", { name: "הבא →" }).click();
   }
   await page.getByRole("button", { name: "→ לתרגול" }).click();
+  // Starts in fullscreen by default (docs/features/practice-fullscreen-start/), which hides
+  // the regular header — exit first, same as a student would.
+  await page.locator(".notebook-fullscreen-exit").click();
 
   // Practice for the same topic — the header names it, just like every other entry into
   // practice for a topic does.

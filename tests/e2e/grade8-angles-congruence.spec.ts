@@ -61,6 +61,10 @@ async function openOmerTopics(page: Page) {
 async function openTopic(page: Page) {
   await openOmerTopics(page);
   await page.locator(".topic-card", { hasText: TOPIC_TITLE }).click();
+  // Adaptive — lands straight on practice, which starts in fullscreen by default
+  // (docs/features/practice-fullscreen-start/) — exit first, same as a student would, so
+  // the regular header (back button, hint button, .progress) is reachable.
+  await page.locator(".notebook-fullscreen-exit").click();
 }
 
 /** Pulls the number right after a fixed anchor phrase — targeted, so a prompt with more
@@ -135,6 +139,10 @@ async function answerAndNext(page: Page, value: number) {
  *  seen. Assumes the topic screen is already open with no level picker in the way. */
 async function playSession(page: Page): Promise<string[]> {
   const prompts: string[] = [];
+  // Starts in fullscreen by default (docs/features/practice-fullscreen-start/), which hides
+  // .progress (part of the regular header) — exit first, same as a student would.
+  const exit = page.locator(".notebook-fullscreen-exit");
+  if (await exit.count()) await exit.click();
   const total = Number((await page.locator(".progress").innerText()).match(/מתוך (\d+)/)![1]);
   for (let i = 0; i < total; i++) {
     const prompt = await currentPrompt(page);

@@ -71,6 +71,9 @@ test("the result screen's heading balances", async ({ page }) => {
   await page.locator(".student-card").nth(MIKA).click();
   await page.locator(".grade-card").first().click();
   await page.locator(".topic-card", { hasText: "חיבור עד 10" }).click();
+  // Starts in fullscreen by default (docs/features/practice-fullscreen-start/), which hides
+  // the regular header (and with it .progress) — exit first, same as a student would.
+  await page.locator(".notebook-fullscreen-exit").click();
   const total = Number((await page.locator(".progress").innerText()).match(/מתוך (\d+)/)![1]);
   for (let i = 0; i < total; i++) {
     await answerViaNotebook(page, 999999);

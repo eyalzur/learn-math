@@ -95,6 +95,9 @@ test("leaving mid-session through the back button still resumes from the reached
 }) => {
   await enterAdd100(page);
   await climbAddUntilCarrying(page);
+  // Starts in fullscreen by default (docs/features/practice-fullscreen-start/), which hides
+  // the back button — exit first, same as a student would.
+  await page.locator(".notebook-fullscreen-exit").click();
   // Mid-session, not finished — the back button, not "סיום".
   await page.getByRole("button", { name: "← חזרה" }).click();
 
@@ -134,6 +137,9 @@ test("a different adaptive topic for the same student is unaffected by another t
 }) => {
   await enterAdd100(page);
   await climbAddUntilCarrying(page);
+  // Starts in fullscreen by default (docs/features/practice-fullscreen-start/), which hides
+  // the back button — exit first, same as a student would.
+  await page.locator(".notebook-fullscreen-exit").click();
   await page.getByRole("button", { name: "← חזרה" }).click();
 
   // חיסור עד 1000 — a sibling adaptive topic, never visited before in this test.
