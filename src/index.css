@@ -1,31 +1,34 @@
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  /* The notebook page's own squared-paper guide — a deliberate, genuinely blue tone,
-     independent of --accent-border (the app's purple accent, which the grid borrowed by
+  /* Fixed "candy" design — docs/features/candy-redesign/. One set of values, no
+     light/dark split: the background is dark on purpose, in every mode. */
+  --text: #cdb8ea;
+  --text-h: #fdf5ff;
+  --bg: #2a1b40;
+  --border: #4a3366;
+  --code-bg: #352350;
+  --accent: #ff6fae;
+  --accent-bg: rgba(255, 111, 174, 0.18);
+  --accent-border: rgba(255, 111, 174, 0.6);
+  /* The notebook page's own squared-paper guide — a deliberate lavender tone,
+     independent of --accent-border (the app's accent, which the grid borrowed by
      coincidence rather than by design). */
-  --notebook-grid: #b8d4f0;
+  --notebook-grid: #8a6fb8;
   /* The question written on the notebook page: a distinct "printed ink" blue, deliberately
      different from both --text-h (the student's own ink) and --notebook-grid (too light to
-     read as text). See docs/features/notebook-question-on-page/design.md. */
-  --notebook-question-ink: #2c5282;
-  --social-bg: rgba(244, 243, 236, 0.5);
+     read as text). Carried over from the app's former dark-mode value — still reads clearly
+     on this background. See docs/features/notebook-question-on-page/design.md. */
+  --notebook-question-ink: #8fb8e8;
+  --social-bg: rgba(47, 48, 58, 0.5);
   --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+    rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --sans: "Rubik", system-ui, 'Segoe UI', Roboto, sans-serif;
+  --heading: "Varela Round", system-ui, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, Consolas, monospace;
 
   font: 18px/145% var(--sans);
   letter-spacing: 0.18px;
-  color-scheme: light dark;
+  color-scheme: dark;
   color: var(--text);
   background: var(--bg);
   font-synthesis: none;
@@ -38,26 +41,8 @@
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --notebook-grid: #3a5578;
-    --notebook-question-ink: #8fb8e8;
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
+#social .button-icon {
+  filter: invert(1) brightness(2);
 }
 
 #root {

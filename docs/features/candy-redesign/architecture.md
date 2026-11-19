@@ -103,3 +103,35 @@ Cases) ישירות לתוך ה-`:root` הבסיסי, והבלוק כולו נמ
 
 ## Open Questions
 None.
+
+## Implementation Notes
+נבנה כפי שתוכנן, עם תיקון אחד שהתגלה תוך כדי אימות חי בדפדפן:
+
+- **`index.html`** — הורחב ה-`<link>` הקיים ל-Google Fonts לבקש גם `Varela+Round`
+  ו-`Rubik:wght@400;500;600;700` באותה בקשה; עודכנה התגובה שהייתה טוענת ש-Playpen
+  Sans Hebrew הוא "הגופן החיצוני הראשון".
+- **`src/index.css`** — `:root` יחיד עם כל הערכים החדשים מ-design.md, הטוקנים
+  שלא הוחלטו במפורש (`--notebook-question-ink`, `--social-bg`, `--shadow`) נשארו
+  בערך ה-dark-mode הישן שלהם, ובלוק `@media (prefers-color-scheme: dark)` הוסר
+  כליל (כולל `#social .button-icon`'s filter, שעבר לכלל קבוע).
+- **`src/App.css`** — `border-radius: 12px → 20px` ב-7 הסלקטורים שתוכננו
+  (`.student-card`, `.topic-card`, `.level-card`, `.settings-dialog` [היה 14px],
+  `.read-aloud-setting`, `.hold-zoom-setting`/`.auto-scroll-setting`,
+  `.pan-speed-setting`), ו-`.notebook-send-btn` הפך לפיל (`999px`).
+
+**סטייה מהתכנון, שהתגלתה באימות חי:** architecture.md תכנן `outline: 2px dotted
+var(--accent); outline-offset: -2px;` על `.notebook-stage` כדי להימנע משינוי גודל
+הקופסה. בפועל, ב-Chrome, אלמנט עם `overflow: hidden` **על עצמו** פשוט לא מצייר את
+ה-outline שלו בכלל — אומת חי (גם עם `outline: 8px solid red` בלי offset, שום דבר
+לא נצבע). הפתרון: `border: 2px dotted var(--accent);` רגיל, יחד עם
+`box-sizing: border-box` מפורש על אותו סלקטור — כך שהוספת ה-border לא משנה את
+גודל הקופסה הכוללת (רק מצמצמת את השטח הפנימי הנראה ב-2px מכל צד), בלי לגעת
+ב-`inset: 0` או בחישובי pan/zoom. אומת חי בדפדפן אחרי התיקון: המסגרת המנוקדת
+מופיעה בבירור סביב כל אזור הכתיבה.
+
+אומת חי: מסך בחירת תלמיד/ה, מסך בחירת כיתה/נושא, מסך תרגול + מחברת (כולל המסגרת
+המנוקדת), ודיאלוג ⚙️ ההגדרות — כולם מציגים את הרקע הסגול הכהה, הגופנים החדשים,
+והפינות המעוגלות. אין שגיאות קונסול.
+
+`npm run build` ו-`npm run lint` נקיים. `npm run bump:feature` →
+`1.42.0 → 1.43.0`.
