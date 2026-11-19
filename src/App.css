@@ -54,7 +54,13 @@
    checking which build a device actually loaded, and must stay out of the way of a
    seven-year-old scanning for her own name. */
 .app-version {
-  margin: 28px 0 0;
+  display: block;
+  margin: 28px auto 0;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
   text-align: center;
   font-size: 12px;
   color: var(--text);
@@ -779,6 +785,83 @@ button.secondary {
   display: flex;
   justify-content: center;
   margin-top: 16px;
+}
+
+/* Same anatomy and values as .settings-backdrop/-dialog/-title, deliberately under its own
+   name — see the comment above .settings-backdrop for why dialogs don't share classes. */
+.version-log-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 31;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 24px;
+}
+
+.version-log-dialog {
+  max-width: 420px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--bg);
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+
+.version-log-title {
+  margin: 0 0 16px;
+  font-size: 19px;
+  color: var(--text-h);
+  text-align: right;
+}
+
+.version-log-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.version-log-entry {
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.version-log-entry:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.version-log-heading {
+  margin: 0 0 4px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+/* Same isolation as .app-version-number/.problem-box — a version number is LTR content
+   inside an RTL page. */
+.version-log-version {
+  direction: ltr;
+  unicode-bidi: isolate;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.version-log-today {
+  font-size: 13px;
+  color: var(--accent);
+}
+
+.version-log-description {
+  margin: 0;
+  text-align: right;
+  color: var(--text);
 }
 
 /* ---- read-aloud: the per-student setting, and the question's own speaker ---- */

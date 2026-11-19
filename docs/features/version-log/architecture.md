@@ -91,3 +91,16 @@ export const CHANGELOG: ChangelogEntry[] = [
 
 ## Open Questions
 None.
+
+## Implementation Notes
+נבנה כמתואר, עם סטייה קטנה אחת: design.md תיאר כפתור סגירה בתור ✕ ב"בדיוק
+כמו דיאלוג ה-⚙️ הקיים" — אבל `SettingsDialog` בפועל סוגר עם כפתור טקסט
+("סגירה") בתחתית, לא ✕ בכותרת. מימשתי לפי הדיאלוג האמיתי (`.settings-actions`
++ כפתור "סגירה") כדי שהדיאלוג החדש יהיה עקבי עם זה שכבר קיים, לא עם תיאור
+שגוי שלו — זה גם מה שהכוונה המקורית ("בדיוק כמו...") התכוונה אליו בפועל.
+
+קבצים: `src/data/changelog.ts` (חדש), `src/components/VersionLog.tsx` (חדש),
+`src/components/StudentPicker.tsx` (`.app-version` הפך לכפתור, state מקומי),
+`src/App.css` (reset לכפתור + ארבע מחלקות דיאלוג חדשות). `npm run
+bump:feature` → `1.42.0 → 1.43.0`, תואם לשורה הראשונה ב-`CHANGELOG`.
+`npm run build` ו-`npm run lint` נקיים.
