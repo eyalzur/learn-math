@@ -20,8 +20,8 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     version: "1.49.0",
-    icon: "🔗",
-    description: "קישורי \"חזרה\" ו\"החלף תלמיד\" מרגישים קלילים יותר, לא נדחסים זה בזה.",
+    icon: "✨",
+    description: "זוהר עדין עובר בין הכפתורים כל כמה שניות, ורקע המסך קצת חי — בלי להפריע, כל עוד לא לוחצים.",
   },
   {
     version: "1.48.1",

@@ -21,6 +21,7 @@ import {
   clearStudent as clearStudentAdaptiveTiers,
 } from "./data/adaptiveProgress";
 import { userStore } from "./data/userStore";
+import { reindexIdleSpotlight } from "./data/idleSpotlight";
 import { readAloud as readAloudFor, setReadAloud } from "./data/preferences";
 import "./App.css";
 
@@ -181,6 +182,15 @@ function App() {
       }
     });
   }, []);
+
+  // Re-indexes the currently-visible cards/buttons for the idle-spotlight CSS animation
+  // (docs/features/idle-spotlight/) after every render — deliberately no dependency
+  // array, since any navigation/state change can change which elements are on screen.
+  // The scan itself is cheap (a few dozen elements at most); see idleSpotlight.ts.
+  useEffect(() => {
+    reindexIdleSpotlight();
+  });
+
   /** The per-student settings (read-aloud, hold-to-zoom strength) are stored rather than
    *  held in state; this forces a re-read after either of them is written. */
   const [, setPreferencesTick] = useState(0);
