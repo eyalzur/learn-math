@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { answerViaNotebook } from "./helpers/notebookAnswer";
+import { answerQuestion } from "./helpers/answerQuestion";
 
 /**
  * Acceptance criteria under test
@@ -28,8 +28,14 @@ async function open(page: Page) {
 async function playLevel(page: Page, answerWith: string) {
   const total = Number((await page.locator(".progress").innerText()).match(/מתוך (\d+)/)![1]);
   for (let i = 0; i < total; i++) {
-    await answerViaNotebook(page, answerWith);
-    await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
+    await answerQuestion(page, answerWith);
+    // A correct answer advances on its own — no "הבא" button for that path.
+    const nextButton = page.getByRole("button", { name: /^(הבא|סיום)$/ });
+    if (await nextButton.count()) {
+      await nextButton.click();
+    } else {
+      await page.waitForTimeout(800);
+    }
   }
   return total;
 }
@@ -139,8 +145,15 @@ test("a level practises only its own topic", async ({ page }) => {
   for (let i = 0; i < 10; i++) {
     const prompt = await page.locator(".problem-text").innerText();
     expect(prompt, `"${prompt}" is not a subtraction`).toContain("−");
-    await answerViaNotebook(page, 0);
-    await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
+    // 0 isn't guaranteed wrong (e.g. "5 − 5"), so a correct answer can legitimately
+    // advance on its own here — no "הבא" button for that path.
+    await answerQuestion(page, 0);
+    const nextButton = page.getByRole("button", { name: /^(הבא|סיום)$/ });
+    if (await nextButton.count()) {
+      await nextButton.click();
+    } else {
+      await page.waitForTimeout(800);
+    }
   }
 });
 

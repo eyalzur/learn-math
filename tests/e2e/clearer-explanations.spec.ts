@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { answerViaNotebook } from "./helpers/notebookAnswer";
+import { answerQuestion } from "./helpers/answerQuestion";
 
 /**
  * Acceptance criteria under test
@@ -58,7 +58,7 @@ async function enterDecimals(page: Page) {
 }
 
 const answerWrong = async (page: Page) => {
-  await answerViaNotebook(page, 999999);
+  await answerQuestion(page, 999999);
 };
 
 async function currentPrompt(page: Page): Promise<string> {
@@ -317,6 +317,6 @@ test("the follow-up field asks for a decimal keyboard", async ({ page }) => {
   // is the only way to answer now, so there is no keyboard-mode attribute left to assert on
   // the main answer itself.
   await start(page, 0, 3, "חיבור");
-  await answerViaNotebook(page, 7);
+  await answerQuestion(page, 7);
   await expect(page.locator(".followup-input")).toHaveAttribute("inputmode", "decimal");
 });
