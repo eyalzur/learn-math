@@ -19,6 +19,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.45.1",
+    icon: "🔧",
+    description:
+      "תיקונים קטנים: גלילה בלוג הגרסאות לא מזיזה יותר את הרקע, מספר הגרסה עבר לפינה, פער קושי בחזקות ושורשים תוקן, ומסך הסיום חוגג יותר.",
+  },
+  {
     version: "1.45.0",
     icon: "🗂️",
     description: "לוג גרסאות — אפשר לראות כאן, בלחיצה על מספר הגרסה, מה היה בכל גרסה.",
