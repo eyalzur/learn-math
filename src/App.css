@@ -52,10 +52,16 @@
 
 /* Deliberately the smallest and faintest thing on the screen. It exists for the adult
    checking which build a device actually loaded, and must stay out of the way of a
-   seven-year-old scanning for her own name. */
+   seven-year-old scanning for her own name — pinned to the screen's own bottom-left
+   corner (physical, not `inset-inline-start`: a corner badge like this reads as "the
+   same corner every time", not "wherever RTL happens to start"), out of the student
+   list's flow entirely rather than sitting right under it. */
 .app-version {
+  position: fixed;
+  bottom: 12px;
+  left: 12px;
   display: block;
-  margin: 28px auto 0;
+  margin: 0;
   background: none;
   border: none;
   padding: 0;
@@ -589,13 +595,94 @@ button.secondary {
 }
 
 .result {
-  padding: 60px 24px;
+  padding: 40px 24px;
+  display: flex;
+  justify-content: center;
+}
+
+/* A game-style "you did it" card, not a bare sentence on the page — the user asked
+   explicitly for this screen to feel more like a win, not just report a number. */
+.result-card {
+  max-width: 380px;
+  width: 100%;
+  padding: 32px 24px;
+  border-radius: 28px;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.result-icon {
+  display: block;
+  font-size: 56px;
+  line-height: 1;
+  animation: result-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.result-stars {
+  margin: 10px 0 4px;
+  font-size: 22px;
+  letter-spacing: 4px;
+}
+
+.result-star {
+  opacity: 0.25;
+  filter: grayscale(1);
+}
+
+.result-star-on {
+  opacity: 1;
+  filter: none;
+  animation: result-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+}
+
+.result-star-on:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.result-star-on:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+@keyframes result-pop {
+  from {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .score {
   font-size: 20px;
-  margin: 16px 0 32px;
+  margin: 8px 0 28px;
   color: var(--text-h);
+}
+
+/* Pill buttons here only — a deliberate, scoped exception for this one "win screen",
+   not a global button restyle. */
+.result .actions button {
+  border-radius: 999px;
+  padding: 12px 28px;
+}
+
+/* The global h1 (index.css) is sized for a full-width hero (56px) and never sets its
+   own line-height, inheriting the root's `145%` — a *percentage* line-height resolves to
+   a fixed length at the element that declares it (26px, off the root's 18px) and is
+   inherited as that same fixed length, not recomputed against h1's own much bigger
+   font-size. That's invisible as long as every h1 fits on one line, which is why this
+   never showed up before — this card is the first place a message (e.g. "ציון מושלם!
+   פתרת הכל נכון!") is long enough, in a narrow enough box, to actually wrap, and the two
+   lines land almost exactly on top of each other. Overridden here with its own sizing
+   instead of patching the global h1 rule, which would need checking every other screen's
+   h1 before touching it. */
+.result-card h1 {
+  font-size: 24px;
+  line-height: 1.35;
+  letter-spacing: normal;
+  margin: 4px 0 2px;
 }
 
 /* ---- topic picker ---- */
@@ -861,6 +948,11 @@ button.secondary {
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
+  /* Scrolling to the end of a long changelog must not "chain" into scrolling the
+     student picker behind it — the backdrop covers the whole screen, but without this
+     a touchpad/touch swipe that hits the dialog's own scroll limit keeps going into
+     whatever's underneath. */
+  overscroll-behavior: contain;
   background: var(--bg);
   border-radius: 14px;
   padding: 20px;

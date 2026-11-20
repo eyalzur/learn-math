@@ -85,7 +85,8 @@ test("shows the perfect-score message when every answer is correct", async ({ pa
   const answers = await harvestAnswers(page, total);
   await completeLevel(page, answers, { missOne: false });
 
-  await expect(page.locator(".result h1")).toHaveText("🌟 ציון מושלם! פתרת הכל נכון!");
+  await expect(page.locator(".result h1")).toHaveText("ציון מושלם! פתרת הכל נכון!");
+  await expect(page.locator(".result-icon")).toHaveText("🌟");
   await expect(page.locator(".score")).toContainText("100%");
 });
 
