@@ -49,55 +49,51 @@ test("the grade picker is shown to every student, including one who used to skip
   await expect(page.getByText("באיזו כיתה מתרגלים היום?")).toBeVisible();
 });
 
-test("reloading after reaching the topic list returns straight to that grade's topic list", async ({ page }) => {
+/**
+ * How deep "remembered position" goes, at four depths in the same menu — and where it
+ * deliberately stops. One flowing test, not four: all four reuse the same navigation
+ * primitives (reload, then check what's on screen) against the same underlying mechanism,
+ * just at a different depth each time, so a shared setup tells the same story better than
+ * four near-identical page loads.
+ */
+test("remembered position holds at the topic list and the style picker, forgets the way back, and never resumes an active session", async ({
+  page,
+}) => {
+  // Depth 1: topic list — reload returns straight to it.
   await freshStart(page);
   await studentCard(page, 0).click();
   await page.locator(".grade-card").nth(2).click(); // grade ו׳
   await expect(page.locator(".topic-card").first()).toBeVisible();
-
   await page.reload();
   await expect(page.locator(".student-card")).toHaveCount(0);
   await expect(page.locator(".grade-card")).toHaveCount(0);
   await expect(page.locator(".topic-card").first()).toBeVisible();
-});
 
-test("reloading after reaching a style picker returns straight to that same style picker", async ({ page }) => {
+  // Depth 2: a style picker, one level deeper — reload returns to that same picker.
   await freshStart(page);
   await studentCard(page, 0).click(); // Mika
   await page.locator(".grade-card").first().click(); // grade א׳
   await page.locator(".topic-card").first().click(); // a style-based topic
   await expect(page.locator(".style-card").first()).toBeVisible();
-
   await page.reload();
   await expect(page.locator(".student-card")).toHaveCount(0);
   await expect(page.locator(".topic-card")).toHaveCount(0);
   await expect(page.locator(".style-card").first()).toBeVisible();
-});
 
-test("going back from a style picker to the topic list, then reloading, stays on the topic list", async ({
-  page,
-}) => {
-  await freshStart(page);
-  await studentCard(page, 0).click();
-  await page.locator(".grade-card").first().click();
-  await page.locator(".topic-card").first().click();
-  await expect(page.locator(".style-card").first()).toBeVisible();
-
+  // Stepping back from that picker forgets it deliberately — reload stays on the topic list.
   await page.getByRole("button", { name: "← חזרה" }).click();
   await expect(page.locator(".topic-card").first()).toBeVisible();
-
   await page.reload();
   await expect(page.locator(".topic-card").first()).toBeVisible();
   await expect(page.locator(".style-card")).toHaveCount(0);
-});
 
-test("an adaptive topic never resumes inside an active practice session", async ({ page }) => {
+  // Depth 3: an active practice session is never resumed, even for an adaptive topic that
+  // skips every picker and lands straight on it.
   await freshStart(page);
   await studentCard(page, 0).click();
   await page.locator(".grade-card").first().click(); // grade א׳
   await page.locator(".topic-card").nth(1).click(); // "חיבור עד 10" — adaptive, straight to practice
   await expect(page.locator(".progress")).toBeVisible();
-
   await page.reload();
   await expect(page.locator(".progress")).toHaveCount(0);
   await expect(page.locator(".topic-card").first()).toBeVisible();
