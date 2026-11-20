@@ -323,13 +323,35 @@
   padding-block: 8px;
 }
 
+/* A light pill, not bare text — .history-link below used to be bare text like this and
+   was reported live as "looks very bad"; that fix belongs on every link-button, not just
+   the one that happened to get it first (docs/features/back-link-redesign). Deliberately
+   not the heavy box-shadow ledge playful-redesign gives real action buttons (excluded
+   below, App.css's own :not(.link-button) additions) — a secondary nav link shouldn't
+   visually compete with a screen's actual primary action. */
 .link-button {
-  background: none;
+  background: var(--accent-bg);
   border: none;
+  border-radius: 999px;
   color: var(--accent);
   cursor: pointer;
   font: inherit;
-  padding: 0;
+  font-size: 14px;
+  padding: 6px 14px;
+  width: fit-content;
+}
+
+/* Solid accent + white text on hover, not a darker pink tint — var(--accent-border) is a
+   translucent pink meant for borders/strokes (see .lesson-link:hover above), and pink text
+   on a pink-tinted background would be a real contrast problem. This mirrors the same
+   accent+white combination the base `button` rule already uses for primary actions. */
+.link-button:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+.link-button:active {
+  opacity: 0.8;
 }
 
 .progress {
@@ -561,10 +583,13 @@
   color: var(--text);
 }
 
+/* width: fit-content matters now that the base .link-button carries a visible
+   background (docs/features/back-link-redesign) — without it, display: block would
+   stretch the pill the full width of its container instead of hugging its text. */
 .reveal-link {
   display: block;
+  width: fit-content;
   margin-top: 12px;
-  font-size: 14px;
 }
 
 /* "דוגמה N מתוך M" heading on the lesson screen's current page (only shown when the
@@ -703,7 +728,7 @@ button.secondary {
 .topic-card,
 .level-card,
 .style-card,
-button:not(.app-version) {
+button:not(.app-version):not(.link-button) {
   box-shadow: 0 5px 0 var(--accent-border);
   /* No transition on transform/box-shadow here on purpose: an animated press looked
      nicer by eye, but a transition keeps the element's bounding box moving between
@@ -766,7 +791,7 @@ button:not(.app-version) {
 .topic-card:active:not(:disabled),
 .level-card:active,
 .style-card:active,
-button:active:not(:disabled):not(.app-version) {
+button:active:not(:disabled):not(.app-version):not(.link-button) {
   transform: translateY(5px);
   box-shadow: 0 0 0 var(--accent-border);
 }
@@ -1042,19 +1067,14 @@ body:has(
   padding: 32px 24px;
 }
 
-/* Previously bare text, flush against .grade-header above it — crammed into the corner
-   with no visual weight of its own, unlike every other tappable thing on the screen
-   (reported live as "looks very bad"). A light pill gives it the same "this is a real,
-   tappable chip" read as the rest of the app's rounded language, without competing with
-   the screen's actual primary action. */
+/* The light-pill look (background/padding/radius/font-size) now lives on the base
+   .link-button itself (docs/features/back-link-redesign) — every link-button gets it,
+   not just this one. Only the layout specifics stay here: block + its own width so it
+   doesn't stretch full-width, and enough margin to sit clearly apart from the link
+   above it rather than crowding against it (10px → 14px top, per design.md). */
 .history-link {
   display: block;
-  width: fit-content;
-  margin: 10px 0 20px auto;
-  padding: 6px 14px;
-  border-radius: 999px;
-  background: var(--accent-bg);
-  font-size: 14px;
+  margin: 14px 0 24px auto;
 }
 
 .topic-grid {
