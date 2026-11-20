@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { answerViaNotebook } from "./helpers/notebookAnswer";
+import { answerQuestion } from "./helpers/answerQuestion";
 import { geometryShape } from "../../src/data/geometryShape";
 import { pythagorasTriangle } from "../../src/data/pythagorasTriangle";
 import { percentStrip } from "../../src/data/percentStrip";
@@ -55,7 +55,7 @@ async function currentPrompt(page: Page): Promise<string> {
 }
 
 async function submit(page: Page, value: number) {
-  await answerViaNotebook(page, value);
+  await answerQuestion(page, value);
 }
 
 const answerWrong = (page: Page) => submit(page, 999999);

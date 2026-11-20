@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { answerViaNotebook } from "./helpers/notebookAnswer";
+import { answerQuestion } from "./helpers/answerQuestion";
 
 /**
  * Acceptance criteria under test
@@ -125,8 +125,14 @@ async function currentPrompt(page: Page): Promise<string> {
 }
 
 async function answerAndNext(page: Page, value: number) {
-  await answerViaNotebook(page, value);
-  await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
+  await answerQuestion(page, value);
+  // A correct answer advances on its own — no "הבא" button for that path.
+  const nextButton = page.getByRole("button", { name: /^(הבא|סיום)$/ });
+  if (await nextButton.count()) {
+    await nextButton.click();
+  } else {
+    await page.waitForTimeout(800);
+  }
 }
 
 /** Plays through one full 20-question session, answering correctly whenever
@@ -190,7 +196,7 @@ test("every question has a prompt, two hints, and — after a wrong answer — s
   await page.locator(".hint-button").click();
   await expect(page.locator(".hint")).toHaveCount(2);
 
-  await answerViaNotebook(page, -999999);
+  await answerQuestion(page, -999999);
   await expect(page.locator(".explanation-step").first()).toBeVisible();
   await expect(page.locator(".explanation-analogy")).not.toBeEmpty();
 });
@@ -228,8 +234,10 @@ test("covers angle questions — straight-angle completion, triangle angle sum, 
   // for its two climbing questions before permanently outgrowing it — two random draws
   // between "sum" and "exterior" per session, eight total at four sessions, which misses
   // "exterior" entirely about 1 in 250 runs. Six sessions cuts that to roughly 1 in 4000.
-  // Extended timeout for the same load reason as the two tests above.
-  test.setTimeout(60000);
+  // 6 sessions × 20 questions, mostly correct (each correct answer now waits out a real
+  // ~700ms auto-advance — docs/features/scored-answer-practice/ — instead of an instant
+  // mocked click), comfortably exceeds the old 60s budget; 120s covers it with margin.
+  test.setTimeout(120000);
   await openTopic(page);
   const prompts = await playSessions(page, 6);
 
@@ -243,6 +251,10 @@ test("covers angle questions — straight-angle completion, triangle angle sum, 
 test("covers congruent-triangle questions — a missing side or angle from a stated congruence", async ({
   page,
 }) => {
+  // 3 sessions × 20 questions, mostly correct — each correct answer now waits out a real
+  // ~700ms auto-advance (docs/features/scored-answer-practice/) instead of an instant
+  // mocked click, which the default 30s budget no longer covers.
+  test.setTimeout(60000);
   await openTopic(page);
   const prompts = await playSessions(page, 3);
 
@@ -252,6 +264,8 @@ test("covers congruent-triangle questions — a missing side or angle from a sta
 test("covers isosceles-triangle questions — equal base angles, and the median that is also a height", async ({
   page,
 }) => {
+  // Same timing reason as the congruent-triangle test above.
+  test.setTimeout(60000);
   await openTopic(page);
   const prompts = await playSessions(page, 3);
 
@@ -266,7 +280,7 @@ test("the diagram appears next to the question itself, before any answer", async
   await expect(page.locator(".angle-figure-inline")).toBeVisible();
   await expect(page.locator(".angle-figure-inline")).toHaveAttribute("role", "img");
   // Still there after a wrong answer too — the picture doesn't disappear or duplicate.
-  await answerViaNotebook(page, -999999);
+  await answerQuestion(page, -999999);
   await expect(page.locator(".angle-figure-inline")).toHaveCount(1);
 });
 
@@ -372,7 +386,7 @@ test("the triangle-angle-sum step shows the calculation with explicit brackets",
   }
   expect(found, "never encountered a triangle-angle-sum question across 5 sessions").toBe(true);
 
-  await answerViaNotebook(page, -999999);
+  await answerQuestion(page, -999999);
   const mathSteps = await page.locator(".explanation-math").allInnerTexts();
   expect(mathSteps.some((s) => s.includes("(") && s.includes(")"))).toBeTruthy();
 });

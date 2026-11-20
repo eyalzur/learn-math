@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { answerViaNotebook } from "./helpers/notebookAnswer";
+import { answerQuestion } from "./helpers/answerQuestion";
 
 /**
  * Acceptance criteria under test
@@ -123,7 +123,7 @@ async function failUntilMultiStep(page: Page) {
     // The last question leads to the result screen, not another question — stop rather
     // than hanging on a question screen that is no longer there.
     if ((await page.locator(".problem-box").count()) === 0) return false;
-    await answerViaNotebook(page, 999999);
+    await answerQuestion(page, 999999);
   }
   return false;
 }
@@ -151,7 +151,7 @@ async function failFirstQuestion(page: Page, topicIndex = 1) {
   const byLevel = page.locator(".level-card");
   if (await byStyle.count()) await byStyle.first().click();
   else if (await byLevel.count()) await byLevel.first().click();
-  await answerViaNotebook(page, 999999);
+  await answerQuestion(page, 999999);
 }
 
 const spokenText = (page: Page) =>
@@ -293,7 +293,7 @@ test("arithmetic is spoken as Hebrew words rather than symbols", async ({ page }
       break;
     }
     await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
-    await answerViaNotebook(page, 999999);
+    await answerQuestion(page, 999999);
   }
   expect(checked, "no explanation in this level contained an expression").toBe(true);
 });

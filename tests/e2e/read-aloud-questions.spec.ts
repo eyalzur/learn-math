@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { answerViaNotebook } from "./helpers/notebookAnswer";
+import { answerQuestion } from "./helpers/answerQuestion";
 
 /**
  * Acceptance criteria under test
@@ -139,9 +139,7 @@ test("the arithmetic is spoken as Hebrew words, not skipped symbols", async ({ p
   await fresh(page);
   await openStudent(page, 0);
   await startHintedLevel(page);
-  // The question now lives on the notebook page itself, not a separate .problem-box — see
-  // docs/features/notebook-question-on-page/.
-  await expect(page.locator(".notebook-question-header")).toContainText("12");
+  await expect(page.locator(".problem-text")).toContainText("12");
 
   await speakButton(page).click();
   await expect.poll(() => spokenText(page)).not.toHaveLength(0);
@@ -248,7 +246,7 @@ test("checking an answer silences a reading in progress", async ({ page }) => {
   await startHintedLevel(page);
   await expect.poll(() => spokenText(page)).not.toHaveLength(0);
 
-  await answerViaNotebook(page, 17);
+  await answerQuestion(page, 17);
 
   // The button is back to its idle state, which is the visible half of "stopped".
   await expect(speakButton(page)).toBeVisible();
@@ -276,20 +274,18 @@ test("a browser with no speech engine shows no setting and no button", async ({ 
   await fresh(page);
   await openStudent(page, 0);
 
-  // Open the settings and look inside: "no read-aloud switch" specifically — not "no switch
-  // anywhere in the dialog", since docs/features/notebook-auto-scroll/ added a second switch
-  // that has nothing to do with speech and is still there regardless.
-  await page.getByRole("button", { name: "הגדרות" }).click();
-  await expect(page.getByRole("switch", { name: READ_ALOUD_SWITCH_NAME })).toHaveCount(0);
-  // The zoom setting has nothing to do with speech, so it is still there — which is also
-  // why the ⚙️ button never opens an empty dialog.
-  await expect(page.locator(".hold-zoom-setting")).toBeVisible();
-  await page.getByRole("button", { name: "סגירה" }).click();
+  // scored-answer-practice removed every other setting (hold-zoom, auto-scroll, pan-speed,
+  // button-size, suggestion-sensitivity) — read-aloud is the only one left, so with no
+  // speech engine there is nothing left for the dialog to show at all, and the ⚙️ button
+  // itself does not render (hasAnySettings() — src/lib/settingsVisibility.ts). This is the
+  // new correct behavior, not a regression: previously a second, unrelated setting kept the
+  // button alive even with speech unsupported; that setting no longer exists.
+  await expect(page.getByRole("button", { name: "הגדרות" })).toHaveCount(0);
 
   await startHintedLevel(page);
   await expect(page.locator(".speak-button")).toHaveCount(0);
-  // And the rest of the screen is untouched. The question now lives on the notebook page
-  // itself, not a separate .problem-box — see docs/features/notebook-question-on-page/.
-  await expect(page.locator(".notebook-question-header")).toBeVisible();
-  await expect(page.locator("canvas")).toBeVisible();
+  // And the rest of the screen is untouched — the question still renders normally, same
+  // .problem-box TopicLesson.tsx uses. See docs/features/scored-answer-practice/.
+  await expect(page.locator(".problem-box")).toBeVisible();
+  await expect(page.locator(".answer-input")).toBeVisible();
 });

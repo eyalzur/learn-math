@@ -1,6 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { generateEquationsQuestion } from "../../src/data/adaptiveEquations";
-import { answerViaNotebook } from "./helpers/notebookAnswer";
+import { answerQuestion } from "./helpers/answerQuestion";
 
 /**
  * Acceptance criteria under test (docs/features/teacher-reading-precision/product-spec.md).
@@ -101,11 +101,11 @@ test("end-to-end: an additive-equation analogy actually renders on screen, in th
   // path works; the bulk test above owns variety/originality with a sample large enough to
   // be reliable.
   for (let i = 0; i < 20; i++) {
-    // The question now lives on the notebook page itself, not a separate .problem-box — see
-    // docs/features/notebook-question-on-page/.
-    const prompt = (await page.locator(".notebook-question-header").innerText()).trim();
+    // scored-answer-practice removed the notebook; the question is back to being a plain
+    // .problem-text, same as TopicLesson.tsx — see docs/features/scored-answer-practice/.
+    const prompt = (await page.locator(".problem-text").innerText()).trim();
     if (additiveDirection(prompt)) {
-      await answerViaNotebook(page, -1); // never a real equation's answer, always "wrong"
+      await answerQuestion(page, -1); // never a real equation's answer, always "wrong"
       const analogy = page.locator(".explanation-analogy");
       await analogy.waitFor({ state: "visible" });
       const text = (await analogy.textContent())?.trim() ?? "";

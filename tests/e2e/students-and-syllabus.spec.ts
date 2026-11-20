@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { answerViaNotebook } from "./helpers/notebookAnswer";
+import { answerQuestion } from "./helpers/answerQuestion";
 
 /** Every grade now practises topic by topic, so levels always sit one screen deeper. */
 async function openLevels(page: Page, studentIndex: number, topicIndex = 0) {
@@ -123,7 +123,7 @@ test("picking a topic runs a full practice and ends on a score summary", async (
 
   for (let i = 1; i <= 20; i++) {
     await expect(page.locator(".progress")).toContainText(`שאלה ${i} מתוך 20`);
-    await answerViaNotebook(page, 0);
+    await answerQuestion(page, 0);
     await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
   }
 
@@ -198,12 +198,8 @@ test("a bare expression is shown left-to-right with a trailing equals sign", asy
   // which are RTL by design and covered by the sibling test above.
   await openLevels(page, 0, 1);
 
-  // The question now lives on the notebook page itself, not a separate .problem-box — see
-  // docs/features/notebook-question-on-page/. Same direction check, new class scheme
-  // (qh-ltr instead of box-ltr — kept independent so TopicLesson.tsx's own .problem-box is
-  // unaffected).
-  const box = page.locator(".notebook-question-header");
-  await expect(box).toHaveClass(/qh-ltr/);
+  const box = page.locator(".problem-box");
+  await expect(box).toHaveClass(/box-ltr/);
   await expect(box).toHaveCSS("direction", "ltr");
   await expect(page.locator(".problem-text")).toContainText("=");
 });

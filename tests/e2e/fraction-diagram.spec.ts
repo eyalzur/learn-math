@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { answerViaNotebook } from "./helpers/notebookAnswer";
+import { answerQuestion } from "./helpers/answerQuestion";
 
 /**
  * Acceptance criteria under test
@@ -65,14 +65,10 @@ async function currentPrompt(page: Page): Promise<string> {
 }
 
 async function submit(page: Page, value: number) {
-  await answerViaNotebook(page, value);
+  await answerQuestion(page, value);
 }
 
 const answerWrong = (page: Page) => submit(page, 999999);
-
-async function nextQuestion(page: Page) {
-  await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
-}
 
 // ------------------------------------------------------- the picture never leaks
 
@@ -144,16 +140,17 @@ test("questions the circle cannot describe get no circle, and still explain them
     const parsed = parseFractionPrompt(prompt);
     if (parsed) {
       await submit(page, parsed.answer);
-    } else {
-      odd = { prompt };
-      await expect(page.locator(".fraction-circle"), `${prompt} drew a circle`).toHaveCount(0);
-      // Absence must not look like breakage: the explanation is still whole.
-      await answerWrong(page);
-      await expect(page.locator(".explanation")).toBeVisible();
-      await expect(page.locator(".explanation-step").first()).toBeVisible();
+      // A correct answer advances on its own (docs/features/scored-answer-practice/) —
+      // no "הבא" button for this path.
+      await page.waitForTimeout(800);
+      continue;
     }
-    if ((await page.getByRole("button", { name: /^(הבא|סיום)$/ }).count()) === 0) break;
-    await nextQuestion(page);
+    odd = { prompt };
+    await expect(page.locator(".fraction-circle"), `${prompt} drew a circle`).toHaveCount(0);
+    // Absence must not look like breakage: the explanation is still whole.
+    await answerWrong(page);
+    await expect(page.locator(".explanation")).toBeVisible();
+    await expect(page.locator(".explanation-step").first()).toBeVisible();
   }
 
   expect(odd, "no odd-shaped question was reached in six questions").not.toBeNull();
