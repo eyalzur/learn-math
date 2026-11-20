@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /**
  * Acceptance criteria under test (docs/features/pwa-install/product-spec.md), with the
@@ -36,12 +37,12 @@ test("the page links a resolvable manifest with the right top-level fields", asy
 
   const manifest = await response.json();
   expect(manifest.name).toBe("לומדים חשבון");
-  expect(manifest.short_name).toBe("חשבון");
+  expect(manifest.short_name).toBe("משחקים במספרים");
   expect(manifest.start_url).toBe("/learn-math/");
   expect(manifest.scope).toBe("/learn-math/");
   expect(manifest.display).toBe("standalone");
-  expect(manifest.theme_color).toBe("#aa3bff");
-  expect(manifest.background_color).toBe("#ffffff");
+  expect(manifest.theme_color).toBe("#ff6fae");
+  expect(manifest.background_color).toBe("#fff1f7");
 });
 
 test("the manifest's icons cover the required sizes/purposes and every icon file actually resolves", async ({
@@ -85,7 +86,10 @@ test("iOS install tags are present with the right values", async ({ page, baseUR
   );
   // design.md: iOS doesn't read the manifest's short_name for the home-screen label —
   // without this meta tag it falls back to the full <title>, which gets cut off.
-  await expect(page.locator('meta[name="apple-mobile-web-app-title"]')).toHaveAttribute("content", "חשבון");
+  await expect(page.locator('meta[name="apple-mobile-web-app-title"]')).toHaveAttribute(
+    "content",
+    "משחקים במספרים",
+  );
 });
 
 test("theme-color meta tag matches the manifest's theme_color", async ({ page, baseURL }) => {
@@ -99,12 +103,15 @@ test("theme-color meta tag matches the manifest's theme_color", async ({ page, b
 
 test("the app keeps working completely normally in an ordinary browser tab", async ({ page }) => {
   await page.goto("/learn-math/");
-  // A full, unrelated flow through the app — picking a student, a grade, and a topic —
-  // proves the new <head> tags didn't break anything that was already working. A topic
-  // can land on a level picker, a style picker, or straight into practice (an adaptive
-  // topic) — any of the three is a working app, same as every other spec in this suite
-  // already assumes.
-  await page.locator(".student-card").first().click();
+  await page.evaluate(() => localStorage.clear());
+  await page.goto("/learn-math/");
+  // A full, unrelated flow through the app — creating/picking a student, a grade, and
+  // a topic — proves the new <head> tags didn't break anything that was already
+  // working. The roster starts empty now (docs/features/manage-students/), so a
+  // student has to be created first — same helper every other spec in this suite
+  // already uses. A topic can land on a level picker, a style picker, or straight
+  // into practice (an adaptive topic) — any of the three is a working app.
+  await createAndSelectStudent(page);
   await page.locator(".grade-card").first().click();
   await page.locator(".topic-card").first().click();
   const landed =
