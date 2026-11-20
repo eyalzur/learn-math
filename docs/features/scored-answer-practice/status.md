@@ -11,9 +11,9 @@
 - [x] Implementation — developer — 2026-11-20
 - [x] Tests — qa — 2026-11-20
 
-**Current phase:** done — awaiting PR review
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `feature/scored-answer-practice`
-**PR:** not opened yet
+**PR:** [#95](https://github.com/eyalzur/learn-math/pull/95) — מוזג 2026-11-20
 
 ## Open questions / blockers
 None.
