@@ -39,6 +39,55 @@
   box-shadow: var(--shadow);
 }
 
+/* The card itself stays a plain <button> (so clicking anywhere on it still selects the
+   student) — the delete trigger has to be a sibling, not a nested button, since a
+   <button> inside a <button> isn't valid markup. Positioned over the card's own corner
+   so the two still read as one unit. */
+.student-card-wrap {
+  position: relative;
+}
+
+.student-card-wrap .student-card {
+  width: 100%;
+}
+
+.student-card-delete {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.55;
+}
+
+.student-card-delete:hover {
+  opacity: 1;
+  background: var(--code-bg);
+}
+
+/* Same card shape as a real student, so it reads as "one more tile in the row", not a
+   separate control bolted onto the list — always last (see StudentPicker.tsx). */
+.student-card-add {
+  align-items: center;
+  color: var(--text);
+  border-style: dashed;
+}
+
+.student-card-add-icon {
+  font-size: 26px;
+  line-height: 1;
+}
+
 .student-name {
   font-size: 22px;
   font-weight: 600;
@@ -140,6 +189,15 @@
 
 .grade-card-2 .grade-card-letter {
   color: #7c3aed;
+}
+
+/* Only meaningful inside CreateStudentDialog, where a grade card is a persistent choice
+   rather than a one-shot navigation (GradePicker itself never needs a "selected" look —
+   picking a grade there just goes somewhere). */
+.grade-card-selected {
+  border-color: var(--accent);
+  box-shadow: var(--shadow);
+  background: var(--accent-bg);
 }
 
 /* ---- grade home ---- */
@@ -1022,6 +1080,131 @@ button.secondary {
   margin: 0;
   text-align: right;
   color: var(--text);
+}
+
+/* ---- create-student dialog ---- */
+
+/* Same anatomy and values as .settings-backdrop/-dialog/-title and
+   .version-log-backdrop/-dialog/-title, deliberately under its own name — see the
+   comment above .settings-backdrop for why dialogs don't share classes. */
+.create-student-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 31;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 24px;
+}
+
+.create-student-dialog {
+  max-width: 420px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--bg);
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+
+.create-student-title {
+  margin: 0 0 4px;
+  font-size: 19px;
+  color: var(--text-h);
+  text-align: right;
+}
+
+.create-student-label {
+  margin: 10px 0 0;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.create-student-input {
+  font: inherit;
+  font-size: 18px;
+  padding: 10px 12px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text-h);
+  text-align: right;
+}
+
+.create-student-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.create-student-grade-list {
+  margin: 4px 0 0;
+  max-width: none;
+  gap: 10px;
+}
+
+.create-student-grade-list .grade-card {
+  width: 90px;
+  padding: 14px 8px;
+}
+
+.create-student-grade-list .grade-card-letter {
+  font-size: 30px;
+}
+
+.create-student-hint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text);
+  opacity: 0.75;
+}
+
+/* ---- delete-student dialog ---- */
+
+.delete-student-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 31;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 24px;
+}
+
+.delete-student-dialog {
+  max-width: 380px;
+  width: 100%;
+  background: var(--bg);
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+
+.delete-student-title {
+  margin: 0 0 10px;
+  font-size: 19px;
+  color: var(--text-h);
+  text-align: right;
+}
+
+.delete-student-body {
+  margin: 0;
+  text-align: right;
+  color: var(--text);
+}
+
+/* Intentionally not the big default-looking button — "ביטול" keeps the normal/primary
+   look (the safe default) and this one has to read as the deliberate, less-easy choice. */
+.delete-student-confirm {
+  background: var(--code-bg);
+  color: #c0392b;
+  border: 1px solid #c0392b;
 }
 
 /* ---- read-aloud: the per-student setting, and the question's own speaker ---- */

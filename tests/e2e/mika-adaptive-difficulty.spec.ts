@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { answerQuestion } from "./helpers/answerQuestion";
+import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /**
  * Acceptance criteria under test (docs/features/mika-adaptive-difficulty/product-spec.md),
@@ -17,8 +18,6 @@ import { answerQuestion } from "./helpers/answerQuestion";
  *  5. History keeps recording the topic, without inventing a level label that no longer
  *     exists.
  */
-
-const MIKA = 0;
 
 interface AdaptiveTopic {
   gradeIndex: number; // which of Mika's .grade-card entries (0 = א׳, 1 = ב׳)
@@ -57,7 +56,7 @@ async function open(page: Page) {
 }
 
 async function toGrade(page: Page, gradeIndex: number) {
-  await page.locator(".student-card").nth(MIKA).click();
+  await createAndSelectStudent(page);
   await page.locator(".grade-card").nth(gradeIndex).click();
 }
 

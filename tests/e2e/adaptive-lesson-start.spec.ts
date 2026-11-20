@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { answerQuestion } from "./helpers/answerQuestion";
+import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /**
  * Acceptance criteria under test (docs/features/adaptive-lesson-start/product-spec.md):
@@ -21,7 +22,6 @@ import { answerQuestion } from "./helpers/answerQuestion";
  * where the previous visit left off.
  */
 
-const MIKA = 0;
 const GRADE_B = 1; // כיתה ב׳
 
 async function open(page: Page) {
@@ -31,7 +31,7 @@ async function open(page: Page) {
 }
 
 async function toGradeB(page: Page) {
-  await page.locator(".student-card").nth(MIKA).click();
+  await createAndSelectStudent(page);
   await page.locator(".grade-card").nth(GRADE_B).click();
 }
 

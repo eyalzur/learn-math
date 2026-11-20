@@ -6,7 +6,8 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
-| לוג גרסאות | 🟡 built, awaiting review | [status](./version-log/status.md) |
+| לוג גרסאות | 🟢 done — מוזג ל-main | [status](./version-log/status.md) |
+| ניהול משתמשים דינמי | 🟢 done — מוזג ל-main | [status](./manage-students/status.md) |
 | עיצוב חדש — ממתקייה | 🟢 done — מוזג ל-main | [status](./candy-redesign/status.md) |
 | תרגול בתשובה סופית + ניקוד וסטטיסטיקה (מחליף את המחברת) | 🟢 done — מוזג ל-main | [status](./scored-answer-practice/status.md) |
 | תרגול אדפטיבי מתחיל לפי היסטוריה, לא מאפס בכל פעם | 🟢 done — מוזג ל-main | [status](./adaptive-lesson-start/status.md) |

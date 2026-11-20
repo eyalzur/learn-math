@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /**
  * Acceptance criteria under test (docs/features/candy-redesign/product-spec.md).
@@ -37,7 +38,7 @@ async function open(page: Page, scheme: "light" | "dark" = "light") {
 /** Student → grade → topic → practice, clicking through a style screen if the topic
  *  happens to be style-based (not every topic drops straight into practice). */
 async function enterPractice(page: Page) {
-  await page.locator(".student-card").first().click();
+  await createAndSelectStudent(page);
   await page.locator(".grade-card").first().click();
   await page.locator(".topic-card, .level-card").first().click();
   const styleCard = page.locator(".style-card").first();
@@ -56,7 +57,7 @@ test.describe("candy-redesign — fixed pink background, regardless of OS prefer
 
 test("grade/topic screen shows the same background", async ({ page }) => {
   await open(page);
-  await page.locator(".student-card").first().click();
+  await createAndSelectStudent(page);
   const { bg } = await root(page);
   expect(bg.toLowerCase()).toBe("#fff1f7");
 });

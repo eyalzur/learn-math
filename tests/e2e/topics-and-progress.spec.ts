@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { answerQuestion } from "./helpers/answerQuestion";
+import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /**
  * Acceptance criteria under test
@@ -15,9 +16,6 @@ import { answerQuestion } from "./helpers/answerQuestion";
  *  9. History is reachable and shows newest first.
  * 10. An empty history says so rather than showing a blank screen.
  */
-
-const MIKA = 0;
-const ROTEM = 1;
 
 async function open(page: Page) {
   await page.goto("/learn-math/");
@@ -47,7 +45,7 @@ test.beforeEach(async ({ page }) => {
 test("picking a student shows the grade's topics, and a topic leads somewhere to practise", async ({
   page,
 }) => {
-  await page.locator(".student-card").nth(MIKA).click();
+  await createAndSelectStudent(page);
   // Mika now has two grades available; this suite is entirely about her grade 1 (א׳).
   await page.locator(".grade-card").first().click();
 
@@ -76,7 +74,7 @@ test("grade 1 has three levels of ten questions for every topic", async ({ page 
   // Only the topics that still offer levels — the ones holding a single kind of question.
   // The rest are entered by style and run however many that style has; style-lessons
   // covers them.
-  await page.locator(".student-card").nth(MIKA).click();
+  await createAndSelectStudent(page);
   await page.locator(".grade-card").first().click();
   const topicCount = await page.locator(".topic-card").count();
   expect(topicCount).toBe(5);
@@ -138,7 +136,7 @@ test("a level practises only its own topic", async ({ page }) => {
   // Every question in "חיסור עד 10" must be a subtraction — the whole point of choosing
   // a topic is not getting a mixed sample. Adaptive now (docs/features/mika-adaptive-
   // difficulty), so it lands straight on practice with no level to pick.
-  await page.locator(".student-card").nth(MIKA).click();
+  await createAndSelectStudent(page);
   await page.locator(".grade-card").first().click();
   await page.getByText("חיסור עד 10", { exact: true }).click();
 
@@ -158,7 +156,7 @@ test("a level practises only its own topic", async ({ page }) => {
 });
 
 test("you can walk back from level to topic to student", async ({ page }) => {
-  await page.locator(".student-card").nth(MIKA).click();
+  await createAndSelectStudent(page);
   await page.locator(".grade-card").first().click();
   await page.locator(".topic-card").first().click();
   await expect(page.locator(".style-card, .level-card").first()).toBeVisible();
@@ -174,11 +172,11 @@ test("you can walk back from level to topic to student", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "באיזו כיתה מתרגלים היום?" })).toBeVisible();
 
   await page.getByRole("button", { name: "← החלף תלמיד" }).click();
-  await expect(page.locator(".student-card")).toHaveCount(3);
+  await expect(page.locator(".student-card-wrap")).toHaveCount(1);
 });
 
 test("an empty history says so instead of showing a blank screen", async ({ page }) => {
-  await page.locator(".student-card").nth(MIKA).click();
+  await createAndSelectStudent(page);
   await page.getByRole("button", { name: "ההתקדמות שלי →" }).click();
 
   await expect(page.locator(".history h1")).toHaveText("ההתקדמות שלי");
@@ -189,7 +187,7 @@ test("an empty history says so instead of showing a blank screen", async ({ page
 test("finishing a practice records the topic, level and score, and it survives a reload", async ({
   page,
 }) => {
-  await page.locator(".student-card").nth(MIKA).click();
+  await createAndSelectStudent(page);
   await page.locator(".grade-card").first().click();
   const topicTitle = await page.locator(".topic-card").first().locator(".topic-title").innerText();
   await page.locator(".topic-card").first().click();
@@ -218,7 +216,7 @@ test("finishing a practice records the topic, level and score, and it survives a
 });
 
 test("history is newest first", async ({ page }) => {
-  await page.locator(".student-card").nth(MIKA).click();
+  await createAndSelectStudent(page);
   await page.locator(".grade-card").first().click();
 
   for (const topicIndex of [0, 1]) {
@@ -245,29 +243,32 @@ test("history is newest first", async ({ page }) => {
 });
 
 test("each student's history is their own", async ({ page }) => {
-  await page.locator(".student-card").nth(MIKA).click();
+  const studentA = await createAndSelectStudent(page, "1");
   await page.locator(".grade-card").first().click();
   await page.locator(".topic-card").first().click();
   await enterFirstLesson(page);
   await playLevel(page, "999999");
   await page.getByRole("button", { name: "חזרה לתפריט" }).click();
   await page.getByRole("button", { name: "← חזרה" }).click();
-  // Mika's topics screen leads to the grade picker first ("← חזרה"), and switching
-  // student happens from there ("← החלף תלמיד") — one more step than a single-grade
-  // student, since her "back" and "switch student" are no longer the same click.
+  // This student's topics screen leads to the grade picker first ("← חזרה"), and
+  // switching student happens from there ("← החלף תלמיד") — one more step than a
+  // single-grade student, since her "back" and "switch student" are no longer the same
+  // click.
   await page.getByRole("button", { name: "← חזרה" }).click();
   await page.getByRole("button", { name: "← החלף תלמיד" }).click();
 
-  // Rotem's grade still practises straight from levels, and his history starts empty.
-  await page.locator(".student-card").nth(ROTEM).click();
+  // A second student's grade still practises straight from levels, and their history
+  // starts empty.
+  await createAndSelectStudent(page, "6");
   await page.getByRole("button", { name: "ההתקדמות שלי →" }).click();
   await expect(page.locator(".history-empty")).toBeVisible();
 
   await page.getByRole("button", { name: "← חזרה" }).click();
   await page.getByRole("button", { name: "← החלף תלמיד" }).click();
-  // Mika's grade choice from earlier in this test is still remembered (survives exactly
-  // like the student choice does), so this lands straight back on her topics screen.
-  await page.locator(".student-card").nth(MIKA).click();
+  // studentA's grade choice from earlier in this test is still remembered (survives
+  // exactly like the student choice does), so re-selecting her by name lands straight
+  // back on her topics screen.
+  await page.locator(".student-card", { hasText: studentA }).click();
   await page.getByRole("button", { name: "ההתקדמות שלי →" }).click();
   await expect(page.locator(".history-row")).toHaveCount(1);
 });

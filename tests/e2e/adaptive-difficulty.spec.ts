@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { answerQuestion } from "./helpers/answerQuestion";
+import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /**
  * Acceptance criteria under test (docs/features/adaptive-difficulty/product-spec.md),
@@ -25,8 +26,6 @@ import { answerQuestion } from "./helpers/answerQuestion";
  * file's own two topics are still the only adaptive ones.
  */
 
-const MIKA = 0;
-
 async function open(page: Page) {
   await page.goto("/learn-math/");
   await page.evaluate(() => localStorage.clear());
@@ -34,7 +33,7 @@ async function open(page: Page) {
 }
 
 async function toGradeB(page: Page) {
-  await page.locator(".student-card").nth(MIKA).click();
+  await createAndSelectStudent(page);
   await page.locator(".grade-card").nth(1).click(); // כיתה ב׳
 }
 

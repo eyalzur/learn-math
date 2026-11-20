@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { grades } from "../../src/data/curriculum";
+import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /**
  * Acceptance criteria under test
@@ -40,7 +41,8 @@ const GRADE_8_TOPICS = [
   "בעיות מילוליות",
 ];
 
-/** Rotem 1, Omer 2. */
+/** Not roster positions any more (docs/features/manage-students removed the fixed
+ *  roster) — just markers for "grade ו׳'s topics" / "grade ח׳'s", below. */
 const ROTEM = 1;
 const OMER = 2;
 
@@ -50,12 +52,12 @@ async function open(page: Page) {
   await page.goto("/learn-math/");
 }
 
-/** Every student now picks a grade first (docs/features/any-grade-any-student) — the
- *  grade card index each student's own tests here actually need. */
+/** Every student picks a grade first (docs/features/any-grade-any-student) — the grade
+ *  card index each test here actually needs. */
 const GRADE_CARD_INDEX: Record<number, number> = { 0: 0, [ROTEM]: 2, [OMER]: 3 };
 
 async function pickStudent(page: Page, index: number) {
-  await page.locator(".student-card").nth(index).click();
+  await createAndSelectStudent(page);
   await page.locator(".grade-card").nth(GRADE_CARD_INDEX[index]).click();
 }
 

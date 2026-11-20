@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { answerQuestion } from "./helpers/answerQuestion";
+import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /**
  * Acceptance criteria under test
@@ -14,7 +15,6 @@ import { answerQuestion } from "./helpers/answerQuestion";
  * `textContent` through `evaluateAll`.
  */
 
-const MIKA = 0;
 const NUMBERS = 0;
 const PLACE = 4;
 
@@ -28,8 +28,8 @@ async function open(page: Page, topicIdx: number, style: string) {
   await page.goto("/learn-math/");
   await page.evaluate(() => localStorage.clear());
   await page.goto("/learn-math/");
-  await page.locator(".student-card").nth(MIKA).click();
-  // Mika now has two grades available; every topic this file tests is grade 1 (א׳).
+  await createAndSelectStudent(page);
+  // Two grades available; every topic this file tests is grade 1 (א׳).
   await page.locator(".grade-card").first().click();
   await page.locator(".topic-card").nth(topicIdx).click();
   await page.locator(".style-card").filter({ hasText: style }).first().click();

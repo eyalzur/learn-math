@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { answerQuestion } from "./helpers/answerQuestion";
+import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /**
  * Acceptance criteria under test
@@ -27,14 +28,14 @@ import { answerQuestion } from "./helpers/answerQuestion";
  * difficulty) that lands straight on practice", so each call site says which screen it is
  * actually going through.
  */
-async function start(page: Page, student: number, topicIdx: number, pick: number | string | null) {
+async function start(page: Page, topicIdx: number, pick: number | string | null) {
   await page.goto("/learn-math/");
   await page.evaluate(() => localStorage.clear());
   await page.goto("/learn-math/");
-  await page.locator(".student-card").nth(student).click();
-  // Every student picks a grade first (docs/features/any-grade-any-student). This helper
-  // is only ever called for Mika (student 0), whose route here is always grade 1 (א׳).
-  if (student === 0) await page.locator(".grade-card").first().click();
+  // No pre-seeded roster any more (docs/features/manage-students) — every test creates its
+  // own student. This helper is only ever used for grade 1 (א׳) content.
+  await createAndSelectStudent(page, "1");
+  await page.locator(".grade-card").first().click();
   await page.locator(".topic-card").nth(topicIdx).click();
   if (pick === null) {
     // Adaptive: already on practice, nothing left to click.
@@ -45,15 +46,14 @@ async function start(page: Page, student: number, topicIdx: number, pick: number
   }
 }
 
-/** Rotem's "שברים עשרוניים" — adaptive, so entering it lands straight on practice with a
- *  generated question rather than a chosen level. Every student now picks a grade first
- *  (docs/features/any-grade-any-student) — Rotem's usual grade is ו׳, third card. */
+/** "שברים עשרוניים" (grade ו׳) — adaptive, so entering it lands straight on practice with
+ *  a generated question rather than a chosen level. */
 async function enterDecimals(page: Page) {
   await page.goto("/learn-math/");
   await page.evaluate(() => localStorage.clear());
   await page.goto("/learn-math/");
-  await page.locator(".student-card").nth(1).click(); // Rotem
-  await page.locator(".grade-card").nth(2).click(); // grade ו׳
+  await createAndSelectStudent(page);
+  await page.locator(".grade-card-6").click();
   await page.locator(".topic-card").nth(1).click(); // שברים עשרוניים
 }
 
@@ -159,7 +159,7 @@ test("a carrying question shows the carry mark, and a whole-number result is exp
 test("a subtraction question gets a subtraction sentence, never an addition one", async ({
   page,
 }) => {
-  await start(page, 0, 3, "חיסור");
+  await start(page, 3, "חיסור");
   const failAt = async (wanted: string) => {
     for (let i = 0; i < 12; i++) {
       const prompt = await currentPrompt(page);
@@ -186,7 +186,7 @@ test("a borrowing question shows the vertical with a borrow mark, and the explan
 }) => {
   // A lesson now climbs from the easy end, so the borrowing questions are no longer
   // whatever comes first — walk to one by name.
-  await start(page, 0, 3, "חיסור");
+  await start(page, 3, "חיסור");
   for (let i = 0; i < 12; i++) {
     const prompt = await currentPrompt(page);
     if (prompt.includes("15 − 8")) break;
@@ -208,7 +208,7 @@ test("a borrowing question shows the vertical with a borrow mark, and the explan
 test("single-digit sums get a sentence but no column layout", async ({ page }) => {
   // חיבור עד 10 is adaptive now (docs/features/mika-adaptive-difficulty), always starting
   // at its easiest tier — single-digit sums — so the first question already fits.
-  await start(page, 0, 1, null);
+  await start(page, 1, null);
   await answerWrong(page);
 
   await expect(page.locator(".explanation-method")).toContainText("סופרים");
@@ -316,7 +316,7 @@ test("the follow-up field asks for a decimal keyboard", async ({ page }) => {
   // test used to check is gone entirely (docs/features/notebook-default-practice) — writing
   // is the only way to answer now, so there is no keyboard-mode attribute left to assert on
   // the main answer itself.
-  await start(page, 0, 3, "חיבור");
+  await start(page, 3, "חיבור");
   await answerQuestion(page, 7);
   await expect(page.locator(".followup-input")).toHaveAttribute("inputmode", "decimal");
 });

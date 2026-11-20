@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { answerQuestion } from "./helpers/answerQuestion";
+import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /**
  * Acceptance criteria under test
@@ -73,12 +74,14 @@ async function stubNoSpeech(page: Page) {
 const spokenText = (page: Page) =>
   page.evaluate(() => (window as unknown as { __spoken: Spoken[] }).__spoken.map((s) => s.text));
 
-async function openStudent(page: Page, index: number) {
+/** Creates a fresh student and enters grade 1 (א׳) — the only grade this file's own
+ *  content cares about. Returns the name, so a test that needs to come back to the same
+ *  identity later can re-select by it instead of creating another one. */
+async function openStudent(page: Page): Promise<string> {
   await page.goto("/learn-math/");
-  await page.locator(".student-card").nth(index).click();
-  // Mika (the only student this file ever passes) now has two grades available; every
-  // route here is grade 1 (א׳).
-  if (index === 0) await page.locator(".grade-card").first().click();
+  const name = await createAndSelectStudent(page);
+  await page.locator(".grade-card").first().click();
+  return name;
 }
 
 async function fresh(page: Page) {
@@ -125,7 +128,7 @@ test("every question can be heard before answering, with arithmetic spoken as He
 }) => {
   await stubSpeech(page);
   await fresh(page);
-  await openStudent(page, 0);
+  await openStudent(page);
   await startHintedLevel(page);
   await expect(page.locator(".problem-text")).toContainText("12");
 
@@ -142,7 +145,7 @@ test("every question can be heard before answering, with arithmetic spoken as He
 test("a hint is read too — help that cannot be read is not help", async ({ page }) => {
   await stubSpeech(page);
   await fresh(page);
-  await openStudent(page, 0);
+  await openStudent(page);
   await toggleReadAloud(page);
   await startHintedLevel(page);
 
@@ -163,7 +166,7 @@ test("a hint is read too — help that cannot be read is not help", async ({ pag
 test("the setting is off until someone turns it on", async ({ page }) => {
   await stubSpeech(page);
   await fresh(page);
-  await openStudent(page, 0);
+  await openStudent(page);
 
   expect(await readAloudState(page)).toBe("false");
 });
@@ -171,7 +174,7 @@ test("the setting is off until someone turns it on", async ({ page }) => {
 test("with the setting off, nothing is spoken until it is asked for", async ({ page }) => {
   await stubSpeech(page);
   await fresh(page);
-  await openStudent(page, 0);
+  await openStudent(page);
   await startHintedLevel(page);
 
   // Long enough that a delayed auto-read would have fired.
@@ -182,7 +185,7 @@ test("with the setting off, nothing is spoken until it is asked for", async ({ p
 test("with the setting on, a new question reads itself", async ({ page }) => {
   await stubSpeech(page);
   await fresh(page);
-  await openStudent(page, 0);
+  await openStudent(page);
   await toggleReadAloud(page);
   await startHintedLevel(page);
 
@@ -192,7 +195,7 @@ test("with the setting on, a new question reads itself", async ({ page }) => {
 test("the setting survives a reload", async ({ page }) => {
   await stubSpeech(page);
   await fresh(page);
-  await openStudent(page, 0);
+  await openStudent(page);
   await toggleReadAloud(page);
 
   await page.reload();
@@ -203,15 +206,15 @@ test("the setting belongs to the student, not the device", async ({ page }) => {
   await stubSpeech(page);
   await fresh(page);
 
-  await openStudent(page, 0);
+  const studentA = await openStudent(page);
   await toggleReadAloud(page);
   expect(await readAloudState(page)).toBe("true");
 
-  // A different child on the same device is unaffected. Mika's topics screen leads to
+  // A different child on the same device is unaffected. Their topics screen leads to
   // the grade picker first ("← חזרה") — switching student happens from there.
   await page.getByRole("button", { name: "← חזרה" }).click();
   await page.getByRole("button", { name: "← החלף תלמיד" }).click();
-  await page.locator(".student-card").nth(1).click();
+  await createAndSelectStudent(page);
   // Every student now picks a grade first (docs/features/any-grade-any-student).
   await page.locator(".grade-card").nth(2).click(); // grade ו׳
   expect(await readAloudState(page)).toBe("false");
@@ -221,7 +224,7 @@ test("the setting belongs to the student, not the device", async ({ page }) => {
   // this test (a plain reload would have kept it, going back to pick again does not).
   await page.getByRole("button", { name: "← חזרה" }).click();
   await page.getByRole("button", { name: "← החלף תלמיד" }).click();
-  await page.locator(".student-card").nth(0).click();
+  await page.locator(".student-card", { hasText: studentA }).click();
   await page.locator(".grade-card").first().click();
   expect(await readAloudState(page)).toBe("true");
 });
@@ -231,7 +234,7 @@ test("the setting belongs to the student, not the device", async ({ page }) => {
 test("checking an answer silences a reading in progress", async ({ page }) => {
   await stubSpeech(page);
   await fresh(page);
-  await openStudent(page, 0);
+  await openStudent(page);
   await toggleReadAloud(page);
   await startHintedLevel(page);
   await expect.poll(() => spokenText(page)).not.toHaveLength(0);
@@ -246,7 +249,7 @@ test("the speak button turns into a stop, and pressing it again stops", async ({
   // A sentence that lasts, so the talking state is observable at all.
   await stubSpeech(page, 3000);
   await fresh(page);
-  await openStudent(page, 0);
+  await openStudent(page);
   await startHintedLevel(page);
 
   await speakButton(page).click();
@@ -262,7 +265,7 @@ test("the speak button turns into a stop, and pressing it again stops", async ({
 test("a browser with no speech engine shows no setting and no button", async ({ page }) => {
   await stubNoSpeech(page);
   await fresh(page);
-  await openStudent(page, 0);
+  await openStudent(page);
 
   // scored-answer-practice removed every other setting (hold-zoom, auto-scroll, pan-speed,
   // button-size, suggestion-sensitivity) — read-aloud is the only one left, so with no

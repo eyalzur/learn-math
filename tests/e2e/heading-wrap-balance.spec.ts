@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { answerQuestion } from "./helpers/answerQuestion";
+import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /**
  * Acceptance criteria under test (docs/features/heading-wrap-balance/product-spec.md).
@@ -10,9 +11,6 @@ import { answerQuestion } from "./helpers/answerQuestion";
  * to match. What is reliable and directly tests the fix: `text-wrap: balance` is actually
  * applied to every one of the app's seven `h1` headings, not just the one reported.
  */
-
-const MIKA = 0;
-const ROTEM = 1;
 
 async function open(page: Page) {
   await page.goto("/learn-math/");
@@ -37,12 +35,12 @@ test("the student picker's heading balances", async ({ page }) => {
 });
 
 test("the grade picker's heading balances — the reported case", async ({ page }) => {
-  await page.locator(".student-card").nth(MIKA).click();
+  await createAndSelectStudent(page);
   await expectBalancedH1(page, "באיזו כיתה מתרגלים היום?");
 });
 
 test("the topic picker's heading balances", async ({ page }) => {
-  await page.locator(".student-card").nth(ROTEM).click();
+  await createAndSelectStudent(page);
   await page.locator(".grade-card").nth(2).click(); // grade ו׳ (docs/features/any-grade-any-student)
   await expectBalancedH1(page, "מה נתרגל היום?");
 });
@@ -57,7 +55,7 @@ test("the topic picker's heading balances", async ({ page }) => {
 // no coverage is actually lost by removing this one.
 
 test("the style picker's heading balances", async ({ page }) => {
-  await page.locator(".student-card").nth(MIKA).click();
+  await createAndSelectStudent(page);
   await page.locator(".grade-card").first().click(); // כיתה א׳, which has style-based topics
   const styleTopic = page.locator(".topic-card", { hasText: "מספרים עד 20" });
   await styleTopic.click();
@@ -68,7 +66,7 @@ test("the style picker's heading balances", async ({ page }) => {
 test("the result screen's heading balances", async ({ page }) => {
   // "חיבור עד 10" reaches the result screen just as well now that it enters practice
   // directly (docs/features/mika-adaptive-difficulty) — no level click needed on the way.
-  await page.locator(".student-card").nth(MIKA).click();
+  await createAndSelectStudent(page);
   await page.locator(".grade-card").first().click();
   await page.locator(".topic-card", { hasText: "חיבור עד 10" }).click();
   const total = Number((await page.locator(".progress").innerText()).match(/מתוך (\d+)/)![1]);
@@ -81,7 +79,7 @@ test("the result screen's heading balances", async ({ page }) => {
 });
 
 test("the history screen's heading balances", async ({ page }) => {
-  await page.locator(".student-card").nth(MIKA).click();
+  await createAndSelectStudent(page);
   await page.getByRole("button", { name: "ההתקדמות שלי →" }).click();
   await expectBalancedH1(page, "ההתקדמות שלי");
 });

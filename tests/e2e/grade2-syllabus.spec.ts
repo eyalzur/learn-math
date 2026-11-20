@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { answerQuestion } from "./helpers/answerQuestion";
+import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /**
  * Acceptance criteria under test (docs/features/grade2-syllabus/product-spec.md and
@@ -26,7 +27,6 @@ import { answerQuestion } from "./helpers/answerQuestion";
  *     במושג בסיסי של חילוק").
  */
 
-const MIKA = 0;
 const GRADE_B = 1;
 
 async function open(page: Page) {
@@ -36,7 +36,7 @@ async function open(page: Page) {
 }
 
 async function toGradeB(page: Page) {
-  await page.locator(".student-card").nth(MIKA).click();
+  await createAndSelectStudent(page);
   await page.locator(".grade-card").nth(GRADE_B).click();
 }
 

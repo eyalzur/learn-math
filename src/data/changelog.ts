@@ -19,6 +19,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.46.0",
+    icon: "👤",
+    description:
+      "אפשר ליצור ולמחוק תלמידים ישירות במסך הבחירה — כל אחד שומר את ההתקדמות שלו בנפרד על המכשיר.",
+  },
+  {
     version: "1.45.1",
     icon: "🔧",
     description:

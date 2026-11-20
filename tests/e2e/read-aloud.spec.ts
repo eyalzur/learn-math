@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { answerQuestion } from "./helpers/answerQuestion";
+import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /**
  * Acceptance criteria under test
@@ -140,8 +141,8 @@ async function failFirstQuestion(page: Page, topicIndex = 1) {
   await page.goto("/learn-math/");
   await page.evaluate(() => localStorage.clear());
   await page.goto("/learn-math/");
-  await page.locator(".student-card").first().click();
-  // Mika now has two grades available; every route here is grade 1 (א׳).
+  await createAndSelectStudent(page);
+  // Two grades available; every route here is grade 1 (א׳).
   await page.locator(".grade-card").first().click();
   await page.locator(".topic-card").nth(topicIndex).click();
   // Grade 1's multi-style topics are entered by style, a written-level topic by level, and

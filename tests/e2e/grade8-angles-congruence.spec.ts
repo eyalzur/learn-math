@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { answerQuestion } from "./helpers/answerQuestion";
+import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /**
  * Acceptance criteria under test
@@ -39,10 +40,9 @@ import { answerQuestion } from "./helpers/answerQuestion";
  * reading the generator's source.
  */
 
-// Every student now picks a grade first (docs/features/any-grade-any-student) — Omer is
-// the third student card, and ח׳ is his fourth grade card (same index used throughout the
-// suite, e.g. topics-all-grades.spec.ts, more-diagrams-wave2.spec.ts).
-const OMER_STUDENT_INDEX = 2;
+// Every student picks a grade first (docs/features/any-grade-any-student) — ח׳ is the
+// fourth grade card (same index used throughout the suite, e.g. topics-all-grades.spec.ts,
+// more-diagrams-wave2.spec.ts).
 const OMER_GRADE_CARD_INDEX = 3;
 const TOPIC_TITLE = "זוויות וחפיפת משולשים";
 
@@ -54,7 +54,7 @@ async function open(page: Page) {
 
 async function openOmerTopics(page: Page) {
   await open(page);
-  await page.locator(".student-card").nth(OMER_STUDENT_INDEX).click();
+  await createAndSelectStudent(page);
   await page.locator(".grade-card").nth(OMER_GRADE_CARD_INDEX).click();
 }
 
