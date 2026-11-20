@@ -6,7 +6,7 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
-| הרגשה כיפית, כמו משחק | 🟡 in design | [status](./playful-redesign/status.md) |
+| הרגשה כיפית, כמו משחק | 🟡 in architecture | [status](./playful-redesign/status.md) |
 | לוג גרסאות | 🟢 done — מוזג ל-main | [status](./version-log/status.md) |
 | ניהול משתמשים דינמי | 🟢 done — מוזג ל-main | [status](./manage-students/status.md) |
 | עיצוב חדש — ממתקייה | 🟢 done — מוזג ל-main | [status](./candy-redesign/status.md) |
