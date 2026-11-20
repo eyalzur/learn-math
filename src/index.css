@@ -58,6 +58,21 @@
 
 body {
   margin: 0;
+  /* This app is tapped and clicked, not read-and-copied — a long-press/click-drag
+     selecting a heading or a button's label (the blue highlight iOS and desktop
+     browsers both show by default) was reported live as something that shouldn't be
+     possible anywhere. Re-enabled explicitly on text inputs below, since that's a
+     real text field meant to be typed into and edited, not prose. */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+input,
+textarea {
+  user-select: text;
+  -webkit-user-select: text;
+  -webkit-touch-callout: default;
 }
 
 h1,
