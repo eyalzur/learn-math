@@ -19,6 +19,11 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.47.0",
+    icon: "🎮",
+    description: "כל הכפתורים והכרטיסים מרגישים יותר כמו משחק — לחיצה אמיתית, קפיצה בכניסה, וכוכב ⭐ על תשובה נכונה.",
+  },
+  {
     version: "1.46.1",
     icon: "🔧",
     description: "תיקון קטן: כפתור \"ההתקדמות שלי\" נראה עכשיו כמו כפתור אמיתי, לא כמו טקסט תלוש.",

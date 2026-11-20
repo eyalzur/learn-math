@@ -253,8 +253,12 @@ test("covers congruent-triangle questions — a missing side or angle from a sta
 }) => {
   // 3 sessions × 20 questions, mostly correct — each correct answer now waits out a real
   // ~700ms auto-advance (docs/features/scored-answer-practice/) instead of an instant
-  // mocked click, which the default 30s budget no longer covers.
-  test.setTimeout(60000);
+  // mocked click, which the default 30s budget no longer covers. Raised again
+  // (docs/features/playful-redesign/) after this test measurably — not just
+  // theoretically — went from 56.5s to failing its old 60s ceiling: confirmed by
+  // running it against main's pre-change App.css/Practice.tsx (passed, 56.5s) and
+  // against this branch's (failed on this same wait, twice) before raising this.
+  test.setTimeout(90000);
   await openTopic(page);
   const prompts = await playSessions(page, 3);
 
@@ -265,7 +269,7 @@ test("covers isosceles-triangle questions — equal base angles, and the median 
   page,
 }) => {
   // Same timing reason as the congruent-triangle test above.
-  test.setTimeout(60000);
+  test.setTimeout(90000);
   await openTopic(page);
   const prompts = await playSessions(page, 3);
 
