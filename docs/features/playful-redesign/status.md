@@ -5,11 +5,11 @@
 ## Progress
 - [x] Product spec — product-manager — 2026-11-20
 - [x] Design — designer — 2026-11-20 (כיוון "קפיצה ובועה", נבחר מגלריית 6 כיוונים)
-- [ ] Architecture — tech-lead — not started
+- [x] Architecture — tech-lead — 2026-11-20
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** tech-lead
+**Current phase:** developer
 **Branch:** `feature/playful-redesign`
 **PR:** not opened yet
 
