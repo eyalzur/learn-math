@@ -652,6 +652,113 @@ button.secondary {
   color: var(--text-h);
 }
 
+/* ---- playful motion: ledge-press + pop-in (docs/features/playful-redesign) ---- */
+
+/* A grouped selector over the cards/buttons that already exist, not a new class on
+   each one — the whole point of this pass is a CSS-only layer with zero .tsx changes
+   for this part (the one real .tsx touch, Practice.tsx's star-burst span, is separate).
+   `button` here deliberately includes every button in the app, including ones inside
+   dialogs (⚙️, version log, delete-confirm) that design.md didn't call out by name but
+   didn't exclude either — if a specific one ever needs to opt out, exclude it with
+   `:not()` here rather than un-grouping the selector. `.app-version` is excluded on
+   purpose: design.md calls it out explicitly as staying the quietest thing on the
+   screen, and it's a <button> underneath, so it would otherwise be caught here too.
+
+   The static ledge-shadow applies to both cards and buttons, but the pop-in entrance
+   animation below is cards-only (design.md itself only describes cards "entering a
+   screen" this way) — a real, measured reason, not just following the letter of the
+   doc: Practice.tsx's "בדיקה" button unmounts and remounts fresh on every single
+   question (conditionally rendered on `feedback === null`), so giving it an entrance
+   animation meant it replayed on every answer in a streak, adding real cumulative
+   latency that blew through the 30s test timeout in long streak-style e2e tests —
+   a genuine regression, not a flake. Buttons still get the ledge-shadow and the
+   instant :active press below; they just don't pop in on (re)mount. */
+.student-card,
+.grade-card,
+.topic-card,
+.level-card,
+.style-card,
+button:not(.app-version) {
+  box-shadow: 0 5px 0 var(--accent-border);
+  /* No transition on transform/box-shadow here on purpose: an animated press looked
+     nicer by eye, but a transition keeps the element's bounding box moving between
+     frames, and rapid back-to-back clicks (a real streak of e2e answers, or just a
+     fast double-tap) never let it finish settling — Playwright's actionability check
+     waits for an element to be "stable" (unchanged across two animation frames)
+     before clicking, so a transition here caused genuine timeouts in streak-style
+     tests, not flakes. An instant snap on :active still reads as a real press. */
+}
+
+.student-card,
+.grade-card,
+.topic-card,
+.level-card,
+.style-card {
+  animation: playful-pop-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+}
+
+.student-card:nth-child(2),
+.grade-card:nth-child(2),
+.topic-card:nth-child(2),
+.level-card:nth-child(2),
+.style-card:nth-child(2) {
+  animation-delay: 0.05s;
+}
+.student-card:nth-child(3),
+.grade-card:nth-child(3),
+.topic-card:nth-child(3),
+.level-card:nth-child(3),
+.style-card:nth-child(3) {
+  animation-delay: 0.1s;
+}
+.student-card:nth-child(4),
+.grade-card:nth-child(4),
+.topic-card:nth-child(4),
+.level-card:nth-child(4),
+.style-card:nth-child(4) {
+  animation-delay: 0.15s;
+}
+
+@keyframes playful-pop-in {
+  from { transform: scale(0.5); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.student-card:active,
+.grade-card:active,
+.topic-card:active:not(:disabled),
+.level-card:active,
+.style-card:active,
+button:active:not(:disabled):not(.app-version) {
+  transform: translateY(5px);
+  box-shadow: 0 0 0 var(--accent-border);
+}
+
+.feedback-star {
+  display: inline-block;
+  margin-inline-start: 6px;
+  animation: playful-star-burst 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes playful-star-burst {
+  0% { transform: scale(0) rotate(-20deg); opacity: 0; }
+  50% { transform: scale(1.3) rotate(10deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .student-card,
+  .grade-card,
+  .topic-card,
+  .level-card,
+  .style-card,
+  button:not(.app-version),
+  .feedback-star {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
 .result {
   padding: 40px 24px;
   display: flex;

@@ -276,6 +276,11 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
       {feedback !== null && (feedback === "correct" || revealed) && (
         <p className={`feedback ${feedback}`}>
           {feedback === "correct" ? "נכון מאוד! 🎉" : `לא נכון. התשובה היא ${question.answer}`}
+          {feedback === "correct" && (
+            <span className="feedback-star" aria-hidden="true">
+              ⭐
+            </span>
+          )}
         </p>
       )}
 

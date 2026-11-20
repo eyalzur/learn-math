@@ -84,3 +84,34 @@ none !important; transition: none !important; } }` — אותה קבוצת-סל�
 
 ## Open Questions
 None.
+
+## Implementation Notes
+
+Deviated from the plan in two ways, both found through testing, not guessed up front:
+
+1. **The grouped selector's `:active` rule dropped its `transition`.** The original
+   plan called for a smooth 0.08s tween on press. A first full e2e run showed 9 real
+   failures — long streak-style tests (dozens of rapid answers in a row) timing out
+   with "element is not stable", Playwright's actionability check for an element whose
+   bounding box is still mid-transition. Removed the transition; `:active` now snaps
+   instantly, which still reads as a real press and fully resolved those failures.
+2. **The pop-in entrance animation moved off `button` entirely, staying only on the
+   five card selectors.** design.md's own wording already only describes *cards*
+   entering a screen this way, but the first draft also put it on `button` for
+   consistency. That broke things for a reason worth recording: `Practice.tsx`'s
+   "בדיקה" button is conditionally rendered on `feedback === null`, so it unmounts and
+   remounts fresh on every single question — giving it an entrance animation meant it
+   replayed on every answer in a streak, and the accumulated cost pushed several long
+   streak-style tests past their 30s timeout. Buttons keep the static ledge-shadow and
+   the instant `:active` press; only cards pop in.
+
+Both were caught by running the real e2e suite after implementation, not inferred from
+the architecture alone — see tests.md.
+
+323/324 e2e, single clean run — the one failure is the pre-existing
+`grade8-angles-congruence.spec.ts` flake, unrelated. A second failure seen on an
+earlier run of this same suite (`mika-adaptive-difficulty.spec.ts`'s "history records
+the topic without a level suffix", 19/20 instead of 20/20) reran green 9/9 times in
+isolation — a pre-existing flake in the adaptive question generator (duplicate
+consecutive questions, already tracked separately, unmerged PR #91), not caused by
+this change. `npm run build`/`npm run lint` clean. Version 1.46.1 → 1.47.0.
