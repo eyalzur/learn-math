@@ -8,9 +8,9 @@
 - [x] Design — designer — 2026-11-21
 - [x] Architecture — tech-lead — 2026-11-21
 - [x] Implementation — developer — 2026-11-21
-- [ ] Tests — qa — not started
+- [x] Tests — qa — 2026-11-21, 342/343 (known flake only, --workers=1)
 
-**Current phase:** qa
+**Current phase:** done — ready for PR
 **Branch:** `feature/screen-entrance-animation`
 **PR:** not opened yet
 
