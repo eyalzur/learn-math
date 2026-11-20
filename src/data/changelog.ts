@@ -19,6 +19,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.47.1",
+    icon: "🔧",
+    description:
+      "תיקונים: טקסט כבר לא מסומן בכחול בטעות, כפתור השאלה נשאר במקומו כשהמקלדת נפתחת, ושני כפתורי מסך הסיום ממורכזים יפה.",
+  },
+  {
     version: "1.47.0",
     icon: "🎮",
     description: "כל הכפתורים והכרטיסים מרגישים יותר כמו משחק — לחיצה אמיתית, קפיצה בכניסה, וכוכב ⭐ על תשובה נכונה.",

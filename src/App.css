@@ -305,11 +305,22 @@
   padding: 32px 24px;
 }
 
+/* Sticky, not static: when the on-screen keyboard opens for the answer field below,
+   the browser scrolls the page to keep that field visible above the keyboard — on a
+   page this tall, that scroll can push the back-button/progress row up and off the
+   top of the screen entirely, leaving a student unable to see "שאלה X מתוך Y" or get
+   back. Reported live ("המסך חתוך מלמעלה"). Needs its own opaque background since
+   the question/diagram now scrolls underneath it instead of past it. */
 .practice-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 16px;
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 5;
+  padding-block: 8px;
 }
 
 .link-button {
@@ -376,24 +387,31 @@
    read and behave left-to-right regardless of the surrounding page direction, the same
    class of bug CLAUDE.md already warns about for displayed expressions. Explicit, not
    assumed: text-align:center alone doesn't fix digit/sign order. */
+/* Stacked, not side by side — reported live as cramped, and a full-width field above
+   a full-width button reads more clearly as "type here, then press this" than two
+   small controls competing for the same row. */
 .answer-row {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 12px;
-  margin: 16px 0;
+  gap: 14px;
+  margin: 20px 0;
 }
 
 .answer-input {
-  width: 110px;
+  width: 200px;
   font-size: 32px;
   text-align: center;
   direction: ltr;
-  padding: 8px;
+  padding: 14px;
   border: 2px solid var(--border);
-  border-radius: 8px;
+  border-radius: 16px;
   background: var(--bg);
   color: var(--text-h);
+}
+
+.answer-row button {
+  width: 200px;
 }
 
 .answer-input:focus {
@@ -502,23 +520,30 @@
   line-height: 160%;
 }
 
+/* Same stacked treatment as .answer-row, one size down — this is the secondary
+   follow-up question inside a diagnosis conversation, not the main answer. */
 .followup-row {
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 10px;
 }
 
 .followup-input {
-  width: 96px;
-  padding: 8px 10px;
+  width: 160px;
+  padding: 10px;
   font: inherit;
   font-size: 20px;
   text-align: center;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 12px;
   /* A number field, like the main answer: same keyboard on a phone, and digits stay
      left-to-right whatever the page direction is. */
   direction: ltr;
+}
+
+.followup-row button {
+  width: 160px;
 }
 
 .followup-reply {
@@ -827,10 +852,25 @@ button:active:not(:disabled):not(.app-version) {
 }
 
 /* Pill buttons here only — a deliberate, scoped exception for this one "win screen",
-   not a global button restyle. */
+   not a global button restyle. Equal width so the pair reads as one balanced, centered
+   unit instead of two differently-sized labels drifting apart. */
+.result .actions {
+  gap: 14px;
+}
+
 .result .actions button {
   border-radius: 999px;
-  padding: 12px 28px;
+  padding: 12px 20px;
+  min-width: 128px;
+}
+
+/* button.secondary is the same white as .result-card's own background (both
+   var(--code-bg)) — fine on the page's pink background elsewhere, but invisible here,
+   leaving only its ledge-shadow visible and making the two actions look lopsided
+   instead of a centered pair. Reported live. A visible border fixes the contrast
+   without inventing a new color. */
+.result .actions button.secondary {
+  border: 2px solid var(--border);
 }
 
 /* The global h1 (index.css) is sized for a full-width hero (56px) and never sets its
