@@ -56,30 +56,27 @@ const ticks = (page: Page) =>
 
 // -------------------------------------------------------- the picture never leaks early
 
-test("no number line before the question is answered", async ({ page }) => {
+test("neither picture appears before its question is answered, and a correct answer still shows none", async ({
+  page,
+}) => {
   await open(page, NUMBERS, "מה בא אחרי");
   await expect(page.locator(".problem-text")).toBeVisible();
   await expect(page.locator(".number-line")).toHaveCount(0);
-});
 
-test("no ten-frame before the question is answered", async ({ page }) => {
   await open(page, PLACE, "כמה עשרות");
   await expect(page.locator(".problem-text")).toBeVisible();
   await expect(page.locator(".ten-frame")).toHaveCount(0);
-});
 
-test("a correct answer shows no picture", async ({ page }) => {
   // A lesson climbs from the easy end, so this opens on "איזה מספר בא אחרי 3?".
   await open(page, NUMBERS, "מה בא אחרי");
   await answer(page, "4");
-
   await expect(page.locator(".feedback.correct")).toBeVisible();
   await expect(page.locator(".number-line")).toHaveCount(0);
 });
 
 // ------------------------------------------------------------- the line ascends, left to right
 
-test("the ticks run left to right and ascend", async ({ page }) => {
+test("the ticks run left to right and ascend, on an isolated left-to-right line", async ({ page }) => {
   await open(page, NUMBERS, "מה בא אחרי");
   await failAt(page, "בא אחרי 12");
 
@@ -90,17 +87,9 @@ test("the ticks run left to right and ascend", async ({ page }) => {
   expect(values, "the ticks are not ascending").toEqual([...values].sort((a, b) => a - b));
   expect(values).toContain(12);
   expect(values).toContain(13);
-});
 
-test("the line is one isolated left-to-right island", async ({ page }) => {
-  await open(page, NUMBERS, "מה בא אחרי");
-  await failAt(page, "בא אחרי 12");
-
-  const style = await page.locator(".number-line").evaluate((el) => {
-    const c = getComputedStyle(el);
-    return { direction: c.direction, unicodeBidi: c.unicodeBidi };
-  });
-  expect(style.direction).toBe("ltr");
+  const direction = await page.locator(".number-line").evaluate((el) => getComputedStyle(el).direction);
+  expect(direction).toBe("ltr");
 });
 
 test("even at the top of the range the window still holds five ticks", async ({ page }) => {

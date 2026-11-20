@@ -75,35 +75,36 @@ test("both new topics still offer a lesson (📖) alongside practice, like every
   }
 });
 
-for (const title of ["כפל וחילוק", "צורות וגופים"]) {
-  test(`${title} is adaptive, entered directly with no level to pick`, async ({ page }) => {
+test("both new topics are adaptive, entered directly with no level to pick", async ({ page }) => {
+  for (const title of ["כפל וחילוק", "צורות וגופים"]) {
+    // beforeEach only resets once per test, not per loop iteration — each pass needs its
+    // own fresh start, or the second openTopic() finds mid-practice state instead of the
+    // student/grade pickers it expects.
+    await open(page);
     await openTopic(page, title);
-    await expect(page.locator(".level-card")).toHaveCount(0);
-    await expect(page.locator(".progress")).toContainText("מתוך 20");
-  });
-}
-
-test("a כפל וחילוק question is a bare expression, shown left-to-right", async ({ page }) => {
-  await openTopic(page, "כפל וחילוק");
-
-  // scored-answer-practice removed the notebook — the question is back to a plain
-  // .problem-box, same as TopicLesson.tsx. See docs/features/scored-answer-practice/.
-  const box = page.locator(".problem-box");
-  await expect(box).toBeVisible();
-  await expect(box).toHaveCSS("direction", "ltr");
-  await expect(page.locator(".problem-text")).toContainText("×");
-  await expect(page.locator(".problem-text")).toContainText("=");
+    await expect(page.locator(".level-card"), title).toHaveCount(0);
+    await expect(page.locator(".progress"), title).toContainText("מתוך 20");
+  }
 });
 
-test("a צורות וגופים question is a plain Hebrew sentence, with no arithmetic to isolate", async ({
+test("כפל וחילוק is a bare expression shown left-to-right; צורות וגופים is a plain Hebrew sentence", async ({
   page,
 }) => {
-  await openTopic(page, "צורות וגופים");
+  await openTopic(page, "כפל וחילוק");
+  // scored-answer-practice removed the notebook — the question is back to a plain
+  // .problem-box, same as TopicLesson.tsx. See docs/features/scored-answer-practice/.
+  const multBox = page.locator(".problem-box");
+  await expect(multBox).toBeVisible();
+  await expect(multBox).toHaveCSS("direction", "ltr");
+  await expect(page.locator(".problem-text")).toContainText("×");
+  await expect(page.locator(".problem-text")).toContainText("=");
 
-  const box = page.locator(".problem-box");
-  await expect(box).toBeVisible();
-  await expect(box).not.toHaveClass(/box-ltr/);
-  await expect(box).toHaveCSS("direction", "rtl");
+  await open(page); // beforeEach only resets once — the second topic needs its own fresh start
+  await openTopic(page, "צורות וגופים");
+  const shapeBox = page.locator(".problem-box");
+  await expect(shapeBox).toBeVisible();
+  await expect(shapeBox).not.toHaveClass(/box-ltr/);
+  await expect(shapeBox).toHaveCSS("direction", "rtl");
   await expect(page.locator(".problem-text")).toContainText("?");
 });
 

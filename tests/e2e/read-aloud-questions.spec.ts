@@ -120,27 +120,17 @@ async function readAloudState(page: Page): Promise<string | null> {
   return value;
 }
 
-test("every question can be heard before answering, without a mistake first", async ({
+test("every question can be heard before answering, with arithmetic spoken as Hebrew words", async ({
   page,
 }) => {
   await stubSpeech(page);
   await fresh(page);
   await openStudent(page, 0);
   await startHintedLevel(page);
+  await expect(page.locator(".problem-text")).toContainText("12");
 
   // Nothing has been answered and nothing has gone wrong yet.
   await expect(speakButton(page)).toBeVisible();
-  await speakButton(page).click();
-  await expect.poll(() => spokenText(page)).not.toHaveLength(0);
-});
-
-test("the arithmetic is spoken as Hebrew words, not skipped symbols", async ({ page }) => {
-  await stubSpeech(page);
-  await fresh(page);
-  await openStudent(page, 0);
-  await startHintedLevel(page);
-  await expect(page.locator(".problem-text")).toContainText("12");
-
   await speakButton(page).click();
   await expect.poll(() => spokenText(page)).not.toHaveLength(0);
   const said = (await spokenText(page)).join(" ");
