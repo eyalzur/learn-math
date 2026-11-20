@@ -1,0 +1,23 @@
+# הרגשה כיפית, כמו משחק
+
+מהלך חזותי ותחושתי על פני כל האפליקציה — כיפי, מגניב, מזמין, כמו משחק — לא רק מסך הסיום.
+
+## Progress
+- [x] Product spec — product-manager — 2026-11-20
+- [ ] Design — designer — not started
+- [ ] Architecture — tech-lead — not started
+- [ ] Implementation — developer — not started
+- [ ] Tests — qa — not started
+
+**Current phase:** designer
+**Branch:** `feature/playful-redesign`
+**PR:** not opened yet
+
+## Open questions / blockers
+None.
+
+## Docs
+- [Product spec](./product-spec.md)
+- [Design](./design.md)
+- [Architecture](./architecture.md)
+- [Tests](./tests.md)
