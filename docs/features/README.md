@@ -6,7 +6,7 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
-| אנימציית-כניסה למסך (מסכי-תפריטים) | 🟡 in development | [status](./screen-entrance-animation/status.md) |
+| אנימציית-כניסה למסך (מסכי-תפריטים) | 🟡 in testing | [status](./screen-entrance-animation/status.md) |
 | זרקור-מנוחה — תנועה עדינה ומתמשכת | 🟢 done — מוזג ל-main | [status](./idle-spotlight/status.md) |
 | התקנת האפליקציה כ-PWA באייפון ובאנדרואיד | 🟢 done — מוזג ל-main | [status](./pwa-install/status.md) |
 | הרגשה כיפית, כמו משחק | 🟢 done — מוזג ל-main | [status](./playful-redesign/status.md) |

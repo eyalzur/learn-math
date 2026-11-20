@@ -70,3 +70,23 @@ None מעבר למה שכבר מתועד ב-`playful-redesign`/`idle-spotlight` 
 
 ## Open Questions
 None.
+
+## Implementation Notes
+
+Built exactly per plan — one CSS rule, one keyframe, one reduced-motion addition, zero
+.tsx changes. Verified live (dev server, direct opacity sampling, not just eyeballing):
+
+- A genuine screen entry (creating and selecting a fresh student → GradePicker) shows a
+  smooth 0 → 1 opacity ramp over ~0.3s (sampled at 40ms intervals: `0.10, 0.27, 0.49,
+  0.62, 0.80, 0.89, 0.98, 1`).
+- An unrelated re-render of the same screen instance (opening/closing the ⚙️ settings
+  dialog) leaves opacity at `1` — the fade does not replay, confirming the
+  remount-vs-rerender reasoning in Technical Approach holds in practice, not just in
+  theory.
+- A genuine return visit to the same screen type (back to the student picker, then
+  selecting a student again) replays the fade from `0` again, as expected for a fresh
+  mount.
+- No console errors; the back-link-redesign and idle-spotlight features (already merged)
+  render correctly alongside this change with no visual conflict.
+
+`npm run build`/`npm run lint` clean. Version 1.49.0 → 1.50.0.

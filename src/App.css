@@ -930,6 +930,50 @@ body:has(
   }
 }
 
+/* ---- screen entrance: a single unified fade, menu screens only (docs/features/
+   screen-entrance-animation) ---- */
+
+/* Deliberately opacity-only — no transform/scale on the container. A parent's
+   transform moves its children's bounding boxes too, which is exactly the mechanism
+   that broke e2e click-stability for playful-redesign and idle-spotlight during their
+   own development (see both features' architecture.md Implementation Notes).
+   opacity never affects layout, so this is safe regardless of duration.
+
+   Runs concurrently with playful-redesign's existing per-card pop-in, not sequenced
+   before/after it — the screen materializing while its cards individually pop in
+   reads as one entrance moment, not two competing animations. No React/.tsx changes
+   needed: every menu screen is a different component type at the same tree position
+   in App.tsx's render branches, so React's own reconciliation unmounts/remounts it on
+   every real screen transition (verified, not assumed) — a plain CSS `animation`
+   naturally replays on that fresh mount, and correctly does NOT replay on an unrelated
+   re-render of the same screen instance (e.g. the ⚙️ dialog opening). */
+.student-picker,
+.grade-picker,
+.topic-picker,
+.grade-home,
+.history {
+  animation: screen-fade-in 0.3s ease-out;
+}
+
+@keyframes screen-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .student-picker,
+  .grade-picker,
+  .topic-picker,
+  .grade-home,
+  .history {
+    animation: none !important;
+  }
+}
+
 .result {
   padding: 40px 24px;
   display: flex;

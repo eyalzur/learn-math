@@ -19,6 +19,11 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.50.0",
+    icon: "🚪",
+    description: "כל מסך-תפריט דוהה בעדינות פנימה כשנכנסים אליו.",
+  },
+  {
     version: "1.49.0",
     icon: "✨",
     description: "זוהר עדין עובר בין הכפתורים כל כמה שניות, ורקע המסך קצת חי — בלי להפריע, כל עוד לא לוחצים.",
