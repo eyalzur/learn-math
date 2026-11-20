@@ -10,9 +10,9 @@
 - [x] Implementation — developer — 2026-11-20
 - [x] Tests — qa — 2026-11-20
 
-**Current phase:** done — awaiting PR review
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `feature/candy-redesign`
-**PR:** not opened yet
+**PR:** [#96](https://github.com/eyalzur/learn-math/pull/96) — מוזג 2026-11-20
 
 ## Open questions / blockers
 None.
