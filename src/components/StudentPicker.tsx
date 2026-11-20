@@ -1,15 +1,22 @@
 import { useState } from "react";
-import { students, grades } from "../data/curriculum";
+import { grades } from "../data/curriculum";
 import type { Student } from "../data/curriculum";
 import { APP_VERSION } from "../data/version";
 import { VersionLog } from "./VersionLog";
+import { CreateStudentDialog } from "./CreateStudentDialog";
+import { DeleteStudentDialog } from "./DeleteStudentDialog";
 
 interface StudentPickerProps {
+  students: Student[];
   onSelect: (student: Student) => void;
+  onCreate: (name: string, gradeId: string) => void;
+  onDelete: (id: string) => void;
 }
 
-export function StudentPicker({ onSelect }: StudentPickerProps) {
+export function StudentPicker({ students, onSelect, onCreate, onDelete }: StudentPickerProps) {
   const [versionLogOpen, setVersionLogOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Student | null>(null);
 
   return (
     <div className="student-picker">
@@ -18,16 +25,31 @@ export function StudentPicker({ onSelect }: StudentPickerProps) {
         {students.map((student) => {
           const grade = grades.find((g) => g.id === student.gradeId);
           return (
-            <button
-              key={student.id}
-              className="student-card"
-              onClick={() => onSelect(student)}
-            >
-              <span className="student-name">{student.name}</span>
-              <span className="student-grade">{grade?.label}</span>
-            </button>
+            <div key={student.id} className="student-card-wrap">
+              <button className="student-card" onClick={() => onSelect(student)}>
+                <span className="student-name">{student.name}</span>
+                <span className="student-grade">{grade?.label}</span>
+              </button>
+              <button
+                type="button"
+                className="student-card-delete"
+                aria-label={`מחיקת ${student.name}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDeleteTarget(student);
+                }}
+              >
+                🗑
+              </button>
+            </div>
           );
         })}
+        <button type="button" className="student-card student-card-add" onClick={() => setCreateOpen(true)}>
+          <span className="student-card-add-icon" aria-hidden="true">
+            ➕
+          </span>
+          <span className="student-grade">הוספת תלמיד/ה</span>
+        </button>
       </div>
       {/* Label and number are separate elements on purpose: a mixed Hebrew/LTR string
           handed to the browser's bidi algorithm is how this project shipped three
@@ -36,6 +58,23 @@ export function StudentPicker({ onSelect }: StudentPickerProps) {
         גרסה <span className="app-version-number">{APP_VERSION}</span>
       </button>
       <VersionLog open={versionLogOpen} onClose={() => setVersionLogOpen(false)} />
+      <CreateStudentDialog
+        open={createOpen}
+        grades={grades}
+        onCreate={(name, gradeId) => {
+          onCreate(name, gradeId);
+          setCreateOpen(false);
+        }}
+        onClose={() => setCreateOpen(false)}
+      />
+      <DeleteStudentDialog
+        student={deleteTarget}
+        onConfirm={() => {
+          if (deleteTarget) onDelete(deleteTarget.id);
+          setDeleteTarget(null);
+        }}
+        onClose={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }

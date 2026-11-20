@@ -200,3 +200,36 @@ than inventing a second grade-selection visual language.
 
 ## Open Questions
 None.
+
+## Implementation Notes
+
+Built essentially as planned, with one mechanical extension of the plan's shape:
+
+- The plan's `App.tsx` code sketch showed `loadStudent()`'s job moving into a single
+  `useEffect`. In the real file, `student`, `gradeId`, and `screen` each had their own
+  `useState(() => loadStudent() ...)` initializer (three separate synchronous reads, not
+  one) — all three now start at their "nothing yet" value (`null`/`null`/`{name:"home"}`)
+  and are set together inside the one effect once `userStore.list()` resolves. Same
+  outcome the architecture doc described, just applied to all three pieces of initial
+  state it hadn't enumerated individually.
+- `clearStudent` is the exported name in both `progress.ts` and `adaptiveProgress.ts`
+  (matching "Affected Files"), imported into `App.tsx` under aliases
+  (`clearStudentProgress`, `clearStudentAdaptiveTiers`) so the two calls at the delete
+  site read unambiguously — "Technical Approach"'s prose used those longer names only
+  for the narrative, not as a second proposed export name.
+- `CreateStudentDialog` defaults the grade selector to `grades[0]` and reuses
+  `GradePicker`'s exact card markup/classnames, with a new `.grade-card-selected`
+  modifier (not needed by `GradePicker` itself, which never shows a persistent
+  selection) and a dialog-scoped size override (`.create-student-grade-list .grade-card`)
+  so four cards fit a 420px-wide dialog instead of the full-page `.grade-list` layout.
+- The trash icon could not be nested inside the student's own `<button>` (invalid
+  HTML), so `StudentPicker` wraps each card in a `.student-card-wrap` div and positions
+  `.student-card-delete` as its sibling, absolutely placed over the card's corner.
+
+Verified live (empty state → create "דנה" into כיתה ו׳ → appears unselected, as
+designed → select her → any-grade choice still offered, unaffected → back → delete her
+via the trash icon → confirmation names her and warns about progress loss → confirms →
+back to empty state) with zero console errors throughout.
+
+`npm run build` and `npm run lint` both clean. Version bumped 1.45.1 → 1.46.0
+(`npm run bump:feature`), changelog entry added in the same commit.

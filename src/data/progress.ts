@@ -45,6 +45,19 @@ export function recordPractice(record: PracticeRecord): void {
   }
 }
 
+/** Deleting a student deletes their saved progress with them — there is no undo, by
+ *  design (see docs/features/manage-students/product-spec.md). */
+export function clearStudent(studentId: string): void {
+  try {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify(readAll().filter((record) => record.studentId !== studentId)),
+    );
+  } catch {
+    // ignore
+  }
+}
+
 /** One student's practices, newest first. */
 export function historyFor(studentId: string): PracticeRecord[] {
   return readAll()
