@@ -10,9 +10,9 @@
 - [x] Implementation — developer — 2026-11-20
 - [x] Tests — qa — 2026-11-21, 338/339 (known flake only)
 
-**Current phase:** done — ready for PR
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `feature/idle-spotlight`
-**PR:** not opened yet
+**PR:** https://github.com/eyalzur/learn-math/pull/104 — מוזג 2026-11-21
 
 ## Open questions / blockers
 None.
