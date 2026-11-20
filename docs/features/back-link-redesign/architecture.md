@@ -71,3 +71,26 @@ Practice.tsx, History.tsx, TopicLesson.tsx — שני האחרונים לא הו
 
 ## Open Questions
 None.
+
+## Implementation Notes
+
+Built exactly per plan, one deviation worth flagging: the design.md/plan didn't specify
+the exact hover background value, and the first pick (`var(--accent-border)`, a 50%-opacity
+pink) turned out to be a real contrast problem — that token is used elsewhere in the
+codebase only for borders/strokes (`.lesson-link:hover`'s `border-color`), never as a
+background with text on top, and pink text over a 50%-opacity pink tint would have been
+hard to read. Switched to the same solid-accent + white-text combination the base
+`button` rule already uses for primary actions (`background: var(--accent); color: #fff`)
+— good contrast, and a natural "fills in" hover feel for a pill.
+
+`.history-link` and `.reveal-link` now only carry their own layout specifics
+(display/width/margin) — the shared look (background/padding/radius/font-size) lives
+once on the base `.link-button`, as architecture.md intended.
+
+Verified live (dev server, screenshots): the GradePicker first-visit screen's two
+stacked links, the topic-picker header, and the practice screen's back-link all show the
+light pill instead of the old heavy ledge-shadow button look, with no visual regression
+to actual action buttons ("בדיקה", "רמז", grade/topic cards) — confirmed those still
+keep their full ledge-shadow + ledge-press treatment unchanged.
+
+`npm run build`/`npm run lint` clean. Version 1.48.1 → 1.49.0.
