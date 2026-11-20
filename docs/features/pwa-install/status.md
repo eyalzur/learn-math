@@ -46,12 +46,9 @@
   (`grade8-angles-congruence.spec.ts`, אותו assert כמו ב-PR #88). ראו
   tests.md.)
 
-**Current phase:** ready for review (עודכן 2026-11-20 — שם-קצר ואיקון חדשים;
-ראו "עדכון" בכל אחד משלושת מסמכי-הפאזה למעלה. 332/333 אחרי מיזוג `main`
-(candy-redesign/playful-redesign/manage-students וכו׳) — הכשל היחיד נשאר
-אותו flake ישן)
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `feature/pwa-install`
-**PR:** [#89](https://github.com/eyalzur/learn-math/pull/89)
+**PR:** [#89](https://github.com/eyalzur/learn-math/pull/89) — מוזג 2026-11-20
 
 ## Open questions / blockers
 None.

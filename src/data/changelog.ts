@@ -19,6 +19,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.48.0",
+    icon: "📲",
+    description:
+      "אפשר להתקין את האפליקציה על מסך הבית (אייפון/אנדרואיד), עם אייקון וכיתוב \"משחקים במספרים\" משלה.",
+  },
+  {
     version: "1.47.1",
     icon: "🔧",
     description:
