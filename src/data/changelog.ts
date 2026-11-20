@@ -19,6 +19,11 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.46.1",
+    icon: "🔧",
+    description: "תיקון קטן: כפתור \"ההתקדמות שלי\" נראה עכשיו כמו כפתור אמיתי, לא כמו טקסט תלוש.",
+  },
+  {
     version: "1.46.0",
     icon: "👤",
     description:

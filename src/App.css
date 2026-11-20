@@ -749,9 +749,18 @@ button.secondary {
   padding: 32px 24px;
 }
 
+/* Previously bare text, flush against .grade-header above it — crammed into the corner
+   with no visual weight of its own, unlike every other tappable thing on the screen
+   (reported live as "looks very bad"). A light pill gives it the same "this is a real,
+   tappable chip" read as the rest of the app's rounded language, without competing with
+   the screen's actual primary action. */
 .history-link {
   display: block;
-  margin: 0 0 20px auto;
+  width: fit-content;
+  margin: 10px 0 20px auto;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--accent-bg);
   font-size: 14px;
 }
 
