@@ -827,19 +827,25 @@ button:not(.app-version):not(.speak-button):not(.hint-button):not(.link-button):
    or this animation would blank it out for 75% of every cycle instead of layering a
    glow on top of it only at the peak. Found and fixed by checking computed styles
    live, not assumed — the rest state looked identical to the "glowing" state by eye
-   until that check. */
+   until that check.
+
+   Deliberately no `transform: scale(...)` here, even though it was tried — box-shadow
+   alone doesn't affect an element's bounding box, but a scale pulse does, and
+   Playwright's click-actionability check requires an element's bounding box to be
+   unchanged across two consecutive frames before it'll click. A continuously-animating
+   scale made *any* idle-breathing element (not just rapid-fire practice buttons)
+   intermittently "not stable" mid-cycle — found live via a real e2e failure
+   (fraction-diagram.spec.ts, clicking a .topic-card). Glow-only avoids the mechanism
+   entirely instead of papering over where it happened to surface. */
 @keyframes idle-breathe {
   0%,
   100% {
-    transform: scale(1);
     box-shadow: 0 5px 0 var(--accent-border);
   }
   12.5% {
-    transform: scale(1.025);
     box-shadow: 0 5px 0 var(--accent-border), 0 0 0 6px var(--accent-bg), 0 0 18px var(--accent-border);
   }
   25% {
-    transform: scale(1);
     box-shadow: 0 5px 0 var(--accent-border);
   }
 }
