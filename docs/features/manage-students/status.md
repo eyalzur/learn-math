@@ -10,9 +10,9 @@
 - [x] Tests — qa — 2026-11-20 (323/324, single clean run — only the known
   grade8-angles-congruence flake)
 
-**Current phase:** done — awaiting PR review
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `feature/manage-students`
-**PR:** not opened yet
+**PR:** [#99](https://github.com/eyalzur/learn-math/pull/99) — מוזג 2026-11-20
 
 ## Open questions / blockers
 None.
