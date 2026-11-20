@@ -19,6 +19,11 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.47.2",
+    icon: "⌨️",
+    description: "תיקון: כותרת מסך התרגול כבר לא נעלמת למעלה כשהמקלדת נפתחת בטלפון.",
+  },
+  {
     version: "1.47.1",
     icon: "🔧",
     description:

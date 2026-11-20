@@ -3,7 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- interactive-widget=resizes-content: on iOS/Android, opening the on-screen
+         keyboard normally pans a "visual viewport" while leaving the actual page layout
+         (what position:sticky/fixed measure against) the same size — so a sticky header
+         can be structurally "stuck" at the top and still end up off-screen, panned away
+         with everything else. This tells the browser to actually shrink the real layout
+         when the keyboard opens, so sticky/fixed positioning tracks what's truly visible.
+         Reported live, reproduced exactly: .practice-header (position:sticky) vanished
+         above the fold the moment the keyboard opened on a real phone. Requires Safari
+         16.4+ / Chrome 108+; on an older browser this is simply ignored, same as any
+         other viewport hint it doesn't understand. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content" />
     <title>לומדים חשבון</title>
     <!-- Playpen Sans Hebrew: .notebook-teacher-mark (docs/features/notebook-teacher-marks/,
          "עדכון סבב ב׳"). Picked over the more cursive "Gveret Levin" after a real
