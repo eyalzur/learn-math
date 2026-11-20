@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /**
  * Acceptance criteria under test (docs/features/topic-lesson/product-spec.md, including
@@ -28,10 +29,6 @@ async function open(page: Page) {
   await page.goto("/learn-math/");
 }
 
-const MIKA = 0;
-const ROTEM = 1;
-const OMER = 2;
-
 test.beforeEach(async ({ page }) => {
   await open(page);
 });
@@ -39,32 +36,32 @@ test.beforeEach(async ({ page }) => {
 test("a topic card still enters practice directly, unchanged, with a separate lesson button beside it", async ({
   page,
 }) => {
-  await page.locator(".student-card").nth(ROTEM).click();
+  await createAndSelectStudent(page);
   await page.locator(".grade-card").nth(2).click(); // grade ו׳ (docs/features/any-grade-any-student)
 
   const row = page.locator(".topic-row").first();
   await expect(row.locator(".lesson-link")).toBeVisible();
 
   // The card itself — not the lesson button — goes straight into practice, exactly like
-  // before this feature existed: a question with a notebook to write the answer in and a
-  // "שלח למורה" button (docs/features/notebook-default-practice replaced the typed answer
-  // field/"בדיקה" button this test used to check for with exactly these).
+  // before this feature existed: a question with a typed final-answer field and a "בדיקה"
+  // button (docs/features/scored-answer-practice/ replaced the notebook/"שלח למורה" this
+  // test used to check for with exactly these).
   await row.locator(".topic-card").click();
-  await expect(page.locator("canvas")).toBeVisible();
-  await expect(page.getByRole("button", { name: "שלח למורה" })).toBeVisible();
+  await expect(page.locator(".answer-input")).toBeVisible();
+  await expect(page.getByRole("button", { name: "בדיקה" })).toBeVisible();
 });
 
-test("the lesson screen has no notebook and no send-to-teacher button", async ({ page }) => {
-  await page.locator(".student-card").nth(OMER).click();
+test("the lesson screen has no answer field and no check button", async ({ page }) => {
+  await createAndSelectStudent(page);
   await page.locator(".grade-card").nth(3).click(); // grade ח׳ (docs/features/any-grade-any-student)
   await page.locator(".lesson-link").first().click();
 
-  await expect(page.locator("canvas")).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "שלח למורה" })).toHaveCount(0);
+  await expect(page.locator(".answer-input")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "בדיקה" })).toHaveCount(0);
 });
 
 test("the lesson screen shows real learning content, not a blank screen", async ({ page }) => {
-  await page.locator(".student-card").nth(OMER).click();
+  await createAndSelectStudent(page);
   await page.locator(".grade-card").nth(3).click(); // grade ח׳ (docs/features/any-grade-any-student)
   const topicTitle = await page.locator(".topic-title").first().innerText();
   await page.locator(".lesson-link").first().click();
@@ -78,7 +75,7 @@ test("the lesson screen shows real learning content, not a blank screen", async 
 });
 
 test("the last page's '→ לתרגול' enters practice for the same topic", async ({ page }) => {
-  await page.locator(".student-card").nth(ROTEM).click();
+  await createAndSelectStudent(page);
   await page.locator(".grade-card").nth(2).click(); // grade ו׳ (docs/features/any-grade-any-student)
   const topicTitle = await page.locator(".topic-title").first().innerText();
   await page.locator(".lesson-link").first().click();
@@ -93,13 +90,13 @@ test("the last page's '→ לתרגול' enters practice for the same topic", as
   // Practice for the same topic — the header names it, just like every other entry into
   // practice for a topic does.
   await expect(page.locator("h2")).toHaveText(topicTitle);
-  await expect(page.locator("canvas")).toBeVisible();
+  await expect(page.locator(".answer-input")).toBeVisible();
 });
 
 test("'← חזרה' from the lesson screen returns to the same student's topic list", async ({
   page,
 }) => {
-  await page.locator(".student-card").nth(ROTEM).click();
+  await createAndSelectStudent(page);
   await page.locator(".grade-card").nth(2).click(); // grade ו׳ (docs/features/any-grade-any-student)
   const topicsBefore = await page.locator(".topic-title").allInnerTexts();
   await page.locator(".lesson-link").first().click();
@@ -112,7 +109,7 @@ test("'← חזרה' from the lesson screen returns to the same student's topic 
 test("an adaptive topic's lesson pages through one worked example per difficulty tier, one at a time", async ({
   page,
 }) => {
-  await page.locator(".student-card").nth(OMER).click();
+  await createAndSelectStudent(page);
   await page.locator(".grade-card").nth(3).click(); // grade ח׳ (docs/features/any-grade-any-student)
   await page.locator(".lesson-link").first().click();
 
@@ -156,7 +153,7 @@ test("an adaptive topic's lesson pages through one worked example per difficulty
 test("a non-adaptive topic's lesson shows exactly one example, with no page heading or prev/next buttons", async ({
   page,
 }) => {
-  await page.locator(".student-card").nth(MIKA).click();
+  await createAndSelectStudent(page);
   await page.locator(".grade-card").first().click();
   await page.locator(".lesson-link").first().click();
 
@@ -174,9 +171,9 @@ test("wherever a topic is still unreviewed, it offers no lesson button either", 
   // Conditional on purpose, same convention as review-status.spec.ts: every topic is
   // reviewed right now, so this passes without exercising real content — it stays ready
   // for the day a topic goes back to `reviewed: false`.
-  for (const idx of [MIKA, ROTEM, OMER]) {
+  for (let i = 0; i < 3; i++) {
     await open(page);
-    await page.locator(".student-card").nth(idx).click();
+    await createAndSelectStudent(page);
     if (await page.locator(".grade-card").count()) {
       await page.locator(".grade-card").first().click();
     }

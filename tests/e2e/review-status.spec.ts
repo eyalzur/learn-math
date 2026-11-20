@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /**
  * Acceptance criteria under test
@@ -23,21 +24,18 @@ async function blockedTopics(page: Page) {
   return page.locator(".topic-card:disabled");
 }
 
-async function pickStudent(page: Page, index: number) {
+async function pickStudent(page: Page) {
   await page.goto("/learn-math/");
   await page.evaluate(() => localStorage.clear());
   await page.goto("/learn-math/");
-  await page.locator(".student-card").nth(index).click();
-  // Every student now picks a grade first (docs/features/any-grade-any-student). Which
-  // one doesn't matter for what these tests check, except for Mika (index 0), who needs
-  // grade א׳ specifically — and it happens to be the first card for her too.
+  await createAndSelectStudent(page);
+  // Every student now picks a grade first (docs/features/any-grade-any-student) — every
+  // test in this file lands in grade א׳, the first card.
   await page.locator(".grade-card").first().click();
 }
 
-const MIKA = 0, ROTEM = 1, OMER = 2;
-
 test("grade 1 is reviewed and behaves exactly as before", async ({ page }) => {
-  await pickStudent(page, MIKA);
+  await pickStudent(page);
 
   const cards = page.locator(".topic-card");
   await expect(cards).toHaveCount(5);
@@ -54,8 +52,8 @@ test("grade 1 is reviewed and behaves exactly as before", async ({ page }) => {
 test("every student can now open every topic", async ({ page }) => {
   // The state this feature was built to manage has been cleared: all three children have
   // their whole syllabus approved. That is the thing worth asserting today.
-  for (const student of [MIKA, ROTEM, OMER]) {
-    await pickStudent(page, student);
+  for (let i = 0; i < 3; i++) {
+    await pickStudent(page);
     await expect(page.locator(".topic-card")).not.toHaveCount(0);
     await expect(await blockedTopics(page)).toHaveCount(0);
     await expect(page.locator(".topics-notice")).toHaveCount(0);
@@ -72,8 +70,8 @@ test("wherever a topic is still unreviewed, it is blocked and says so", async ({
   // Conditional on purpose. Nothing is unreviewed right now, so this passes without
   // asserting much — and it starts asserting again by itself the day new content arrives
   // unapproved, which is exactly when the guard matters.
-  for (const student of [MIKA, ROTEM, OMER]) {
-    await pickStudent(page, student);
+  for (let i = 0; i < 3; i++) {
+    await pickStudent(page);
     const blocked = await blockedTopics(page);
     const count = await blocked.count();
     for (let i = 0; i < count; i++) {
@@ -89,7 +87,7 @@ test("wherever a topic is still unreviewed, it is blocked and says so", async ({
 test("history stays reachable for a student whose topics are all blocked", async ({
   page,
 }) => {
-  await pickStudent(page, ROTEM);
+  await pickStudent(page);
 
   await page.locator(".history-link").click();
   // The screen opens rather than erroring — an empty history says so itself.
@@ -99,11 +97,9 @@ test("history stays reachable for a student whose topics are all blocked", async
 test("grade 1 keeps working end to end while other grades are blocked", async ({
   page,
 }) => {
-  await pickStudent(page, MIKA);
+  await pickStudent(page);
   await page.locator(".topic-card").first().click();
   await page.locator(".style-card, .level-card").first().click();
 
-  // The question now lives on the notebook page itself, not a separate .problem-box — see
-  // docs/features/notebook-question-on-page/.
-  await expect(page.locator(".notebook-question-header")).toBeVisible();
+  await expect(page.locator(".problem-box")).toBeVisible();
 });

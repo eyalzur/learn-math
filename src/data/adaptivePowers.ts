@@ -56,7 +56,12 @@ function cube(rng: Rng): Question {
  *  than just stating the answer's square, by listing five consecutive squares centered on
  *  the answer (clamped to stay at `1` or above). */
 function squareRoot(rng: Rng): Question {
-  const answer = randInt(2, 20, rng);
+  // Capped at 10, not 20: finding a root is a search ("which number squared gets me
+  // here?"), not a direct computation like square()/cube() — a range that let the
+  // root land anywhere from 2 to 20 meant two questions in the same tier could feel
+  // nothing alike (√4 right next to √324), which is exactly the unaligned-difficulty
+  // gap reported live. Kept tractable at both ends of the tier instead.
+  const answer = randInt(2, 10, rng);
   const n = answer * answer;
   const lo = Math.max(1, answer - 2);
   const nearby = Array.from({ length: 5 }, (_, i) => lo + i)

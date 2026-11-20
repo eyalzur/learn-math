@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
-import { answerViaNotebook } from "./helpers/notebookAnswer";
+import { answerQuestion } from "./helpers/answerQuestion";
+import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /**
  * Acceptance criteria under test (docs/features/adaptive-difficulty/product-spec.md),
@@ -25,8 +26,6 @@ import { answerViaNotebook } from "./helpers/notebookAnswer";
  * file's own two topics are still the only adaptive ones.
  */
 
-const MIKA = 0;
-
 async function open(page: Page) {
   await page.goto("/learn-math/");
   await page.evaluate(() => localStorage.clear());
@@ -34,7 +33,7 @@ async function open(page: Page) {
 }
 
 async function toGradeB(page: Page) {
-  await page.locator(".student-card").nth(MIKA).click();
+  await createAndSelectStudent(page);
   await page.locator(".grade-card").nth(1).click(); // כיתה ב׳
 }
 
@@ -57,8 +56,15 @@ async function currentPrompt(page: Page): Promise<[number, number]> {
 }
 
 async function answer(page: Page, value: number) {
-  await answerViaNotebook(page, value);
-  await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
+  await answerQuestion(page, value);
+  // A correct answer advances on its own (docs/features/scored-answer-practice/) — no
+  // "הבא" button for that path, unlike a wrong one.
+  const nextButton = page.getByRole("button", { name: /^(הבא|סיום)$/ });
+  if (await nextButton.count()) {
+    await nextButton.click();
+  } else {
+    await page.waitForTimeout(800);
+  }
 }
 
 test.beforeEach(async ({ page }) => {
@@ -116,7 +122,7 @@ test("a generated question still has two hints and shows a real explanation afte
   await expect(page.locator(".hint-button")).toHaveCount(0);
 
   const [a, b] = await currentPrompt(page);
-  await answerViaNotebook(page, a + b + 1000);
+  await answerQuestion(page, a + b + 1000);
 
   await expect(page.locator(".feedback.wrong")).toBeVisible();
   await expect(page.locator(".explanation")).toContainText(String(a));

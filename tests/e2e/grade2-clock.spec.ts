@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
-import { answerViaNotebook } from "./helpers/notebookAnswer";
+import { answerQuestion } from "./helpers/answerQuestion";
+import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /**
  * Acceptance criteria under test (docs/features/grade2-clock/product-spec.md and
@@ -24,9 +25,6 @@ import { answerViaNotebook } from "./helpers/notebookAnswer";
  *  9. The lesson (📖) screen shows the clock too, for all three difficulty tiers.
  */
 
-const MIKA = 0;
-const GRADE_B = 1;
-
 const HOUR_WORD_TO_NUM: Record<string, number> = {
   אחת: 1,
   שתיים: 2,
@@ -49,8 +47,8 @@ async function open(page: Page) {
 }
 
 async function enterClock(page: Page) {
-  await page.locator(".student-card").nth(MIKA).click();
-  await page.locator(".grade-card").nth(GRADE_B).click();
+  await createAndSelectStudent(page);
+  await page.locator(".grade-card-2").click();
   await page.locator(".topic-card", { hasText: "שעון וזמן" }).click();
 }
 
@@ -66,8 +64,14 @@ function hourFromLabel(label: string): number {
 }
 
 async function answer(page: Page, value: number) {
-  await answerViaNotebook(page, value);
-  await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
+  await answerQuestion(page, value);
+  // A correct answer advances on its own — no "הבא" button for that path.
+  const nextButton = page.getByRole("button", { name: /^(הבא|סיום)$/ });
+  if (await nextButton.count()) {
+    await nextButton.click();
+  } else {
+    await page.waitForTimeout(800);
+  }
 }
 
 /** Answers correctly, by reading the current single clock's face, until the two-clock
@@ -111,7 +115,7 @@ test("the first question of a fresh session is the easy tier, and reading its fa
   await enterClock(page);
   await expect(page.locator(".clock-pair")).toHaveCount(0); // one clock, not two — easy tier
   const label = await page.locator(".clock-face").getAttribute("aria-label");
-  await answerViaNotebook(page, hourFromLabel(label!));
+  await answerQuestion(page, hourFromLabel(label!));
   await expect(page.locator(".feedback.correct")).toBeVisible();
 });
 
@@ -141,7 +145,7 @@ test("the clock face is not duplicated after a wrong answer reveals the explanat
   page,
 }) => {
   await enterClock(page);
-  await answerViaNotebook(page, 9999); // guaranteed wrong for any hour or minute-count answer
+  await answerQuestion(page, 9999); // guaranteed wrong for any hour or minute-count answer
   await expect(page.locator(".feedback.wrong")).toBeVisible();
   await expect(page.locator(".explanation")).toBeVisible();
   await expect(page.locator(".clock-face")).toHaveCount(1);
@@ -157,8 +161,8 @@ test("every clock's svg renders left-to-right, inside the RTL page", async ({ pa
 test("the lesson (📖) screen shows the clock face too, for every difficulty tier", async ({
   page,
 }) => {
-  await page.locator(".student-card").nth(MIKA).click();
-  await page.locator(".grade-card").nth(GRADE_B).click();
+  await createAndSelectStudent(page);
+  await page.locator(".grade-card-2").click();
   const row = page.locator(".topic-row", { has: page.locator(".topic-card", { hasText: "שעון וזמן" }) });
   await row.locator(".lesson-link").click();
 
