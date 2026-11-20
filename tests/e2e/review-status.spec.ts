@@ -103,7 +103,5 @@ test("grade 1 keeps working end to end while other grades are blocked", async ({
   await page.locator(".topic-card").first().click();
   await page.locator(".style-card, .level-card").first().click();
 
-  // The question now lives on the notebook page itself, not a separate .problem-box — see
-  // docs/features/notebook-question-on-page/.
-  await expect(page.locator(".notebook-question-header")).toBeVisible();
+  await expect(page.locator(".problem-box")).toBeVisible();
 });
