@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { answerViaNotebook } from "./helpers/notebookAnswer";
+import { answerQuestion } from "./helpers/answerQuestion";
 
 /**
  * Acceptance criteria under test
@@ -36,7 +36,7 @@ async function open(page: Page, topicIdx: number, style: string) {
 }
 
 const answer = async (page: Page, value: string) => {
-  await answerViaNotebook(page, value);
+  await answerQuestion(page, value);
 };
 
 /** Walks the level until the prompt contains `wanted`, then answers it wrong. */

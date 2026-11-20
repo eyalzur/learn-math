@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { answerViaNotebook } from "./helpers/notebookAnswer";
+import { answerQuestion } from "./helpers/answerQuestion";
 
 /** Grade 1 practises topic-by-topic, so its levels sit one screen deeper. */
 async function openLevels(page: Page, studentIndex: number, topicIndex = 0) {
@@ -36,7 +36,7 @@ async function startGrade1Easy(page: Page) {
 }
 
 async function answerWrong(page: Page) {
-  await answerViaNotebook(page, 999999);
+  await answerQuestion(page, 999999);
 }
 
 test.beforeEach(async ({ page }) => {
@@ -92,7 +92,7 @@ test("a correct answer shows no explanation", async ({ page }) => {
   await page.getByRole("button", { name: "← חזרה" }).click();
   await page.locator(".style-card").first().click();
 
-  await answerViaNotebook(page, answer);
+  await answerQuestion(page, answer);
 
   await expect(page.locator(".feedback.correct")).toBeVisible();
   await expect(page.locator(".explanation")).toHaveCount(0);

@@ -16,29 +16,7 @@ import { hasStyleLessons, stylesOf } from "./data/style";
 import { speak, speechParts } from "./data/speech";
 import { recordPractice } from "./data/progress";
 import { loadAdaptiveTier, saveAdaptiveTier } from "./data/adaptiveProgress";
-import {
-  readAloud as readAloudFor,
-  setReadAloud,
-  holdZoomLevel as holdZoomLevelFor,
-  setHoldZoomLevel,
-  autoScrollJumpLevel as autoScrollJumpLevelFor,
-  setAutoScrollJumpLevel,
-  panSpeedLevel as panSpeedLevelFor,
-  setPanSpeedLevel,
-  buttonSizeLevel as buttonSizeLevelFor,
-  setButtonSizeLevel,
-  suggestionSensitivityLevel as suggestionSensitivityLevelFor,
-  setSuggestionSensitivityLevel,
-  navPadVisible as navPadVisibleFor,
-  setNavPadVisible,
-} from "./data/preferences";
-import {
-  autoScrollJumpFractionFor,
-  buttonSizeFor,
-  holdZoomFactorFor,
-  panSpeedFor,
-  suggestionDelayFor,
-} from "./data/notebook";
+import { readAloud as readAloudFor, setReadAloud } from "./data/preferences";
 import "./App.css";
 
 const STORAGE_KEY = "learn-math:student";
@@ -343,17 +321,6 @@ function App() {
 
   const grade = grades.find((g) => g.id === gradeId)!;
   const readAloud = readAloudFor(student.id);
-  const holdZoomLevel = holdZoomLevelFor(student.id);
-  const holdZoomFactor = holdZoomFactorFor(holdZoomLevel);
-  const autoScrollJumpLevel = autoScrollJumpLevelFor(student.id);
-  const autoScrollJumpFraction = autoScrollJumpFractionFor(autoScrollJumpLevel);
-  const panSpeedLevel = panSpeedLevelFor(student.id);
-  const { stepPx: panStepPx, holdIntervalMs: panHoldIntervalMs } = panSpeedFor(panSpeedLevel);
-  const buttonSizeLevel = buttonSizeLevelFor(student.id);
-  const buttonDiameterPx = buttonSizeFor(buttonSizeLevel);
-  const suggestionSensitivityLevel = suggestionSensitivityLevelFor(student.id);
-  const suggestionDelayMs = suggestionDelayFor(suggestionSensitivityLevel);
-  const navPadVisible = navPadVisibleFor(student.id);
 
   function finish(topic: Topic | null, lesson: Lesson, correctCount: number) {
     recordPractice({
@@ -367,6 +334,9 @@ function App() {
       // the children's devices. An adaptive topic has no "this" — there was never a level
       // or style to name — so it stays empty and History omits the separator for it.
       levelTitle: topic?.adaptive ? "" : lesson.title,
+      // Separate from levelTitle on purpose — see progress.ts: an adaptive topic has no
+      // named level, but "by difficulty" stats still need something to group it under.
+      difficultyLabel: topic?.adaptive ? `רמה ${adaptiveSession?.difficulty ?? ""}` : undefined,
       correct: correctCount,
       total: lesson.questions.length,
     });
@@ -377,45 +347,14 @@ function App() {
     setScreen({ name: "result", topic, lesson, correctCount });
   }
 
-  // Every settings value/callback pair is shared between whichever screen's own ⚙️ button
-  // decides whether to show itself (via hasAnySettings()) and the dialog that actually
-  // renders them — same props, two different consumers. See
-  // docs/features/notebook-nav-buttons-visibility/architecture.md.
+  // Shared between whichever screen's own ⚙️ button decides whether to show itself (via
+  // hasAnySettings()) and the dialog that actually renders it — same props, two different
+  // consumers.
   const settingsProps = {
     readAloud,
     onReadAloudChange: (value: boolean) => {
       setReadAloud(student.id, value);
       // The value lives in storage, so a render is needed to pick it back up.
-      setPreferencesTick((n) => n + 1);
-    },
-    holdZoomLevel,
-    onHoldZoomLevelChange: (levelId: string) => {
-      setHoldZoomLevel(student.id, levelId);
-      setPreferencesTick((n) => n + 1);
-    },
-    autoScrollJumpLevel,
-    onAutoScrollJumpLevelChange: (levelId: string) => {
-      setAutoScrollJumpLevel(student.id, levelId);
-      setPreferencesTick((n) => n + 1);
-    },
-    panSpeedLevel,
-    onPanSpeedLevelChange: (levelId: string) => {
-      setPanSpeedLevel(student.id, levelId);
-      setPreferencesTick((n) => n + 1);
-    },
-    buttonSizeLevel,
-    onButtonSizeLevelChange: (levelId: string) => {
-      setButtonSizeLevel(student.id, levelId);
-      setPreferencesTick((n) => n + 1);
-    },
-    suggestionSensitivityLevel,
-    onSuggestionSensitivityLevelChange: (levelId: string) => {
-      setSuggestionSensitivityLevel(student.id, levelId);
-      setPreferencesTick((n) => n + 1);
-    },
-    navPadVisible,
-    onNavPadVisibleChange: (value: boolean) => {
-      setNavPadVisible(student.id, value);
       setPreferencesTick((n) => n + 1);
     },
   };
@@ -515,14 +454,6 @@ function App() {
             setScreen(insideTopic(topic));
           }}
           readAloud={readAloud}
-          holdZoomFactor={holdZoomFactor}
-          autoScrollJumpFraction={autoScrollJumpFraction}
-          panStepPx={panStepPx}
-          panHoldIntervalMs={panHoldIntervalMs}
-          buttonDiameterPx={buttonDiameterPx}
-          suggestionDelayMs={suggestionDelayMs}
-          navPadVisible={navPadVisible}
-          onOpenSettings={() => setSettingsOpen(true)}
           onAnswered={topic?.adaptive ? (correct) => handleAdaptiveAnswered(topic, correct) : undefined}
         />
         {settingsOpen && <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} {...settingsProps} />}
