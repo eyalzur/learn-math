@@ -883,14 +883,26 @@ button.secondary {
   list-style: none;
 }
 
+/* A small card per entry, not a bare list row — the icon gives each version a visual
+   anchor (see src/data/changelog.ts's comment on why an emoji icon, not a screenshot). */
 .version-log-entry {
-  padding-bottom: 14px;
-  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--code-bg);
 }
 
-.version-log-entry:last-child {
-  padding-bottom: 0;
-  border-bottom: none;
+.version-log-icon {
+  flex-shrink: 0;
+  font-size: 26px;
+  line-height: 1;
+}
+
+.version-log-text {
+  min-width: 0;
 }
 
 .version-log-heading {

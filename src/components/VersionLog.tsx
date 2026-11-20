@@ -25,13 +25,18 @@ export function VersionLog({ open, onClose }: VersionLogProps) {
         <ul className="version-log-list">
           {CHANGELOG.map((entry) => (
             <li key={entry.version} className="version-log-entry">
-              <p className="version-log-heading">
-                <span className="version-log-version">{entry.version}</span>
-                {entry.version === APP_VERSION && (
-                  <span className="version-log-today">(היום)</span>
-                )}
-              </p>
-              <p className="version-log-description">{entry.description}</p>
+              <span className="version-log-icon" aria-hidden="true">
+                {entry.icon}
+              </span>
+              <div className="version-log-text">
+                <p className="version-log-heading">
+                  <span className="version-log-version">{entry.version}</span>
+                  {entry.version === APP_VERSION && (
+                    <span className="version-log-today">(היום)</span>
+                  )}
+                </p>
+                <p className="version-log-description">{entry.description}</p>
+              </div>
             </li>
           ))}
         </ul>
