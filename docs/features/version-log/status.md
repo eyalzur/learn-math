@@ -9,9 +9,9 @@
 - [x] Implementation — developer — 2026-11-19
 - [x] Tests — qa — 2026-11-19
 
-**Current phase:** done, awaiting PR review
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `feature/version-log`
-**PR:** [#93](https://github.com/eyalzur/learn-math/pull/93) — נפתח 2026-11-19, הוחיה ועודכנה 2026-11-20
+**PR:** [#93](https://github.com/eyalzur/learn-math/pull/93) — מוזג 2026-11-20
 
 ## Open questions / blockers
 None.
