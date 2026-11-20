@@ -172,3 +172,42 @@ body:has(.create-student-backdrop, .delete-student-backdrop,
 
 ## Open Questions
 None.
+
+## Implementation Notes
+
+Two real bugs found and fixed through live verification, not caught by reasoning alone:
+
+1. **`box-shadow: none` in the rest keyframe was blanking out playful-redesign's
+   static ledge-shadow.** `box-shadow` is a single property — the rest state has to
+   repeat the exact same ledge value (`0 5px 0 var(--accent-border)`), layering the
+   glow on top of it only at the peak, or every card loses its ledge look 75% of
+   each cycle instead of just occasionally glowing on top of it. Looked identical by
+   eye to the correct version until checked via computed styles.
+2. **Two separate CSS rules can't both set the `animation` shorthand on the same
+   selector and have both animations run** — the later rule in source order replaces
+   the property whole, not layers on top of it like `box-shadow` can. idle-breathe's
+   rule (added after playful-pop-in's) silently killed the entrance pop-in for every
+   card. Fixed by merging into one `animation:` declaration (comma-separated:
+   `playful-pop-in ..., idle-breathe ...`), with every `animation-delay` override
+   (including the `:nth-child` pop-in stagger rules) updated to two comma-separated
+   values positionally matching the two animation names.
+3. **A related, nastier version of the same overlap**: every card (`.student-card`
+   etc.) is itself a `<button>`, so the idle-breathe rule meant for "buttons only"
+   (`button:not(.app-version):not(.speak-button)...`, six chained `:not()` clauses)
+   also matched every card — and its accumulated specificity (0,6,1) beat the
+   dedicated card rule (0,1,0) outright, silently overriding it. This also meant the
+   `:hover`/`:focus`/`:active` pause rule's shorter `button:not(.app-version)` branch
+   (specificity 0,2,1) couldn't win against it either, so pausing never worked on
+   plain buttons. Fixed by explicitly excluding the five card classes from the
+   button-only rule, and by giving the pause rule's button branch the identical full
+   `:not()` chain so its specificity actually wins.
+
+All three were caught by checking real computed styles (`getComputedStyle`,
+`element.matches()`, and sampling box-shadow blur radius over time to confirm the
+cycle visits cards one at a time in the right order) — not by reading the CSS and
+reasoning it should work. Confirmed live: pop-in still fires on screen entry,
+hover/focus/active correctly pause the breathing on both cards and plain buttons, and
+a 3-card screen's spotlight visits each card in DOM order with no overlap, matching
+the negative-delay math exactly.
+
+`npm run build`/`npm run lint` clean. Version 1.48.0 → 1.49.0.

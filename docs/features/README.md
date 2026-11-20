@@ -6,7 +6,7 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
-| זרקור-מנוחה — תנועה עדינה ומתמשכת | 🟡 in development | [status](./idle-spotlight/status.md) |
+| זרקור-מנוחה — תנועה עדינה ומתמשכת | 🟡 in testing | [status](./idle-spotlight/status.md) |
 | התקנת האפליקציה כ-PWA באייפון ובאנדרואיד | 🟢 done — מוזג ל-main | [status](./pwa-install/status.md) |
 | הרגשה כיפית, כמו משחק | 🟢 done — מוזג ל-main | [status](./playful-redesign/status.md) |
 | לוג גרסאות | 🟢 done — מוזג ל-main | [status](./version-log/status.md) |
