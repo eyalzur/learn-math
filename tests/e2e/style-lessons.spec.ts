@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { answerQuestion } from "./helpers/answerQuestion";
+import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /**
  * Acceptance criteria under test (docs/features/style-lessons/product-spec.md).
@@ -10,10 +11,12 @@ import { answerQuestion } from "./helpers/answerQuestion";
  * only one kind are left exactly as they were.
  */
 
+// Not roster identities any more (docs/features/manage-students removed the fixed
+// roster) — just markers for "grade 1 (א׳)'s topics" vs. "grade 6 (ו׳)'s", below.
 const MIKA = 0;
 const ROTEM = 1;
 
-/** Mika's topics, in the order the picker shows them. */
+/** Grade 1's (א׳) topics, in the order the picker shows them. */
 const NUMBERS = 0; // מספרים עד 20 — five styles
 const ADD10 = 1; // חיבור עד 10 — one style; became adaptive later, see below
 const PLACE = 4; // עשרות ויחידות — six styles
@@ -23,9 +26,9 @@ async function openTopic(page: Page, student: number, topic: number) {
   await page.goto("/learn-math/");
   await page.evaluate(() => localStorage.clear());
   await page.goto("/learn-math/");
-  await page.locator(".student-card").nth(student).click();
-  // Every student now picks a grade first (docs/features/any-grade-any-student). Mika's
-  // route here is always grade א׳ (first card); Rotem's is grade ו׳ (third card).
+  await createAndSelectStudent(page);
+  // Every student picks a grade first (docs/features/any-grade-any-student) — grade א׳
+  // (first card) for MIKA's topics above, grade ו׳ (third card) for ROTEM's.
   await page.locator(".grade-card").nth(student === MIKA ? 0 : 2).click();
   await page.locator(".topic-card").nth(topic).click();
 }

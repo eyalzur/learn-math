@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { answerQuestion } from "./helpers/answerQuestion";
+import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /**
  * Acceptance criteria under test (docs/features/grade2-clock/product-spec.md and
@@ -24,9 +25,6 @@ import { answerQuestion } from "./helpers/answerQuestion";
  *  9. The lesson (📖) screen shows the clock too, for all three difficulty tiers.
  */
 
-const MIKA = 0;
-const GRADE_B = 1;
-
 const HOUR_WORD_TO_NUM: Record<string, number> = {
   אחת: 1,
   שתיים: 2,
@@ -49,8 +47,8 @@ async function open(page: Page) {
 }
 
 async function enterClock(page: Page) {
-  await page.locator(".student-card").nth(MIKA).click();
-  await page.locator(".grade-card").nth(GRADE_B).click();
+  await createAndSelectStudent(page);
+  await page.locator(".grade-card-2").click();
   await page.locator(".topic-card", { hasText: "שעון וזמן" }).click();
 }
 
@@ -163,8 +161,8 @@ test("every clock's svg renders left-to-right, inside the RTL page", async ({ pa
 test("the lesson (📖) screen shows the clock face too, for every difficulty tier", async ({
   page,
 }) => {
-  await page.locator(".student-card").nth(MIKA).click();
-  await page.locator(".grade-card").nth(GRADE_B).click();
+  await createAndSelectStudent(page);
+  await page.locator(".grade-card-2").click();
   const row = page.locator(".topic-row", { has: page.locator(".topic-card", { hasText: "שעון וזמן" }) });
   await row.locator(".lesson-link").click();
 

@@ -1,37 +1,42 @@
 import { test, expect, type Page } from "@playwright/test";
 import { answerQuestion } from "./helpers/answerQuestion";
-
-/** Every grade now practises topic by topic, so levels always sit one screen deeper. */
-async function openLevels(page: Page, studentIndex: number, topicIndex = 0) {
-  await page.locator(".student-card").nth(studentIndex).click();
-  // Mika (index 0) now has two grades available; every route here is grade 1 (א׳).
-  if (studentIndex === 0) await page.locator(".grade-card").first().click();
-  await page.locator(".topic-card").nth(topicIndex).click();
-}
-
+import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /**
  * Acceptance criteria under test
  * (docs/features/students-and-syllabus/product-spec.md):
- *  1. The app opens on a picker with Mika (grade 1), Rotem (grade 6), Omer (grade 8),
- *     each showing name and grade.
- *  2. Picking a student shows that grade's topics; picking a topic shows three levels.
- *  3. Every grade has exactly three levels; the questions per level are the grade's
+ *  1. Picking a student shows that grade's topics; picking a topic shows three levels.
+ *  2. Every grade has exactly three levels; the questions per level are the grade's
  *     own (ten for grade 1, five for grades 6 and 8 — see topics-all-grades).
- *  4. Every question belongs to a topic in its own grade's syllabus.
- *  5. Picking a level starts a practice run over its questions.
- *  6. Finishing a level shows the score summary.
- *  7. You can go back and switch student.
- *  8. The last choice is remembered across a reload.
+ *  3. Every question belongs to a topic in its own grade's syllabus.
+ *  4. Picking a level starts a practice run over its questions.
+ *  5. Finishing a level shows the score summary.
+ *  6. You can go back and switch student.
+ *  7. The last choice is remembered across a reload.
+ *
+ * Criterion "the app opens on a picker with three fixed, pre-named students" is gone —
+ * docs/features/manage-students replaced the fixed roster with one created/deleted on
+ * the picker itself, by explicit product decision (no auto-seeding). What's left of that
+ * criterion — a created student's card shows their name and chosen grade correctly — is
+ * covered by its own test below, and more fully by tests/e2e/manage-students.spec.ts.
  *
  * Screens and copy come from design.md.
  */
 
-const EXPECTED = [
-  { name: "מיקה", grade: "כיתה א׳" },
-  { name: "רותם", grade: "כיתה ו׳" },
-  { name: "עומר", grade: "כיתה ח׳" },
+const STUDENTS = [
+  { name: "מיקה", gradeId: "1" as const, gradeLabel: "כיתה א׳" },
+  { name: "רותם", gradeId: "6" as const, gradeLabel: "כיתה ו׳" },
+  { name: "עומר", gradeId: "8" as const, gradeLabel: "כיתה ח׳" },
 ];
+
+/** Every grade now practises topic by topic, so levels always sit one screen deeper. */
+async function openLevels(page: Page, studentIndex: number, topicIndex = 0) {
+  const { name, gradeId } = STUDENTS[studentIndex];
+  await createAndSelectStudent(page, gradeId, name);
+  // Mika (index 0) now has two grades available; every route here is grade 1 (א׳).
+  if (studentIndex === 0) await page.locator(".grade-card").first().click();
+  await page.locator(".topic-card").nth(topicIndex).click();
+}
 
 async function open(page: Page) {
   await page.goto("/learn-math/");
@@ -40,7 +45,8 @@ async function open(page: Page) {
 }
 
 async function pickStudent(page: Page, index: number) {
-  await page.locator(".student-card").nth(index).click();
+  const { name, gradeId } = STUDENTS[index];
+  await createAndSelectStudent(page, gradeId, name);
   // Every student now picks a grade first (docs/features/any-grade-any-student). Which
   // one doesn't matter for what these tests check, except for Mika (index 0), who needs
   // grade א׳ specifically — and it happens to be the first card for her too.
@@ -51,16 +57,20 @@ test.beforeEach(async ({ page }) => {
   await open(page);
 });
 
-test("opens on the student picker with all three students and their grades", async ({
-  page,
-}) => {
+test("a created student's card shows their name and chosen grade", async ({ page }) => {
   await expect(page.locator(".student-picker h1")).toHaveText("מי לומד היום?");
-  const cards = page.locator(".student-card");
-  await expect(cards).toHaveCount(3);
+  for (const student of STUDENTS) {
+    await page.locator(".student-card-add").click();
+    await page.getByLabel("שם").fill(student.name);
+    if (student.gradeId !== "1") await page.locator(`.grade-card-${student.gradeId}`).click();
+    await page.getByRole("button", { name: "יצירה" }).click();
+  }
 
-  for (const [i, student] of EXPECTED.entries()) {
+  const cards = page.locator(".student-card-wrap");
+  await expect(cards).toHaveCount(3);
+  for (const [i, student] of STUDENTS.entries()) {
     await expect(cards.nth(i).locator(".student-name")).toHaveText(student.name);
-    await expect(cards.nth(i).locator(".student-grade")).toHaveText(student.grade);
+    await expect(cards.nth(i).locator(".student-grade")).toHaveText(student.gradeLabel);
   }
 });
 

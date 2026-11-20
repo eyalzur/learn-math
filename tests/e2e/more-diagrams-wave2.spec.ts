@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { answerQuestion } from "./helpers/answerQuestion";
+import { createAndSelectStudent } from "./helpers/selectStudent";
 import { geometryShape } from "../../src/data/geometryShape";
 import { pythagorasTriangle } from "../../src/data/pythagorasTriangle";
 import { percentStrip } from "../../src/data/percentStrip";
@@ -38,14 +39,15 @@ import type { Question } from "../../src/data/curriculum";
  */
 
 // Every student now picks a grade first (docs/features/any-grade-any-student) — this file
-// only ever uses Rotem (ו׳, third card) and Omer (ח׳, fourth card).
+// only ever uses these two keys to mean "grade ו׳, third card" / "grade ח׳, fourth card",
+// not real roster identities any more (docs/features/manage-students removed those).
 const GRADE_CARD_INDEX: Record<string, number> = { "רותם": 2, "עומר": 3 };
 
 async function open(page: Page, student: string, topic: string) {
   await page.goto("/learn-math/");
   await page.evaluate(() => localStorage.clear());
   await page.goto("/learn-math/");
-  await page.locator(".student-card").filter({ hasText: student }).click();
+  await createAndSelectStudent(page);
   await page.locator(".grade-card").nth(GRADE_CARD_INDEX[student]).click();
   await page.locator(".topic-card").filter({ hasText: topic }).click();
 }

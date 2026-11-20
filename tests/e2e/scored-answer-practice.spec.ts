@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { answerQuestion } from "./helpers/answerQuestion";
+import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /**
  * Acceptance criteria under test (docs/features/scored-answer-practice/product-spec.md).
@@ -13,7 +14,7 @@ import { answerQuestion } from "./helpers/answerQuestion";
 
 async function openDeterministicLesson(page: Page) {
   await page.goto("/learn-math/");
-  await page.locator(".student-card").filter({ hasText: "מיקה" }).click();
+  await createAndSelectStudent(page);
   await page.getByRole("button", { name: "כיתה א׳" }).click();
   await page.getByRole("button", { name: "מספרים עד 20", exact: true }).click();
   await page.getByRole("button", { name: "מה בא אחרי" }).click();
@@ -51,7 +52,7 @@ test("a wrong answer shows the right answer and an explanation, and waits for a 
 
 test("works the same way for a different grade/student (עומר, כיתה ח׳)", async ({ page }) => {
   await page.goto("/learn-math/");
-  await page.locator(".student-card").filter({ hasText: "עומר" }).click();
+  await createAndSelectStudent(page);
   await page.getByRole("button", { name: "כיתה ח׳" }).click();
   await page.locator(".topic-card").first().click();
   await expect(page.locator(".answer-input")).toBeVisible();
@@ -60,7 +61,7 @@ test("works the same way for a different grade/student (עומר, כיתה ח׳)
 
 test("arithmetic expressions still render left-to-right", async ({ page }) => {
   await page.goto("/learn-math/");
-  await page.locator(".student-card").filter({ hasText: "מיקה" }).click();
+  await createAndSelectStudent(page);
   await page.getByRole("button", { name: "כיתה א׳" }).click();
   await page.getByRole("button", { name: "חיבור עד 10", exact: true }).click();
   const box = page.locator(".problem-box").first();

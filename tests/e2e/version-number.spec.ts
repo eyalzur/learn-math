@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { test, expect, type Page } from "@playwright/test";
 import { answerQuestion } from "./helpers/answerQuestion";
+import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /**
  * Acceptance criteria under test
@@ -83,7 +84,16 @@ test("the version has not fallen below the 1.0.0 baseline", async ({ page }) => 
   await expect(page.locator(".app-version-number")).toHaveText(PACKAGE_VERSION);
 });
 
+/** Creates a student without selecting them — leaves the picker on screen with a real
+ *  card visible, the way `createAndSelectStudent` can't (it always selects). */
+async function createStudentWithoutSelecting(page: Page, name = "דנה") {
+  await page.locator(".student-card-add").click();
+  await page.getByLabel("שם").fill(name);
+  await page.getByRole("button", { name: "יצירה" }).click();
+}
+
 test("the version is not the most prominent element on the screen", async ({ page }) => {
+  await createStudentWithoutSelecting(page);
   const version = await fontSize(page, ".app-version");
   const studentName = await fontSize(page, ".student-name");
   const studentGrade = await fontSize(page, ".student-grade");
@@ -97,7 +107,7 @@ test("the version is not the most prominent element on the screen", async ({ pag
 
   // And it sits at the bottom, below the students rather than above them.
   const versionBox = (await page.locator(".app-version").boundingBox())!;
-  const lastCardBox = (await page.locator(".student-card").last().boundingBox())!;
+  const lastCardBox = (await page.locator(".student-card-wrap").last().boundingBox())!;
   expect(versionBox.y).toBeGreaterThan(lastCardBox.y);
 });
 
@@ -136,7 +146,7 @@ test("the version appears on the first screen only", async ({ page }) => {
   await expect(version).toBeVisible();
 
   // Grade picker, then topic picker — Mika now has two grades available.
-  await page.locator(".student-card").first().click();
+  await createAndSelectStudent(page);
   await expect(version).toHaveCount(0);
   await page.locator(".grade-card").first().click();
   await expect(page.locator(".topic-card").first()).toBeVisible();
@@ -163,7 +173,7 @@ test("the version appears on the first screen only", async ({ page }) => {
 });
 
 test("the version does not appear on the history screen", async ({ page }) => {
-  await page.locator(".student-card").first().click();
+  await createAndSelectStudent(page);
   await page.locator(".history-link").click();
 
   await expect(page.locator(".app-version")).toHaveCount(0);

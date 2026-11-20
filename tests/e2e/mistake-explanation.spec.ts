@@ -1,12 +1,13 @@
 import { test, expect, type Page } from "@playwright/test";
 import { answerQuestion } from "./helpers/answerQuestion";
+import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /** Grade 1 practises topic-by-topic, so its levels sit one screen deeper. */
-async function openLevels(page: Page, studentIndex: number, topicIndex = 0) {
-  await page.locator(".student-card").nth(studentIndex).click();
-  // Mika now has two grades available; her existing routes are all grade 1 (א׳).
-  if (studentIndex === 0) await page.locator(".grade-card").first().click();
-  if (studentIndex === 0) await page.locator(".topic-card").nth(topicIndex).click();
+async function openLevels(page: Page, topicIndex = 0) {
+  await createAndSelectStudent(page);
+  // Two grades available; every route here is grade 1 (א׳).
+  await page.locator(".grade-card").first().click();
+  await page.locator(".topic-card").nth(topicIndex).click();
 }
 
 
@@ -29,7 +30,7 @@ async function startGrade1Easy(page: Page) {
   await page.goto("/learn-math/");
   await page.evaluate(() => localStorage.clear());
   await page.goto("/learn-math/");
-  await openLevels(page, 0);
+  await openLevels(page);
   // Grade 1's first topic is entered by style rather than by level. Any lesson serves —
   // these tests are about what a wrong answer produces, not about which question.
   await page.locator(".style-card").first().click();

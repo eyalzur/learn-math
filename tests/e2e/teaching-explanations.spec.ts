@@ -1,11 +1,12 @@
 import { test, expect, type Page } from "@playwright/test";
 import { answerQuestion } from "./helpers/answerQuestion";
+import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /** Every grade now practises topic by topic, so levels always sit one screen deeper. */
-async function openLevels(page: Page, studentIndex: number, topicIndex = 0) {
-  await page.locator(".student-card").nth(studentIndex).click();
-  // Mika (index 0) now has two grades available; every route here is grade 1 (א׳).
-  if (studentIndex === 0) await page.locator(".grade-card").first().click();
+async function openLevels(page: Page, topicIndex = 0) {
+  await createAndSelectStudent(page);
+  // Two grades available; every route here is grade 1 (א׳).
+  await page.locator(".grade-card").first().click();
   await page.locator(".topic-card").nth(topicIndex).click();
 }
 
@@ -22,11 +23,11 @@ async function openLevels(page: Page, studentIndex: number, topicIndex = 0) {
  * checked 3 topics out of 17 while claiming to cover every question.
  */
 
-async function startLevel(page: Page, studentIndex: number, levelIndex: number) {
+async function startLevel(page: Page, levelIndex: number) {
   await page.goto("/learn-math/");
   await page.evaluate(() => localStorage.clear());
   await page.goto("/learn-math/");
-  await openLevels(page, studentIndex);
+  await openLevels(page);
   // Grade 1's multi-style topics are entered by style now; everything else by level.
   // These tests are about the explanation, not about which chooser led to it.
   const byStyle = page.locator(".style-card");
@@ -41,7 +42,7 @@ async function answerWrong(page: Page) {
 test("the explanation refers to the numbers of the failed question", async ({ page }) => {
   // Grade 1, because grades 6 and 8 are blocked until reviewed. The explanation is built
   // by one shared code path, so which grade exercises it does not change what is proved.
-  await startLevel(page, 0, 0);
+  await startLevel(page, 0);
   const prompt = await page.locator(".problem-text").innerText();
   const operands = prompt.match(/\d+/g) ?? [];
   expect(operands.length).toBeGreaterThan(0);
@@ -51,7 +52,7 @@ test("the explanation refers to the numbers of the failed question", async ({ pa
 });
 
 test("a correct answer still shows no explanation", async ({ page }) => {
-  await startLevel(page, 0, 0);
+  await startLevel(page, 0);
   await answerWrong(page);
   const answer = (await page.locator(".feedback.wrong").innerText()).match(
     /(-?\d+(?:\.\d+)?)\s*$/,

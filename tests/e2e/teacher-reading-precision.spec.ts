@@ -1,6 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import { generateEquationsQuestion } from "../../src/data/adaptiveEquations";
 import { answerQuestion } from "./helpers/answerQuestion";
+import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /**
  * Acceptance criteria under test (docs/features/teacher-reading-precision/product-spec.md).
@@ -72,7 +73,7 @@ async function openEquationsTopic(page: Page) {
   await page.goto("/learn-math/");
   await page.evaluate(() => localStorage.clear());
   await page.goto("/learn-math/");
-  await page.locator(".student-card", { hasText: "עומר" }).click();
+  await createAndSelectStudent(page);
   await page.locator(".grade-card", { hasText: "כיתה ח" }).click();
   await page.locator(".topic-card", { hasText: "משוואות" }).first().click();
 }

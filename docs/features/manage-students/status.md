@@ -7,9 +7,10 @@
 - [x] Design — designer — 2026-11-20
 - [x] Architecture — tech-lead — 2026-11-20
 - [x] Implementation — developer — 2026-11-20
-- [ ] Tests — qa — not started
+- [x] Tests — qa — 2026-11-20 (323/324, single clean run — only the known
+  grade8-angles-congruence flake)
 
-**Current phase:** qa
+**Current phase:** done — awaiting PR review
 **Branch:** `feature/manage-students`
 **PR:** not opened yet
 

@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { answerQuestion } from "./helpers/answerQuestion";
+import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /**
  * Acceptance criteria under test
@@ -16,8 +17,6 @@ import { answerQuestion } from "./helpers/answerQuestion";
  * `innerText` returns undefined on SVG elements, so slice values are read with
  * `textContent` through `evaluateAll`.
  */
-
-const ROTEM = 1;
 
 /** Mirrors the phrase table `src/data/fractionDiagram.ts` recognizes — the ten shapes
  *  the two easiest generator tiers ("שברים פשוטים") can produce. */
@@ -55,7 +54,7 @@ async function openFractions(page: Page) {
   await page.goto("/learn-math/");
   await page.evaluate(() => localStorage.clear());
   await page.goto("/learn-math/");
-  await page.locator(".student-card").nth(ROTEM).click();
+  await createAndSelectStudent(page);
   await page.locator(".grade-card").nth(2).click(); // grade ו׳ (docs/features/any-grade-any-student)
   await page.locator(".topic-card").nth(0).click();
 }
@@ -207,8 +206,8 @@ test("a grade with no fractions is untouched", async ({ page }) => {
   await page.goto("/learn-math/");
   await page.evaluate(() => localStorage.clear());
   await page.goto("/learn-math/");
-  await page.locator(".student-card").nth(0).click(); // Mika
-  // Mika now has two grades available; this test is about her grade 1 (א׳) content.
+  await createAndSelectStudent(page);
+  // Two grades available; this test is about grade 1 (א׳) content.
   await page.locator(".grade-card").first().click();
   await page.locator(".topic-card").nth(0).click();
   // Grade 1 enters this topic by style, not by level.
