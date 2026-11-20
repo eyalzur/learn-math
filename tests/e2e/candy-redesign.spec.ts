@@ -61,7 +61,7 @@ test("grade/topic screen shows the same background", async ({ page }) => {
   expect(bg.toLowerCase()).toBe("#fff1f7");
 });
 
-test("practice/notebook screen shows the same background", async ({ page }) => {
+test("practice screen shows the same background", async ({ page }) => {
   await open(page);
   await enterPractice(page);
   const { bg } = await root(page);
@@ -82,20 +82,6 @@ test("main cards show clearly rounded corners", async ({ page }) => {
   expect(parseInt(radius)).toBeGreaterThanOrEqual(16);
 });
 
-test("the notebook's writing area is framed by a dotted accent-colored border", async ({ page }) => {
-  await open(page);
-  await enterPractice(page);
-  const stage = page.locator(".notebook-stage");
-  await expect(stage).toBeVisible();
-  const style = await stage.evaluate((el) => {
-    const s = getComputedStyle(el);
-    return { style: s.borderStyle, width: s.borderWidth, color: s.borderColor };
-  });
-  expect(style.style).toBe("dotted");
-  expect(parseInt(style.width)).toBeGreaterThan(0);
-  expect(style.color).toBe("rgb(255, 111, 174)");
-});
-
 test("text contrast against the background meets WCAG AA (>= 4.5:1)", async ({ page }) => {
   await open(page);
   const { bg, text, textH } = await root(page);
@@ -106,11 +92,10 @@ test("text contrast against the background meets WCAG AA (>= 4.5:1)", async ({ p
 test("arithmetic expressions still render left-to-right", async ({ page }) => {
   await open(page);
   await enterPractice(page);
-  const ltrHeader = page.locator(".notebook-question-header.qh-ltr");
-  await expect(ltrHeader.or(page.locator(".notebook-question-header.qh-rtl"))).toBeVisible();
-  if (await ltrHeader.count()) {
-    const direction = await ltrHeader.evaluate((el) => getComputedStyle(el).direction);
-    expect(direction).toBe("ltr");
+  const box = page.locator(".problem-box").first();
+  await expect(box).toBeVisible();
+  if (await box.evaluate((el) => el.classList.contains("box-ltr"))) {
+    await expect(box).toHaveCSS("direction", "ltr");
   }
 });
 
