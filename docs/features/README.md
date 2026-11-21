@@ -7,6 +7,7 @@ architecture, implementation notes, and tests.
 | Feature | Status | Details |
 |---|---|---|
 | אבחון קשיים לאורך זמן | 🟡 ready for review | [status](./struggle-diagnosis/status.md) |
+| קצב התקדמות בקושי — ניתן לכיוון | 🟢 done — מוזג ל-main | [status](./adaptive-pace-setting/status.md) |
 | קישורי-טקסט (חזרה/החלף תלמיד) — עיצוב מחדש | 🟢 done — ממתין ל-PR | [status](./back-link-redesign/status.md) |
 | זרקור-מנוחה — תנועה עדינה ומתמשכת | 🟢 done — מוזג ל-main | [status](./idle-spotlight/status.md) |
 | התקנת האפליקציה כ-PWA באייפון ובאנדרואיד | 🟢 done — מוזג ל-main | [status](./pwa-install/status.md) |

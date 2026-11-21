@@ -20,8 +20,8 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     version: "1.51.0",
-    icon: "💡",
-    description: "חדש: במסך \"ההתקדמות שלי\", נושא שקשה בו לאחרונה מקבל כרטיס עם קישור לתרגול ישיר.",
+    icon: "🎯",
+    description: "חדש: בורר \"קצב שינוי הקושי\" (אטי/בינוני/מהיר) בדיאלוג ⚙️, לכל תרגול אדפטיבי.",
   },
   {
     version: "1.50.1",

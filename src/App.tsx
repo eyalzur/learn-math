@@ -22,7 +22,13 @@ import {
 } from "./data/adaptiveProgress";
 import { userStore } from "./data/userStore";
 import { startIdleSpotlightObserver } from "./data/idleSpotlight";
-import { readAloud as readAloudFor, setReadAloud } from "./data/preferences";
+import {
+  readAloud as readAloudFor,
+  setReadAloud,
+  paceLevel as paceLevelFor,
+  setPaceLevel,
+} from "./data/preferences";
+import type { PaceLevel } from "./data/adaptivePace";
 import "./App.css";
 
 const STORAGE_KEY = "learn-math:student";
@@ -351,8 +357,14 @@ function App() {
   function handleAdaptiveAnswered(topic: Topic, correct: boolean) {
     const adaptive = topic.adaptive;
     if (!adaptive || !adaptiveSession) return;
-    const streak = correct ? adaptiveSession.streak + 1 : 0;
-    const difficulty = adaptive.nextDifficulty(adaptiveSession.difficulty, correct, streak);
+    const streak = correct
+      ? adaptiveSession.streak > 0
+        ? adaptiveSession.streak + 1
+        : 1
+      : adaptiveSession.streak < 0
+        ? adaptiveSession.streak - 1
+        : -1;
+    const difficulty = adaptive.nextDifficulty(adaptiveSession.difficulty, correct, streak, paceLevel);
     // Written on every answer, not only at the end of a session — this is also the save
     // point for a session abandoned via "חזרה" (there is no separate save there), see
     // docs/features/adaptive-lesson-start/architecture.md.
@@ -401,6 +413,7 @@ function App() {
 
   const grade = grades.find((g) => g.id === gradeId)!;
   const readAloud = readAloudFor(student.id);
+  const paceLevel = paceLevelFor(student.id);
 
   function finish(topic: Topic | null, lesson: Lesson, correctCount: number) {
     recordPractice({
@@ -435,6 +448,11 @@ function App() {
     onReadAloudChange: (value: boolean) => {
       setReadAloud(student.id, value);
       // The value lives in storage, so a render is needed to pick it back up.
+      setPreferencesTick((n) => n + 1);
+    },
+    paceLevel,
+    onPaceLevelChange: (levelId: string) => {
+      setPaceLevel(student.id, levelId as PaceLevel);
       setPreferencesTick((n) => n + 1);
     },
   };

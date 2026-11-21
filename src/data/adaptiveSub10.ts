@@ -1,4 +1,5 @@
 import type { Question } from "./curriculum";
+import { nextAdaptiveDifficulty, type PaceLevel } from "./adaptivePace";
 
 /**
  * "חיסור עד 10", built at runtime instead of written 30 questions deep — the subtraction
@@ -107,7 +108,11 @@ export const SUB10_MAX_DIFFICULTY = 3;
 export const SUB10_INITIAL_DIFFICULTY = 1;
 export const SUB10_QUESTION_COUNT = 20;
 
-export function nextSub10Difficulty(current: number, wasCorrect: boolean, streak: number): number {
-  if (!wasCorrect) return Math.max(SUB10_MIN_DIFFICULTY, current - 1);
-  return streak >= 2 ? Math.min(SUB10_MAX_DIFFICULTY, current + 1) : current;
+export function nextSub10Difficulty(
+  current: number,
+  wasCorrect: boolean,
+  streak: number,
+  pace: PaceLevel,
+): number {
+  return nextAdaptiveDifficulty(current, wasCorrect, streak, SUB10_MIN_DIFFICULTY, SUB10_MAX_DIFFICULTY, pace);
 }
