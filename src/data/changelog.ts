@@ -19,6 +19,11 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.50.1",
+    icon: "🔧",
+    description: "תיקון: בדיאלוג \"הוספת תלמיד/ה\", כפתורי הכיתה כבר לא נושמים כולם ביחד.",
+  },
+  {
     version: "1.50.0",
     icon: "🔗",
     description: "קישורי \"חזרה\" ו\"החלף תלמיד\" מרגישים קלילים יותר, לא נדחסים זה בזה.",

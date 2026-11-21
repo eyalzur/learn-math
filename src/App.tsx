@@ -21,7 +21,7 @@ import {
   clearStudent as clearStudentAdaptiveTiers,
 } from "./data/adaptiveProgress";
 import { userStore } from "./data/userStore";
-import { reindexIdleSpotlight } from "./data/idleSpotlight";
+import { startIdleSpotlightObserver } from "./data/idleSpotlight";
 import { readAloud as readAloudFor, setReadAloud } from "./data/preferences";
 import "./App.css";
 
@@ -183,13 +183,14 @@ function App() {
     });
   }, []);
 
-  // Re-indexes the currently-visible cards/buttons for the idle-spotlight CSS animation
-  // (docs/features/idle-spotlight/) after every render — deliberately no dependency
-  // array, since any navigation/state change can change which elements are on screen.
-  // The scan itself is cheap (a few dozen elements at most); see idleSpotlight.ts.
-  useEffect(() => {
-    reindexIdleSpotlight();
-  });
+  // Keeps the idle-spotlight CSS animation's --spot-i/--spot-n indices live for the
+  // app's whole lifetime via a MutationObserver, not React's own render cycle — a
+  // dialog whose open state lives in a descendant component's own useState (e.g.
+  // StudentPicker's create-student dialog) never re-renders App itself, so a reindex
+  // tied to App's render cycle alone misses it. Found live: that dialog's own
+  // .grade-card buttons never got a --spot-i, defaulting their stagger delay to the
+  // same 0s and "breathing" in sync instead of one at a time. See idleSpotlight.ts.
+  useEffect(() => startIdleSpotlightObserver(), []);
 
   /** The per-student settings (read-aloud, hold-to-zoom strength) are stored rather than
    *  held in state; this forces a re-read after either of them is written. */
