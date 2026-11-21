@@ -1,4 +1,5 @@
 import type { Question } from "./curriculum";
+import { nextAdaptiveDifficulty, type PaceLevel } from "./adaptivePace";
 
 /**
  * "חיבור עד 1000", built at runtime instead of written 30 questions deep.
@@ -363,7 +364,11 @@ export const ADD100_QUESTION_COUNT = 20;
  * One wrong answer is enough to back off immediately — a real struggle gets a lighter
  * question right away, not after a run of misses.
  */
-export function nextAdd100Difficulty(current: number, wasCorrect: boolean, streak: number): number {
-  if (!wasCorrect) return Math.max(ADD100_MIN_DIFFICULTY, current - 1);
-  return streak >= 2 ? Math.min(ADD100_MAX_DIFFICULTY, current + 1) : current;
+export function nextAdd100Difficulty(
+  current: number,
+  wasCorrect: boolean,
+  streak: number,
+  pace: PaceLevel,
+): number {
+  return nextAdaptiveDifficulty(current, wasCorrect, streak, ADD100_MIN_DIFFICULTY, ADD100_MAX_DIFFICULTY, pace);
 }
