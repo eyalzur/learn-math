@@ -19,9 +19,9 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
-    version: "1.52.1",
-    icon: "✨",
-    description: "זרקור-המנוחה עובר בין כפתורים לפי הסדר שהעין רואה (מלמעלה למטה, מימין לשמאל), ובולט יותר.",
+    version: "1.53.0",
+    icon: "🚪",
+    description: "כל מסך-תפריט דוהה בעדינות פנימה כשנכנסים אליו.",
   },
   {
     version: "1.52.0",
