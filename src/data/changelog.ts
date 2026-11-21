@@ -19,6 +19,11 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.51.2",
+    icon: "📌",
+    description: "בלוג הגרסאות, כפתור הסגירה נשאר קבוע על המסך גם כשגוללים ברשימה.",
+  },
+  {
     version: "1.51.1",
     icon: "🔁",
     description: "תיקון: בנושאים אדפטיביים, שתי שאלות זהות (אותם מספרים) כבר לא יוצאות ברצף.",

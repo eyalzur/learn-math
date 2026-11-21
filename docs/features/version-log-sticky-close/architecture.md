@@ -87,3 +87,18 @@ parent actually is a flex container.
 
 ## Open Questions
 None.
+
+## Implementation Notes
+
+Built exactly as planned, no deviations.
+
+- `src/components/VersionLog.tsx`: `<ul className="version-log-list">` wrapped in a new
+  `<div className="version-log-scroll">`.
+- `src/App.css`: `.version-log-dialog` gained `display: flex; flex-direction: column`,
+  lost `overflow-y`/`overscroll-behavior` (moved to the new `.version-log-scroll`, plus
+  `min-height: 0`). `.version-log-title` gained `flex-shrink: 0`. New scoped rule
+  `.version-log-dialog .settings-actions { flex-shrink: 0; }`.
+- Version bumped `1.51.1 → 1.51.2` (`npm run bump:fix`) + changelog entry.
+- `npm run build` and `npm run lint` clean. Visual verification (dev server,
+  `npm run test:e2e`) deliberately deferred — port 5173 occupied by an unrelated PR's
+  background test run at implementation time.
