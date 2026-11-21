@@ -158,13 +158,12 @@ test("every clock's svg renders left-to-right, inside the RTL page", async ({ pa
   expect(direction).toBe("ltr");
 });
 
-test("the lesson (📖) screen shows the clock face too, for every difficulty tier", async ({
+test("the lesson screen shows the clock face too, for every difficulty tier", async ({
   page,
 }) => {
   await createAndSelectStudent(page);
   await page.locator(".grade-card-2").click();
-  const row = page.locator(".topic-row", { has: page.locator(".topic-card", { hasText: "שעון וזמן" }) });
-  await row.locator(".lesson-link").click();
+  await page.locator(".topic-card", { hasText: "שעון וזמן" }).click();
 
   // Easy tier's example.
   await expect(page.locator(".clock-face")).toHaveCount(1);

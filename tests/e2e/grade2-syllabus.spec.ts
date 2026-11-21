@@ -65,13 +65,15 @@ test("grade ב׳ shows five topics, including כפל וחילוק and צורות
   }
 });
 
-test("both new topics still offer a lesson (📖) alongside practice, like every other topic", async ({
+test("both new topics enter a real lesson on click, like every other topic", async ({
   page,
 }) => {
   await toGradeB(page);
   for (const title of ["כפל וחילוק", "צורות וגופים"]) {
-    const row = page.locator(".topic-row", { has: page.locator(".topic-card", { hasText: title }) });
-    await expect(row.locator(".lesson-link")).toBeVisible();
+    await page.locator(".topic-card", { hasText: title }).click();
+    await expect(page.locator(".problem-box").first()).toBeVisible();
+    await expect(page.locator(".answer-input")).toHaveCount(0);
+    await page.getByRole("button", { name: "← חזרה" }).click();
   }
 });
 

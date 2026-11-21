@@ -19,6 +19,11 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.51.0",
+    icon: "📖",
+    description: "כניסה לנושא מובילה עכשיו קודם לשיעור, עם \"דלג לתרגול\" מיידי וברור.",
+  },
+  {
     version: "1.50.0",
     icon: "🔗",
     description: "קישורי \"חזרה\" ו\"החלף תלמיד\" מרגישים קלילים יותר, לא נדחסים זה בזה.",
