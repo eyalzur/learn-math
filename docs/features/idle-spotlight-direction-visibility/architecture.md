@@ -93,3 +93,19 @@ idle-breathe`.
 
 ## Open Questions
 None.
+
+## Implementation Notes
+
+Built exactly as planned, no deviations.
+
+- `src/data/idleSpotlight.ts`: added `sortByScreenPosition` exactly as architecture.md
+  specified; `reindex()`'s `visible` is now `sortByScreenPosition(all.filter(...))`
+  instead of the plain filter. Module docstring updated to mention visit order is
+  screen-position, not DOM order.
+- `src/App.css`'s `@keyframes idle-breathe` 12.5% step: `9px`/`26px` → `13px`/`38px`.
+  Nothing else in the keyframe, the `animation-delay` formulas, or the pause rules
+  touched.
+- Version bumped `1.50.1 → 1.50.2` (`npm run bump:fix`) + changelog entry.
+- `npm run build` and `npm run lint` clean. Visual verification (dev server,
+  `npm run test:e2e`) deliberately deferred — port 5173 was occupied by an unrelated PR's
+  background test run at implementation time; see status.md for when that happened.

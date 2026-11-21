@@ -19,6 +19,11 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.50.2",
+    icon: "✨",
+    description: "זרקור-המנוחה עובר בין כפתורים לפי הסדר שהעין רואה (מלמעלה למטה, מימין לשמאל), ובולט יותר.",
+  },
+  {
     version: "1.50.1",
     icon: "🔧",
     description: "תיקון: בדיאלוג \"הוספת תלמיד/ה\", כפתורי הכיתה כבר לא נושמים כולם ביחד.",
