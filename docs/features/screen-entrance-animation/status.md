@@ -10,9 +10,13 @@
 - [x] Implementation — developer — 2026-11-21
 - [x] Tests — qa — 2026-11-21, 342/343 (known flake only, --workers=1)
 
-**Current phase:** done — ready for PR
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `feature/screen-entrance-animation`
-**PR:** not opened yet
+**PR:** https://github.com/eyalzur/learn-math/pull/106 — מוזג 2026-11-21
+
+**מיזוג `main` פנימה (2026-11-21):** `main` זז משמעותית מאז פתיחת ה-PR. קונפליקטים
+קלים (README/CLAUDE.md/changelog/package.json בלבד — App.css/App.tsx התמזגו נקי).
+גרסה סופית `1.50.0` → `1.53.0`.
 
 ## Open questions / blockers
 None.

@@ -19,6 +19,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.53.0",
+    icon: "🚪",
+    description: "כל מסך-תפריט דוהה בעדינות פנימה כשנכנסים אליו.",
+  },
+  {
+    version: "1.52.0",
+    icon: "💡",
+    description: "חדש: במסך \"ההתקדמות שלי\", נושא שקשה בו לאחרונה מקבל כרטיס עם קישור לתרגול ישיר.",
+  },
+  {
     version: "1.51.1",
     icon: "🔁",
     description: "תיקון: בנושאים אדפטיביים, שתי שאלות זהות (אותם מספרים) כבר לא יוצאות ברצף.",
