@@ -92,6 +92,20 @@ export function TopicLesson({ topicTitle, gradeLabel, questions, onBack, onPract
         >
           ← חזרה
         </button>
+        {/* Visible and identical on every page, not just the last — the lesson is now
+           the default entry point for every reviewed topic (docs/features/
+           lesson-always-first), so whoever already knows the material needs an
+           immediate way out, not just the "→ לתרגול" button waiting at the end. */}
+        <button
+          type="button"
+          className="link-button"
+          onClick={() => {
+            stopSpeaking();
+            onPractice();
+          }}
+        >
+          דלג לתרגול →
+        </button>
         <span className="progress">{gradeLabel}</span>
       </div>
       <h2>{topicTitle}</h2>

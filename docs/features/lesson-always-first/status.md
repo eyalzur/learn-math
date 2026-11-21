@@ -5,14 +5,21 @@
 
 ## Progress
 - [x] Product spec — product-manager — 2026-11-21
-- [ ] Design — designer — not started
-- [ ] Architecture — tech-lead — not started
-- [ ] Implementation — developer — not started
+- [x] Design — designer — 2026-11-21
+- [x] Architecture — tech-lead — 2026-11-21
+- [ ] Implementation — developer — component changes built and demoed,
+      App.tsx wiring not yet done (see below)
 - [ ] Tests — qa — not started
 
-**Current phase:** designer
+**Current phase:** ממתין לאישור-מוק לפני חיווט ב-`App.tsx`
 **Branch:** `feature/lesson-always-first`
 **PR:** not opened yet
+
+**מוק לאישור:** https://claude.ai/artifact/K9Bdi3rpUqxNCyBjStLA1h — `TopicLesson.tsx`
+ו-`TopicPicker.tsx` כבר שונו בפועל (לא placeholder), מודגמים כאן עם נתונים
+אמיתיים (כיתה ו׳) מחוץ ל-`App.tsx`. אחרי אישור: שינוי-חיווט אחד ב-`App.tsx`
+(`onSelect={enterLesson}` במקום `enterTopic` בשני מקומות) + build/lint/e2e
+מלאים + טסטים חדשים — ראו architecture.md's "תהליך-אישור".
 
 ## Open questions / blockers
 None.
