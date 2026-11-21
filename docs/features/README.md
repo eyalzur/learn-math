@@ -6,6 +6,7 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
+| השיעור הוא הכניסה הדיפולטיבית לנושא | 🟡 in design | [status](./lesson-always-first/status.md) |
 | קישורי-טקסט (חזרה/החלף תלמיד) — עיצוב מחדש | 🟢 done — ממתין ל-PR | [status](./back-link-redesign/status.md) |
 | זרקור-מנוחה — תנועה עדינה ומתמשכת | 🟢 done — מוזג ל-main | [status](./idle-spotlight/status.md) |
 | התקנת האפליקציה כ-PWA באייפון ובאנדרואיד | 🟢 done — מוזג ל-main | [status](./pwa-install/status.md) |
