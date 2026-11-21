@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
-import { answerViaNotebook } from "./helpers/notebookAnswer";
+import { answerQuestion } from "./helpers/answerQuestion";
+import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /**
  * Acceptance criteria under test (docs/features/style-lessons/product-spec.md).
@@ -10,10 +11,12 @@ import { answerViaNotebook } from "./helpers/notebookAnswer";
  * only one kind are left exactly as they were.
  */
 
+// Not roster identities any more (docs/features/manage-students removed the fixed
+// roster) — just markers for "grade 1 (א׳)'s topics" vs. "grade 6 (ו׳)'s", below.
 const MIKA = 0;
 const ROTEM = 1;
 
-/** Mika's topics, in the order the picker shows them. */
+/** Grade 1's (א׳) topics, in the order the picker shows them. */
 const NUMBERS = 0; // מספרים עד 20 — five styles
 const ADD10 = 1; // חיבור עד 10 — one style; became adaptive later, see below
 const PLACE = 4; // עשרות ויחידות — six styles
@@ -23,50 +26,38 @@ async function openTopic(page: Page, student: number, topic: number) {
   await page.goto("/learn-math/");
   await page.evaluate(() => localStorage.clear());
   await page.goto("/learn-math/");
-  await page.locator(".student-card").nth(student).click();
-  // Every student now picks a grade first (docs/features/any-grade-any-student). Mika's
-  // route here is always grade א׳ (first card); Rotem's is grade ו׳ (third card).
+  await createAndSelectStudent(page);
+  // Every student picks a grade first (docs/features/any-grade-any-student) — grade א׳
+  // (first card) for MIKA's topics above, grade ו׳ (third card) for ROTEM's.
   await page.locator(".grade-card").nth(student === MIKA ? 0 : 2).click();
   await page.locator(".topic-card").nth(topic).click();
 }
 
 // ------------------------------------------------- which screen a topic opens on
 
-test("a topic with several styles asks which style, not which level", async ({ page }) => {
+/**
+ * Which screen a topic opens on, from three angles — a multi-style topic asks which
+ * style (not which level), a single-style topic is untouched by this feature (it now goes
+ * straight to adaptive practice, its own separate way of never asking a single-choice
+ * question), and an unclassified grade's topic never shows the *style* screen either. Same
+ * assertion shape each time (does `.style-card` show, or not), just a different topic/grade
+ * input, so one test walks all three rather than three near-identical page loads.
+ */
+test("a topic opens on the right screen: multi-style asks which style, single-style and unclassified never do", async ({
+  page,
+}) => {
   await openTopic(page, MIKA, NUMBERS);
-
   await expect(page.locator(".style-card")).toHaveCount(5);
   await expect(page.locator(".level-card"), "the level screen must not also appear").toHaveCount(
     0,
   );
   await expect(page.locator(".subtitle")).toHaveText("מה לומדים?");
-});
 
-test("a topic with one style is untouched and never shows the new screen", async ({ page }) => {
-  // "חיבור עד 10" is one kind of question — a screen offering a single choice teaches a
-  // child that there is a decision here when there is not. It used to land on the level
-  // screen to prove that; it moved to adaptive difficulty later
-  // (docs/features/mika-adaptive-difficulty), which is its own, different way of never
-  // asking a single-choice question — it does not ask at all, straight into practice.
-  // What still matters here is style-lessons' own concern: the style screen never shows.
   await openTopic(page, MIKA, ADD10);
-
   await expect(page.locator(".style-card")).toHaveCount(0);
   await expect(page.locator(".problem-text")).toBeVisible();
-});
 
-test("a grade that has not been classified into styles never shows the style screen", async ({
-  page,
-}) => {
-  // This used to demonstrate "an unclassified grade falls back to plain levels" — true
-  // when it was written, but Rotem's topics have since all moved to adaptive difficulty
-  // (docs/features/levels-as-practice), which is now the fallback instead of levels for
-  // every one of them. "A topic with one style still shows the level screen" above
-  // already covers the levels case, on Mika's own unclassified single-style topic. What
-  // still matters here, and is still style-lessons' own concern: an unclassified topic
-  // must never show the *style* screen either, whichever of the other two it lands on.
   await openTopic(page, ROTEM, 0);
-
   await expect(page.locator(".style-card")).toHaveCount(0);
   await expect(page.locator(".problem-text")).toBeVisible();
 });
@@ -141,7 +132,7 @@ test("the questions climb, so the hardest is not the first one met", async ({ pa
   for (let i = 0; i < 7; i++) {
     const prompt = await page.locator(".problem-text").innerText();
     seen.push(Number(prompt.match(/\d+/)![0]));
-    await answerViaNotebook(page, 999999);
+    await answerQuestion(page, 999999);
     const next = page.getByRole("button", { name: /^(הבא|סיום)$/ });
     if (!(await next.count())) break;
     await next.click();
@@ -173,7 +164,7 @@ test("history says which style was practised, not just which topic", async ({ pa
   await page.locator(".style-card").filter({ hasText: "כמה עשרות" }).click();
 
   for (let i = 0; i < 5; i++) {
-    await answerViaNotebook(page, 999999);
+    await answerQuestion(page, 999999);
     await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
   }
 

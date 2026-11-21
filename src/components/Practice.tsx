@@ -1,36 +1,18 @@
 import type { Lesson } from "../data/style";
 import { useEffect, useRef, useState } from "react";
-import { isHebrewPrompt, promptSegments, promptWithEquals } from "../data/curriculum";
+import { isHebrewPrompt, promptWithEquals } from "../data/curriculum";
 import type { Diagnosis } from "../data/diagnose";
 import { diagnose } from "../data/diagnose";
-import type { NotebookPage } from "../data/notebook";
-import { createBlankPage, MAX_PAGES, PAGE_HEIGHT, PAGE_WIDTH, pageHasContent } from "../data/notebook";
-import type { PageReading } from "../lib/notebookServer";
-import { readPageWithTeacher } from "../lib/notebookServer";
 import { buildExplanation, explanationSpeechParts } from "../data/questionExplanation";
 import { AngleShape } from "./AngleShape";
 import { ClockFace } from "./ClockFace";
-import { PracticeNotebook } from "./PracticeNotebook";
 import { QuestionExplanation } from "./QuestionExplanation";
 import { segmented } from "./segmented";
 import { primeVoices, speak, speechParts, speechSupported, stopSpeaking } from "../data/speech";
 
-/**
- * Which box is talking. One engine, four speak buttons — a boolean would light up "stop"
- * on all of them while only one is being read.
- */
-type SpeakingBox = "question" | "diagnosis" | "explanation" | "teacher" | null;
-
-/** What the teacher wrote directly on the notebook page after reading it — see
- *  docs/features/notebook-teacher-marks/. */
-interface TeacherMark {
-  color: "green" | "amber" | "red";
-  text: string;
-  /** A rough estimate (0–1 fraction of the page) of where the errorPointer issue was
-   *  written — only ever set alongside an errorPointer-derived text, never on its own. See
-   *  "עדכון סבב ב׳" in this feature's docs. */
-  location?: { x: number; y: number };
-}
+/** Which box is talking. One engine, three speak buttons — a boolean would light up "stop"
+ *  on all of them while only one is being read. */
+type SpeakingBox = "question" | "diagnosis" | "explanation" | null;
 
 interface PracticeProps {
   /**
@@ -42,51 +24,13 @@ interface PracticeProps {
   onExit: () => void;
   /** This student has every new question read to them without asking. */
   readAloud: boolean;
-  /** This student's hold-to-zoom strength, already resolved to a multiplier — `null` when
-   *  they have it switched off. Passed straight through to the notebook. */
-  holdZoomFactor: number | null;
-  /** How far this student's notebook view jumps between finished strokes, already resolved
-   *  to a fraction of the stage size — `null` when off. Passed straight through to the
-   *  notebook. */
-  autoScrollJumpFraction: number | null;
-  /** This student's nav-button speed, already resolved to a step size and repeat interval
-   *  — `holdIntervalMs: null` means holding a button doesn't repeat. Passed straight
-   *  through to the notebook, same as `holdZoomFactor`. */
-  panStepPx: number;
-  panHoldIntervalMs: number | null;
-  /** This student's notebook toolbar button diameter, already resolved to pixels. See
-   *  docs/features/notebook-toolbar-redesign/. */
-  buttonDiameterPx: number;
-  /** How long after a stroke/pan ends before the suggested-next-action animation starts, or
-   *  `null` when the student has it switched off. */
-  suggestionDelayMs: number | null;
-  /** Whether this student's notebook shows the directional nav pad. See
-   *  docs/features/notebook-nav-buttons-visibility/. */
-  navPadVisible: boolean;
-  /** Opens the ⚙️ settings dialog — owned and rendered by `App.tsx`. Passed straight
-   *  through to the notebook's own settings-entry button. */
-  onOpenSettings: () => void;
   /** Fires once per question, right after right/wrong is decided — before the child even
    *  sees the feedback or explanation. Only an adaptive lesson supplies this; every other
    *  lesson leaves it unset and nothing here changes for it. */
   onAnswered?: (correct: boolean) => void;
 }
 
-export function Practice({
-  lesson,
-  onFinish,
-  onExit,
-  readAloud,
-  holdZoomFactor,
-  autoScrollJumpFraction,
-  panStepPx,
-  panHoldIntervalMs,
-  buttonDiameterPx,
-  suggestionDelayMs,
-  navPadVisible,
-  onOpenSettings,
-  onAnswered,
-}: PracticeProps) {
+export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: PracticeProps) {
   const [index, setIndex] = useState(0);
   const [feedback, setFeedback] = useState<"correct" | "wrong" | null>(null);
   const [correctCount, setCorrectCount] = useState(0);
@@ -95,6 +39,8 @@ export function Practice({
    *  flags — the second is unreachable without the first, and one number resets in one
    *  line when the question changes. */
   const [hintsShown, setHintsShown] = useState(0);
+  /** The student's typed final answer, not yet checked. */
+  const [answerInput, setAnswerInput] = useState("");
 
   /** What the wrong answer says about the thinking behind it, when anything does. */
   const [diagnosis, setDiagnosis] = useState<Diagnosis | null>(null);
@@ -102,84 +48,10 @@ export function Practice({
   const [followUpResult, setFollowUpResult] = useState<"right" | "wrong" | null>(null);
   const [askedToSee, setAskedToSee] = useState(false);
 
-  /**
-   * The notebook's pages. Deliberately state on *this* component, not a screen of its own
-   * in App.tsx: that's what lets it survive across questions (nothing here resets when
-   * `index` changes — see `next()`, which appends a fresh page rather than clearing this)
-   * while still disappearing the moment the child leaves practice.
-   */
-  const [pages, setPages] = useState<NotebookPage[]>(() => [createBlankPage()]);
-  const [currentPageIndex, setCurrentPageIndex] = useState(0);
-  /** Which question's index each page in `pages` was written for — a parallel array, kept
-   *  in lockstep with `pages` in every place `pages` changes. Needed because "which page is
-   *  being *viewed*" (`currentPageIndex`, driven by the ◀/▶ page-nav buttons) and "which
-   *  question is currently *live*" (`index`, driven only by `next()`) are two different
-   *  things once a student navigates back to an earlier page: the page itself doesn't
-   *  change, but without this, the written-question header had no way to know which
-   *  question that page was actually for, and silently showed the live one instead. See
-   *  docs/features/notebook-question-on-page/architecture.md, "Implementation Notes". */
-  const [pageQuestionIndex, setPageQuestionIndex] = useState<number[]>(() => [0]);
-
-  /** A page-space, page-owned companion to `teacherNote` below, not a replacement for it
-   *  (the panel keeps using `teacherNote`/`feedback` exactly as before). Derived once, in
-   *  `handleTeacherReading`, from the same reading that already sets `teacherNote`/`feedback`
-   *  — not a second source of truth. Updated in lockstep with `pageQuestionIndex` (same two
-   *  call sites in `next()`, same per-page indexing) for the same reason: a page's own mark
-   *  must stay with that page when navigating back to it, not follow whichever question is
-   *  currently live. See docs/features/notebook-teacher-marks/architecture.md. */
-  const [pageTeacherMarks, setPageTeacherMarks] = useState<(TeacherMark | null)[]>(() => [null]);
-
-  /** Talking to the teacher: idle (nothing sent yet, or a previous reading is showing),
-   *  sending (waiting on the server), or error (the call itself failed — network/server,
-   *  distinct from a reading that came back but wasn't confident, see `uncertain` below). */
-  const [sendState, setSendState] = useState<"idle" | "sending" | "error">("idle");
-  /** The teacher read the page but wasn't confident what was written — an invitation to
-   *  write again, not a verdict. Never set alongside `feedback`: an uncertain reading has
-   *  no answer to check. */
-  const [uncertain, setUncertain] = useState(false);
-  /** What the teacher understood, once a reading comes back confident. */
-  const [teacherNote, setTeacherNote] = useState<{ reflection: string; errorPointer?: string } | null>(null);
-  /** The most recent reading, kept around only so a correction can tell the server what it's
-   *  correcting (docs/features/teacher-misread-log/) — the client never displays this
-   *  directly, `teacherNote`/`uncertain` do that. Reset in `next()`. */
-  const [lastReading, setLastReading] = useState<PageReading | null>(null);
-
-  /** Telling the teacher she got it wrong (docs/features/notebook-teacher-feedback/):
-   *  whether the free-text correction form is open, its content, and whether the reading
-   *  currently on screen is the result of one (so the heading can say "...עכשיו"). */
-  const [correctionOpen, setCorrectionOpen] = useState(false);
-  const [correctionText, setCorrectionText] = useState("");
-  const [isCorrectedReading, setIsCorrectedReading] = useState(false);
-  /** Whether *this* question is currently included in `correctCount` — lets a corrected
-   *  reading that flips right/wrong adjust the score by exactly one instead of guessing
-   *  from the reading alone (see architecture.md, "מונה כפול"). Reset in `next()`. */
-  const questionCountedRef = useRef(false);
-  /** Whether `onAnswered` has already fired for this question. It drives adaptive
-   *  difficulty (docs/features/adaptive-difficulty/), which assumes exactly one call per
-   *  question — a corrected reading updates everything else on screen but deliberately
-   *  never fires this a second time (see architecture.md, Risks). Reset in `next()`. */
-  const onAnsweredFiredRef = useRef(false);
-
-  /** The notebook box expanded to (almost) the whole screen — a writing-mode toggle, not a
-   *  result mode: see the effect below, which drops it the moment a reading comes back
-   *  confident (design.md, מצב F). */
-  const [fullscreen, setFullscreen] = useState(false);
-  // What the student asked for, as opposed to what is showing right now: a reading or the
-  // correction form drops fullscreen temporarily, and "הבא" brings it back. Only the toggle
-  // and the ✕ change this — see docs/features/notebook-toolbar-actions/.
-  const [fullscreenWanted, setFullscreenWanted] = useState(false);
-
   // Voices load asynchronously, so warm the list before the first press.
   useEffect(primeVoices, []);
   // Leaving mid-sentence must not leave a voice talking over the next screen.
   useEffect(() => stopSpeaking, []);
-  // A confident reading means the page is locked and the result is showing — the whole
-  // reason to expand the notebook (room to write) is gone, and the result needs the normal
-  // full-width layout, not the compact strip. See design.md, מצב F: "מסך מלא הוא
-  // מצב-כתיבה, לא מצב-תוצאה".
-  useEffect(() => {
-    if (feedback !== null) setFullscreen(false);
-  }, [feedback]);
 
   const question = lesson.questions[index];
   const isLast = index === lesson.questions.length - 1;
@@ -228,6 +100,17 @@ export function Practice({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hintsShown]);
 
+  // A correct answer moves on by itself — no extra tap. Scheduled from an effect, not from
+  // inside checkAnswer() directly, so `next()` here closes over the *already-updated*
+  // correctCount (checkAnswer's own closure still has the pre-increment value at the point
+  // it calls setCorrectCount — see docs/features/scored-answer-practice/architecture.md).
+  useEffect(() => {
+    if (feedback !== "correct") return;
+    const timer = setTimeout(() => next(), 700);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [feedback]);
+
   /**
    * Whether the correct answer and the worked explanation are on screen yet.
    *
@@ -249,144 +132,21 @@ export function Practice({
    * turning into words.
    */
   function questionParts(): string[] {
-    const prompt = isWordProblem
-      ? promptSegments(question.prompt)
-          .map((s) => (s.kind === "math" ? `\`${s.value}\`` : s.value))
-          .join(" ")
-      : `\`${question.prompt}\``;
+    const prompt = isWordProblem ? question.prompt : `\`${question.prompt}\``;
     return speechParts([prompt, ...question.hints.slice(0, hintsShown)]);
   }
 
-  /** Never the correct answer — only the exercise text already on screen. Judging
-   *  correct/incorrect stays entirely with the local check below, never with the model. */
-  function currentExpectedPrompt(): string {
-    return question.prompt.replace(/`/g, "");
-  }
-
-  /**
-   * What the teacher's reading means for this question — the direct replacement for the
-   * old `checkAnswer`, driven by `reading.finalAnswer` instead of a typed number.
-   *
-   * Reentrant by design (docs/features/notebook-teacher-feedback/architecture.md): a
-   * corrected reading calls this again for the same question, so it always resets what the
-   * *previous* reading derived before applying the new one, rather than assuming it's the
-   * first and only call. `questionCountedRef`/`onAnsweredFiredRef` start `false`, so the
-   * very first call behaves exactly as before this feature existed.
-   */
-  function handleTeacherReading(reading: PageReading, corrected: boolean) {
-    setLastReading(reading);
-    setIsCorrectedReading(corrected);
-    setFollowUpInput("");
-    setFollowUpResult(null);
-    setAskedToSee(false);
-    setDiagnosis(null);
-
-    if (!reading.certain) {
-      setUncertain(true);
-      setTeacherNote(null);
-      setFeedback(null);
-      setPageTeacherMarks((prev) => {
-        const updated = [...prev];
-        updated[currentPageIndex] = null;
-        return updated;
-      });
-      if (questionCountedRef.current) {
-        setCorrectCount((c) => c - 1);
-        questionCountedRef.current = false;
-      }
-      return;
-    }
-    setUncertain(false);
-    setTeacherNote({ reflection: reading.processReflection, errorPointer: reading.errorPointer });
-    const isCorrect = reading.finalAnswer === question.answer;
+  function checkAnswer() {
+    if (feedback !== null) return;
+    const trimmed = answerInput.trim();
+    if (trimmed === "") return;
+    const parsed = Number(trimmed);
+    if (Number.isNaN(parsed)) return;
+    const isCorrect = parsed === question.answer;
     setFeedback(isCorrect ? "correct" : "wrong");
-    const mark: TeacherMark = reading.errorPointer
-      ? {
-          color: isCorrect ? "amber" : "red",
-          text: `${isCorrect ? "✓" : "✗"} ${reading.errorPointer}`,
-          ...(reading.errorLocation ? { location: reading.errorLocation } : {}),
-        }
-      : isCorrect
-        ? { color: "green", text: "✓ יפה מאוד!" }
-        : { color: "red", text: "✗ כדאי לבדוק שוב." };
-    setPageTeacherMarks((prev) => {
-      const updated = [...prev];
-      updated[currentPageIndex] = mark;
-      return updated;
-    });
-
-    if (isCorrect && !questionCountedRef.current) {
-      setCorrectCount((c) => c + 1);
-      questionCountedRef.current = true;
-    } else if (!isCorrect && questionCountedRef.current) {
-      setCorrectCount((c) => c - 1);
-      questionCountedRef.current = false;
-    }
-
-    // Adaptive difficulty assumes exactly one call per question — firing it again on a
-    // corrected reading could double-count a question it already reacted to. See
-    // architecture.md, Risks: a deliberate choice, not an oversight.
-    if (!onAnsweredFiredRef.current) {
-      onAnswered?.(isCorrect);
-      onAnsweredFiredRef.current = true;
-    }
-
-    if (!isCorrect) {
-      setDiagnosis(diagnose(question, reading.finalAnswer));
-    }
-  }
-
-  async function sendToTeacher() {
-    const currentPage = pages[currentPageIndex];
-    if (!currentPage || !pageHasContent(currentPage) || sendState === "sending" || feedback !== null) return;
-    // Pressing "send" means she is done listening, and a fresh attempt clears the last
-    // "couldn't read that" message so it doesn't linger next to a new reading.
-    stopSpeaking();
-    setSpeakingBox(null);
-    setUncertain(false);
-    setSendState("sending");
-    try {
-      const { reading } = await readPageWithTeacher(currentPage, currentExpectedPrompt());
-      setSendState("idle");
-      handleTeacherReading(reading, false);
-    } catch {
-      setSendState("error");
-    }
-  }
-
-  function openCorrection() {
-    // The form needs the regular width, not the compact fullscreen strip — same reason a
-    // confident reading already drops out of fullscreen on its own (design.md, מצב F). A
-    // no-op when we're not in fullscreen already.
-    setFullscreen(false);
-    setCorrectionOpen(true);
-  }
-
-  function cancelCorrection() {
-    setCorrectionOpen(false);
-    setCorrectionText("");
-    if (sendState === "error") setSendState("idle");
-  }
-
-  async function sendCorrection() {
-    const currentPage = pages[currentPageIndex];
-    if (!currentPage || sendState === "sending" || correctionText.trim() === "") return;
-    setSendState("sending");
-    try {
-      const { reading } = await readPageWithTeacher(
-        currentPage,
-        currentExpectedPrompt(),
-        correctionText.trim(),
-        lastReading ?? undefined,
-        { questionId: question.id, topic: question.topic, lessonTitle: lesson.title },
-      );
-      setSendState("idle");
-      handleTeacherReading(reading, true);
-      setCorrectionOpen(false);
-      setCorrectionText("");
-    } catch {
-      setSendState("error");
-    }
+    if (isCorrect) setCorrectCount((c) => c + 1);
+    onAnswered?.(isCorrect);
+    if (!isCorrect) setDiagnosis(diagnose(question, parsed));
   }
 
   function checkFollowUp() {
@@ -404,51 +164,13 @@ export function Practice({
       return;
     }
     setIndex((i) => i + 1);
-    setFullscreen(fullscreenWanted);
     setFeedback(null);
     setHintsShown(0);
+    setAnswerInput("");
     setDiagnosis(null);
     setFollowUpInput("");
     setFollowUpResult(null);
     setAskedToSee(false);
-    setSendState("idle");
-    setUncertain(false);
-    setTeacherNote(null);
-    setLastReading(null);
-    setCorrectionOpen(false);
-    setCorrectionText("");
-    setIsCorrectedReading(false);
-    questionCountedRef.current = false;
-    onAnsweredFiredRef.current = false;
-
-    // One fresh page per question — "one page = one exercise", like a real notebook, and
-    // it means a locked, already-checked page can never end up being "the current page"
-    // when a new question loads. At the page cap, reuse the last page instead of growing
-    // past it (see docs/features/notebook-default-practice/architecture.md, Edge Cases).
-    const nextQuestionIndex = index + 1;
-    if (pages.length >= MAX_PAGES) {
-      setPages((prev) => {
-        const updated = [...prev];
-        updated[updated.length - 1] = createBlankPage();
-        return updated;
-      });
-      setCurrentPageIndex(pages.length - 1);
-      setPageQuestionIndex((prev) => {
-        const updated = [...prev];
-        updated[updated.length - 1] = nextQuestionIndex;
-        return updated;
-      });
-      setPageTeacherMarks((prev) => {
-        const updated = [...prev];
-        updated[updated.length - 1] = null;
-        return updated;
-      });
-    } else {
-      setPages((prev) => [...prev, createBlankPage()]);
-      setCurrentPageIndex(pages.length);
-      setPageQuestionIndex((prev) => [...prev, nextQuestionIndex]);
-      setPageTeacherMarks((prev) => [...prev, null]);
-    }
   }
 
   function toggleSpeech(box: Exclude<SpeakingBox, null>) {
@@ -464,10 +186,7 @@ export function Practice({
         ? questionParts()
         : box === "diagnosis"
           ? diagnosis?.followUp && speechParts([diagnosis.headline, diagnosis.followUp.question])
-          : box === "teacher"
-            ? teacherNote &&
-              speechParts([teacherNote.reflection, ...(teacherNote.errorPointer ? [teacherNote.errorPointer] : [])])
-            : explanation && [
+          : explanation && [
               // No conversation box exists to read the headline for an off-by-one
               // diagnosis, so this button says it instead — an unreadable diagnosis is
               // exactly as good as one that was never said (see design.md, Accessibility).
@@ -479,266 +198,92 @@ export function Practice({
     speak(parts, () => setSpeakingBox(null));
   }
 
-  const currentPage = pages[currentPageIndex];
-  /** The single action rendered in the notebook's toolbar — see PracticeNotebook.tsx and
-   *  docs/features/notebook-default-practice/architecture.md, "primaryAction בכל שלב". */
-  const primaryAction =
-    feedback !== null
-      ? { label: isLast ? "סיום" : "הבא", onClick: next, disabled: false }
-      : sendState === "sending"
-        ? { label: "המורה קוראת...", onClick: () => {}, disabled: true }
-        : { label: "שלח למורה", onClick: sendToTeacher, disabled: !currentPage || !pageHasContent(currentPage) };
-
-  // Shared between the regular header and the fullscreen strip below, so the two never
-  // drift apart — same markup, same RTL/LTR isolation, rendered in two different places.
-  const questionSpeakButton = (
-    <button
-      type="button"
-      className="speak-button"
-      onClick={() => toggleSpeech("question")}
-      aria-label={speakingBox === "question" ? "עצרו את ההקראה" : "הקריאו לי את השאלה"}
-    >
-      {speakingBox === "question" ? "⏹" : "🔊"}
-    </button>
-  );
-  /** The question whose page is actually being *viewed* right now — not necessarily the
-   *  live `question` being answered. Navigating back to an earlier page (◀) must keep
-   *  showing what was written there, not whatever's currently being answered. Falls back to
-   *  `index` only if `pageQuestionIndex` hasn't caught up yet (never observed in practice,
-   *  since both are seeded/updated together, but a missing page index must never crash). */
-  const displayedQuestion = lesson.questions[pageQuestionIndex[currentPageIndex] ?? index];
-  const displayedQuestionIsWordProblem = isHebrewPrompt(displayedQuestion.prompt);
-  /** The teacher's mark for the page actually being *viewed* — same "viewed page, not live
-   *  question" split as `displayedQuestion` above. See docs/features/notebook-teacher-marks/. */
-  const displayedTeacherMark = pageTeacherMarks[currentPageIndex] ?? null;
-
-  /** The question, written on the notebook page itself — rendered inside
-   *  `.notebook-stack` by `PracticeNotebook`, which has no idea what it is (same split as
-   *  `primaryAction`/`topSlot`). Same prompt-parsing/LTR-isolation logic `.problem-box`
-   *  always used, just a different wrapper — `TopicLesson.tsx` keeps using `.problem-box`/
-   *  `box-rtl`/`box-ltr` on its own, unrelated screen. See
-   *  docs/features/notebook-question-on-page/. The teacher's mark (if any) is a second,
-   *  independent child here — not a new prop to PracticeNotebook, which still only sees one
-   *  opaque `questionHeader` node. See docs/features/notebook-teacher-marks/. */
-  const questionHeader = (
-    <div className={`notebook-question-header ${displayedQuestionIsWordProblem ? "qh-rtl" : "qh-ltr"}`}>
-      <span className={`problem-text ${displayedQuestionIsWordProblem ? "qh-text-rtl" : "qh-text-ltr"}`}>
-        {displayedQuestionIsWordProblem ? (
-          promptSegments(displayedQuestion.prompt).map((segment, i) =>
-            segment.kind === "math" ? (
-              <span key={i} className="prompt-math">
-                {segment.value}
-              </span>
-            ) : (
-              <span key={i}>{segment.value}</span>
-            ),
-          )
-        ) : (
-          <>{promptWithEquals(displayedQuestion.prompt)}</>
-        )}
-      </span>
-      {displayedTeacherMark && (
-        <p className={`notebook-teacher-mark notebook-teacher-mark-${displayedTeacherMark.color}`}>
-          {segmented(displayedTeacherMark.text)}
-        </p>
-      )}
-    </div>
-  );
-
-  /** A rough circle+line pointing from roughly where the teacher's errorPointer issue was
-   *  written toward the note above — a kept, labeled deviation from `questionHeader`'s
-   *  "everything folds into one opaque node" rule: this draws anywhere on the page (the
-   *  circle can land far below the header), not just inside the header block, so it needs
-   *  its own prop. See docs/features/notebook-teacher-marks/architecture.md, "סבב ב׳".
-   *  The line's target end is a fixed page-space point, not a measured DOM position (the
-   *  mark's own height is dynamic) — it points toward the header's own corner, not at the
-   *  mark's exact text. */
-  const teacherPointer = displayedTeacherMark?.location ? (
-    <svg className="notebook-teacher-pointer" viewBox={`0 0 ${PAGE_WIDTH} ${PAGE_HEIGHT}`}>
-      <line
-        x1={displayedTeacherMark.location.x * PAGE_WIDTH}
-        y1={displayedTeacherMark.location.y * PAGE_HEIGHT}
-        x2={displayedQuestionIsWordProblem ? PAGE_WIDTH - 110 : 96}
-        y2={60}
-      />
-      <circle cx={displayedTeacherMark.location.x * PAGE_WIDTH} cy={displayedTeacherMark.location.y * PAGE_HEIGHT} r={40} />
-    </svg>
-  ) : null;
-
   /** The one diagram in the app that renders next to the question itself instead of only
    *  inside `QuestionExplanation` — see docs/features/grade2-clock/design.md. `bundle.clock`
    *  is `null` for every other topic, so this is a no-op everywhere else. */
   const clockSlot = bundle.clock ? <ClockFace data={bundle.clock} label={bundle.clock.caption} /> : null;
 
-  /** A second such diagram, added in docs/features/grade8-angles-congruence/design.md's
-   *  round ג׳ revision: the angle/triangle picture now sits with the question too, not
-   *  only inside the wrong-answer panel. `label` is `srLabel` — a structural description,
-   *  not `caption` (which states the rule/method and stays gated behind a wrong answer,
-   *  rendered as plain text by `QuestionExplanation`). `bundle.angle` is `null` for every
-   *  other topic, so this is a no-op everywhere else, same as `clockSlot`. */
+  /** A second such diagram — see docs/features/grade8-angles-congruence/design.md's round
+   *  ג׳ revision. `bundle.angle` is `null` for every other topic, so this is a no-op
+   *  everywhere else, same as `clockSlot`. */
   const angleSlot = bundle.angle ? <AngleShape shape={bundle.angle} label={bundle.angle.srLabel} /> : null;
-
-  /** What the notebook shows above the writing surface while it fills the screen: a way
-   *  back out, plus any clock/angle diagram — the question itself no longer needs a copy
-   *  here, since it's written on the page itself now (`questionHeader`, passed to
-   *  `PracticeNotebook` directly) and stays visible exactly the same way in fullscreen. See
-   *  docs/features/notebook-question-on-page/design.md. Rendered by PracticeNotebook, which
-   *  has no idea what it is (same split as primaryAction). Null outside fullscreen: the
-   *  regular header below covers it. */
-  const topSlot = fullscreen ? (
-    <div className="notebook-fullscreen-topbar">
-      <button
-        type="button"
-        className="notebook-fullscreen-exit"
-        onClick={() => {
-          setFullscreen(false);
-          setFullscreenWanted(false);
-        }}
-        aria-label="צאו ממסך מלא"
-      >
-        ✕
-      </button>
-      {clockSlot}
-      {angleSlot}
-    </div>
-  ) : null;
-
-  /** States C (uncertain reading) and E (send failed) stay reachable in fullscreen — they
-   *  are small, sit beside the toolbar, and don't need the full header back (design.md,
-   *  "מצב C/E בתוך מסך מלא"). Outside fullscreen these render in their usual spot below
-   *  instead, unchanged from before this revision. */
-  const statusSlot = fullscreen ? (
-    <>
-      {uncertain && (
-        <>
-          <p className="teacher-uncertain" aria-live="polite">
-            לא הצלחתי לקרוא את זה בבירור. אפשר לכתוב שוב, קצת יותר גדול או ברור?
-          </p>
-          {/* Only the link, never the form: opening it exits fullscreen (openCorrection),
-              so the form itself always renders in the regular layout below — see
-              docs/features/notebook-teacher-feedback/design.md, מצב C. */}
-          <button type="button" className="link-button teacher-correction-link" onClick={openCorrection}>
-            ספרו למורה מה כתבתם
-          </button>
-        </>
-      )}
-      {sendState === "error" && (
-        <p className="notebook-send-error" aria-live="polite">
-          לא הצלחנו לשלוח את הדף. נסו שוב.
-        </p>
-      )}
-    </>
-  ) : null;
-
-  /** The free-text correction form (מצב G/H/I) — the same form regardless of which trigger
-   *  opened it (an uncertain reading, or a confident-but-wrong one), since only one of
-   *  `uncertain`/`teacherNote` is ever set at a time. See design.md, מצב G–I. */
-  const correctionForm = (
-    <div className="teacher-correction-form">
-      <textarea
-        className="teacher-correction-input"
-        value={correctionText}
-        onChange={(e) => setCorrectionText(e.target.value)}
-        placeholder="מה באמת כתבתם?"
-        aria-label="מה באמת כתבתם?"
-        disabled={sendState === "sending"}
-        autoFocus
-      />
-      <div className="teacher-correction-actions">
-        <button
-          type="button"
-          onClick={sendCorrection}
-          disabled={sendState === "sending" || correctionText.trim() === ""}
-        >
-          {sendState === "sending" ? "המורה קוראת..." : "שליחה למורה"}
-        </button>
-        <button type="button" className="link-button" onClick={cancelCorrection} disabled={sendState === "sending"}>
-          ביטול
-        </button>
-      </div>
-      {sendState === "error" && (
-        <p className="teacher-correction-error" aria-live="polite">
-          לא הצלחנו לשלוח את התיקון. נסו שוב.
-        </p>
-      )}
-    </div>
-  );
 
   return (
     <div className="practice">
-      {/* The regular header/title hide while the notebook fills the screen — the question
-          itself no longer needs a chrome copy in either state, since it's written on the
-          notebook page directly now. See docs/features/notebook-question-on-page/design.md. */}
-      {!fullscreen && (
-        <>
-          <div className="practice-header">
-            <button
-              className="link-button"
-              onClick={() => {
-                stopSpeaking();
-                onExit();
-              }}
-            >
-              ← חזרה
-            </button>
-            <span className="progress">
-              שאלה {index + 1} מתוך {lesson.questions.length}
+      <div className="practice-header">
+        <button
+          className="link-button"
+          onClick={() => {
+            stopSpeaking();
+            onExit();
+          }}
+        >
+          ← חזרה
+        </button>
+        <span className="progress">
+          שאלה {index + 1} מתוך {lesson.questions.length}
+        </span>
+      </div>
+      <h2>{lesson.title}</h2>
+
+      {/* Same prompt-parsing/LTR-isolation pattern TopicLesson.tsx already uses for the
+          identical question shape — see docs/features/scored-answer-practice/design.md. */}
+      <div className={`problem-box ${isWordProblem ? "box-rtl" : "box-ltr"}`}>
+        <span className={`problem-text ${isWordProblem ? "prompt-rtl" : "prompt-ltr"}`}>
+          {isWordProblem ? segmented(question.prompt) : <>{promptWithEquals(question.prompt)}</>}
+        </span>
+        {speechSupported() && (
+          <button
+            type="button"
+            className="speak-button"
+            onClick={() => toggleSpeech("question")}
+            aria-label={speakingBox === "question" ? "עצרו את ההקראה" : "הקריאו לי את השאלה"}
+          >
+            {speakingBox === "question" ? "⏹" : "🔊"}
+          </button>
+        )}
+      </div>
+      {clockSlot}
+      {angleSlot}
+
+      <div className="answer-row">
+        <input
+          type="text"
+          inputMode="decimal"
+          className="answer-input"
+          value={answerInput}
+          onChange={(e) => setAnswerInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") checkAnswer();
+          }}
+          disabled={feedback !== null}
+          autoFocus
+          aria-label="התשובה שלכם"
+          placeholder="התשובה"
+        />
+        {feedback === null && (
+          <button type="button" onClick={checkAnswer} disabled={answerInput.trim() === ""}>
+            בדיקה
+          </button>
+        )}
+        {feedback === "wrong" && (
+          <button type="button" onClick={next}>
+            {isLast ? "סיום" : "הבא"}
+          </button>
+        )}
+      </div>
+
+      {feedback !== null && (feedback === "correct" || revealed) && (
+        <p className={`feedback ${feedback}`}>
+          {feedback === "correct" ? "נכון מאוד! 🎉" : `לא נכון. התשובה היא ${question.answer}`}
+          {feedback === "correct" && (
+            <span className="feedback-star" aria-hidden="true">
+              ⭐
             </span>
-          </div>
-          <h2>{lesson.title}</h2>
-          {clockSlot}
-          {angleSlot}
-        </>
-      )}
-      {!fullscreen && uncertain && (
-        <>
-          <p className="teacher-uncertain" aria-live="polite">
-            לא הצלחתי לקרוא את זה בבירור. אפשר לכתוב שוב, קצת יותר גדול או ברור?
-          </p>
-          {correctionOpen ? (
-            correctionForm
-          ) : (
-            <button type="button" className="link-button teacher-correction-link" onClick={openCorrection}>
-              ספרו למורה מה כתבתם
-            </button>
           )}
-        </>
+        </p>
       )}
-      {teacherNote && (
-        <div className="teacher-reading">
-          <div className="teacher-reading-header">
-            <h3>{isCorrectedReading ? "מה המורה הבינה עכשיו" : "מה המורה הבינה"}</h3>
-            {speechSupported() && (
-              <button
-                type="button"
-                className="speak-button"
-                onClick={() => toggleSpeech("teacher")}
-                aria-label={speakingBox === "teacher" ? "עצרו את ההקראה" : "הקראת מה שהמורה הבינה"}
-              >
-                {speakingBox === "teacher" ? "⏹" : "🔊"}
-              </button>
-            )}
-          </div>
-          <p className="teacher-reading-line">{segmented(teacherNote.reflection)}</p>
-          {teacherNote.errorPointer && (
-            <p
-              className={`teacher-reading-line${feedback === "correct" ? " teacher-reading-flag" : ""}`}
-            >
-              {segmented(teacherNote.errorPointer)}
-            </p>
-          )}
-          {/* Corrects the reading, not the correct/wrong verdict below it — always visible
-              here regardless of feedback, including a reading that already came out
-              correct (design.md, מצב D: "מופיע תמיד כשיש teacherNote"). */}
-          {correctionOpen ? (
-            correctionForm
-          ) : (
-            <button type="button" className="link-button teacher-correction-link" onClick={openCorrection}>
-              המורה טעתה? ספרו לה מה קרה
-            </button>
-          )}
-        </div>
-      )}
+
       {feedback === "wrong" && diagnosis !== null && (
         <p className="diagnosis" aria-live="polite">
           {segmented(diagnosis.headline)}
@@ -753,9 +298,7 @@ export function Practice({
                 type="button"
                 className="speak-button"
                 onClick={() => toggleSpeech("diagnosis")}
-                aria-label={
-                  speakingBox === "diagnosis" ? "עצרו את ההקראה" : "הקריאו לי מה קרה"
-                }
+                aria-label={speakingBox === "diagnosis" ? "עצרו את ההקראה" : "הקריאו לי מה קרה"}
               >
                 {speakingBox === "diagnosis" ? "⏹" : "🔊"}
               </button>
@@ -764,9 +307,8 @@ export function Practice({
           <p className="followup-question">{segmented(diagnosis.followUp.question)}</p>
           <div className="followup-row">
             <input
-              type="number"
+              type="text"
               inputMode="decimal"
-              step="any"
               value={followUpInput}
               onChange={(e) => setFollowUpInput(e.target.value)}
               onKeyDown={(e) => {
@@ -795,84 +337,29 @@ export function Practice({
           )}
         </div>
       )}
-      {feedback && (feedback === "correct" || revealed) && (
-        // A correct answer whose process the teacher flagged (errorPointer) still reads as
-        // correct, but not as an unqualified "🎉" — same amber accent as .diagnosis below,
-        // "points at something, does not mark work as failed" applied to a right answer too.
-        <p
-          className={`feedback ${feedback === "correct" && teacherNote?.errorPointer ? "correct-flagged" : feedback}`}
-        >
-          {feedback === "correct"
-            ? teacherNote?.errorPointer
-              ? "התשובה נכונה"
-              : "נכון מאוד! 🎉"
-            : `לא נכון. התשובה היא ${question.answer}`}
-        </p>
-      )}
+
       {feedback === "wrong" && revealed && explanation !== null && (
         <QuestionExplanation
           bundle={bundle}
           speak={
             speechSupported()
-              ? {
-                  active: speakingBox === "explanation",
-                  onToggle: () => toggleSpeech("explanation"),
-                }
+              ? { active: speakingBox === "explanation", onToggle: () => toggleSpeech("explanation") }
               : undefined
           }
         />
       )}
-      <PracticeNotebook
-        pages={pages}
-        currentPageIndex={currentPageIndex}
-        onPagesChange={setPages}
-        onCurrentPageIndexChange={setCurrentPageIndex}
-        locked={feedback !== null}
-        primaryAction={primaryAction}
-        fullscreen={fullscreen}
-        onToggleFullscreen={() => {
-          const turnOn = !fullscreen;
-          setFullscreen(turnOn);
-          setFullscreenWanted(turnOn);
-        }}
-        topSlot={topSlot}
-        statusSlot={statusSlot}
-        holdZoomFactor={holdZoomFactor}
-        autoScrollJumpFraction={autoScrollJumpFraction}
-        panStepPx={panStepPx}
-        panHoldIntervalMs={panHoldIntervalMs}
-        buttonDiameterPx={buttonDiameterPx}
-        suggestionDelayMs={suggestionDelayMs}
-        navPadVisible={navPadVisible}
-        onOpenSettings={onOpenSettings}
-        questionHeader={questionHeader}
-        teacherPointer={teacherPointer}
-        anchorRight={displayedQuestionIsWordProblem}
-        speakButton={speechSupported() ? questionSpeakButton : null}
-      />
-      {!fullscreen && sendState === "error" && (
-        <p className="notebook-send-error" aria-live="polite">
-          לא הצלחנו לשלוח את הדף. נסו שוב.
-        </p>
-      )}
-      {!fullscreen && hintsShown > 0 && (
+
+      {hintsShown > 0 && (
         <div className="hints">
           {question.hints.slice(0, hintsShown).map((hint, i) => (
             <p key={i} className="hint">
-              {/* Same isolation the prompts get: a hint like "כמה זה `8 + 2`?" is a
-                  Hebrew sentence wrapped around an expression, which is exactly what the
-                  bidi algorithm mangles. */}
               {segmented(hint)}
             </p>
           ))}
         </div>
       )}
-      {!fullscreen && feedback === null && hintsShown < 2 && (
-        <button
-          type="button"
-          className="hint-button"
-          onClick={() => setHintsShown((n) => n + 1)}
-        >
+      {feedback === null && hintsShown < 2 && (
+        <button type="button" className="hint-button" onClick={() => setHintsShown((n) => n + 1)}>
           {hintsShown === 0 ? "רמז 💡" : "עוד רמז 💡"}
         </button>
       )}

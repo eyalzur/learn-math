@@ -1,12 +1,13 @@
 import { test, expect, type Page } from "@playwright/test";
-import { answerViaNotebook } from "./helpers/notebookAnswer";
+import { answerQuestion } from "./helpers/answerQuestion";
+import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /** Grade 1 practises topic-by-topic, so its levels sit one screen deeper. */
-async function openLevels(page: Page, studentIndex: number, topicIndex = 0) {
-  await page.locator(".student-card").nth(studentIndex).click();
-  // Mika now has two grades available; her existing routes are all grade 1 (א׳).
-  if (studentIndex === 0) await page.locator(".grade-card").first().click();
-  if (studentIndex === 0) await page.locator(".topic-card").nth(topicIndex).click();
+async function openLevels(page: Page, topicIndex = 0) {
+  await createAndSelectStudent(page);
+  // Two grades available; every route here is grade 1 (א׳).
+  await page.locator(".grade-card").first().click();
+  await page.locator(".topic-card").nth(topicIndex).click();
 }
 
 
@@ -35,7 +36,7 @@ const ALWAYS_WRONG = 999999;
 async function harvestAnswers(page: Page, count: number): Promise<number[]> {
   const answers: number[] = [];
   for (let i = 0; i < count; i++) {
-    await answerViaNotebook(page, ALWAYS_WRONG);
+    await answerQuestion(page, ALWAYS_WRONG);
     const feedback = await page.locator(".feedback.wrong").innerText();
     const match = feedback.match(/(-?\d+(?:\.\d+)?)\s*$/);
     if (!match) throw new Error(`Could not read the answer out of "${feedback}"`);
@@ -54,11 +55,11 @@ async function harvestAnswers(page: Page, count: number): Promise<number[]> {
  * than assumed, which is what these tests needed all along: they are about the message at
  * 100%, not about the number of questions behind it.
  */
-async function startLesson(page: Page, studentIndex: number, index: number): Promise<number> {
+async function startLesson(page: Page, index: number): Promise<number> {
   await page.goto("/learn-math/");
   await page.evaluate(() => localStorage.clear());
   await page.goto("/learn-math/");
-  await openLevels(page, studentIndex);
+  await openLevels(page);
   const byStyle = page.locator(".style-card");
   if (await byStyle.count()) await byStyle.nth(index).click();
   else await page.locator(".level-card").nth(index).click();
@@ -69,22 +70,29 @@ async function startLesson(page: Page, studentIndex: number, index: number): Pro
 async function completeLevel(page: Page, answers: number[], { missOne }: { missOne: boolean }) {
   for (let i = 0; i < answers.length; i++) {
     const value = missOne && i === 0 ? answers[i] + 1000 : answers[i];
-    await answerViaNotebook(page, value);
-    await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
+    await answerQuestion(page, value);
+    // A correct answer advances on its own — no "הבא" button for that path.
+    const nextButton = page.getByRole("button", { name: /^(הבא|סיום)$/ });
+    if (await nextButton.count()) {
+      await nextButton.click();
+    } else {
+      await page.waitForTimeout(800);
+    }
   }
 }
 
 test("shows the perfect-score message when every answer is correct", async ({ page }) => {
-  const total = await startLesson(page, 0, 0);
+  const total = await startLesson(page, 0);
   const answers = await harvestAnswers(page, total);
   await completeLevel(page, answers, { missOne: false });
 
-  await expect(page.locator(".result h1")).toHaveText("🌟 ציון מושלם! פתרת הכל נכון!");
+  await expect(page.locator(".result h1")).toHaveText("ציון מושלם! פתרת הכל נכון!");
+  await expect(page.locator(".result-icon")).toHaveText("🌟");
   await expect(page.locator(".score")).toContainText("100%");
 });
 
 test("keeps the existing message when the score is below 100%", async ({ page }) => {
-  const total = await startLesson(page, 0, 0);
+  const total = await startLesson(page, 0);
   const answers = await harvestAnswers(page, total);
   await completeLevel(page, answers, { missOne: true });
 
@@ -95,7 +103,7 @@ test("keeps the existing message when the score is below 100%", async ({ page })
 test("the perfect-score message never appears during practice, only on the result screen", async ({
   page,
 }) => {
-  const total = await startLesson(page, 0, 0);
+  const total = await startLesson(page, 0);
   await expect(page.locator(".practice")).not.toContainText("ציון מושלם");
 
   const answers = await harvestAnswers(page, total);

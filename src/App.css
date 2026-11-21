@@ -25,7 +25,7 @@
   gap: 4px;
   padding: 20px 24px;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 20px;
   background: var(--bg);
   cursor: pointer;
   font: inherit;
@@ -37,6 +37,55 @@
 .student-card:hover {
   border-color: var(--accent-border);
   box-shadow: var(--shadow);
+}
+
+/* The card itself stays a plain <button> (so clicking anywhere on it still selects the
+   student) — the delete trigger has to be a sibling, not a nested button, since a
+   <button> inside a <button> isn't valid markup. Positioned over the card's own corner
+   so the two still read as one unit. */
+.student-card-wrap {
+  position: relative;
+}
+
+.student-card-wrap .student-card {
+  width: 100%;
+}
+
+.student-card-delete {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.55;
+}
+
+.student-card-delete:hover {
+  opacity: 1;
+  background: var(--code-bg);
+}
+
+/* Same card shape as a real student, so it reads as "one more tile in the row", not a
+   separate control bolted onto the list — always last (see StudentPicker.tsx). */
+.student-card-add {
+  align-items: center;
+  color: var(--text);
+  border-style: dashed;
+}
+
+.student-card-add-icon {
+  font-size: 26px;
+  line-height: 1;
 }
 
 .student-name {
@@ -52,9 +101,21 @@
 
 /* Deliberately the smallest and faintest thing on the screen. It exists for the adult
    checking which build a device actually loaded, and must stay out of the way of a
-   seven-year-old scanning for her own name. */
+   seven-year-old scanning for her own name — pinned to the screen's own bottom-left
+   corner (physical, not `inset-inline-start`: a corner badge like this reads as "the
+   same corner every time", not "wherever RTL happens to start"), out of the student
+   list's flow entirely rather than sitting right under it. */
 .app-version {
-  margin: 28px 0 0;
+  position: fixed;
+  bottom: 12px;
+  left: 12px;
+  display: block;
+  margin: 0;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
   text-align: center;
   font-size: 12px;
   color: var(--text);
@@ -130,6 +191,15 @@
   color: #7c3aed;
 }
 
+/* Only meaningful inside CreateStudentDialog, where a grade card is a persistent choice
+   rather than a one-shot navigation (GradePicker itself never needs a "selected" look —
+   picking a grade there just goes somewhere). */
+.grade-card-selected {
+  border-color: var(--accent);
+  box-shadow: var(--shadow);
+  background: var(--accent-bg);
+}
+
 /* ---- grade home ---- */
 
 .grade-header {
@@ -180,7 +250,7 @@
   gap: 6px;
   padding: 20px;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 20px;
   background: var(--bg);
   cursor: pointer;
   font: inherit;
@@ -235,20 +305,53 @@
   padding: 32px 24px;
 }
 
+/* Sticky, not static: when the on-screen keyboard opens for the answer field below,
+   the browser scrolls the page to keep that field visible above the keyboard — on a
+   page this tall, that scroll can push the back-button/progress row up and off the
+   top of the screen entirely, leaving a student unable to see "שאלה X מתוך Y" or get
+   back. Reported live ("המסך חתוך מלמעלה"). Needs its own opaque background since
+   the question/diagram now scrolls underneath it instead of past it. */
 .practice-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 16px;
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 5;
+  padding-block: 8px;
 }
 
+/* A light pill, not bare text — .history-link below used to be bare text like this and
+   was reported live as "looks very bad"; that fix belongs on every link-button, not just
+   the one that happened to get it first (docs/features/back-link-redesign). Deliberately
+   not the heavy box-shadow ledge playful-redesign gives real action buttons (excluded
+   below, App.css's own :not(.link-button) additions) — a secondary nav link shouldn't
+   visually compete with a screen's actual primary action. */
 .link-button {
-  background: none;
+  background: var(--accent-bg);
   border: none;
+  border-radius: 999px;
   color: var(--accent);
   cursor: pointer;
   font: inherit;
-  padding: 0;
+  font-size: 14px;
+  padding: 6px 14px;
+  width: fit-content;
+}
+
+/* Solid accent + white text on hover, not a darker pink tint — var(--accent-border) is a
+   translucent pink meant for borders/strokes (see .lesson-link:hover above), and pink text
+   on a pink-tinted background would be a real contrast problem. This mirrors the same
+   accent+white combination the base `button` rule already uses for primary actions. */
+.link-button:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+.link-button:active {
+  opacity: 0.8;
 }
 
 .progress {
@@ -302,20 +405,44 @@
   white-space: nowrap;
 }
 
+/* The one new LTR surface this feature adds inside the RTL page — a typed number must
+   read and behave left-to-right regardless of the surrounding page direction, the same
+   class of bug CLAUDE.md already warns about for displayed expressions. Explicit, not
+   assumed: text-align:center alone doesn't fix digit/sign order. */
+/* Stacked, not side by side — reported live as cramped, and a full-width field above
+   a full-width button reads more clearly as "type here, then press this" than two
+   small controls competing for the same row. */
+.answer-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin: 20px 0;
+}
+
 .answer-input {
-  width: 110px;
+  width: 200px;
   font-size: 32px;
   text-align: center;
-  padding: 8px;
+  direction: ltr;
+  padding: 14px;
   border: 2px solid var(--border);
-  border-radius: 8px;
+  border-radius: 16px;
   background: var(--bg);
   color: var(--text-h);
+}
+
+.answer-row button {
+  width: 200px;
 }
 
 .answer-input:focus {
   outline: none;
   border-color: var(--accent);
+}
+
+.answer-input:disabled {
+  opacity: 0.7;
 }
 
 /* Secondary on purpose: it sits below the check button so it never competes with the
@@ -415,23 +542,30 @@
   line-height: 160%;
 }
 
+/* Same stacked treatment as .answer-row, one size down — this is the secondary
+   follow-up question inside a diagnosis conversation, not the main answer. */
 .followup-row {
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 10px;
 }
 
 .followup-input {
-  width: 96px;
-  padding: 8px 10px;
+  width: 160px;
+  padding: 10px;
   font: inherit;
   font-size: 20px;
   text-align: center;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 12px;
   /* A number field, like the main answer: same keyboard on a phone, and digits stay
      left-to-right whatever the page direction is. */
   direction: ltr;
+}
+
+.followup-row button {
+  width: 160px;
 }
 
 .followup-reply {
@@ -449,10 +583,13 @@
   color: var(--text);
 }
 
+/* width: fit-content matters now that the base .link-button carries a visible
+   background (docs/features/back-link-redesign) — without it, display: block would
+   stretch the pill the full width of its container instead of hugging its text. */
 .reveal-link {
   display: block;
+  width: fit-content;
   margin-top: 12px;
-  font-size: 14px;
 }
 
 /* "דוגמה N מתוך M" heading on the lesson screen's current page (only shown when the
@@ -565,14 +702,389 @@ button.secondary {
   color: var(--text-h);
 }
 
+/* ---- playful motion: ledge-press + pop-in (docs/features/playful-redesign) ---- */
+
+/* A grouped selector over the cards/buttons that already exist, not a new class on
+   each one — the whole point of this pass is a CSS-only layer with zero .tsx changes
+   for this part (the one real .tsx touch, Practice.tsx's star-burst span, is separate).
+   `button` here deliberately includes every button in the app, including ones inside
+   dialogs (⚙️, version log, delete-confirm) that design.md didn't call out by name but
+   didn't exclude either — if a specific one ever needs to opt out, exclude it with
+   `:not()` here rather than un-grouping the selector. `.app-version` is excluded on
+   purpose: design.md calls it out explicitly as staying the quietest thing on the
+   screen, and it's a <button> underneath, so it would otherwise be caught here too.
+
+   The static ledge-shadow applies to both cards and buttons, but the pop-in entrance
+   animation below is cards-only (design.md itself only describes cards "entering a
+   screen" this way) — a real, measured reason, not just following the letter of the
+   doc: Practice.tsx's "בדיקה" button unmounts and remounts fresh on every single
+   question (conditionally rendered on `feedback === null`), so giving it an entrance
+   animation meant it replayed on every answer in a streak, adding real cumulative
+   latency that blew through the 30s test timeout in long streak-style e2e tests —
+   a genuine regression, not a flake. Buttons still get the ledge-shadow and the
+   instant :active press below; they just don't pop in on (re)mount. */
+.student-card,
+.grade-card,
+.topic-card,
+.level-card,
+.style-card,
+button:not(.app-version):not(.link-button) {
+  box-shadow: 0 5px 0 var(--accent-border);
+  /* No transition on transform/box-shadow here on purpose: an animated press looked
+     nicer by eye, but a transition keeps the element's bounding box moving between
+     frames, and rapid back-to-back clicks (a real streak of e2e answers, or just a
+     fast double-tap) never let it finish settling — Playwright's actionability check
+     waits for an element to be "stable" (unchanged across two animation frames)
+     before clicking, so a transition here caused genuine timeouts in streak-style
+     tests, not flakes. An instant snap on :active still reads as a real press. */
+}
+
+/* Two independent animations on the same elements — playful-pop-in (one-shot entrance)
+   and idle-breathe (docs/features/idle-spotlight, added later) — have to live in ONE
+   `animation` declaration, comma-separated. `animation` is not additive like
+   `box-shadow`: two separate rules each setting the shorthand on the same selector
+   don't layer, the later one in source order replaces the property whole, and the
+   earlier animation simply never plays. Found by checking computed styles live (the
+   pop-in entrance silently stopped working the moment idle-breathe's rule was added)
+   — every `animation-delay` override below has to list both animations' delays too,
+   positionally matching the two `animation-name`s, for the same reason.
+
+   The idle-breathe delay-per-step is no longer a flat `1s` — with the cycle floored
+   at `max(3s, N*1s)` (see below), a flat 1s step would space peaks evenly only for
+   N≥3; for N=1/2 the floor stretches the cycle without stretching the step, landing
+   peaks unevenly. `(cycle / N) * -spot-i` keeps the step proportional to the real
+   cycle length, so peaks stay evenly spaced regardless of N — and is a no-op change
+   for N≥3, where cycle/N is already 1s. */
+.student-card,
+.grade-card,
+.topic-card,
+.level-card,
+.style-card {
+  animation:
+    playful-pop-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) backwards,
+    idle-breathe max(3s, calc(var(--spot-n, 1) * 1s)) ease-in-out infinite;
+  animation-delay: 0s, calc(max(3s, calc(var(--spot-n, 1) * 1s)) / var(--spot-n, 1) * var(--spot-i, 0) * -1);
+}
+
+.student-card:nth-child(2),
+.grade-card:nth-child(2),
+.topic-card:nth-child(2),
+.level-card:nth-child(2),
+.style-card:nth-child(2) {
+  animation-delay: 0.05s, calc(max(3s, calc(var(--spot-n, 1) * 1s)) / var(--spot-n, 1) * var(--spot-i, 0) * -1);
+}
+.student-card:nth-child(3),
+.grade-card:nth-child(3),
+.topic-card:nth-child(3),
+.level-card:nth-child(3),
+.style-card:nth-child(3) {
+  animation-delay: 0.1s, calc(max(3s, calc(var(--spot-n, 1) * 1s)) / var(--spot-n, 1) * var(--spot-i, 0) * -1);
+}
+.student-card:nth-child(4),
+.grade-card:nth-child(4),
+.topic-card:nth-child(4),
+.level-card:nth-child(4),
+.style-card:nth-child(4) {
+  animation-delay: 0.15s, calc(max(3s, calc(var(--spot-n, 1) * 1s)) / var(--spot-n, 1) * var(--spot-i, 0) * -1);
+}
+
+@keyframes playful-pop-in {
+  from { transform: scale(0.5); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.student-card:active,
+.grade-card:active,
+.topic-card:active:not(:disabled),
+.level-card:active,
+.style-card:active,
+button:active:not(:disabled):not(.app-version):not(.link-button) {
+  transform: translateY(5px);
+  box-shadow: 0 0 0 var(--accent-border);
+}
+
+.feedback-star {
+  display: inline-block;
+  margin-inline-start: 6px;
+  animation: playful-star-burst 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes playful-star-burst {
+  0% { transform: scale(0) rotate(-20deg); opacity: 0; }
+  50% { transform: scale(1.3) rotate(10deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .student-card,
+  .grade-card,
+  .topic-card,
+  .level-card,
+  .style-card,
+  button:not(.app-version),
+  .feedback-star {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ---- idle spotlight: a single gentle breathing glow, cycling (docs/features/idle-spotlight) ----
+   Deliberately a narrower selector than playful-redesign's button group above — this
+   cycle should only visit primary choices, not every small utility icon (🔊/💡/⚙️/🗑/
+   text links), or it would run long and stop feeling "gentle". --spot-i/--spot-n are
+   set by src/data/idleSpotlight.ts (startIdleSpotlightObserver, a MutationObserver +
+   IntersectionObserver pair set up once from App.tsx — not tied to any one component's
+   render, so a dialog whose open state lives in a descendant's own useState still gets
+   indexed; see idleSpotlight.ts for why that distinction mattered in practice) — not
+   written here, just consumed.
+
+   `max(3s, ...)` floors the cycle length at 3s even when only one or two elements are
+   on screen (N=1 would otherwise mean a 1-second cycle — reported live as "blinks too
+   fast" on the version-log screen, which only ever has its one button). N=3+ still
+   scales normally (3s, 4s, 5s, ...), unaffected by the floor. This has to be inlined at
+   each selector below rather than factored into a shared custom property at :root: a
+   custom property's value is resolved in the cascade context where it's *declared*, so
+   one declared at :root would always see :root's own --spot-n (never set, always the
+   `1` fallback) instead of each matching element's own inline value.
+
+   Cards are handled above, combined into the same declaration as playful-pop-in (two
+   animations can't be set by two separate rules on the same property — see the big
+   comment there). Buttons have no pop-in of their own, so no such conflict here.
+
+   The five card classes are excluded here too, and not just redundantly — every card
+   is itself a <button>, so without this exclusion this selector's six chained `:not()`
+   clauses give it higher specificity (0,6,1) than the dedicated card rule above
+   (0,1,0), and this rule would silently win and override it entirely for every card,
+   found live: cards' own animation/animation-delay were being overridden despite
+   looking like the right rule should apply, including beating the hover/focus/active
+   pause rule below (which is why that rule also repeats this full selector for its
+   button branch, not just `button:not(.app-version)`). */
+button:not(.app-version):not(.speak-button):not(.hint-button):not(.link-button):not(.student-card-delete):not(.settings-button):not(.student-card):not(.grade-card):not(.topic-card):not(.level-card):not(.style-card) {
+  /* Every matching element gets the identical animation; a negative delay equal to its
+     own index means each one is already partway through its own timeline from frame
+     one — the classic "staggered cycle" trick, no JS timing involved. The delay-per-step
+     is cycle/N, not a flat 1s — see the big comment on the card rule above for why. */
+  animation: idle-breathe max(3s, calc(var(--spot-n, 1) * 1s)) ease-in-out infinite;
+  animation-delay: calc(max(3s, calc(var(--spot-n, 1) * 1s)) / var(--spot-n, 1) * var(--spot-i, 0) * -1);
+}
+
+/* box-shadow is a single property — the rest state here has to repeat the same static
+   ledge-shadow value playful-redesign already declares (0 5px 0 var(--accent-border)),
+   or this animation would blank it out for 75% of every cycle instead of layering a
+   glow on top of it only at the peak. Found and fixed by checking computed styles
+   live, not assumed — the rest state looked identical to the "glowing" state by eye
+   until that check.
+
+   Peak ring-spread/blur bumped from 6px/18px to 9px/26px (2026-11-21) — reported live
+   as "almost can't be seen" on the topic-picker, especially against the app's own
+   pink-on-pink palette. A bigger halo, not a harsher one: same colors/opacity, no
+   change to the stagger timing, no scale.
+
+   Deliberately no `transform: scale(...)` here, even though it was tried — box-shadow
+   alone doesn't affect an element's bounding box, but a scale pulse does, and
+   Playwright's click-actionability check requires an element's bounding box to be
+   unchanged across two consecutive frames before it'll click. A continuously-animating
+   scale made *any* idle-breathing element (not just rapid-fire practice buttons)
+   intermittently "not stable" mid-cycle — found live via a real e2e failure
+   (fraction-diagram.spec.ts, clicking a .topic-card). Glow-only avoids the mechanism
+   entirely instead of papering over where it happened to surface. */
+@keyframes idle-breathe {
+  0%,
+  100% {
+    box-shadow: 0 5px 0 var(--accent-border);
+  }
+  12.5% {
+    box-shadow: 0 5px 0 var(--accent-border), 0 0 0 9px var(--accent-bg), 0 0 26px var(--accent-border);
+  }
+  25% {
+    box-shadow: 0 5px 0 var(--accent-border);
+  }
+}
+
+/* Paused, not fighting — a card/button already reacting to a real press (ledge-press,
+   hover) shouldn't also be mid-breath at the same time.
+   The button branch repeats the full six-`:not()` selector above, not the shorter
+   `button:not(.app-version)` — found live that the shorter form's lower specificity
+   (0,2,1) lost outright to the idle-breathe button rule's (0,6,1) for any element that
+   also matches it, so :hover/:focus/:active never paused anything. Matching the same
+   specificity here is what makes the override actually win. */
+.student-card:hover,
+.student-card:focus,
+.student-card:active,
+.grade-card:hover,
+.grade-card:focus,
+.grade-card:active,
+.topic-card:hover,
+.topic-card:focus,
+.topic-card:active,
+.level-card:hover,
+.level-card:focus,
+.level-card:active,
+.style-card:hover,
+.style-card:focus,
+.style-card:active,
+button:not(.app-version):not(.speak-button):not(.hint-button):not(.link-button):not(.student-card-delete):not(.settings-button):not(.student-card):not(.grade-card):not(.topic-card):not(.level-card):not(.style-card):hover,
+button:not(.app-version):not(.speak-button):not(.hint-button):not(.link-button):not(.student-card-delete):not(.settings-button):not(.student-card):not(.grade-card):not(.topic-card):not(.level-card):not(.style-card):focus,
+button:not(.app-version):not(.speak-button):not(.hint-button):not(.link-button):not(.student-card-delete):not(.settings-button):not(.student-card):not(.grade-card):not(.topic-card):not(.level-card):not(.style-card):active {
+  animation-play-state: paused;
+}
+
+/* Paused screen-wide whenever any modal dialog is open — the spotlight shouldn't keep
+   cycling, invisibly, underneath something covering the whole screen. */
+body:has(
+    .create-student-backdrop,
+    .delete-student-backdrop,
+    .settings-backdrop,
+    .version-log-backdrop
+  )
+  [style*="--spot-i"] {
+  animation-play-state: paused;
+}
+
+/* A huge, heavily-blurred, almost-static glow drifting very slowly — meant to be felt,
+   not consciously noticed. No JS at all: a single ::before on #root. */
+#root::before {
+  content: "";
+  position: fixed;
+  inset: -20% -20% auto auto;
+  width: 60vw;
+  height: 60vw;
+  max-width: 600px;
+  max-height: 600px;
+  border-radius: 50%;
+  background: var(--accent-bg);
+  filter: blur(80px);
+  z-index: -1;
+  pointer-events: none;
+  animation: idle-bg-drift 28s ease-in-out infinite;
+}
+
+@keyframes idle-bg-drift {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(-8%, 6%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .student-card,
+  .grade-card,
+  .topic-card,
+  .level-card,
+  .style-card,
+  button:not(.app-version),
+  #root::before {
+    animation: none !important;
+  }
+}
+
 .result {
-  padding: 60px 24px;
+  padding: 40px 24px;
+  display: flex;
+  justify-content: center;
+}
+
+/* A game-style "you did it" card, not a bare sentence on the page — the user asked
+   explicitly for this screen to feel more like a win, not just report a number. */
+.result-card {
+  max-width: 380px;
+  width: 100%;
+  padding: 32px 24px;
+  border-radius: 28px;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.result-icon {
+  display: block;
+  font-size: 56px;
+  line-height: 1;
+  animation: result-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.result-stars {
+  margin: 10px 0 4px;
+  font-size: 22px;
+  letter-spacing: 4px;
+}
+
+.result-star {
+  opacity: 0.25;
+  filter: grayscale(1);
+}
+
+.result-star-on {
+  opacity: 1;
+  filter: none;
+  animation: result-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+}
+
+.result-star-on:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.result-star-on:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+@keyframes result-pop {
+  from {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .score {
   font-size: 20px;
-  margin: 16px 0 32px;
+  margin: 8px 0 28px;
   color: var(--text-h);
+}
+
+/* Pill buttons here only — a deliberate, scoped exception for this one "win screen",
+   not a global button restyle. Equal width so the pair reads as one balanced, centered
+   unit instead of two differently-sized labels drifting apart. */
+.result .actions {
+  gap: 14px;
+}
+
+.result .actions button {
+  border-radius: 999px;
+  padding: 12px 20px;
+  min-width: 128px;
+}
+
+/* button.secondary is the same white as .result-card's own background (both
+   var(--code-bg)) — fine on the page's pink background elsewhere, but invisible here,
+   leaving only its ledge-shadow visible and making the two actions look lopsided
+   instead of a centered pair. Reported live. A visible border fixes the contrast
+   without inventing a new color. */
+.result .actions button.secondary {
+  border: 2px solid var(--border);
+}
+
+/* The global h1 (index.css) is sized for a full-width hero (56px) and never sets its
+   own line-height, inheriting the root's `145%` — a *percentage* line-height resolves to
+   a fixed length at the element that declares it (26px, off the root's 18px) and is
+   inherited as that same fixed length, not recomputed against h1's own much bigger
+   font-size. That's invisible as long as every h1 fits on one line, which is why this
+   never showed up before — this card is the first place a message (e.g. "ציון מושלם!
+   פתרת הכל נכון!") is long enough, in a narrow enough box, to actually wrap, and the two
+   lines land almost exactly on top of each other. Overridden here with its own sizing
+   instead of patching the global h1 rule, which would need checking every other screen's
+   h1 before touching it. */
+.result-card h1 {
+  font-size: 24px;
+  line-height: 1.35;
+  letter-spacing: normal;
+  margin: 4px 0 2px;
 }
 
 /* ---- topic picker ---- */
@@ -581,10 +1093,14 @@ button.secondary {
   padding: 32px 24px;
 }
 
+/* The light-pill look (background/padding/radius/font-size) now lives on the base
+   .link-button itself (docs/features/back-link-redesign) — every link-button gets it,
+   not just this one. Only the layout specifics stay here: block + its own width so it
+   doesn't stretch full-width, and enough margin to sit clearly apart from the link
+   above it rather than crowding against it (10px → 14px top, per design.md). */
 .history-link {
   display: block;
-  margin: 0 0 20px auto;
-  font-size: 14px;
+  margin: 14px 0 24px auto;
 }
 
 .topic-grid {
@@ -598,7 +1114,7 @@ button.secondary {
   text-align: right;
   padding: 22px 20px;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 20px;
   background: var(--bg);
   cursor: pointer;
   font: inherit;
@@ -722,6 +1238,45 @@ button.secondary {
   direction: ltr;
 }
 
+/* The cumulative-by-topic/by-difficulty summary — docs/features/scored-answer-practice/.
+   Same card anatomy as .history-row, grouped under its own heading, above the existing
+   session log rather than replacing it. */
+.history-stats {
+  max-width: 480px;
+  margin: 0 auto 24px;
+}
+
+.history-stats-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+
+.history-stats-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  background: var(--code-bg);
+  text-align: right;
+}
+
+.history-stats-label {
+  flex: 1;
+  font-size: 15px;
+  color: var(--text-h);
+}
+
+.history-stats-score {
+  font-weight: 600;
+  color: var(--text-h);
+  direction: ltr;
+}
+
 /* ---- settings: the ⚙️ in the topic screen's header, and the dialog it opens. Both
    settings rows below live inside it. See docs/features/notebook-hold-to-zoom/ (סבב ו׳). ---- */
 
@@ -757,7 +1312,7 @@ button.secondary {
   max-height: 90vh;
   overflow-y: auto;
   background: var(--bg);
-  border-radius: 14px;
+  border-radius: 20px;
   padding: 20px;
   box-shadow: var(--shadow);
 }
@@ -781,6 +1336,225 @@ button.secondary {
   margin-top: 16px;
 }
 
+/* Same anatomy and values as .settings-backdrop/-dialog/-title, deliberately under its own
+   name — see the comment above .settings-backdrop for why dialogs don't share classes. */
+.version-log-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 31;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 24px;
+}
+
+.version-log-dialog {
+  max-width: 420px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  /* Scrolling to the end of a long changelog must not "chain" into scrolling the
+     student picker behind it — the backdrop covers the whole screen, but without this
+     a touchpad/touch swipe that hits the dialog's own scroll limit keeps going into
+     whatever's underneath. */
+  overscroll-behavior: contain;
+  background: var(--bg);
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+
+.version-log-title {
+  margin: 0 0 16px;
+  font-size: 19px;
+  color: var(--text-h);
+  text-align: right;
+}
+
+.version-log-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A small card per entry, not a bare list row — the icon gives each version a visual
+   anchor (see src/data/changelog.ts's comment on why an emoji icon, not a screenshot). */
+.version-log-entry {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--code-bg);
+}
+
+.version-log-icon {
+  flex-shrink: 0;
+  font-size: 26px;
+  line-height: 1;
+}
+
+.version-log-text {
+  min-width: 0;
+}
+
+.version-log-heading {
+  margin: 0 0 4px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+/* Same isolation as .app-version-number/.problem-box — a version number is LTR content
+   inside an RTL page. */
+.version-log-version {
+  direction: ltr;
+  unicode-bidi: isolate;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.version-log-today {
+  font-size: 13px;
+  color: var(--accent);
+}
+
+.version-log-description {
+  margin: 0;
+  text-align: right;
+  color: var(--text);
+}
+
+/* ---- create-student dialog ---- */
+
+/* Same anatomy and values as .settings-backdrop/-dialog/-title and
+   .version-log-backdrop/-dialog/-title, deliberately under its own name — see the
+   comment above .settings-backdrop for why dialogs don't share classes. */
+.create-student-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 31;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 24px;
+}
+
+.create-student-dialog {
+  max-width: 420px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--bg);
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+
+.create-student-title {
+  margin: 0 0 4px;
+  font-size: 19px;
+  color: var(--text-h);
+  text-align: right;
+}
+
+.create-student-label {
+  margin: 10px 0 0;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.create-student-input {
+  font: inherit;
+  font-size: 18px;
+  padding: 10px 12px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text-h);
+  text-align: right;
+}
+
+.create-student-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.create-student-grade-list {
+  margin: 4px 0 0;
+  max-width: none;
+  gap: 10px;
+}
+
+.create-student-grade-list .grade-card {
+  width: 90px;
+  padding: 14px 8px;
+}
+
+.create-student-grade-list .grade-card-letter {
+  font-size: 30px;
+}
+
+.create-student-hint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text);
+  opacity: 0.75;
+}
+
+/* ---- delete-student dialog ---- */
+
+.delete-student-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 31;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 24px;
+}
+
+.delete-student-dialog {
+  max-width: 380px;
+  width: 100%;
+  background: var(--bg);
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+
+.delete-student-title {
+  margin: 0 0 10px;
+  font-size: 19px;
+  color: var(--text-h);
+  text-align: right;
+}
+
+.delete-student-body {
+  margin: 0;
+  text-align: right;
+  color: var(--text);
+}
+
+/* Intentionally not the big default-looking button — "ביטול" keeps the normal/primary
+   look (the safe default) and this one has to read as the deliberate, less-easy choice. */
+.delete-student-confirm {
+  background: var(--code-bg);
+  color: #c0392b;
+  border: 1px solid #c0392b;
+}
+
 /* ---- read-aloud: the per-student setting, and the question's own speaker ---- */
 
 /* Lives inside the settings dialog since סבב ו׳ of docs/features/notebook-hold-to-zoom —
@@ -797,122 +1571,11 @@ button.secondary {
   text-align: right;
 }
 
-/* The hold-to-zoom strength setting — same box as the read-aloud row, but stacked: six
+/* The pace-of-difficulty setting — same box as the read-aloud row, but stacked: three
    options don't fit beside the text at phone width, so the text block sits on top and the
-   options row underneath. See docs/features/notebook-hold-to-zoom/ (סבב ה׳/ו׳).
-   The auto-scroll-jump strength setting (docs/features/notebook-auto-scroll/, סבב ב׳) shares
-   this same visual style — same six-buttons-in-a-row shape — but keeps its own class names
-   rather than reusing these: round 1 of that feature reused `.read-aloud-switch`/
-   `role="switch"` for an unrelated row and it broke three existing e2e tests that assumed a
-   single match for a bare selector (see that feature's tests.md). Two distinct pickers in
-   the same dialog need two distinct sets of class names even when the CSS is identical. */
-.hold-zoom-setting,
-.auto-scroll-setting {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 12px 16px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--code-bg);
-  text-align: right;
-}
-
-.hold-zoom-header,
-.auto-scroll-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.hold-zoom-icon,
-.auto-scroll-icon {
-  font-size: 22px;
-  line-height: 1;
-}
-
-/* wrap, not overflow-x: all six options have to be visible at once. The notebook toolbar
-   scrolls horizontally and that is exactly the failure mode being avoided here. */
-.hold-zoom-options,
-.auto-scroll-options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.hold-zoom-option,
-.auto-scroll-option {
-  padding: 6px 12px;
-  font-size: 14px;
-  color: var(--text);
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-}
-
-.hold-zoom-option[aria-pressed="true"],
-.auto-scroll-option[aria-pressed="true"] {
-  background: var(--accent-bg);
-  border-color: var(--accent-border);
-  color: var(--text-h);
-  font-weight: 600;
-}
-
-/* The nav-buttons speed setting — same box/wrap behavior as .hold-zoom-setting above, just
-   a different set of options. See docs/features/notebook-nav-settings/. */
-.pan-speed-setting {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 12px 16px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--code-bg);
-  text-align: right;
-}
-
-.pan-speed-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.pan-speed-icon {
-  font-size: 22px;
-  line-height: 1;
-}
-
-.pan-speed-options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.pan-speed-option {
-  padding: 6px 12px;
-  font-size: 14px;
-  color: var(--text);
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-}
-
-.pan-speed-option[aria-pressed="true"] {
-  background: var(--accent-bg);
-  border-color: var(--accent-border);
-  color: var(--text-h);
-  font-weight: 600;
-}
-
-/* The two notebook-toolbar-redesign settings, and the pace-of-difficulty setting —
-   same box/wrap behavior as .pan-speed-setting above, just more option sets. A
-   separate class per setting (not a shared one) — see
-   docs/features/adaptive-pace-setting/architecture.md: two settings rendered in the
-   same dialog at once can't share a class, or `.foo-option[aria-pressed="true"]`
-   matches both and breaks anything that expects exactly one. See
-   docs/features/notebook-toolbar-redesign/. */
-.button-size-setting,
-.suggestion-sensitivity-setting,
+   options row underneath. See docs/features/adaptive-pace-setting/. Its own class names,
+   not shared with another setting's — two pickers visible in the dialog at once can't
+   share a class, or `.foo-option[aria-pressed="true"]` matches both. */
 .pace-setting {
   display: flex;
   flex-direction: column;
@@ -924,31 +1587,23 @@ button.secondary {
   text-align: right;
 }
 
-.button-size-header,
-.suggestion-sensitivity-header,
 .pace-header {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.button-size-icon,
-.suggestion-sensitivity-icon,
 .pace-icon {
   font-size: 22px;
   line-height: 1;
 }
 
-.button-size-options,
-.suggestion-sensitivity-options,
 .pace-options {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
 
-.button-size-option,
-.suggestion-sensitivity-option,
 .pace-option {
   padding: 6px 12px;
   font-size: 14px;
@@ -958,8 +1613,6 @@ button.secondary {
   border-radius: 999px;
 }
 
-.button-size-option[aria-pressed="true"],
-.suggestion-sensitivity-option[aria-pressed="true"],
 .pace-option[aria-pressed="true"] {
   background: var(--accent-bg);
   border-color: var(--accent-border);
@@ -1504,796 +2157,6 @@ button.secondary {
 
 .style-speak:hover {
   border-color: var(--accent-border);
-}
-
-
-/* ---- practice notebook ---- */
-
-/* An embedded panel in the normal practice screen flow, not a full-screen takeover —
-   since notebook-default-practice, the question header stays visible above it at all
-   times (see docs/features/notebook-default-practice/design.md). flex: 1 1 auto (rather
-   than a fixed height) lets it fill whatever .practice has left over after its other
-   children (header/question/hints) — on a normal question screen (state A) that's nearly
-   the whole free viewport, not a small fixed box. min-height is a floor, not a target: if
-   state D's extra content (teacher paragraph/feedback/explanation) needs more room than
-   that leaves, .practice grows past the viewport and the page scrolls, exactly as it
-   already could before this box existed. See
-   docs/features/notebook-default-practice/architecture.md, "עודכן בסבב רוויזיה א׳". */
-.notebook-screen {
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 auto;
-  min-height: 360px;
-  margin: 0 0 16px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  overflow: hidden;
-  background: var(--bg);
-  direction: rtl;
-}
-
-/* Real fullscreen, not a bigger embedded box: the "⤢" toggle expands .notebook-screen to
-   cover the viewport instead of merely re-fitting the zoom inside its existing size. This
-   is the exact position:fixed;inset:0 mechanism practice-notebook used before this
-   feature embedded the notebook in the page flow (same z-index:30, chosen so
-   .notebook-confirm-backdrop's z-index:31 still layers above it if a delete is confirmed
-   while in fullscreen) — reused rather than the browser's Fullscreen API; see
-   architecture.md for why. */
-.notebook-screen.fullscreen {
-  position: fixed;
-  inset: 0;
-  z-index: 30;
-  min-height: 0;
-  margin: 0;
-  border-radius: 0;
-}
-
-.notebook-fullscreen-topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 12px 20px;
-  border-bottom: 1px solid var(--border);
-}
-
-.notebook-fullscreen-exit {
-  flex-shrink: 0;
-  background: none;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  width: 36px;
-  height: 36px;
-  font-size: 18px;
-  line-height: 1;
-  cursor: pointer;
-  color: var(--text-h);
-}
-
-.notebook-topbar {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--border);
-}
-
-/* Groups the page indicator with the question's read-aloud button — now the one place that
-   button lives, embedded or fullscreen (see docs/features/notebook-question-on-page/) — so
-   .notebook-topbar's existing space-between still works with two groups, not three loose
-   items spread evenly across the bar. */
-.notebook-topbar-start {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.notebook-page-indicator,
-.notebook-zoom-readout {
-  font-size: 13px;
-  color: var(--text);
-}
-
-/* Owns the flex sizing that .notebook-stage used to own directly — see the JSX comment
-   above .notebook-stage-frame for why this split exists (the floating button columns
-   need a non-clipped box to live in). Same final size as .notebook-stage always had;
-   .notebook-stage fills it exactly via inset:0, so nothing that measured
-   .notebook-stage's own box (several e2e tests) sees any change. */
-.notebook-stage-frame {
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  /* .notebook-screen is a flex column, and flex items paint in document order when
-     z-index is auto — NOT non-positioned-before-positioned like normal block layout. Since
-     .notebook-toolbar comes after this frame in the markup, it would otherwise paint (and
-     win every click) on top of the floating button columns whenever they overlap on a
-     short embedded stage. z-index:1 settles that in the frame's favor, since the floating
-     controls are the thing the student just reached for. */
-  z-index: 1;
-}
-
-/* The viewing window. overflow:hidden and touch-action:none on purpose — there is no
-   scrollable element here at all, so there is nothing for the browser to scroll or
-   rubber-band on its own; every pan/zoom gesture is handled by hand in
-   PracticeNotebook.tsx. touch-action alone doesn't stop every native touch gesture: a real
-   phone's own long-press recognition (callout menu, text-selection magnifier) can still
-   fire independently of it, sending us a pointercancel mid-hold that our hold-to-zoom
-   gesture then reads as "finger lifted" — see docs/features/notebook-hold-to-zoom/,
-   "עדכון סבב ג׳". touch-callout/user-select suppress that native recognition outright. */
-.notebook-stage {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  background: var(--code-bg);
-  touch-action: none;
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  user-select: none;
-}
-
-/* The page itself — fixed size in its own coordinate space, panned/zoomed purely via
-   the transform PracticeNotebook.tsx sets on this element.
-   The squared-paper guide is one grid, sized and coloured as its own design choice (24px,
-   --notebook-grid) — not derived from CELL/ERASER_CELLS in notebook.ts. It used to be two
-   overlapping grids that happened to reuse those same numbers, which made the "paper" and
-   the ink rendering visually indistinguishable; the two are unrelated and are kept that
-   way on purpose now. */
-.notebook-stack {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 1200px;
-  height: 1600px;
-  transform-origin: 0 0;
-  background: var(--bg);
-  background-image:
-    repeating-linear-gradient(
-      0deg,
-      color-mix(in srgb, var(--notebook-grid) 55%, transparent) 0 1px,
-      transparent 1px 24px
-    ),
-    repeating-linear-gradient(
-      90deg,
-      color-mix(in srgb, var(--notebook-grid) 55%, transparent) 0 1px,
-      transparent 1px 24px
-    );
-}
-
-.notebook-canvas {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  display: block;
-  touch-action: none;
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  user-select: none;
-}
-
-/* The question, written on the page itself — a sibling of .notebook-canvas inside the same
-   transformed .notebook-stack, so it pans/zooms with the page exactly like the grid and the
-   student's own ink. After the canvas in markup order (paints on top; z-index below is
-   explicit insurance, not load-bearing on its own) and pointer-events:none so a stroke that
-   starts over it still reaches the canvas underneath — it's never ink, never erasable, and
-   never part of filledCells. Deliberately NOT aria-hidden (unlike .notebook-minimap, which
-   is purely decorative): this is real, meaningful content for a screen reader. See
-   docs/features/notebook-question-on-page/. */
-.notebook-question-header {
-  position: absolute;
-  z-index: 1;
-  top: 24px;
-  /* Physical left/right, never a logical inset — which corner the page opens anchored to
-     now itself depends on this question (anchorPanX in notebook.ts: an equation opens
-     top-left, a Hebrew word problem opens top-**right**, see PracticeNotebook.tsx's
-     anchorRight prop), so a logical inset tied to document direction would be solving the
-     wrong variable here anyway. `left`/`right` themselves are set per-variant below, not
-     here — the two directions anchor from opposite physical edges. See docs/features/
-     notebook-question-on-page/design.md, "עיגון פיזי, לא לוגי — סבב ג׳". */
-  pointer-events: none;
-  padding-bottom: 16px;
-  border-bottom: 1px solid color-mix(in srgb, var(--notebook-grid) 70%, transparent);
-}
-
-.notebook-question-header.qh-ltr {
-  direction: ltr;
-  text-align: left;
-  /* 96px, not the 56px a plain "not flush" margin would suggest — measured against the real
-     floating zoom/fullscreen/clear button column, which is fixed screen-space chrome (not
-     part of the page) sitting at the stage's own top-left corner regardless of pan/zoom. At
-     the fixed opening zoom (0.7) that column's right edge sits ~71px into the page's own
-     coordinate space; 96px (4 grid cells) clears it with room to spare instead of landing
-     text half-behind a button, which 56px alone did. See docs/features/
-     notebook-question-on-page/architecture.md, "Implementation Notes — סבב ב׳". */
-  left: 96px;
-  /* Hugs its own content instead of stretching to a fixed width — a bare equation reads
-     top-left, not flush against the edge and not centered across the page. See
-     docs/features/notebook-question-on-page/design.md, "מיקום לפי כיוון קריאה". */
-  width: fit-content;
-}
-
-.notebook-question-header.qh-rtl {
-  direction: rtl;
-  text-align: right;
-  /* Right-aligned text, hugging the page's own physical *right* edge — not a compromise
-     anymore. The page itself now opens anchored to its physical-right corner whenever the
-     question on it is a word problem (anchorRight prop, PracticeNotebook.tsx), so what's in
-     view by default is exactly the area this box lives in, the same way .qh-ltr's left
-     margin lines up with the page's default left-anchored view. 80px (not a flush 56px) —
-     measured against the real floating minimap, fixed screen-space chrome at the stage's
-     own top-right corner regardless of pan/zoom — clears its footprint with room to spare,
-     the same reasoning as .qh-ltr's 96px against the zoom column on the opposite side. See
-     docs/features/notebook-question-on-page/design.md, "עיגון פיזי, לא לוגי — סבב ג׳". */
-  right: 110px;
-  /* A longer question simply wraps into more lines — the header's height is already dynamic
-     by design, not a fixed budget. 260px, not something larger: measured against the real
-     visible stage width on the smallest verified phone (320px viewport, ~270px stage) —
-     110px of right margin (clearing the minimap, see above) plus the box's own width have to
-     both fit inside that, or the box's *left* edge runs off the stage's own left edge
-     instead (caught by an earlier, too-wide attempt during this same round — see
-     architecture.md, "Implementation Notes — סבב ג׳"). */
-  width: 260px;
-}
-
-.qh-text-ltr {
-  font-size: 44px;
-  font-weight: 600;
-  color: var(--notebook-question-ink);
-}
-
-.qh-text-rtl {
-  display: inline-block;
-  max-width: 260px;
-  font-size: 26px;
-  line-height: 150%;
-  font-weight: 600;
-  color: var(--notebook-question-ink);
-}
-
-/* The teacher's note, written below the question — always a Hebrew sentence, so always its
-   own RTL block even inside .qh-ltr's direction:ltr parent (an equation question). See
-   docs/features/notebook-teacher-marks/architecture.md. */
-.notebook-teacher-mark {
-  direction: rtl;
-  text-align: right;
-  margin-top: 8px;
-  /* "Playpen Sans Hebrew" (loaded in index.html) — falls back to the app's regular sans if
-     the web font fails to load, never to no text at all. A handwriting-style font reads
-     smaller than a regular sans at the same nominal size, so this is larger (22px, not
-     20px) and more open (150%, not 140%) than the plain-text version this replaced — see
-     docs/features/notebook-teacher-marks/, "עדכון סבב ב׳". */
-  font-family: "Playpen Sans Hebrew", var(--sans);
-  font-size: 22px;
-  font-weight: 700;
-  line-height: 150%;
-}
-
-/* .qh-ltr's own width is fit-content (hugs the short equation above it) — without a cap
-   here, a long Hebrew sentence would stretch that box arbitrarily wide. 280px matches the
-   safe width already established for RTL text at the narrowest verified phone (320px) in
-   notebook-question-on-page/architecture.md. .qh-rtl already has a fixed 260px width from
-   the box the mark sits inside, so no separate cap is needed there. */
-.qh-ltr .notebook-teacher-mark {
-  max-width: 280px;
-}
-
-/* Same three literals already used by .feedback.correct/.correct-flagged/.wrong — not a
-   new CSS variable, on purpose: none of those three is a token today either. */
-.notebook-teacher-mark-green {
-  color: #16a34a;
-}
-
-.notebook-teacher-mark-amber {
-  color: #b45309;
-}
-
-.notebook-teacher-mark-red {
-  color: #dc2626;
-}
-
-/* A rough circle+line pointing at roughly where a flagged mistake was written, toward the
-   note above — page-space (viewBox matches PAGE_WIDTH/PAGE_HEIGHT exactly, so coordinates
-   passed in from Practice.tsx need no conversion). Same layer/z-index/pointer-events
-   treatment as .notebook-question-header — never the student's own ink, never captures a
-   stroke. See docs/features/notebook-teacher-marks/architecture.md, "סבב ב׳". */
-.notebook-teacher-pointer {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-}
-
-.notebook-teacher-pointer circle {
-  fill: none;
-  stroke: #dc2626;
-  stroke-width: 3px;
-}
-
-.notebook-teacher-pointer line {
-  stroke: #dc2626;
-  stroke-width: 3px;
-  stroke-linecap: round;
-}
-
-.notebook-minimap {
-  position: absolute;
-  top: 10px;
-  inset-inline-start: 10px;
-  width: 60px;
-  height: 80px;
-  background: rgba(20, 16, 30, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  border-radius: 4px;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.notebook-minimap-view {
-  position: absolute;
-  border: 1.5px solid var(--accent);
-  background: var(--accent-bg);
-}
-
-/* Reaches the ⚙️ dialog without leaving the question in progress — see docs/features/
-   notebook-nav-buttons-visibility/. Left side, at the bottom (physical — inset-inline-end
-   resolves to the left edge under this app's RTL direction, same mapping as
-   .notebook-zoom-controls above), per explicit user feedback on the preview. Was beside
-   .notebook-minimap (top-right) at first.
-   NOT flush at inset-inline-end:10px (the raw edge, same as .notebook-zoom-controls) —
-   measured on the real embedded stage (1280x720 test viewport, frame ~190px tall): the
-   zoom column (240px, top-anchored) overflows ~60px past the frame's own bottom edge, so
-   a bottom-anchored element flush at that same edge still lands inside the zoom column's
-   footprint even though the two are anchored to opposite corners — confirmed via a real
-   click-interception failure ("הצגת כל הדף" swallowing clicks meant for ⚙️). Same
-   inset-inline-end: 68px lane as .notebook-pan-controls (10px zoom offset + 48px max
-   button width + 10px gap) clears the zoom column horizontally instead, and bottom vs.
-   the pad's top keeps the two apart from each other too. */
-.notebook-settings-btn {
-  position: absolute;
-  bottom: 10px;
-  inset-inline-end: 68px;
-  padding: 0;
-  width: var(--notebook-btn-size, 40px);
-  height: var(--notebook-btn-size, 40px);
-  border-radius: 50%;
-  background: var(--bg);
-  color: var(--text-h);
-  box-shadow: var(--shadow);
-  font-size: 20px;
-}
-
-/* Fullscreen only — flush at the same edge as .notebook-zoom-controls (inset-inline-end:
-   10px, not the embedded view's 68px inward offset), per explicit user feedback on a real
-   phone: "the settings button should be at the other edge, aligned with the zoom buttons
-   and the rest on the left." The 68px offset exists only to clear .notebook-zoom-controls
-   on the short embedded stage (see the comment above .notebook-pan-controls below) — the
-   fullscreen stage is tall enough (400px+ on a real phone, measured) that the zoom
-   column's own bottom edge sits well above a flush bottom-anchored button, so the offset
-   is pure unused space here, not a safety margin. */
-.notebook-screen.fullscreen .notebook-settings-btn {
-  inset-inline-end: 10px;
-}
-
-/* Pinned top-left (physical — inset-inline-end resolves to the left edge under this app's
-   RTL direction, same mapping already relied on everywhere else in this file), per the
-   redesign: see docs/features/notebook-toolbar-redesign/design.md. Was bottom-anchored
-   before this feature; moved to top so it no longer shares a corner with
-   .notebook-tool-controls/.notebook-pan-controls below. */
-.notebook-zoom-controls {
-  position: absolute;
-  top: 10px;
-  inset-inline-end: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.notebook-zoom-controls button,
-.notebook-tool-controls button,
-.notebook-pan-grid button {
-  padding: 0;
-  border-radius: 50%;
-  background: var(--bg);
-  color: var(--text-h);
-  box-shadow: var(--shadow);
-}
-
-.notebook-zoom-controls button,
-.notebook-tool-controls button {
-  width: var(--notebook-btn-size, 40px);
-  height: var(--notebook-btn-size, 40px);
-  font-size: 20px;
-}
-
-/* Smaller than the zoom buttons on purpose — four of these sit together (the zoom column
-   only ever shows one at a time), so the cross reads as one compact control rather than
-   claiming as much floating space as the whole zoom column. Still a real touch target. */
-.notebook-pan-grid button {
-  width: 32px;
-  height: 32px;
-  font-size: 14px;
-}
-
-/* "הצג את כל הדף" while active — same treatment as a pressed drawing tool (.tool-btn),
-   not a new color: it's a toggle exactly like pen/eraser/pan, just living in this group. */
-.notebook-zoom-controls button[aria-pressed="true"] {
-  background: var(--accent-bg);
-}
-
-/* The directional pad — left side (physical), off by default and reachable only via the
-   ⚙️ setting added in docs/features/notebook-nav-buttons-visibility/. Was bottom-right
-   (inset-inline-start) through PR #78/#80; moved to the opposite inline side per the
-   product request.
-   Top-anchored, beside .notebook-zoom-controls, NOT bottom-anchored below it — measured on
-   the real embedded stage at the standard test viewport (1280x720): the stage is only
-   ~190px tall there, while the zoom column (5 buttons, up to 240px at default sizing) is
-   top-anchored and overflows the whole stage height. A bottom-anchored pad on the same
-   inline side landed entirely inside the zoom column's own vertical range — not an edge
-   case, a total overlap — so e.g. the center of "הקטן" actually hit "הזז שמאלה" instead
-   (confirmed via document.elementFromPoint). Putting the pad beside the zoom column
-   instead of below it removes the collision regardless of stage height — the same
-   "side-by-side beats stacking" fix already used for .notebook-tool-controls vs. this same
-   pad in docs/features/notebook-toolbar-redesign/, and again here for the same reason.
-   inset-inline-end: 68px = the zoom column's own 10px offset + its 48px max button width +
-   a 10px gap, so the two clusters never touch regardless of which is taller. A 3x3 grid in
-   a cross: up/down centered, left and right flanking an empty middle cell — recognizable as
-   "move this way" without reading a single label, which matters for Mika (grade 1, still
-   learning to read). See docs/features/notebook-nav-buttons/design.md. */
-/* Positioning only — the grid itself (and its own direction override, below) lives one
-   level in, on .notebook-pan-grid — direction is inherited by children too, so overriding
-   it here would just move the whole cluster to the wrong corner instead of only reordering
-   its columns (this shipped once already, caught in review: both clusters landed on the
-   same side). */
-.notebook-pan-controls {
-  position: absolute;
-  top: 10px;
-  inset-inline-end: 68px;
-}
-
-/* Tool switcher (hand/pen/eraser) — bottom-right (physical), per
-   docs/features/notebook-toolbar-redesign/design.md ("עמודת כלים — פינה ימנית-תחתונה").
-   NOT flush at the edge (inset-inline-start: 10px, like .notebook-zoom-controls on the
-   opposite side) — that was tried and broke on a real mobile viewport (iPhone/Pixel-size,
-   narrow AND short, never checked until the user explicitly asked — this app's whole e2e
-   suite only ever runs at the desktop default). .notebook-minimap sits top-anchored on
-   this exact same physical side (inset-inline-start: 10px, top: 10px, 82px tall); on a
-   mobile-height embedded stage, minimap (82px, top) and a flush bottom-anchored tool
-   column (136px) together need 218px+ and the real stage is shorter than that — same
-   mechanism as .notebook-zoom-controls overflowing past .notebook-pan-controls, just on
-   the opposite side and against the minimap instead of the zoom column. inset-inline-
-   start: 82px (= minimap's own 10px offset + its 62px width + a 10px gap) clears it
-   horizontally instead, so it no longer depends on the stage's height at all. */
-.notebook-tool-controls {
-  position: absolute;
-  bottom: 10px;
-  inset-inline-start: 82px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-/* Fullscreen only — flush at the real edge (inset-inline-start: 10px, not the embedded
-   view's 82px-in-from-.notebook-minimap offset), per the same user feedback as
-   .notebook-settings-btn above: "the buttons on the right need to be at the screen edge."
-   The 82px offset exists only to clear .notebook-minimap on the short embedded stage —
-   fullscreen's own stage is tall enough (measured 400px+ on a real phone) that minimap
-   (82px, top-anchored) and a flush bottom-anchored tool column (136px) never come close
-   to meeting, so the offset only pushes the buttons in from the edge for no reason here. */
-.notebook-screen.fullscreen .notebook-tool-controls {
-  inset-inline-start: 10px;
-}
-
-.notebook-pan-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 32px);
-  grid-template-rows: repeat(3, 32px);
-  gap: 2px;
-  /* Spatial, not reading-order (see the JSX comment above this group): CSS grid columns
-     flow right-to-left in an RTL-inherited container by default, which would put
-     .notebook-pan-left's column 1 on the physical right — exactly the mismatch this
-     project has shipped before (CLAUDE.md, "כיווניות — הבאג החוזר"). Forcing ltr here
-     keeps column 1 physically on the left regardless of page direction, matching where
-     the ◀ glyph and the "reveal more of the left" behavior actually are. */
-  direction: ltr;
-}
-
-.notebook-pan-up {
-  grid-column: 2;
-  grid-row: 1;
-}
-
-.notebook-pan-left {
-  grid-column: 1;
-  grid-row: 2;
-}
-
-.notebook-pan-right {
-  grid-column: 3;
-  grid-row: 2;
-}
-
-.notebook-pan-down {
-  grid-column: 2;
-  grid-row: 3;
-}
-
-/* One row, always — never wraps into a second line that eats into the writing area above
-   it. Icon-only throughout. Since the redesign moved the pen/eraser/hand tool group and
-   "נקה דף" into their own floating columns (see docs/features/notebook-toolbar-redesign/),
-   this row now only holds prev/next page and add/remove page — add/remove (used far less
-   often) still sit last, the ones a screen too narrow to fit all four scrolls to reach
-   (nowrap + overflow-x, not a second row). */
-.notebook-toolbar {
-  flex-shrink: 0;
-  display: flex;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 10px;
-  border-top: 1px solid var(--border);
-}
-
-/* .tool-btn now lives only in .notebook-tool-controls (the old horizontal .tool-group row
-   in .notebook-toolbar is gone — see docs/features/notebook-toolbar-redesign/). Circular,
-   sized by the same --notebook-btn-size variable as the zoom column; width/height/radius/
-   background/box-shadow come from the shared ".notebook-zoom-controls button,
-   .notebook-tool-controls button" rules above. */
-.tool-btn[aria-pressed="true"] {
-  background: var(--accent-bg);
-}
-
-/* "נקה דף" moved in from .notebook-toolbar into this column — the small gap (not a
-   dividing line) that sets it apart from the four view buttons above it, per design.md. */
-.notebook-clear-btn {
-  margin-top: 8px;
-}
-
-/* The suggested next action (pen or hand) — a pulse distinct from the aria-pressed
-   "selected" treatment above: scale + glow, never background, so a button can show both
-   at once (selected AND suggested — e.g. pen, mid-write, right after a pan ends) without
-   the two states reading as the same thing. Pure CSS, driven by the data-suggested
-   attribute only — no per-frame JS. See docs/features/notebook-toolbar-redesign/. */
-[data-suggested="true"] {
-  animation: notebook-suggest-pulse 1.6s ease-in-out infinite;
-}
-
-@keyframes notebook-suggest-pulse {
-  0%,
-  100% {
-    transform: scale(1);
-    box-shadow: var(--shadow);
-  }
-  50% {
-    transform: scale(1.18);
-    box-shadow: 0 0 0 8px var(--accent-bg);
-  }
-}
-
-.notebook-page-nav {
-  flex-shrink: 0;
-  display: flex;
-  gap: 3px;
-}
-
-/* No longer pushed to the far (inline-end / physical-left) edge — that existed only to
-   keep "הסר דף" far from the pen/eraser/pan tool-group that used to open this row, and
-   that group is gone now (moved to .notebook-tool-controls). Removing the push also fixes
-   a real collision found in testing: physical-left is exactly where
-   .notebook-zoom-controls (now 5 buttons, top-left) can overflow past a short embedded
-   stage, and pushing this row there put "הסר דף" directly under "נקה דף", so a center
-   click on "הסר דף" hit "נקה דף" instead. Now everything in this row clusters at the
-   physical-right edge instead, nowhere near the zoom column. See
-   docs/features/notebook-toolbar-redesign/. */
-
-.notebook-page-nav button {
-  flex-shrink: 0;
-  min-width: 36px;
-  min-height: 36px;
-  padding: 0;
-  background: var(--code-bg);
-  color: var(--text-h);
-  font-size: 13px;
-}
-
-.notebook-remove-btn {
-  color: #dc2626;
-}
-
-.notebook-action-row {
-  flex-shrink: 0;
-  padding: 6px 10px 10px;
-}
-
-.notebook-send-btn {
-  display: block;
-  width: 100%;
-  min-height: 48px;
-  padding: 0 16px;
-  font-size: 18px;
-  font-weight: 600;
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-}
-
-.notebook-send-btn:disabled {
-  background: var(--code-bg);
-  color: var(--text);
-  cursor: default;
-}
-
-.notebook-max-pages-note {
-  margin: 0;
-  padding: 6px 16px 10px;
-  font-size: 13px;
-  color: var(--text);
-  text-align: center;
-}
-
-.notebook-send-error {
-  margin: 0;
-  padding: 6px 16px 10px;
-  font-size: 13px;
-  color: #dc2626;
-  text-align: center;
-}
-
-/* The teacher's reflection on what was written — a standalone panel now (since
-   notebook-default-practice merged the notebook into the main practice screen, there is no
-   more confirmation dialog around it), styled like the other result-screen boxes
-   (.followup, .explanation) rather than inventing a new visual language. */
-.teacher-reading {
-  max-width: 420px;
-  margin: 0 auto 16px;
-  padding: 14px 18px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--code-bg);
-  text-align: right;
-}
-
-.teacher-reading-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 8px;
-}
-
-.teacher-reading-header h3 {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text-h);
-}
-
-.teacher-reading-line {
-  margin: 0 0 6px;
-  color: var(--text-h);
-  font-size: 15px;
-  line-height: 160%;
-}
-
-.teacher-reading-line:last-child {
-  margin-bottom: 0;
-}
-
-/* The teacher spotted a step that didn't follow from the one before it, on an answer that
-   still came out right — same amber as .diagnosis/.feedback.correct-flagged, so this line
-   doesn't blend into the plain reflection line above it. */
-.teacher-reading-flag {
-  color: #b45309;
-  font-weight: 600;
-}
-
-/* "לא הצלחתי לקרוא את זה בבירור" — deliberately plain, not alarming (no red/amber): it is
-   an invitation to write again, not a verdict. */
-.teacher-uncertain {
-  max-width: 420px;
-  margin: 0 auto 16px;
-  padding: 12px 16px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--code-bg);
-  text-align: right;
-  font-size: 15px;
-  line-height: 160%;
-  color: var(--text);
-}
-
-/* "ספרו למורה מה כתבתם" / "המורה טעתה? ספרו לה מה קרה" — a plain text link, not a full
-   button, so it reads as a lightweight alternative next to the message it corrects, not a
-   competing call to action. */
-.teacher-correction-link {
-  display: block;
-  max-width: 420px;
-  margin: 6px auto 0;
-  font-size: 14px;
-  text-align: right;
-}
-
-/* Sits where the link was, replacing it in place (docs/features/notebook-teacher-feedback/
-   design.md, מצב G) — same footprint as .teacher-uncertain/.teacher-reading so it doesn't
-   jump the layout around it. */
-.teacher-correction-form {
-  max-width: 420px;
-  margin: 8px auto 0;
-  text-align: right;
-}
-
-.teacher-correction-input {
-  display: block;
-  width: 100%;
-  min-height: 60px;
-  padding: 10px 12px;
-  font: inherit;
-  font-size: 15px;
-  line-height: 150%;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--bg);
-  color: var(--text-h);
-  resize: vertical;
-}
-
-.teacher-correction-input:focus {
-  outline: none;
-  border-color: var(--accent);
-}
-
-.teacher-correction-actions {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  margin-top: 8px;
-}
-
-.teacher-correction-error {
-  margin: 8px 0 0;
-  font-size: 13px;
-  color: #dc2626;
-}
-
-.notebook-confirm-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 31;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.35);
-  padding: 24px;
-}
-
-.notebook-confirm-dialog {
-  max-width: 360px;
-  background: var(--bg);
-  border-radius: 14px;
-  padding: 20px;
-  box-shadow: var(--shadow);
-}
-
-.notebook-confirm-dialog p {
-  margin: 0 0 16px;
-  color: var(--text-h);
-  font-size: 15px;
-  line-height: 1.5;
-}
-
-.notebook-confirm-actions {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-}
-
-.notebook-confirm-delete {
-  background: #dc2626;
 }
 
 /* ---- clock face — the one diagram that renders next to the question itself, not only

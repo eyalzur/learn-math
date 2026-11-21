@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
-import { answerViaNotebook } from "./helpers/notebookAnswer";
+import { answerQuestion } from "./helpers/answerQuestion";
+import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /**
  * Acceptance criteria under test (docs/features/grade2-syllabus/product-spec.md and
@@ -26,7 +27,6 @@ import { answerViaNotebook } from "./helpers/notebookAnswer";
  *     במושג בסיסי של חילוק").
  */
 
-const MIKA = 0;
 const GRADE_B = 1;
 
 async function open(page: Page) {
@@ -36,7 +36,7 @@ async function open(page: Page) {
 }
 
 async function toGradeB(page: Page) {
-  await page.locator(".student-card").nth(MIKA).click();
+  await createAndSelectStudent(page);
   await page.locator(".grade-card").nth(GRADE_B).click();
 }
 
@@ -75,37 +75,36 @@ test("both new topics still offer a lesson (📖) alongside practice, like every
   }
 });
 
-for (const title of ["כפל וחילוק", "צורות וגופים"]) {
-  test(`${title} is adaptive, entered directly with no level to pick`, async ({ page }) => {
+test("both new topics are adaptive, entered directly with no level to pick", async ({ page }) => {
+  for (const title of ["כפל וחילוק", "צורות וגופים"]) {
+    // beforeEach only resets once per test, not per loop iteration — each pass needs its
+    // own fresh start, or the second openTopic() finds mid-practice state instead of the
+    // student/grade pickers it expects.
+    await open(page);
     await openTopic(page, title);
-    await expect(page.locator(".level-card")).toHaveCount(0);
-    await expect(page.locator(".progress")).toContainText("מתוך 20");
-  });
-}
-
-test("a כפל וחילוק question is a bare expression, shown left-to-right", async ({ page }) => {
-  await openTopic(page, "כפל וחילוק");
-
-  // The question now lives on the notebook page itself, not a separate .problem-box — see
-  // docs/features/notebook-question-on-page/.
-  const box = page.locator(".notebook-question-header");
-  await expect(box).toBeVisible();
-  await expect(box).toHaveCSS("direction", "ltr");
-  await expect(page.locator(".problem-text")).toContainText("×");
-  await expect(page.locator(".problem-text")).toContainText("=");
+    await expect(page.locator(".level-card"), title).toHaveCount(0);
+    await expect(page.locator(".progress"), title).toContainText("מתוך 20");
+  }
 });
 
-test("a צורות וגופים question is a plain Hebrew sentence, with no arithmetic to isolate", async ({
+test("כפל וחילוק is a bare expression shown left-to-right; צורות וגופים is a plain Hebrew sentence", async ({
   page,
 }) => {
-  await openTopic(page, "צורות וגופים");
+  await openTopic(page, "כפל וחילוק");
+  // scored-answer-practice removed the notebook — the question is back to a plain
+  // .problem-box, same as TopicLesson.tsx. See docs/features/scored-answer-practice/.
+  const multBox = page.locator(".problem-box");
+  await expect(multBox).toBeVisible();
+  await expect(multBox).toHaveCSS("direction", "ltr");
+  await expect(page.locator(".problem-text")).toContainText("×");
+  await expect(page.locator(".problem-text")).toContainText("=");
 
-  // Same direction check, new class scheme (qh-rtl instead of box-rtl — kept independent so
-  // TopicLesson.tsx's own .problem-box is unaffected).
-  const box = page.locator(".notebook-question-header");
-  await expect(box).toBeVisible();
-  await expect(box).not.toHaveClass(/qh-ltr/);
-  await expect(box).toHaveCSS("direction", "rtl");
+  await open(page); // beforeEach only resets once — the second topic needs its own fresh start
+  await openTopic(page, "צורות וגופים");
+  const shapeBox = page.locator(".problem-box");
+  await expect(shapeBox).toBeVisible();
+  await expect(shapeBox).not.toHaveClass(/box-ltr/);
+  await expect(shapeBox).toHaveCSS("direction", "rtl");
   await expect(page.locator(".problem-text")).toContainText("?");
 });
 
@@ -119,7 +118,7 @@ test("a wrong answer in כפל וחילוק still shows two hints and a real exp
   await expect(page.locator(".hint")).toHaveCount(2);
   await expect(page.locator(".hint-button")).toHaveCount(0);
 
-  await answerViaNotebook(page, -1); // guaranteed wrong for every question in this topic
+  await answerQuestion(page, -1); // guaranteed wrong for every question in this topic
   await expect(page.locator(".feedback.wrong")).toBeVisible();
   await expect(page.locator(".explanation")).toBeVisible();
   expect(await page.locator(".explanation-step").count()).toBeGreaterThan(0);
@@ -137,7 +136,7 @@ test("a numeric answer to a צורות וגופים question still runs through 
   await openTopic(page, "צורות וגופים");
 
   await expect(page.locator(".problem-text")).not.toBeEmpty();
-  await answerViaNotebook(page, 4);
+  await answerQuestion(page, 4);
   const feedback = page.locator(".feedback");
   await expect(feedback).toBeVisible();
   expect(await feedback.getAttribute("class")).toMatch(/\b(correct|wrong)\b/);
@@ -148,7 +147,7 @@ test("a full practice session of כפל וחילוק ends on a score summary", a
 
   const total = Number((await page.locator(".progress").innerText()).match(/מתוך (\d+)/)![1]);
   for (let i = 0; i < total; i++) {
-    await answerViaNotebook(page, -1); // wrong every time — the score itself isn't the point here
+    await answerQuestion(page, -1); // wrong every time — the score itself isn't the point here
     await nextOrFinish(page);
   }
   await expect(page.locator(".result .score")).toContainText(`מתוך ${total}`);
@@ -168,8 +167,10 @@ async function currentOperands(page: Page, operator: "+" | "−"): Promise<[numb
 
 async function answerCorrectly(page: Page, operator: "+" | "−") {
   const [a, b] = await currentOperands(page, operator);
-  await answerViaNotebook(page, operator === "+" ? a + b : a - b);
-  await nextOrFinish(page);
+  await answerQuestion(page, operator === "+" ? a + b : a - b);
+  // A correct answer advances on its own (docs/features/scored-answer-practice/) — no
+  // "הבא" button exists for this path, unlike a wrong one.
+  await page.waitForTimeout(800);
 }
 
 test("a streak of correct answers on חיבור עד 1000 eventually reaches a three-digit problem", async ({
@@ -210,14 +211,15 @@ test("a streak of correct answers on כפל וחילוק eventually reaches a ba
     if (div) {
       sawDivision = true;
       const [n, k] = [Number(div[1]), Number(div[2])];
-      await answerViaNotebook(page, n / k);
+      await answerQuestion(page, n / k);
     } else if (mult) {
       const [a, b] = [Number(mult[1]), Number(mult[2])];
-      await answerViaNotebook(page, a * b);
+      await answerQuestion(page, a * b);
     } else {
       throw new Error(`not a bare multiplication or division: "${prompt}"`);
     }
-    await nextOrFinish(page);
+    // A correct answer advances on its own — no "הבא" button for this path.
+    await page.waitForTimeout(800);
   }
   expect(sawDivision, "a full streak of correct answers never reached a division question").toBe(true);
 });

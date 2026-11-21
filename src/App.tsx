@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { StudentPicker } from "./components/StudentPicker";
 import { GradePicker } from "./components/GradePicker";
 import { TopicPicker } from "./components/TopicPicker";
@@ -9,39 +9,26 @@ import { History } from "./components/History";
 import { Practice } from "./components/Practice";
 import { Result } from "./components/Result";
 import { SettingsDialog } from "./components/SettingsDialog";
-import { students, grades, gradeById } from "./data/curriculum";
+import { grades, gradeById } from "./data/curriculum";
 import type { Student, Topic, Question } from "./data/curriculum";
 import type { Lesson } from "./data/style";
 import { hasStyleLessons, stylesOf } from "./data/style";
 import { speak, speechParts } from "./data/speech";
-import { recordPractice } from "./data/progress";
-import { loadAdaptiveTier, saveAdaptiveTier } from "./data/adaptiveProgress";
+import { recordPractice, clearStudent as clearStudentProgress } from "./data/progress";
+import {
+  loadAdaptiveTier,
+  saveAdaptiveTier,
+  clearStudent as clearStudentAdaptiveTiers,
+} from "./data/adaptiveProgress";
+import { userStore } from "./data/userStore";
+import { startIdleSpotlightObserver } from "./data/idleSpotlight";
 import {
   readAloud as readAloudFor,
   setReadAloud,
-  holdZoomLevel as holdZoomLevelFor,
-  setHoldZoomLevel,
-  autoScrollJumpLevel as autoScrollJumpLevelFor,
-  setAutoScrollJumpLevel,
-  panSpeedLevel as panSpeedLevelFor,
-  setPanSpeedLevel,
-  buttonSizeLevel as buttonSizeLevelFor,
-  setButtonSizeLevel,
-  suggestionSensitivityLevel as suggestionSensitivityLevelFor,
-  setSuggestionSensitivityLevel,
-  navPadVisible as navPadVisibleFor,
-  setNavPadVisible,
   paceLevel as paceLevelFor,
   setPaceLevel,
 } from "./data/preferences";
 import type { PaceLevel } from "./data/adaptivePace";
-import {
-  autoScrollJumpFractionFor,
-  buttonSizeFor,
-  holdZoomFactorFor,
-  panSpeedFor,
-  suggestionDelayFor,
-} from "./data/notebook";
 import "./App.css";
 
 const STORAGE_KEY = "learn-math:student";
@@ -49,10 +36,9 @@ const MENU_POSITION_STORAGE_KEY = "learn-math:menu-position";
 
 /** localStorage throws in private mode in some browsers — remembering a preference is
  *  never worth taking the app down with it. */
-function loadStudent(): Student | null {
+function loadRememberedId(): string | null {
   try {
-    const id = localStorage.getItem(STORAGE_KEY);
-    return students.find((s) => s.id === id) ?? null;
+    return localStorage.getItem(STORAGE_KEY);
   } catch {
     return null;
   }
@@ -169,21 +155,49 @@ function resolveScreen(studentId: string, gradeId: string | null): Screen {
 }
 
 function App() {
-  const [student, setStudent] = useState<Student | null>(loadStudent);
+  /** The full roster — owned here, not fetched separately by `StudentPicker`, since
+   *  `student` below also needs it (to resolve the remembered id) the moment it loads.
+   *  Starts empty and is populated once `userStore.list()` resolves (see the effect
+   *  below) — with the `localStorage`-backed store this settles before the first paint
+   *  in practice, so there is deliberately no separate loading state (see
+   *  docs/features/manage-students/architecture.md, "Edge Cases"). */
+  const [students, setStudents] = useState<Student[]>([]);
+  const [student, setStudent] = useState<Student | null>(null);
   /** Which grade is active. Not part of `Screen` — like `student`, it is decided before
    *  any screen renders. Survives a reload the same way `student` does; only switching
    *  away from the grade screen (or the student) clears it, never a refresh mid-session. */
-  const [gradeId, setGradeId] = useState<string | null>(() => {
-    const initial = loadStudent();
-    return initial ? (loadMenuPosition(initial.id)?.gradeId ?? null) : null;
-  });
+  const [gradeId, setGradeId] = useState<string | null>(null);
   /** Starts wherever the student's saved menu position points, not always "home" — see
    *  `resolveScreen`. */
-  const [screen, setScreen] = useState<Screen>(() => {
-    const initial = loadStudent();
-    if (!initial) return { name: "home" };
-    return resolveScreen(initial.id, loadMenuPosition(initial.id)?.gradeId ?? null);
-  });
+  const [screen, setScreen] = useState<Screen>({ name: "home" });
+
+  // Resolves the roster and the remembered student together, once, on mount — a
+  // `UserStore` is `Promise`-based even today (see userStore.ts), so this can't be a
+  // synchronous `useState` initializer the way it used to be when `students` was a
+  // hardcoded constant.
+  useEffect(() => {
+    userStore.list().then((list) => {
+      setStudents(list);
+      const remembered = loadRememberedId();
+      const initial = list.find((s) => s.id === remembered) ?? null;
+      if (initial) {
+        const initialGradeId = loadMenuPosition(initial.id)?.gradeId ?? null;
+        setStudent(initial);
+        setGradeId(initialGradeId);
+        setScreen(resolveScreen(initial.id, initialGradeId));
+      }
+    });
+  }, []);
+
+  // Keeps the idle-spotlight CSS animation's --spot-i/--spot-n indices live for the
+  // app's whole lifetime via a MutationObserver, not React's own render cycle — a
+  // dialog whose open state lives in a descendant component's own useState (e.g.
+  // StudentPicker's create-student dialog) never re-renders App itself, so a reindex
+  // tied to App's render cycle alone misses it. Found live: that dialog's own
+  // .grade-card buttons never got a --spot-i, defaulting their stagger delay to the
+  // same 0s and "breathing" in sync instead of one at a time. See idleSpotlight.ts.
+  useEffect(() => startIdleSpotlightObserver(), []);
+
   /** The per-student settings (read-aloud, hold-to-zoom strength) are stored rather than
    *  held in state; this forces a re-read after either of them is written. */
   const [, setPreferencesTick] = useState(0);
@@ -217,6 +231,26 @@ function App() {
     const nextGradeId = loadMenuPosition(next.id)?.gradeId ?? null;
     setGradeId(nextGradeId);
     setScreen(resolveScreen(next.id, nextGradeId));
+  }
+
+  /** New user: added to the roster but deliberately not auto-selected — stays on the
+   *  picker (design.md's explicit call), so creating several students in a row doesn't
+   *  jump into practice after each one. */
+  function createStudent(name: string, gradeId: string) {
+    userStore.create(name, gradeId).then((created) => {
+      setStudents((prev) => [...prev, created]);
+    });
+  }
+
+  /** Deletion is irreversible by design (product-spec.md) — removes the roster entry and
+   *  every bit of saved progress/history/adaptive-tier data for this id, from the three
+   *  places that each separately key by it. */
+  function deleteStudent(id: string) {
+    userStore.remove(id).then(() => {
+      setStudents((prev) => prev.filter((s) => s.id !== id));
+    });
+    clearStudentProgress(id);
+    clearStudentAdaptiveTiers(id);
   }
 
   function switchStudent() {
@@ -326,7 +360,14 @@ function App() {
   }
 
   if (student === null) {
-    return <StudentPicker onSelect={selectStudent} />;
+    return (
+      <StudentPicker
+        students={students}
+        onSelect={selectStudent}
+        onCreate={createStudent}
+        onDelete={deleteStudent}
+      />
+    );
   }
 
   // Checked before the grade gate below, not after: history needs a student but never a
@@ -352,17 +393,6 @@ function App() {
 
   const grade = grades.find((g) => g.id === gradeId)!;
   const readAloud = readAloudFor(student.id);
-  const holdZoomLevel = holdZoomLevelFor(student.id);
-  const holdZoomFactor = holdZoomFactorFor(holdZoomLevel);
-  const autoScrollJumpLevel = autoScrollJumpLevelFor(student.id);
-  const autoScrollJumpFraction = autoScrollJumpFractionFor(autoScrollJumpLevel);
-  const panSpeedLevel = panSpeedLevelFor(student.id);
-  const { stepPx: panStepPx, holdIntervalMs: panHoldIntervalMs } = panSpeedFor(panSpeedLevel);
-  const buttonSizeLevel = buttonSizeLevelFor(student.id);
-  const buttonDiameterPx = buttonSizeFor(buttonSizeLevel);
-  const suggestionSensitivityLevel = suggestionSensitivityLevelFor(student.id);
-  const suggestionDelayMs = suggestionDelayFor(suggestionSensitivityLevel);
-  const navPadVisible = navPadVisibleFor(student.id);
   const paceLevel = paceLevelFor(student.id);
 
   function finish(topic: Topic | null, lesson: Lesson, correctCount: number) {
@@ -377,6 +407,9 @@ function App() {
       // the children's devices. An adaptive topic has no "this" — there was never a level
       // or style to name — so it stays empty and History omits the separator for it.
       levelTitle: topic?.adaptive ? "" : lesson.title,
+      // Separate from levelTitle on purpose — see progress.ts: an adaptive topic has no
+      // named level, but "by difficulty" stats still need something to group it under.
+      difficultyLabel: topic?.adaptive ? `רמה ${adaptiveSession?.difficulty ?? ""}` : undefined,
       correct: correctCount,
       total: lesson.questions.length,
     });
@@ -387,45 +420,14 @@ function App() {
     setScreen({ name: "result", topic, lesson, correctCount });
   }
 
-  // Every settings value/callback pair is shared between whichever screen's own ⚙️ button
-  // decides whether to show itself (via hasAnySettings()) and the dialog that actually
-  // renders them — same props, two different consumers. See
-  // docs/features/notebook-nav-buttons-visibility/architecture.md.
+  // Shared between whichever screen's own ⚙️ button decides whether to show itself (via
+  // hasAnySettings()) and the dialog that actually renders it — same props, two different
+  // consumers.
   const settingsProps = {
     readAloud,
     onReadAloudChange: (value: boolean) => {
       setReadAloud(student.id, value);
       // The value lives in storage, so a render is needed to pick it back up.
-      setPreferencesTick((n) => n + 1);
-    },
-    holdZoomLevel,
-    onHoldZoomLevelChange: (levelId: string) => {
-      setHoldZoomLevel(student.id, levelId);
-      setPreferencesTick((n) => n + 1);
-    },
-    autoScrollJumpLevel,
-    onAutoScrollJumpLevelChange: (levelId: string) => {
-      setAutoScrollJumpLevel(student.id, levelId);
-      setPreferencesTick((n) => n + 1);
-    },
-    panSpeedLevel,
-    onPanSpeedLevelChange: (levelId: string) => {
-      setPanSpeedLevel(student.id, levelId);
-      setPreferencesTick((n) => n + 1);
-    },
-    buttonSizeLevel,
-    onButtonSizeLevelChange: (levelId: string) => {
-      setButtonSizeLevel(student.id, levelId);
-      setPreferencesTick((n) => n + 1);
-    },
-    suggestionSensitivityLevel,
-    onSuggestionSensitivityLevelChange: (levelId: string) => {
-      setSuggestionSensitivityLevel(student.id, levelId);
-      setPreferencesTick((n) => n + 1);
-    },
-    navPadVisible,
-    onNavPadVisibleChange: (value: boolean) => {
-      setNavPadVisible(student.id, value);
       setPreferencesTick((n) => n + 1);
     },
     paceLevel,
@@ -530,14 +532,6 @@ function App() {
             setScreen(insideTopic(topic));
           }}
           readAloud={readAloud}
-          holdZoomFactor={holdZoomFactor}
-          autoScrollJumpFraction={autoScrollJumpFraction}
-          panStepPx={panStepPx}
-          panHoldIntervalMs={panHoldIntervalMs}
-          buttonDiameterPx={buttonDiameterPx}
-          suggestionDelayMs={suggestionDelayMs}
-          navPadVisible={navPadVisible}
-          onOpenSettings={() => setSettingsOpen(true)}
           onAnswered={topic?.adaptive ? (correct) => handleAdaptiveAnswered(topic, correct) : undefined}
         />
         {settingsOpen && <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} {...settingsProps} />}

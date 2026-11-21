@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
-import { answerViaNotebook } from "./helpers/notebookAnswer";
+import { answerQuestion } from "./helpers/answerQuestion";
+import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /**
  * Acceptance criteria under test
@@ -25,8 +26,8 @@ async function openTopic(page: Page, topicTitle: string) {
   await page.goto("/learn-math/");
   await page.evaluate(() => localStorage.clear());
   await page.goto("/learn-math/");
-  await page.locator(".student-card").first().click();
-  // Mika now has two grades available; every topic this file tests is grade 1 (א׳).
+  await createAndSelectStudent(page);
+  // Two grades available; every topic this file tests is grade 1 (א׳).
   await page.locator(".grade-card").first().click();
   await page.locator(".topic-card", { hasText: topicTitle }).click();
   // Grade 1's multi-style topics are entered by style; a written-level topic still asks
@@ -78,7 +79,7 @@ test("hints stay on screen after the answer is checked", async ({ page }) => {
   await page.getByRole("button", { name: HINT }).click();
   await page.getByRole("button", { name: MORE_HINT }).click();
 
-  await answerViaNotebook(page, 999999);
+  await answerQuestion(page, 999999);
 
   // The mistake does not erase what the student tried with.
   await expect(page.locator(".hint")).toHaveCount(2);
@@ -87,7 +88,7 @@ test("hints stay on screen after the answer is checked", async ({ page }) => {
 test("no more hints can be asked for once an answer is checked", async ({ page }) => {
   await openHinted(page);
 
-  await answerViaNotebook(page, 999999);
+  await answerQuestion(page, 999999);
 
   await expect(page.locator(".hint-button")).toHaveCount(0);
 });
@@ -98,7 +99,7 @@ test("the next question starts over with no hints shown", async ({ page }) => {
   await page.getByRole("button", { name: HINT }).click();
   await expect(page.locator(".hint")).toHaveCount(1);
 
-  await answerViaNotebook(page, 999999);
+  await answerQuestion(page, 999999);
   await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
 
   await expect(page.locator(".hint")).toHaveCount(0);
@@ -121,9 +122,11 @@ test("taking a hint does not cost anything in the score", async ({ page }) => {
     const [, a, op, b] = prompt.match(/(\d+)\s*([+−])\s*(\d+)/)!;
     const answer = op === "+" ? Number(a) + Number(b) : Number(a) - Number(b);
 
-    await answerViaNotebook(page, answer);
+    await answerQuestion(page, answer);
     await expect(page.locator(".feedback.correct")).toBeVisible();
-    await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
+    // A correct answer advances on its own (docs/features/scored-answer-practice/) — no
+    // "הבא" button for this path, unlike a wrong one.
+    await page.waitForTimeout(800);
   }
 
   // A perfect score after using every hint available.
@@ -139,9 +142,7 @@ test("every topic offers hints, not just the one they were written for first", a
   // topic that was never part of the original hint work offers them all the same.
   await openTopic(page, "חיבור עד 10");
 
-  // The question now lives on the notebook page itself, not a separate .problem-box — see
-  // docs/features/notebook-question-on-page/.
-  await expect(page.locator(".notebook-question-header")).toBeVisible();
+  await expect(page.locator(".problem-box")).toBeVisible();
   await expect(page.locator(".hint-button")).toBeVisible();
 
   await page.locator(".hint-button").click();

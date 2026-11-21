@@ -152,7 +152,8 @@ export interface Student {
   id: string;
   name: string;
   /** This student's usual grade — shown on their card in `StudentPicker`. Every student
-   *  can actually practise in any grade (see `grades`); this is a label, not a filter. */
+   *  can actually practise in any grade (see `grades`); this is a label, not a filter.
+   *  Chosen once at creation time (see `src/data/userStore.ts`) — not editable today. */
   gradeId: string;
 }
 
@@ -162,12 +163,6 @@ const GRADE_1_TOPICS = [
   "חיסור עד 10",
   "חיבור וחיסור עד 20",
   "עשרות ויחידות",
-];
-
-export const students: Student[] = [
-  { id: "mika", name: "מיקה", gradeId: "1" },
-  { id: "rotem", name: "רותם", gradeId: "6" },
-  { id: "omer", name: "עומר", gradeId: "8" },
 ];
 
 
