@@ -1432,19 +1432,33 @@ body:has(
   max-width: 420px;
   width: 100%;
   max-height: 90vh;
-  overflow-y: auto;
-  /* Scrolling to the end of a long changelog must not "chain" into scrolling the
-     student picker behind it — the backdrop covers the whole screen, but without this
-     a touchpad/touch swipe that hits the dialog's own scroll limit keeps going into
-     whatever's underneath. */
-  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
   background: var(--bg);
   border-radius: 14px;
   padding: 20px;
   box-shadow: var(--shadow);
 }
 
+/* Only this area scrolls — the title above and the close button below (in
+   .settings-actions, flex-shrink: 0 further down) stay on screen the whole time, however
+   long the changelog grows. Found live: with the whole dialog as one scrolling unit, the
+   close button could end up pushed far below the viewport on a long list. */
+.version-log-scroll {
+  overflow-y: auto;
+  /* Scrolling to the end of a long changelog must not "chain" into scrolling the
+     student picker behind it — the backdrop covers the whole screen, but without this
+     a touchpad/touch swipe that hits the dialog's own scroll limit keeps going into
+     whatever's underneath. */
+  overscroll-behavior: contain;
+  /* Required for a flex child's own overflow to actually trigger — without this a flex
+     item refuses to shrink below its content's natural height, so "overflow-y: auto"
+     would never kick in and the dialog would just grow past max-height instead. */
+  min-height: 0;
+}
+
 .version-log-title {
+  flex-shrink: 0;
   margin: 0 0 16px;
   font-size: 19px;
   color: var(--text-h);
@@ -1507,6 +1521,14 @@ body:has(
   margin: 0;
   text-align: right;
   color: var(--text);
+}
+
+/* Scoped to this dialog only — .settings-actions is shared with SettingsDialog.tsx,
+   whose own dialog isn't a flex column, so this has no effect there regardless. Keeping
+   the override scoped here rather than on the shared base rule avoids any risk of
+   changing SettingsDialog's layout as a side effect of this fix. */
+.version-log-dialog .settings-actions {
+  flex-shrink: 0;
 }
 
 /* ---- create-student dialog ---- */
