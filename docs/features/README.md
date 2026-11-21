@@ -7,6 +7,14 @@ architecture, implementation notes, and tests.
 | Feature | Status | Details |
 |---|---|---|
 | שתי שאלות זהות לא יוצאות ברצף | 🟡 ready for review | [status](./no-repeat-consecutive-questions/status.md) |
+| קישורי-טקסט (חזרה/החלף תלמיד) — עיצוב מחדש | 🟢 done — ממתין ל-PR | [status](./back-link-redesign/status.md) |
+| זרקור-מנוחה — תנועה עדינה ומתמשכת | 🟢 done — מוזג ל-main | [status](./idle-spotlight/status.md) |
+| התקנת האפליקציה כ-PWA באייפון ובאנדרואיד | 🟢 done — מוזג ל-main | [status](./pwa-install/status.md) |
+| הרגשה כיפית, כמו משחק | 🟢 done — מוזג ל-main | [status](./playful-redesign/status.md) |
+| לוג גרסאות | 🟢 done — מוזג ל-main | [status](./version-log/status.md) |
+| ניהול משתמשים דינמי | 🟢 done — מוזג ל-main | [status](./manage-students/status.md) |
+| עיצוב חדש — ממתקייה | 🟢 done — מוזג ל-main | [status](./candy-redesign/status.md) |
+| תרגול בתשובה סופית + ניקוד וסטטיסטיקה (מחליף את המחברת) | 🟢 done — מוזג ל-main | [status](./scored-answer-practice/status.md) |
 | תרגול אדפטיבי מתחיל לפי היסטוריה, לא מאפס בכל פעם | 🟢 done — מוזג ל-main | [status](./adaptive-lesson-start/status.md) |
 | דיוק בתיאור טעות התהליך + גיוון דימוי במשוואות חיבוריות | 🟢 done — מוזג ל-main | [status](./teacher-reading-precision/status.md) |
 | השאלה כתובה על דף המחברת עצמו + מיקום לפי כיוון כתיבה | 🟢 done — מוזג ל-main | [status](./notebook-question-on-page/status.md) |

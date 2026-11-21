@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
-import { answerViaNotebook } from "./helpers/notebookAnswer";
+import { answerQuestion } from "./helpers/answerQuestion";
+import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /**
  * Acceptance criteria under test
@@ -16,8 +17,6 @@ import { answerViaNotebook } from "./helpers/notebookAnswer";
  * exactly the failure mode that criterion rules out.
  */
 
-const MIKA = 0;
-
 async function open(page: Page) {
   await page.goto("/learn-math/");
   await page.evaluate(() => localStorage.clear());
@@ -25,7 +24,7 @@ async function open(page: Page) {
 }
 
 async function enterAdd10(page: Page) {
-  await page.locator(".student-card").nth(MIKA).click();
+  await createAndSelectStudent(page); // default gradeId "1" — כיתה א׳
   await page.locator(".grade-card").nth(0).click(); // כיתה א׳
   await page.locator(".topic-card", { hasText: "חיבור עד 10" }).click();
 }
@@ -40,10 +39,18 @@ async function currentPrompt(page: Page): Promise<string> {
   return (await page.locator(".problem-text").innerText()).trim();
 }
 
+/** A correct answer advances on its own (docs/features/scored-answer-practice/) — no
+ *  "הבא" button for that path, unlike a wrong one — same pattern
+ *  adaptive-difficulty.spec.ts's own `answer` helper uses. */
 async function answerUsingPrompt(page: Page, prompt: string, correct: boolean) {
   const [a, b] = operands(prompt);
-  await answerViaNotebook(page, correct ? a + b : a + b + 1000);
-  await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
+  await answerQuestion(page, correct ? a + b : a + b + 1000);
+  const nextButton = page.getByRole("button", { name: /^(הבא|סיום)$/ });
+  if (await nextButton.count()) {
+    await nextButton.click();
+  } else {
+    await page.waitForTimeout(800);
+  }
 }
 
 /** Runs a full 20-question session answering every question the same way (always right, or

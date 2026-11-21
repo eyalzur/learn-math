@@ -106,3 +106,37 @@ Built exactly as planned, no deviations.
   **490/491 passing** — the one failure is the pre-existing
   `grade8-angles-congruence.spec.ts` flake (same one already documented against
   PR #88/#89/#90, unrelated to this change).
+
+## Revision — merging `main` in before merge (2026-11-21)
+
+Light conflict in `App.tsx`'s import block only — `main` had already added its own
+`loadAdaptiveTier`/`saveAdaptiveTier` import from a different change; this branch's new
+`withoutRepeatingPrompt` import slotted in next to it with no logic conflict.
+`handleAdaptiveAnswered`'s own body merged clean.
+
+`tests/e2e/no-repeat-consecutive-questions.spec.ts` needed updating for two unrelated
+`main`-side changes: `answerViaNotebook`/`./helpers/notebookAnswer` (removed with
+`docs/features/scored-answer-practice/`, which replaced the notebook with a typed
+final-answer field) → `./helpers/answerQuestion`, and the old hardcoded
+מיקה/רותם/עומר roster → `createAndSelectStudent` (`docs/features/manage-students/` made
+the roster start empty per profile).
+
+**Found while verifying the rewritten test:** the "run of correct answers (climbing
+difficulty)" case failed intermittently (~20% of runs, different adjacent pair each time)
+under `npm run test:e2e` (dev server, React `StrictMode` active), but passed `8/8` when
+the identical test ran against `vite build` + `vite preview` (no `StrictMode`). Diagnosed
+as a dev-only artifact: `StrictMode` deliberately double-invokes `useState` updater
+functions in development, and here that interacts with the `Math.random()`-based adaptive
+generators in a way that occasionally lets two draws collide despite
+`withoutRepeatingPrompt`'s retry loop. **Confirmed not a production bug** — the live site
+is always a production build, never dev-mode. Documented as a new, general CLAUDE.md
+pitfall (not specific to this fix) rather than silently rerun past or worked around in the
+test. The full suite's second failure this round
+(`grade2-syllabus.spec.ts` › "...basic division...") is very likely the same family —
+also an adaptive-topic test, also cleared on an isolated rerun (`3/3`).
+
+Version re-bumped on top of the merge, `1.50.1 → 1.50.2` (the branch's own prior bump
+predates the merge and no longer reflects `main`'s real version). Full single-run
+`npm run test:e2e --workers=1` after the merge: **345/347** — the two failures are the
+pre-existing `grade8-angles-congruence` flake and the `StrictMode`/adaptive flake above,
+neither caused by this change. `npm run build` and `npm run lint` clean.

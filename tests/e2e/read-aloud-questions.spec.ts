@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
-import { answerViaNotebook } from "./helpers/notebookAnswer";
+import { answerQuestion } from "./helpers/answerQuestion";
+import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /**
  * Acceptance criteria under test
@@ -73,12 +74,14 @@ async function stubNoSpeech(page: Page) {
 const spokenText = (page: Page) =>
   page.evaluate(() => (window as unknown as { __spoken: Spoken[] }).__spoken.map((s) => s.text));
 
-async function openStudent(page: Page, index: number) {
+/** Creates a fresh student and enters grade 1 (א׳) — the only grade this file's own
+ *  content cares about. Returns the name, so a test that needs to come back to the same
+ *  identity later can re-select by it instead of creating another one. */
+async function openStudent(page: Page): Promise<string> {
   await page.goto("/learn-math/");
-  await page.locator(".student-card").nth(index).click();
-  // Mika (the only student this file ever passes) now has two grades available; every
-  // route here is grade 1 (א׳).
-  if (index === 0) await page.locator(".grade-card").first().click();
+  const name = await createAndSelectStudent(page);
+  await page.locator(".grade-card").first().click();
+  return name;
 }
 
 async function fresh(page: Page) {
@@ -120,29 +123,17 @@ async function readAloudState(page: Page): Promise<string | null> {
   return value;
 }
 
-test("every question can be heard before answering, without a mistake first", async ({
+test("every question can be heard before answering, with arithmetic spoken as Hebrew words", async ({
   page,
 }) => {
   await stubSpeech(page);
   await fresh(page);
-  await openStudent(page, 0);
+  await openStudent(page);
   await startHintedLevel(page);
+  await expect(page.locator(".problem-text")).toContainText("12");
 
   // Nothing has been answered and nothing has gone wrong yet.
   await expect(speakButton(page)).toBeVisible();
-  await speakButton(page).click();
-  await expect.poll(() => spokenText(page)).not.toHaveLength(0);
-});
-
-test("the arithmetic is spoken as Hebrew words, not skipped symbols", async ({ page }) => {
-  await stubSpeech(page);
-  await fresh(page);
-  await openStudent(page, 0);
-  await startHintedLevel(page);
-  // The question now lives on the notebook page itself, not a separate .problem-box — see
-  // docs/features/notebook-question-on-page/.
-  await expect(page.locator(".notebook-question-header")).toContainText("12");
-
   await speakButton(page).click();
   await expect.poll(() => spokenText(page)).not.toHaveLength(0);
   const said = (await spokenText(page)).join(" ");
@@ -154,7 +145,7 @@ test("the arithmetic is spoken as Hebrew words, not skipped symbols", async ({ p
 test("a hint is read too — help that cannot be read is not help", async ({ page }) => {
   await stubSpeech(page);
   await fresh(page);
-  await openStudent(page, 0);
+  await openStudent(page);
   await toggleReadAloud(page);
   await startHintedLevel(page);
 
@@ -175,7 +166,7 @@ test("a hint is read too — help that cannot be read is not help", async ({ pag
 test("the setting is off until someone turns it on", async ({ page }) => {
   await stubSpeech(page);
   await fresh(page);
-  await openStudent(page, 0);
+  await openStudent(page);
 
   expect(await readAloudState(page)).toBe("false");
 });
@@ -183,7 +174,7 @@ test("the setting is off until someone turns it on", async ({ page }) => {
 test("with the setting off, nothing is spoken until it is asked for", async ({ page }) => {
   await stubSpeech(page);
   await fresh(page);
-  await openStudent(page, 0);
+  await openStudent(page);
   await startHintedLevel(page);
 
   // Long enough that a delayed auto-read would have fired.
@@ -194,7 +185,7 @@ test("with the setting off, nothing is spoken until it is asked for", async ({ p
 test("with the setting on, a new question reads itself", async ({ page }) => {
   await stubSpeech(page);
   await fresh(page);
-  await openStudent(page, 0);
+  await openStudent(page);
   await toggleReadAloud(page);
   await startHintedLevel(page);
 
@@ -204,7 +195,7 @@ test("with the setting on, a new question reads itself", async ({ page }) => {
 test("the setting survives a reload", async ({ page }) => {
   await stubSpeech(page);
   await fresh(page);
-  await openStudent(page, 0);
+  await openStudent(page);
   await toggleReadAloud(page);
 
   await page.reload();
@@ -215,15 +206,15 @@ test("the setting belongs to the student, not the device", async ({ page }) => {
   await stubSpeech(page);
   await fresh(page);
 
-  await openStudent(page, 0);
+  const studentA = await openStudent(page);
   await toggleReadAloud(page);
   expect(await readAloudState(page)).toBe("true");
 
-  // A different child on the same device is unaffected. Mika's topics screen leads to
+  // A different child on the same device is unaffected. Their topics screen leads to
   // the grade picker first ("← חזרה") — switching student happens from there.
   await page.getByRole("button", { name: "← חזרה" }).click();
   await page.getByRole("button", { name: "← החלף תלמיד" }).click();
-  await page.locator(".student-card").nth(1).click();
+  await createAndSelectStudent(page);
   // Every student now picks a grade first (docs/features/any-grade-any-student).
   await page.locator(".grade-card").nth(2).click(); // grade ו׳
   expect(await readAloudState(page)).toBe("false");
@@ -233,7 +224,7 @@ test("the setting belongs to the student, not the device", async ({ page }) => {
   // this test (a plain reload would have kept it, going back to pick again does not).
   await page.getByRole("button", { name: "← חזרה" }).click();
   await page.getByRole("button", { name: "← החלף תלמיד" }).click();
-  await page.locator(".student-card").nth(0).click();
+  await page.locator(".student-card", { hasText: studentA }).click();
   await page.locator(".grade-card").first().click();
   expect(await readAloudState(page)).toBe("true");
 });
@@ -243,12 +234,12 @@ test("the setting belongs to the student, not the device", async ({ page }) => {
 test("checking an answer silences a reading in progress", async ({ page }) => {
   await stubSpeech(page);
   await fresh(page);
-  await openStudent(page, 0);
+  await openStudent(page);
   await toggleReadAloud(page);
   await startHintedLevel(page);
   await expect.poll(() => spokenText(page)).not.toHaveLength(0);
 
-  await answerViaNotebook(page, 17);
+  await answerQuestion(page, 17);
 
   // The button is back to its idle state, which is the visible half of "stopped".
   await expect(speakButton(page)).toBeVisible();
@@ -258,7 +249,7 @@ test("the speak button turns into a stop, and pressing it again stops", async ({
   // A sentence that lasts, so the talking state is observable at all.
   await stubSpeech(page, 3000);
   await fresh(page);
-  await openStudent(page, 0);
+  await openStudent(page);
   await startHintedLevel(page);
 
   await speakButton(page).click();
@@ -274,22 +265,20 @@ test("the speak button turns into a stop, and pressing it again stops", async ({
 test("a browser with no speech engine shows no setting and no button", async ({ page }) => {
   await stubNoSpeech(page);
   await fresh(page);
-  await openStudent(page, 0);
+  await openStudent(page);
 
-  // Open the settings and look inside: "no read-aloud switch" specifically — not "no switch
-  // anywhere in the dialog", since docs/features/notebook-auto-scroll/ added a second switch
-  // that has nothing to do with speech and is still there regardless.
-  await page.getByRole("button", { name: "הגדרות" }).click();
-  await expect(page.getByRole("switch", { name: READ_ALOUD_SWITCH_NAME })).toHaveCount(0);
-  // The zoom setting has nothing to do with speech, so it is still there — which is also
-  // why the ⚙️ button never opens an empty dialog.
-  await expect(page.locator(".hold-zoom-setting")).toBeVisible();
-  await page.getByRole("button", { name: "סגירה" }).click();
+  // scored-answer-practice removed every other setting (hold-zoom, auto-scroll, pan-speed,
+  // button-size, suggestion-sensitivity) — read-aloud is the only one left, so with no
+  // speech engine there is nothing left for the dialog to show at all, and the ⚙️ button
+  // itself does not render (hasAnySettings() — src/lib/settingsVisibility.ts). This is the
+  // new correct behavior, not a regression: previously a second, unrelated setting kept the
+  // button alive even with speech unsupported; that setting no longer exists.
+  await expect(page.getByRole("button", { name: "הגדרות" })).toHaveCount(0);
 
   await startHintedLevel(page);
   await expect(page.locator(".speak-button")).toHaveCount(0);
-  // And the rest of the screen is untouched. The question now lives on the notebook page
-  // itself, not a separate .problem-box — see docs/features/notebook-question-on-page/.
-  await expect(page.locator(".notebook-question-header")).toBeVisible();
-  await expect(page.locator("canvas")).toBeVisible();
+  // And the rest of the screen is untouched — the question still renders normally, same
+  // .problem-box TopicLesson.tsx uses. See docs/features/scored-answer-practice/.
+  await expect(page.locator(".problem-box")).toBeVisible();
+  await expect(page.locator(".answer-input")).toBeVisible();
 });

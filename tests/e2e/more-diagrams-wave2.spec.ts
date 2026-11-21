@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
-import { answerViaNotebook } from "./helpers/notebookAnswer";
+import { answerQuestion } from "./helpers/answerQuestion";
+import { createAndSelectStudent } from "./helpers/selectStudent";
 import { geometryShape } from "../../src/data/geometryShape";
 import { pythagorasTriangle } from "../../src/data/pythagorasTriangle";
 import { percentStrip } from "../../src/data/percentStrip";
@@ -38,14 +39,15 @@ import type { Question } from "../../src/data/curriculum";
  */
 
 // Every student now picks a grade first (docs/features/any-grade-any-student) — this file
-// only ever uses Rotem (ו׳, third card) and Omer (ח׳, fourth card).
+// only ever uses these two keys to mean "grade ו׳, third card" / "grade ח׳, fourth card",
+// not real roster identities any more (docs/features/manage-students removed those).
 const GRADE_CARD_INDEX: Record<string, number> = { "רותם": 2, "עומר": 3 };
 
 async function open(page: Page, student: string, topic: string) {
   await page.goto("/learn-math/");
   await page.evaluate(() => localStorage.clear());
   await page.goto("/learn-math/");
-  await page.locator(".student-card").filter({ hasText: student }).click();
+  await createAndSelectStudent(page);
   await page.locator(".grade-card").nth(GRADE_CARD_INDEX[student]).click();
   await page.locator(".topic-card").filter({ hasText: topic }).click();
 }
@@ -55,21 +57,36 @@ async function currentPrompt(page: Page): Promise<string> {
 }
 
 async function submit(page: Page, value: number) {
-  await answerViaNotebook(page, value);
+  await answerQuestion(page, value);
 }
 
 const answerWrong = (page: Page) => submit(page, 999999);
 
 // -------------------------------------------------------- the picture never leaks early
 
-test("no geometry shape before the question is answered", async ({ page }) => {
-  await open(page, "רותם", "שטח והיקף");
-  await expect(page.locator(".problem-text")).toBeVisible();
-  await expect(page.locator(".geometry-shape")).toHaveCount(0);
-});
+/**
+ * None of the five new pictures leaks before an answer — same assertion shape (question
+ * visible, that shape's own class at count 0) for each of the five topics, so one test
+ * walks all five rather than five near-identical page loads. Geometry's own correct-answer
+ * case is folded in too, since it reuses the same session already open on that topic.
+ */
+test("no diagram appears before answering, for any of the five new shapes — and a correct answer shows none either", async ({
+  page,
+}) => {
+  const noPictureYet: [string, string, string][] = [
+    ["רותם", "שטח והיקף", ".geometry-shape"],
+    ["עומר", "משפט פיתגורס", ".pythagoras-triangle"],
+    ["רותם", "אחוזים", ".percent-strip"],
+    ["רותם", "יחס ופרופורציה", ".ratio-strips"],
+    ["עומר", "פונקציה קווית", ".linear-graph"],
+  ];
+  for (const [student, topic, shapeClass] of noPictureYet) {
+    await open(page, student, topic);
+    await expect(page.locator(".problem-text"), `${topic}: question not shown`).toBeVisible();
+    await expect(page.locator(shapeClass), `${topic}: shape leaked before answering`).toHaveCount(0);
+  }
 
-test("a correct answer shows no geometry shape", async ({ page }) => {
-  // The opening tier is always "שטח מלבן שאורכו A ורוחבו B" (see
+  // The opening tier of שטח והיקף is always "שטח מלבן שאורכו A ורוחבו B" (see
   // adaptiveAreaPerimeter.ts), so the answer is parseable off the prompt.
   await open(page, "רותם", "שטח והיקף");
   const m = (await currentPrompt(page)).match(/^שטח מלבן שאורכו (\d+) ורוחבו (\d+)$/);
@@ -77,30 +94,6 @@ test("a correct answer shows no geometry shape", async ({ page }) => {
   await submit(page, Number(m![1]) * Number(m![2]));
   await expect(page.locator(".feedback.correct")).toBeVisible();
   await expect(page.locator(".geometry-shape")).toHaveCount(0);
-});
-
-test("no Pythagoras triangle before the question is answered", async ({ page }) => {
-  await open(page, "עומר", "משפט פיתגורס");
-  await expect(page.locator(".problem-text")).toBeVisible();
-  await expect(page.locator(".pythagoras-triangle")).toHaveCount(0);
-});
-
-test("no percent strip before the question is answered", async ({ page }) => {
-  await open(page, "רותם", "אחוזים");
-  await expect(page.locator(".problem-text")).toBeVisible();
-  await expect(page.locator(".percent-strip")).toHaveCount(0);
-});
-
-test("no ratio strips before the question is answered", async ({ page }) => {
-  await open(page, "רותם", "יחס ופרופורציה");
-  await expect(page.locator(".problem-text")).toBeVisible();
-  await expect(page.locator(".ratio-strips")).toHaveCount(0);
-});
-
-test("no linear graph before the question is answered", async ({ page }) => {
-  await open(page, "עומר", "פונקציה קווית");
-  await expect(page.locator(".problem-text")).toBeVisible();
-  await expect(page.locator(".linear-graph")).toHaveCount(0);
 });
 
 // ------------------------------------------------------------------------ geometry
