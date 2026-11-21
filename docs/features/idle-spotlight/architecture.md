@@ -211,3 +211,47 @@ a 3-card screen's spotlight visits each card in DOM order with no overlap, match
 the negative-delay math exactly.
 
 `npm run build`/`npm run lint` clean. Version 1.48.0 → 1.49.0.
+
+## Revision — three fixes found live (2026-11-21, `fix/idle-spotlight-dialog-reindex`)
+
+Reported live: "in the create-student dialog, all the buttons breathe together at the
+same time" (too-fast flashing in sync, not staggered). Investigated directly
+(`getComputedStyle`/inline-style inspection on the actual dialog, not guessed) and
+found three distinct, real issues:
+
+1. **The reindex never ran when the create-student dialog opened.** `reindexIdleSpotlight()`
+   was only called from a `useEffect` tied to `App`'s own render cycle — but the
+   dialog's open state lives in `StudentPicker`'s own `useState` (`createOpen`), which
+   re-renders `StudentPicker`, not `App`. Every `.grade-card` inside the dialog was left
+   with no `--spot-i` at all, so `calc(var(--spot-i, 0) * -1s)` defaulted to the same
+   `0s` for all of them — synchronized flashing, not a staggered cycle. Fixed by
+   replacing the render-cycle effect with `startIdleSpotlightObserver()`
+   (`src/data/idleSpotlight.ts`): a `MutationObserver` on `document.body` that reindexes
+   on *any* DOM change, regardless of which component's state caused it.
+2. **A lone element's cycle (N=1) was too fast** — `calc(var(--spot-n, 1) * 1s)` gives a
+   1-second cycle for a single element (e.g. the version-log's close button), reported
+   live as "blinks too fast." Fixed with `max(3s, calc(var(--spot-n, 1) * 1s))` — floors
+   the cycle at 3s for N≤3, unchanged for N≥3. The per-element delay step also had to
+   change from a flat `1s` to `cycle / N` (via the same `max(3s, ...)` expression). so
+   peaks stay evenly spaced under the floor too, not just for N≥3 where the two
+   formulas coincide.
+3. **Off-screen elements kept animating.** The same investigation added viewport-
+   awareness: `startIdleSpotlightObserver()` now also runs an `IntersectionObserver` and
+   excludes anything not currently intersecting the viewport from indexing, explicitly
+   setting `animation-play-state: paused` on it instead — found, while verifying this,
+   that the version-log dialog's own close button sits ~1668px below the visible
+   viewport (the dialog's content isn't height-constrained, so it extends the whole
+   page) — a separate, pre-existing layout issue, not fixed here, but concrete evidence
+   for the user's own separate "screens shouldn't scroll vertically" point.
+
+Separately, the breathing glow's peak intensity was bumped (ring-spread 6px→9px,
+blur 18px→26px) after live review showed it was genuinely hard to notice on the
+topic-picker screen, especially against the app's pink-on-pink palette — same colors,
+bigger halo, no change to timing.
+
+New regression test: `tests/e2e/idle-spotlight-dialog-reindex.spec.ts` (every grade-card
+inside the create-student dialog gets a distinct `--spot-i`). Existing
+`idle-spotlight.spec.ts` suite re-verified unaffected (N≥4 cases are mathematically
+identical before/after the floor change). Full suite: 343/344, single clean isolated
+run (`--workers=1`) — only the pre-existing documented grade8-angles-congruence flake.
+Version 1.50.0 → 1.50.1.
