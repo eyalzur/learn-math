@@ -41,6 +41,9 @@ async function enterPractice(page: Page) {
   await createAndSelectStudent(page);
   await page.locator(".grade-card").first().click();
   await page.locator(".topic-card, .level-card").first().click();
+  // A topic card opens its lesson first now (docs/features/lesson-always-first).
+  const skipLink = page.getByRole("button", { name: "דלג לתרגול →" });
+  if (await skipLink.count()) await skipLink.click();
   const styleCard = page.locator(".style-card").first();
   if (await styleCard.count()) await styleCard.click();
 }

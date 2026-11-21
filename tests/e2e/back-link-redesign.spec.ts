@@ -36,6 +36,7 @@ test("a text-link does not carry the same heavy box-shadow a real action button 
 
   await page.locator(".grade-card-1").click();
   await page.locator(".topic-card").first().click();
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
   await page.locator(".style-card").first().click();
   const actionButton = page.getByRole("button", { name: "בדיקה" });
   const actionShadow = await actionButton.evaluate((el) => getComputedStyle(el).boxShadow);
@@ -77,6 +78,7 @@ test("real action buttons are unaffected — regression guard", async ({ page })
   await createAndSelectStudent(page, "1");
   await page.locator(".grade-card-1").click();
   await page.locator(".topic-card").first().click();
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
   await page.locator(".style-card").first().click();
 
   const checkShadow = await page

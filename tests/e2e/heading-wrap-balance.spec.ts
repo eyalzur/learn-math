@@ -59,6 +59,7 @@ test("the style picker's heading balances", async ({ page }) => {
   await page.locator(".grade-card").first().click(); // כיתה א׳, which has style-based topics
   const styleTopic = page.locator(".topic-card", { hasText: "מספרים עד 20" });
   await styleTopic.click();
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
   await expect(page.locator(".style-card")).not.toHaveCount(0);
   await expectBalancedH1(page);
 });
@@ -69,6 +70,7 @@ test("the result screen's heading balances", async ({ page }) => {
   await createAndSelectStudent(page);
   await page.locator(".grade-card").first().click();
   await page.locator(".topic-card", { hasText: "חיבור עד 10" }).click();
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
   const total = Number((await page.locator(".progress").innerText()).match(/מתוך (\d+)/)![1]);
   for (let i = 0; i < total; i++) {
     await answerQuestion(page, 999999);

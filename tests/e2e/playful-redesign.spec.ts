@@ -30,6 +30,7 @@ async function startFixedLesson(page: Page) {
   await createAndSelectStudent(page, "1");
   await page.locator(".grade-card").first().click();
   await page.locator(".topic-card").first().click();
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
   await page.locator(".style-card").first().click();
 }
 

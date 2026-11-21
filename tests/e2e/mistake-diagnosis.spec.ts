@@ -26,6 +26,7 @@ async function startMedium(page: Page) {
   // Two grades available; the reported case lives in grade 1 (א׳).
   await page.locator(".grade-card").first().click();
   await page.locator(".topic-card").nth(0).click();
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
   // Grade 1 enters this topic by style now. Every test below is about "איזה מספר בא
   // אחרי 12?" — a two-digit answer is what makes a misread digit or an overshoot mean
   // anything — so walk to it rather than take whatever comes first.
@@ -288,6 +289,7 @@ async function enterDecimals(page: Page) {
   await createAndSelectStudent(page);
   await page.locator(".grade-card").nth(2).click(); // grade ו׳ (docs/features/any-grade-any-student)
   await page.locator(".topic-card").nth(1).click();
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
 }
 
 // The "both operands under 1" shape ("0.4 + 0.2") is roughly one generated question in

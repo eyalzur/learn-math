@@ -61,6 +61,9 @@ async function openOmerTopics(page: Page) {
 async function openTopic(page: Page) {
   await openOmerTopics(page);
   await page.locator(".topic-card", { hasText: TOPIC_TITLE }).click();
+  // A topic card opens its lesson first now (docs/features/lesson-always-first) — skip
+  // straight through to practice, same screen this used to land on directly.
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
 }
 
 /** Pulls the number right after a fixed anchor phrase — targeted, so a prompt with more
@@ -292,7 +295,9 @@ test("the topic-lesson screen explains why the exterior-angle and corresponding-
   page,
 }) => {
   await openOmerTopics(page);
-  await page.getByRole("button", { name: `שיעור: ${TOPIC_TITLE}` }).click();
+  // The topic card now opens its lesson directly (docs/features/lesson-always-first) —
+  // no separate lesson button any more.
+  await page.locator(".topic-card", { hasText: TOPIC_TITLE }).click();
   await expect(page.locator(".problem-text")).toBeVisible();
 
   // Tier 1 (straight/right angle) carries no proof — the lesson doesn't show one it has
