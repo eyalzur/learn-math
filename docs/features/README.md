@@ -13,7 +13,7 @@ architecture, implementation notes, and tests.
 | התקנת האפליקציה כ-PWA באייפון ובאנדרואיד | 🟢 done — מוזג ל-main | [status](./pwa-install/status.md) |
 | הרגשה כיפית, כמו משחק | 🟢 done — מוזג ל-main | [status](./playful-redesign/status.md) |
 | לוג גרסאות | 🟢 done — מוזג ל-main | [status](./version-log/status.md) |
-| לוג גרסאות — כפתור-חזרה קבוע על המסך | 🟡 in design | [status](./version-log-sticky-close/status.md) |
+| לוג גרסאות — כפתור-חזרה קבוע על המסך | 🟡 in architecture | [status](./version-log-sticky-close/status.md) |
 | ניהול משתמשים דינמי | 🟢 done — מוזג ל-main | [status](./manage-students/status.md) |
 | עיצוב חדש — ממתקייה | 🟢 done — מוזג ל-main | [status](./candy-redesign/status.md) |
 | תרגול בתשובה סופית + ניקוד וסטטיסטיקה (מחליף את המחברת) | 🟢 done — מוזג ל-main | [status](./scored-answer-practice/status.md) |
