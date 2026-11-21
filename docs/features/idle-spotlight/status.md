@@ -18,6 +18,7 @@
 נשם-ביחד, זרקור-בודד מהיר-מדי, אלמנטים-מחוץ-לוויופורט ממשיכים-לנוע) + עוצמת-זוהר
 מוגברת — ראו architecture.md's "Revision" section. `fix/idle-spotlight-dialog-reindex`,
 `343/344` (flake ידוע בלבד), גרסה `1.50.0` → `1.50.1`.
+**PR:** https://github.com/eyalzur/learn-math/pull/107 — מוזג 2026-11-21
 
 ## Open questions / blockers
 None.
