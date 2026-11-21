@@ -592,13 +592,21 @@
   margin-top: 12px;
 }
 
-/* "דוגמה N מתוך M" heading on the lesson screen's current page (only shown when the
-   topic has more than one worked example — see TopicLesson.tsx's showTierHeadings). */
-.lesson-page-heading {
-  margin: 0 0 12px;
-  font-size: 16px;
-  color: var(--text-h);
-  text-align: center;
+/* "דוגמה N מתוך M" marker on the lesson screen's current page (only shown when the topic
+   has more than one worked example — see TopicLesson.tsx's showTierHeadings). Inline next
+   to the topic title, not a separate full-width heading — it's a small "you're looking at
+   an example" note, not content that needs its own row (found live: the two stacked
+   headings read as a wall of white space before the actual lesson content). */
+.lesson-page-badge {
+  display: inline-block;
+  margin-inline-start: 10px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--code-bg);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 400;
+  vertical-align: middle;
 }
 
 .explanation {
