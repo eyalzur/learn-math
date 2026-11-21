@@ -19,9 +19,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
-    version: "1.50.2",
+    version: "1.51.1",
     icon: "🔁",
     description: "תיקון: בנושאים אדפטיביים, שתי שאלות זהות (אותם מספרים) כבר לא יוצאות ברצף.",
+  },
+  {
+    version: "1.51.0",
+    icon: "🎯",
+    description: "חדש: בורר \"קצב שינוי הקושי\" (אטי/בינוני/מהיר) בדיאלוג ⚙️, לכל תרגול אדפטיבי.",
   },
   {
     version: "1.50.1",

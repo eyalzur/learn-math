@@ -6,11 +6,18 @@
  * value that gets overwritten. Sharing one array would force every history read to filter
  * out rows that are not practices, which looks cheap on the first day and is not.
  */
+import { DEFAULT_PACE_LEVEL, PACE_LEVELS, type PaceLevel } from "./adaptivePace";
+
 const STORAGE_KEY = "learn-math:preferences";
 
 interface Preferences {
   /** Student id → read every new question aloud without being asked. */
   readAloud?: Record<string, boolean>;
+  /** Student id → how fast adaptive difficulty climbs/drops (a `PACE_LEVELS` id). An id
+   *  rather than the thresholds themselves, validated against the current list: a missing
+   *  or stale value falls back to the default rather than propagating a level nothing can
+   *  render as chosen. */
+  paceLevel?: Record<string, string>;
 }
 
 /**
@@ -39,6 +46,26 @@ export function setReadAloud(studentId: string, value: boolean): void {
     localStorage.setItem(
       STORAGE_KEY,
       JSON.stringify({ ...all, readAloud: { ...all.readAloud, [studentId]: value } }),
+    );
+  } catch {
+    // ignore
+  }
+}
+
+/** How fast adaptive difficulty climbs/drops for this student. Validated against the
+ *  current list: a missing or stale value falls back to the default rather than
+ *  propagating a level nothing can render as chosen. */
+export function paceLevel(studentId: string): PaceLevel {
+  const stored = readAll().paceLevel?.[studentId];
+  return PACE_LEVELS.some((level) => level.id === stored) ? (stored as PaceLevel) : DEFAULT_PACE_LEVEL;
+}
+
+export function setPaceLevel(studentId: string, levelId: PaceLevel): void {
+  try {
+    const all = readAll();
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ ...all, paceLevel: { ...all.paceLevel, [studentId]: levelId } }),
     );
   } catch {
     // ignore

@@ -1,5 +1,6 @@
 import type { Question } from "./curriculum";
 import { type Rng, randInt, pick, makeFreshId, wantsDecimal, round2 } from "./adaptiveHelpers";
+import { nextAdaptiveDifficulty, type PaceLevel } from "./adaptivePace";
 
 /**
  * "משוואות" (עומר, כיתה ח׳), built at runtime — see
@@ -170,7 +171,11 @@ export const EQUATIONS_MAX_DIFFICULTY = 5;
 export const EQUATIONS_INITIAL_DIFFICULTY = 1;
 export const EQUATIONS_QUESTION_COUNT = 20;
 
-export function nextEquationsDifficulty(current: number, wasCorrect: boolean, streak: number): number {
-  if (!wasCorrect) return Math.max(EQUATIONS_MIN_DIFFICULTY, current - 1);
-  return streak >= 2 ? Math.min(EQUATIONS_MAX_DIFFICULTY, current + 1) : current;
+export function nextEquationsDifficulty(
+  current: number,
+  wasCorrect: boolean,
+  streak: number,
+  pace: PaceLevel,
+): number {
+  return nextAdaptiveDifficulty(current, wasCorrect, streak, EQUATIONS_MIN_DIFFICULTY, EQUATIONS_MAX_DIFFICULTY, pace);
 }

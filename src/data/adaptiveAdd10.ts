@@ -1,4 +1,5 @@
 import type { Question } from "./curriculum";
+import { nextAdaptiveDifficulty, type PaceLevel } from "./adaptivePace";
 
 /**
  * "חיבור עד 10", built at runtime instead of written 30 questions deep — same idea as
@@ -114,7 +115,11 @@ export const ADD10_MAX_DIFFICULTY = 3;
 export const ADD10_INITIAL_DIFFICULTY = 1;
 export const ADD10_QUESTION_COUNT = 20;
 
-export function nextAdd10Difficulty(current: number, wasCorrect: boolean, streak: number): number {
-  if (!wasCorrect) return Math.max(ADD10_MIN_DIFFICULTY, current - 1);
-  return streak >= 2 ? Math.min(ADD10_MAX_DIFFICULTY, current + 1) : current;
+export function nextAdd10Difficulty(
+  current: number,
+  wasCorrect: boolean,
+  streak: number,
+  pace: PaceLevel,
+): number {
+  return nextAdaptiveDifficulty(current, wasCorrect, streak, ADD10_MIN_DIFFICULTY, ADD10_MAX_DIFFICULTY, pace);
 }
