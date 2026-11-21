@@ -15,6 +15,7 @@ import type { Lesson } from "./data/style";
 import { hasStyleLessons, stylesOf } from "./data/style";
 import { speak, speechParts } from "./data/speech";
 import { recordPractice, clearStudent as clearStudentProgress } from "./data/progress";
+import { withoutRepeatingPrompt } from "./data/adaptiveHelpers";
 import {
   loadAdaptiveTier,
   saveAdaptiveTier,
@@ -372,9 +373,17 @@ function App() {
     setAdaptiveSession((prev) => {
       if (!prev) return prev;
       const answeredCount = prev.answeredCount + 1;
-      const questions = prev.questions.map((q, i) =>
-        i >= answeredCount ? adaptive.generate(difficulty) : q,
-      );
+      // Only the question at exactly `answeredCount` is ever shown as generated here — every
+      // index past it gets regenerated again (and discarded) the next time this runs, so only
+      // this one needs to avoid repeating the question just answered. See
+      // docs/features/no-repeat-consecutive-questions/architecture.md, "Edge Cases".
+      const questions = prev.questions.map((q, i) => {
+        if (i < answeredCount) return q;
+        if (i === answeredCount) {
+          return withoutRepeatingPrompt(() => adaptive.generate(difficulty), prev.questions[answeredCount - 1].prompt);
+        }
+        return adaptive.generate(difficulty);
+      });
       return { difficulty, streak, answeredCount, questions };
     });
   }
