@@ -6,11 +6,11 @@
 ## Progress
 - [x] Product spec — product-manager — 2026-11-21
 - [x] Design — designer — 2026-11-21
-- [ ] Architecture — tech-lead — not started
+- [x] Architecture — tech-lead — 2026-11-21
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** tech-lead
+**Current phase:** developer
 **Branch:** `fix/version-log-sticky-close`
 **PR:** not opened yet
 
