@@ -1,5 +1,6 @@
 import type { Question } from "./curriculum";
 import { type Rng, randInt, pick, makeFreshId, withoutLeakingHints, wantsDecimal, round2 } from "./adaptiveHelpers";
+import { nextAdaptiveDifficulty, type PaceLevel } from "./adaptivePace";
 
 /**
  * "בעיות מילוליות" (עומר, כיתה ח׳), built at runtime — see
@@ -152,7 +153,11 @@ export const WORD_PROBLEMS_MAX_DIFFICULTY = 5;
 export const WORD_PROBLEMS_INITIAL_DIFFICULTY = 1;
 export const WORD_PROBLEMS_QUESTION_COUNT = 20;
 
-export function nextWordProblemsDifficulty(current: number, wasCorrect: boolean, streak: number): number {
-  if (!wasCorrect) return Math.max(WORD_PROBLEMS_MIN_DIFFICULTY, current - 1);
-  return streak >= 2 ? Math.min(WORD_PROBLEMS_MAX_DIFFICULTY, current + 1) : current;
+export function nextWordProblemsDifficulty(
+  current: number,
+  wasCorrect: boolean,
+  streak: number,
+  pace: PaceLevel,
+): number {
+  return nextAdaptiveDifficulty(current, wasCorrect, streak, WORD_PROBLEMS_MIN_DIFFICULTY, WORD_PROBLEMS_MAX_DIFFICULTY, pace);
 }

@@ -1,5 +1,6 @@
 import type { Question } from "./curriculum";
 import { type Rng, pick, makeFreshId } from "./adaptiveHelpers";
+import { nextAdaptiveDifficulty, type PaceLevel } from "./adaptivePace";
 
 /**
  * "משפט פיתגורס" (עומר, כיתה ח׳), built at runtime — see
@@ -161,7 +162,11 @@ export const PYTHAGORAS_MAX_DIFFICULTY = 5;
 export const PYTHAGORAS_INITIAL_DIFFICULTY = 1;
 export const PYTHAGORAS_QUESTION_COUNT = 20;
 
-export function nextPythagorasDifficulty(current: number, wasCorrect: boolean, streak: number): number {
-  if (!wasCorrect) return Math.max(PYTHAGORAS_MIN_DIFFICULTY, current - 1);
-  return streak >= 2 ? Math.min(PYTHAGORAS_MAX_DIFFICULTY, current + 1) : current;
+export function nextPythagorasDifficulty(
+  current: number,
+  wasCorrect: boolean,
+  streak: number,
+  pace: PaceLevel,
+): number {
+  return nextAdaptiveDifficulty(current, wasCorrect, streak, PYTHAGORAS_MIN_DIFFICULTY, PYTHAGORAS_MAX_DIFFICULTY, pace);
 }

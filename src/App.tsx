@@ -15,6 +15,7 @@ import type { Lesson } from "./data/style";
 import { hasStyleLessons, stylesOf } from "./data/style";
 import { speak, speechParts } from "./data/speech";
 import { recordPractice, clearStudent as clearStudentProgress } from "./data/progress";
+import { withoutRepeatingPrompt } from "./data/adaptiveHelpers";
 import {
   loadAdaptiveTier,
   saveAdaptiveTier,
@@ -22,7 +23,13 @@ import {
 } from "./data/adaptiveProgress";
 import { userStore } from "./data/userStore";
 import { startIdleSpotlightObserver } from "./data/idleSpotlight";
-import { readAloud as readAloudFor, setReadAloud } from "./data/preferences";
+import {
+  readAloud as readAloudFor,
+  setReadAloud,
+  paceLevel as paceLevelFor,
+  setPaceLevel,
+} from "./data/preferences";
+import type { PaceLevel } from "./data/adaptivePace";
 import "./App.css";
 
 const STORAGE_KEY = "learn-math:student";
@@ -265,12 +272,18 @@ function App() {
   /** Entering a topic from its card — unchanged from before docs/features/topic-lesson
    *  existed. An adaptive topic skips the level screen entirely — there is nothing to
    *  pick, so a fresh set of questions is generated immediately and practice starts on
-   *  it. Every other topic is unaffected: `insideTopic` alone decides where it lands. */
-  function enterTopic(topic: Topic) {
+   *  it. Every other topic is unaffected: `insideTopic` alone decides where it lands.
+   *
+   *  Takes `forGradeId` explicitly rather than reading the `gradeId` state closure over —
+   *  docs/features/struggle-diagnosis/ needs to enter a topic that belongs to a grade that
+   *  isn't (yet, or ever becomes, synchronously) the selected one, e.g. from the history
+   *  screen reached before any grade was chosen. `enterTopic` below is every existing
+   *  caller's unchanged entry point, now just a thin wrapper over this. */
+  function enterTopicInGrade(topic: Topic, forGradeId: string) {
     if (topic.adaptive) {
-      if (student && gradeId) rememberMenuPosition(student.id, { gradeId });
+      if (student) rememberMenuPosition(student.id, { gradeId: forGradeId });
       const { adaptive } = topic;
-      const savedTier = student && gradeId ? loadAdaptiveTier(student.id, gradeId, topic.id) : null;
+      const savedTier = student ? loadAdaptiveTier(student.id, forGradeId, topic.id) : null;
       const startingDifficulty =
         savedTier === null
           ? adaptive.initialDifficulty
@@ -284,15 +297,29 @@ function App() {
       return;
     }
     const dest = insideTopic(topic);
-    if (student && gradeId) {
+    if (student) {
       rememberMenuPosition(
         student.id,
         dest.name === "styles" || dest.name === "levels"
-          ? { gradeId, topic: { id: topic.id, kind: dest.name } }
-          : { gradeId },
+          ? { gradeId: forGradeId, topic: { id: topic.id, kind: dest.name } }
+          : { gradeId: forGradeId },
       );
     }
     setScreen(dest);
+  }
+
+  function enterTopic(topic: Topic) {
+    if (!gradeId) return;
+    enterTopicInGrade(topic, gradeId);
+  }
+
+  /** "לתרגל עכשיו" on a struggle-diagnosis card (docs/features/struggle-diagnosis/) — the
+   *  topic can belong to a grade other than whatever's currently selected (or none yet, if
+   *  history was reached before picking a grade), so this also switches `gradeId` rather
+   *  than assuming `enterTopic`'s closure value is already right. */
+  function startStuckTopic(topic: Topic, forGradeId: string) {
+    setGradeId(forGradeId);
+    enterTopicInGrade(topic, forGradeId);
   }
 
   /** The topic's card also offers "שיעור" as a secondary action (see
@@ -331,8 +358,14 @@ function App() {
   function handleAdaptiveAnswered(topic: Topic, correct: boolean) {
     const adaptive = topic.adaptive;
     if (!adaptive || !adaptiveSession) return;
-    const streak = correct ? adaptiveSession.streak + 1 : 0;
-    const difficulty = adaptive.nextDifficulty(adaptiveSession.difficulty, correct, streak);
+    const streak = correct
+      ? adaptiveSession.streak > 0
+        ? adaptiveSession.streak + 1
+        : 1
+      : adaptiveSession.streak < 0
+        ? adaptiveSession.streak - 1
+        : -1;
+    const difficulty = adaptive.nextDifficulty(adaptiveSession.difficulty, correct, streak, paceLevel);
     // Written on every answer, not only at the end of a session — this is also the save
     // point for a session abandoned via "חזרה" (there is no separate save there), see
     // docs/features/adaptive-lesson-start/architecture.md.
@@ -340,9 +373,17 @@ function App() {
     setAdaptiveSession((prev) => {
       if (!prev) return prev;
       const answeredCount = prev.answeredCount + 1;
-      const questions = prev.questions.map((q, i) =>
-        i >= answeredCount ? adaptive.generate(difficulty) : q,
-      );
+      // Only the question at exactly `answeredCount` is ever shown as generated here — every
+      // index past it gets regenerated again (and discarded) the next time this runs, so only
+      // this one needs to avoid repeating the question just answered. See
+      // docs/features/no-repeat-consecutive-questions/architecture.md, "Edge Cases".
+      const questions = prev.questions.map((q, i) => {
+        if (i < answeredCount) return q;
+        if (i === answeredCount) {
+          return withoutRepeatingPrompt(() => adaptive.generate(difficulty), prev.questions[answeredCount - 1].prompt);
+        }
+        return adaptive.generate(difficulty);
+      });
       return { difficulty, streak, answeredCount, questions };
     });
   }
@@ -363,7 +404,7 @@ function App() {
   // — clicking it sets `screen` to "history", but `gradeId` is still null, so the gate
   // below would just render the grade picker again and swallow the click.
   if (screen.name === "history") {
-    return <History student={student} onBack={() => setScreen({ name: "home" })} />;
+    return <History student={student} onBack={() => setScreen({ name: "home" })} onStartTopic={startStuckTopic} />;
   }
 
   // Every student picks a grade before anything else — this is deliberately not folded
@@ -381,6 +422,7 @@ function App() {
 
   const grade = grades.find((g) => g.id === gradeId)!;
   const readAloud = readAloudFor(student.id);
+  const paceLevel = paceLevelFor(student.id);
 
   function finish(topic: Topic | null, lesson: Lesson, correctCount: number) {
     recordPractice({
@@ -415,6 +457,11 @@ function App() {
     onReadAloudChange: (value: boolean) => {
       setReadAloud(student.id, value);
       // The value lives in storage, so a render is needed to pick it back up.
+      setPreferencesTick((n) => n + 1);
+    },
+    paceLevel,
+    onPaceLevelChange: (levelId: string) => {
+      setPaceLevel(student.id, levelId as PaceLevel);
       setPreferencesTick((n) => n + 1);
     },
   };
