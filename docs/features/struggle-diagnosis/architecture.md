@@ -1,0 +1,153 @@
+# אבחון קשיים לאורך זמן — Architecture
+
+## Overview
+פונקציה חדשה (`stuckTopicsFor`) קוראת את `historyFor(studentId)` הקיים,
+מקבצת לפי `topicTitle`, ומחזירה רשימת נושאים "תקועים" — כל אחד כבר פותר
+(resolved) לאובייקט `Topic` אמיתי ול-`gradeId`, כדי ש-`History.tsx` לא
+יצטרך לחפש בעצמו. `App.tsx` מעביר ל-`History` קולבק חדש שמפעיל בדיוק את
+אותה לוגיקת-כניסה-לנושא הקיימת (`enterTopic`), רק עם `gradeId` מפורש
+במקום להסתמך על ה-state הנוכחי — כי ה"היסטוריה" נגישה גם לפני שנבחרה
+כיתה בכלל, וגם יכולה להצביע על כיתה **אחרת** מזו שנבחרה כרגע (תלמיד/ה עם
+כמה כיתות, "כל כיתה לכל תלמיד/ה").
+
+## Affected Files / Components
+- **`src/data/struggleDiagnosis.ts`** (חדש) — `stuckTopicsFor(studentId)`
+  וקבועי הסף (`STUCK_MIN_PRACTICES`, `STUCK_SCORE_THRESHOLD`).
+- **`src/components/History.tsx`** — קורא ל-`stuckTopicsFor`, מרנדר כרטיס
+  לכל תוצאה מעל `.history-list` הקיימת, מקבל prop חדש להפעלת "לתרגל עכשיו".
+- **`src/App.tsx`**:
+  - `enterTopic` (סביב שורה 238) מתפצל: הגוף הקיים עובר לפונקציה חדשה
+    `enterTopicInGrade(topic, forGradeId)` שמקבלת `gradeId` כפרמטר במקום
+    לקרוא אותו מ-closure; `enterTopic(topic)` הופכת לעטיפה דקה
+    (`enterTopicInGrade(topic, gradeId!)`) ששומרת על ההתנהגות הקיימת
+    לכל קורא קיים שלה (כרטיסי נושא תמיד נלחצים אחרי שכיתה כבר נבחרה).
+  - קולבק חדש, `startStuckTopic(topic, forGradeId)`: `setGradeId(forGradeId)`
+    ואז `enterTopicInGrade(topic, forGradeId)` — ה-id המפורש, לא ה-state
+    (שעוד לא התעדכן באותו tick), הוא מה שקובע איזה tier/remembered-position
+    נטענים.
+  - מועבר ל-`<History onStartTopic={startStuckTopic} .../>` בשתי נקודות
+    הרינדור הקיימות של המסך (שורה ~327, לפני ואחרי בחירת כיתה).
+
+## Data / State Changes
+אין שדה state חדש. `stuckTopicsFor` היא פונקציה טהורה שקוראת מ-
+`localStorage` דרך `historyFor` הקיים — אותו דפוס בדיוק כמו `preferences.ts`
+קורא מעל `localStorage` משלו.
+
+```ts
+export interface StuckTopic {
+  topic: Topic;
+  gradeId: string;
+  topicTitle: string; // לנוחות הצגה, זהה ל-topic.title
+}
+export function stuckTopicsFor(studentId: string): StuckTopic[]
+```
+
+## Technical Approach
+1. **קיבוץ**: `historyFor(studentId)` כבר מחזיר "החדש ביותר קודם". עוברים
+   על הרשימה פעם אחת, שומרים לכל `topicTitle` עד 3 הרשומות הראשונות
+   שנתקלים בהן (=3 התרגולים האחרונים של אותו נושא), ושומרים את סדר
+   הופעת-הנושא-הראשונה (לשימור "העדכני קודם" ברמת-הנושא, כפי ש-design.md
+   דורש).
+2. **קביעת "תקוע"**: נושא עם פחות מ-`STUCK_MIN_PRACTICES` (3) רשומות —
+   מדולג. נושא עם 3 ומעלה — תקוע אם ורק אם **שלושת** הרשומות שנאספו (לא
+   כל ההיסטוריה שלו, רק 3 האחרונות) עומדות כולן ב-
+   `correct / total < STUCK_SCORE_THRESHOLD` (0.7).
+3. **פתרון (resolve) ל-Topic אמיתי**: לכל נושא תקוע, מחפשים
+   `grades.find(g => g.label === record.gradeLabel)` ואז
+   `grade.topicSets.find(t => t.title === record.topicTitle)`. לא נמצא
+   (תוכן שהשתנה מאז) → הנושא הזה פשוט מדולג (לא קורס, לא מוצג) — ראו
+   Edge Cases.
+4. **הצגה ב-`History.tsx`**: `stuckTopicsFor(student.id)` נקרא פעם אחת
+   ברינדור הקומפוננטה (היא כבר "נטענת מחדש" בכל פעם שנכנסים למסך, בדיוק
+   כמו `historyFor` עצמו — אין צורך ב-`useEffect`/state נוסף). לכל פריט:
+   כרטיס עם הטקסט מ-design.md וכפתור שקורא
+   `onStartTopic(item.topic, item.gradeId)`.
+5. **`enterTopicInGrade`**: אותו גוף בדיוק של `enterTopic` היום (שמירת
+   מיקום-תפריט, חישוב `startingDifficulty` מ-`loadAdaptiveTier`, בניית
+   מסך "practice" או ניווט ל-`insideTopic`), רק מחליפים כל הופעה של
+   ה-closure `gradeId` בפרמטר `forGradeId`.
+
+## Edge Cases
+- **הכיתה/הנושא כבר לא קיימים** (שינוי תוכן אחרי שהרשומה נשמרה): הפריט
+  הזה מדולג בשקט ב-`stuckTopicsFor` (לא זורק, לא מציג כרטיס שבור) — אותה
+  גישה כמו `preferences.ts`'s "ברירת מחדל אם הערך לא תקף".
+- **תלמיד/ה עם כמה כיתות ("כל כיתה לכל תלמיד/ה")**: נושא תקוע יכול להגיע
+  מכיתה שונה מזו שנבחרה כרגע (או מבלי שנבחרה כיתה בכלל — מסך ההיסטוריה
+  נגיש גם לפני כן). `startStuckTopic` קובע את ה-`gradeId` במפורש, לא
+  מניח שזה מה שכבר נבחר.
+- **אותו שם נושא בשתי כיתות שונות**: `historyFor` כולל `gradeLabel` לכל
+  רשומה, אז הקיבוץ-וההתאמה הם תמיד (נושא, כיתה) ביחד, לא לפי שם נושא
+  לבד — שני "שברים" בכיתות שונות לא יתערבבו לרצף אחד.
+- **מסך ריק (אין היסטוריה בכלל)**: `historyFor` כבר מחזיר `[]`, אז
+  `stuckTopicsFor` מחזיר `[]` וה-UI לא מוסיף כלום — זהה למצב הקיים היום.
+
+## Risks / Tradeoffs
+- **לא נשמר/נשכח (cache)** — `stuckTopicsFor` רץ מחדש בכל כניסה למסך,
+  קריאה פשוטה על כל ההיסטוריה. בהיקף הנתונים הזה (תרגולים בודדים,
+  לא אלפים) זה זניח; לא הוצדק להוסיף cache.
+- **הסף (3/70%) קבוע בקוד, לא ניתן לכיוון** — בכוונה, per product-spec.md
+  Out of Scope.
+
+## Open Questions
+None.
+
+## Implementation Notes
+
+Built exactly as planned, no deviations.
+
+- `src/data/struggleDiagnosis.ts` (new): `stuckTopicsFor`, `STUCK_MIN_PRACTICES`,
+  `STUCK_SCORE_THRESHOLD`, keyed by `(gradeLabel, topicTitle)` together so two
+  same-named topics in different grades never share a streak. Order falls out of
+  `Map` insertion order for free, since `historyFor` is already newest-first —
+  no separate sort needed.
+- `src/components/History.tsx`: new `onStartTopic` prop, renders `.stuck-topics`
+  above the existing `.history-list` when `stuckTopicsFor` returns anything.
+- `src/App.tsx`: `enterTopic` split into `enterTopicInGrade(topic, forGradeId)`
+  (the real logic, parameterized) + a thin `enterTopic(topic)` wrapper for every
+  existing caller (unchanged behavior — confirmed by the full e2e run below,
+  which exercises `enterTopic` throughout and stayed green). New
+  `startStuckTopic(topic, forGradeId)` sets `gradeId` and calls
+  `enterTopicInGrade` with the explicit id in the same tick, not the
+  not-yet-updated state.
+- `src/App.css`: new `.stuck-topics`/`.stuck-topic-card`/`.stuck-topic-icon`/
+  `.stuck-topic-text` rules, reusing the `--accent-bg`/`--accent-border` tokens
+  the ⚙️ dialog's selected-option state already uses, for the same soft
+  (not alarming) highlight design.md asked for. The "לתרגל עכשיו" button is a
+  plain unclassed `<button>` — already the app's primary/accent style
+  (`src/App.css`, the base `button` rule), no new button variant needed.
+- Manually verified in the dev server with seeded `localStorage` history (three
+  sub-70% "אחוזים" records for רותם): the card renders correctly, and clicking
+  "לתרגל עכשיו" **before any grade was ever selected** (from the grade-picker
+  screen's own "ההתקדמות שלי" link) correctly lands straight on that topic's
+  practice screen — the exact cross-grade/no-grade-yet case this architecture
+  was built for. No console errors.
+- Version bumped `1.42.0 → 1.43.0` (`npm run bump:feature`).
+- `npm run build` and `npm run lint` are clean. Full single-run `npm run test:e2e`:
+  **490/491 passing** — the one failure is the pre-existing
+  `grade8-angles-congruence.spec.ts` flake (unrelated, already documented against
+  PR #88/#89/#90/#91).
+
+## Revision — merging `main` in before merge (2026-11-21)
+
+`main` had added its own `StatsSection` (per-topic/per-difficulty score summaries) to
+`History.tsx` in parallel with this feature's stuck-topic cards — both insert content
+between the `<h1>` and the practice-history list, so `History.tsx` conflicted on the
+import block and the component signature. Resolved by keeping both: `StatsSection` stays
+exactly as `main` built it, `.stuck-topics` renders above it exactly as this feature built
+it, neither one's code touched.
+
+`tests/e2e/struggle-diagnosis.spec.ts` needed a real rewrite, not just an import swap:
+it assumed a fixed `.student-card` roster (`מיקה`/`רותם`/`עומר`, hardcoded `studentId:
+"rotem"`) that no longer exists — `docs/features/manage-students/` made the roster start
+empty per profile, and student ids are now real `crypto.randomUUID()`s assigned at
+creation, unknowable in advance. Fixed by creating a real student through
+`createAndSelectStudent` (`tests/e2e/helpers/selectStudent.ts`) first, then reading its
+actual id back from `localStorage.getItem("learn-math:users")` before seeding
+`learn-math:history` records against it — same "seed storage directly, don't play through
+the UI" technique as before, just anchored to a real id instead of a guessed one.
+
+`npm run build` and `npm run lint` clean. `tests/e2e/struggle-diagnosis.spec.ts` itself:
+`7/7` passing, single clean run. Version re-bumped on top of the merge,
+`1.50.1 → 1.51.0` (the branch's own prior bump predates the merge and no longer reflects
+`main`'s real version). Full single-run `npm run test:e2e --workers=1`: **350/351** — the
+one failure is the pre-existing `grade8-angles-congruence.spec.ts` flake, unrelated.
