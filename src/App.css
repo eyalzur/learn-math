@@ -323,13 +323,35 @@
   padding-block: 8px;
 }
 
+/* A light pill, not bare text — .history-link below used to be bare text like this and
+   was reported live as "looks very bad"; that fix belongs on every link-button, not just
+   the one that happened to get it first (docs/features/back-link-redesign). Deliberately
+   not the heavy box-shadow ledge playful-redesign gives real action buttons (excluded
+   below, App.css's own :not(.link-button) additions) — a secondary nav link shouldn't
+   visually compete with a screen's actual primary action. */
 .link-button {
-  background: none;
+  background: var(--accent-bg);
   border: none;
+  border-radius: 999px;
   color: var(--accent);
   cursor: pointer;
   font: inherit;
-  padding: 0;
+  font-size: 14px;
+  padding: 6px 14px;
+  width: fit-content;
+}
+
+/* Solid accent + white text on hover, not a darker pink tint — var(--accent-border) is a
+   translucent pink meant for borders/strokes (see .lesson-link:hover above), and pink text
+   on a pink-tinted background would be a real contrast problem. This mirrors the same
+   accent+white combination the base `button` rule already uses for primary actions. */
+.link-button:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+.link-button:active {
+  opacity: 0.8;
 }
 
 .progress {
@@ -561,10 +583,13 @@
   color: var(--text);
 }
 
+/* width: fit-content matters now that the base .link-button carries a visible
+   background (docs/features/back-link-redesign) — without it, display: block would
+   stretch the pill the full width of its container instead of hugging its text. */
 .reveal-link {
   display: block;
+  width: fit-content;
   margin-top: 12px;
-  font-size: 14px;
 }
 
 /* "דוגמה N מתוך M" heading on the lesson screen's current page (only shown when the
@@ -703,7 +728,7 @@ button.secondary {
 .topic-card,
 .level-card,
 .style-card,
-button:not(.app-version) {
+button:not(.app-version):not(.link-button) {
   box-shadow: 0 5px 0 var(--accent-border);
   /* No transition on transform/box-shadow here on purpose: an animated press looked
      nicer by eye, but a transition keeps the element's bounding box moving between
@@ -722,7 +747,14 @@ button:not(.app-version) {
    earlier animation simply never plays. Found by checking computed styles live (the
    pop-in entrance silently stopped working the moment idle-breathe's rule was added)
    — every `animation-delay` override below has to list both animations' delays too,
-   positionally matching the two `animation-name`s, for the same reason. */
+   positionally matching the two `animation-name`s, for the same reason.
+
+   The idle-breathe delay-per-step is no longer a flat `1s` — with the cycle floored
+   at `max(3s, N*1s)` (see below), a flat 1s step would space peaks evenly only for
+   N≥3; for N=1/2 the floor stretches the cycle without stretching the step, landing
+   peaks unevenly. `(cycle / N) * -spot-i` keeps the step proportional to the real
+   cycle length, so peaks stay evenly spaced regardless of N — and is a no-op change
+   for N≥3, where cycle/N is already 1s. */
 .student-card,
 .grade-card,
 .topic-card,
@@ -730,8 +762,8 @@ button:not(.app-version) {
 .style-card {
   animation:
     playful-pop-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) backwards,
-    idle-breathe calc(var(--spot-n, 1) * 1s) ease-in-out infinite;
-  animation-delay: 0s, calc(var(--spot-i, 0) * -1s);
+    idle-breathe max(3s, calc(var(--spot-n, 1) * 1s)) ease-in-out infinite;
+  animation-delay: 0s, calc(max(3s, calc(var(--spot-n, 1) * 1s)) / var(--spot-n, 1) * var(--spot-i, 0) * -1);
 }
 
 .student-card:nth-child(2),
@@ -739,21 +771,21 @@ button:not(.app-version) {
 .topic-card:nth-child(2),
 .level-card:nth-child(2),
 .style-card:nth-child(2) {
-  animation-delay: 0.05s, calc(var(--spot-i, 0) * -1s);
+  animation-delay: 0.05s, calc(max(3s, calc(var(--spot-n, 1) * 1s)) / var(--spot-n, 1) * var(--spot-i, 0) * -1);
 }
 .student-card:nth-child(3),
 .grade-card:nth-child(3),
 .topic-card:nth-child(3),
 .level-card:nth-child(3),
 .style-card:nth-child(3) {
-  animation-delay: 0.1s, calc(var(--spot-i, 0) * -1s);
+  animation-delay: 0.1s, calc(max(3s, calc(var(--spot-n, 1) * 1s)) / var(--spot-n, 1) * var(--spot-i, 0) * -1);
 }
 .student-card:nth-child(4),
 .grade-card:nth-child(4),
 .topic-card:nth-child(4),
 .level-card:nth-child(4),
 .style-card:nth-child(4) {
-  animation-delay: 0.15s, calc(var(--spot-i, 0) * -1s);
+  animation-delay: 0.15s, calc(max(3s, calc(var(--spot-n, 1) * 1s)) / var(--spot-n, 1) * var(--spot-i, 0) * -1);
 }
 
 @keyframes playful-pop-in {
@@ -766,7 +798,7 @@ button:not(.app-version) {
 .topic-card:active:not(:disabled),
 .level-card:active,
 .style-card:active,
-button:active:not(:disabled):not(.app-version) {
+button:active:not(:disabled):not(.app-version):not(.link-button) {
   transform: translateY(5px);
   box-shadow: 0 0 0 var(--accent-border);
 }
@@ -800,8 +832,21 @@ button:active:not(:disabled):not(.app-version) {
    Deliberately a narrower selector than playful-redesign's button group above — this
    cycle should only visit primary choices, not every small utility icon (🔊/💡/⚙️/🗑/
    text links), or it would run long and stop feeling "gentle". --spot-i/--spot-n are
-   set by src/data/idleSpotlight.ts (reindexIdleSpotlight, called from App.tsx after
-   every render) — not written here, just consumed.
+   set by src/data/idleSpotlight.ts (startIdleSpotlightObserver, a MutationObserver +
+   IntersectionObserver pair set up once from App.tsx — not tied to any one component's
+   render, so a dialog whose open state lives in a descendant's own useState still gets
+   indexed; see idleSpotlight.ts for why that distinction mattered in practice) — not
+   written here, just consumed.
+
+   `max(3s, ...)` floors the cycle length at 3s even when only one or two elements are
+   on screen (N=1 would otherwise mean a 1-second cycle — reported live as "blinks too
+   fast" on the version-log screen, which only ever has its one button). N=3+ still
+   scales normally (3s, 4s, 5s, ...), unaffected by the floor. This has to be inlined at
+   each selector below rather than factored into a shared custom property at :root: a
+   custom property's value is resolved in the cascade context where it's *declared*, so
+   one declared at :root would always see :root's own --spot-n (never set, always the
+   `1` fallback) instead of each matching element's own inline value.
+
    Cards are handled above, combined into the same declaration as playful-pop-in (two
    animations can't be set by two separate rules on the same property — see the big
    comment there). Buttons have no pop-in of their own, so no such conflict here.
@@ -817,9 +862,10 @@ button:active:not(:disabled):not(.app-version) {
 button:not(.app-version):not(.speak-button):not(.hint-button):not(.link-button):not(.student-card-delete):not(.settings-button):not(.student-card):not(.grade-card):not(.topic-card):not(.level-card):not(.style-card) {
   /* Every matching element gets the identical animation; a negative delay equal to its
      own index means each one is already partway through its own timeline from frame
-     one — the classic "staggered cycle" trick, no JS timing involved. */
-  animation: idle-breathe calc(var(--spot-n, 1) * 1s) ease-in-out infinite;
-  animation-delay: calc(var(--spot-i, 0) * -1s);
+     one — the classic "staggered cycle" trick, no JS timing involved. The delay-per-step
+     is cycle/N, not a flat 1s — see the big comment on the card rule above for why. */
+  animation: idle-breathe max(3s, calc(var(--spot-n, 1) * 1s)) ease-in-out infinite;
+  animation-delay: calc(max(3s, calc(var(--spot-n, 1) * 1s)) / var(--spot-n, 1) * var(--spot-i, 0) * -1);
 }
 
 /* box-shadow is a single property — the rest state here has to repeat the same static
@@ -828,6 +874,11 @@ button:not(.app-version):not(.speak-button):not(.hint-button):not(.link-button):
    glow on top of it only at the peak. Found and fixed by checking computed styles
    live, not assumed — the rest state looked identical to the "glowing" state by eye
    until that check.
+
+   Peak ring-spread/blur bumped from 6px/18px to 9px/26px (2026-11-21) — reported live
+   as "almost can't be seen" on the topic-picker, especially against the app's own
+   pink-on-pink palette. A bigger halo, not a harsher one: same colors/opacity, no
+   change to the stagger timing, no scale.
 
    Deliberately no `transform: scale(...)` here, even though it was tried — box-shadow
    alone doesn't affect an element's bounding box, but a scale pulse does, and
@@ -843,7 +894,7 @@ button:not(.app-version):not(.speak-button):not(.hint-button):not(.link-button):
     box-shadow: 0 5px 0 var(--accent-border);
   }
   12.5% {
-    box-shadow: 0 5px 0 var(--accent-border), 0 0 0 6px var(--accent-bg), 0 0 18px var(--accent-border);
+    box-shadow: 0 5px 0 var(--accent-border), 0 0 0 9px var(--accent-bg), 0 0 26px var(--accent-border);
   }
   25% {
     box-shadow: 0 5px 0 var(--accent-border);
@@ -1086,19 +1137,14 @@ body:has(
   padding: 32px 24px;
 }
 
-/* Previously bare text, flush against .grade-header above it — crammed into the corner
-   with no visual weight of its own, unlike every other tappable thing on the screen
-   (reported live as "looks very bad"). A light pill gives it the same "this is a real,
-   tappable chip" read as the rest of the app's rounded language, without competing with
-   the screen's actual primary action. */
+/* The light-pill look (background/padding/radius/font-size) now lives on the base
+   .link-button itself (docs/features/back-link-redesign) — every link-button gets it,
+   not just this one. Only the layout specifics stay here: block + its own width so it
+   doesn't stretch full-width, and enough margin to sit clearly apart from the link
+   above it rather than crowding against it (10px → 14px top, per design.md). */
 .history-link {
   display: block;
-  width: fit-content;
-  margin: 10px 0 20px auto;
-  padding: 6px 14px;
-  border-radius: 999px;
-  background: var(--accent-bg);
-  font-size: 14px;
+  margin: 14px 0 24px auto;
 }
 
 .topic-grid {
@@ -1567,6 +1613,55 @@ body:has(
   border-radius: 12px;
   background: var(--code-bg);
   text-align: right;
+}
+
+/* The pace-of-difficulty setting — same box as the read-aloud row, but stacked: three
+   options don't fit beside the text at phone width, so the text block sits on top and the
+   options row underneath. See docs/features/adaptive-pace-setting/. Its own class names,
+   not shared with another setting's — two pickers visible in the dialog at once can't
+   share a class, or `.foo-option[aria-pressed="true"]` matches both. */
+.pace-setting {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--code-bg);
+  text-align: right;
+}
+
+.pace-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pace-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.pace-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pace-option {
+  padding: 6px 12px;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+
+.pace-option[aria-pressed="true"] {
+  background: var(--accent-bg);
+  border-color: var(--accent-border);
+  color: var(--text-h);
+  font-weight: 600;
 }
 
 .read-aloud-icon {

@@ -15,14 +15,21 @@ import type { Lesson } from "./data/style";
 import { hasStyleLessons, stylesOf } from "./data/style";
 import { speak, speechParts } from "./data/speech";
 import { recordPractice, clearStudent as clearStudentProgress } from "./data/progress";
+import { withoutRepeatingPrompt } from "./data/adaptiveHelpers";
 import {
   loadAdaptiveTier,
   saveAdaptiveTier,
   clearStudent as clearStudentAdaptiveTiers,
 } from "./data/adaptiveProgress";
 import { userStore } from "./data/userStore";
-import { reindexIdleSpotlight } from "./data/idleSpotlight";
-import { readAloud as readAloudFor, setReadAloud } from "./data/preferences";
+import { startIdleSpotlightObserver } from "./data/idleSpotlight";
+import {
+  readAloud as readAloudFor,
+  setReadAloud,
+  paceLevel as paceLevelFor,
+  setPaceLevel,
+} from "./data/preferences";
+import type { PaceLevel } from "./data/adaptivePace";
 import "./App.css";
 
 const STORAGE_KEY = "learn-math:student";
@@ -183,13 +190,14 @@ function App() {
     });
   }, []);
 
-  // Re-indexes the currently-visible cards/buttons for the idle-spotlight CSS animation
-  // (docs/features/idle-spotlight/) after every render — deliberately no dependency
-  // array, since any navigation/state change can change which elements are on screen.
-  // The scan itself is cheap (a few dozen elements at most); see idleSpotlight.ts.
-  useEffect(() => {
-    reindexIdleSpotlight();
-  });
+  // Keeps the idle-spotlight CSS animation's --spot-i/--spot-n indices live for the
+  // app's whole lifetime via a MutationObserver, not React's own render cycle — a
+  // dialog whose open state lives in a descendant component's own useState (e.g.
+  // StudentPicker's create-student dialog) never re-renders App itself, so a reindex
+  // tied to App's render cycle alone misses it. Found live: that dialog's own
+  // .grade-card buttons never got a --spot-i, defaulting their stagger delay to the
+  // same 0s and "breathing" in sync instead of one at a time. See idleSpotlight.ts.
+  useEffect(() => startIdleSpotlightObserver(), []);
 
   /** The per-student settings (read-aloud, hold-to-zoom strength) are stored rather than
    *  held in state; this forces a re-read after either of them is written. */
@@ -330,8 +338,14 @@ function App() {
   function handleAdaptiveAnswered(topic: Topic, correct: boolean) {
     const adaptive = topic.adaptive;
     if (!adaptive || !adaptiveSession) return;
-    const streak = correct ? adaptiveSession.streak + 1 : 0;
-    const difficulty = adaptive.nextDifficulty(adaptiveSession.difficulty, correct, streak);
+    const streak = correct
+      ? adaptiveSession.streak > 0
+        ? adaptiveSession.streak + 1
+        : 1
+      : adaptiveSession.streak < 0
+        ? adaptiveSession.streak - 1
+        : -1;
+    const difficulty = adaptive.nextDifficulty(adaptiveSession.difficulty, correct, streak, paceLevel);
     // Written on every answer, not only at the end of a session — this is also the save
     // point for a session abandoned via "חזרה" (there is no separate save there), see
     // docs/features/adaptive-lesson-start/architecture.md.
@@ -339,9 +353,17 @@ function App() {
     setAdaptiveSession((prev) => {
       if (!prev) return prev;
       const answeredCount = prev.answeredCount + 1;
-      const questions = prev.questions.map((q, i) =>
-        i >= answeredCount ? adaptive.generate(difficulty) : q,
-      );
+      // Only the question at exactly `answeredCount` is ever shown as generated here — every
+      // index past it gets regenerated again (and discarded) the next time this runs, so only
+      // this one needs to avoid repeating the question just answered. See
+      // docs/features/no-repeat-consecutive-questions/architecture.md, "Edge Cases".
+      const questions = prev.questions.map((q, i) => {
+        if (i < answeredCount) return q;
+        if (i === answeredCount) {
+          return withoutRepeatingPrompt(() => adaptive.generate(difficulty), prev.questions[answeredCount - 1].prompt);
+        }
+        return adaptive.generate(difficulty);
+      });
       return { difficulty, streak, answeredCount, questions };
     });
   }
@@ -380,6 +402,7 @@ function App() {
 
   const grade = grades.find((g) => g.id === gradeId)!;
   const readAloud = readAloudFor(student.id);
+  const paceLevel = paceLevelFor(student.id);
 
   function finish(topic: Topic | null, lesson: Lesson, correctCount: number) {
     recordPractice({
@@ -414,6 +437,11 @@ function App() {
     onReadAloudChange: (value: boolean) => {
       setReadAloud(student.id, value);
       // The value lives in storage, so a render is needed to pick it back up.
+      setPreferencesTick((n) => n + 1);
+    },
+    paceLevel,
+    onPaceLevelChange: (levelId: string) => {
+      setPaceLevel(student.id, levelId as PaceLevel);
       setPreferencesTick((n) => n + 1);
     },
   };

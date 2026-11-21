@@ -132,6 +132,28 @@ npm run build && npm run lint && npm run test:e2e
 פעם אחת וחיכיתי" עדיין לא מבטיח מדידה אמיתית, כי הריצה היחידה ההיא כבר מריצה
 כמה worker-ים בו-זמנית בפנים.
 
+### React StrictMode + `Math.random()` בנושא אדפטיבי — פלייקי רק ב-dev, לא באתר החי
+נמצא ב-2026-11-21 תוך כדי מיזוג `main` לתוך `fix/no-repeat-consecutive-questions`:
+בדיקת e2e ("run of correct answers... never repeats the question just answered",
+נושא `חיבור עד 10`) נכשלה כ-20% מהריצות תחת `npm run test:e2e` (ששם `webServer`
+מריץ `npm run dev`, כלומר `<StrictMode>` פעיל) — אבל **עברה `8/8`** כשאותה בדיקה
+בדיוק רצה נגד `vite build` + `vite preview` (ללא `StrictMode`). React 18's
+`StrictMode` מפעיל updater-functions של `useState` (למשל `setAdaptiveSession(prev
+=> ...)`) פעמיים ב-dev בכוונה, כדי לתפוס קוד לא-טהור — וכאן זה מתערב עם
+`adaptive.generate()`-ים המבוססים על `Math.random()` בדרך שיוצרת לפעמים כפילות
+שהמנגנון `withoutRepeatingPrompt` לא תמיד תופס.
+
+**זו תקלת dev-בלבד, לא רגרסיה באתר החי** — `main` עצמו לא השתנה, ה-`StrictMode`
+לא דולף לבנייה הפרודקשנית (`npm run build`), ואומת ישירות דרך A/B נגד `preview`.
+יתכן שזו גם הסיבה לכשלים-אקראיים-דומים שכבר נצפו בבדיקות אחרות על נושאים
+אדפטיביים (למשל `mika-adaptive-difficulty.spec.ts`'s "19/20 במקום 20/20") —
+לא אושר במפורש לכל מקרה, אבל אותו מנגנון חשוד.
+
+**הכלל:** כשל e2e על נושא אדפטיבי שאינו משחזר בעקביות (נעלם בריצה חוזרת, לא
+תלוי בשינוי שזה עתה נעשה) — לפני שמניחים "רגרסיה", בודקים אם הוא נעלם תחת
+`vite build && vite preview` (בלי `StrictMode`). אם כן, זו תקלת-dev מוכרת, לא
+רגרסיה אמיתית — לא לתקן על ידי שינוי הלוגיקה, ולא להתעלם בלי לתעד.
+
 ### GitHub Pages נכבה בהגדרות הריפו — האתר החי היה למטה בלי שקוד נגע בזה
 ב-2026-09-13 המשתמש דיווח ש-https://eyalzur.github.io/learn-math/ לא עובד. זה לא
 היה קשור לקוד: workflow ה-`Deploy to GitHub Pages` נכשל בכל ריצה מאז מיזוג

@@ -1,5 +1,6 @@
 import type { Question } from "./curriculum";
 import { type Rng, randInt, pick, makeFreshId, withoutLeakingHints } from "./adaptiveHelpers";
+import { nextAdaptiveDifficulty, type PaceLevel } from "./adaptivePace";
 
 /**
  * "יחס ופרופורציה" (רותם, כיתה ו׳), built at runtime — see
@@ -161,7 +162,11 @@ export const RATIO_MAX_DIFFICULTY = 5;
 export const RATIO_INITIAL_DIFFICULTY = 1;
 export const RATIO_QUESTION_COUNT = 20;
 
-export function nextRatioDifficulty(current: number, wasCorrect: boolean, streak: number): number {
-  if (!wasCorrect) return Math.max(RATIO_MIN_DIFFICULTY, current - 1);
-  return streak >= 2 ? Math.min(RATIO_MAX_DIFFICULTY, current + 1) : current;
+export function nextRatioDifficulty(
+  current: number,
+  wasCorrect: boolean,
+  streak: number,
+  pace: PaceLevel,
+): number {
+  return nextAdaptiveDifficulty(current, wasCorrect, streak, RATIO_MIN_DIFFICULTY, RATIO_MAX_DIFFICULTY, pace);
 }
