@@ -8,7 +8,7 @@ architecture, implementation notes, and tests.
 |---|---|---|
 | קישורי-טקסט (חזרה/החלף תלמיד) — עיצוב מחדש | 🟢 done — ממתין ל-PR | [status](./back-link-redesign/status.md) |
 | זרקור-מנוחה — תנועה עדינה ומתמשכת | 🟢 done — מוזג ל-main | [status](./idle-spotlight/status.md) |
-| זרקור-מנוחה — סדר לפי מיקום-מסך, ובולטות גבוהה יותר | 🟡 in architecture | [status](./idle-spotlight-direction-visibility/status.md) |
+| זרקור-מנוחה — סדר לפי מיקום-מסך, ובולטות גבוהה יותר | 🟡 ready for development | [status](./idle-spotlight-direction-visibility/status.md) |
 | התקנת האפליקציה כ-PWA באייפון ובאנדרואיד | 🟢 done — מוזג ל-main | [status](./pwa-install/status.md) |
 | הרגשה כיפית, כמו משחק | 🟢 done — מוזג ל-main | [status](./playful-redesign/status.md) |
 | לוג גרסאות | 🟢 done — מוזג ל-main | [status](./version-log/status.md) |
