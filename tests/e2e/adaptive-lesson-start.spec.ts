@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
-import { answerViaNotebook } from "./helpers/notebookAnswer";
+import { answerQuestion } from "./helpers/answerQuestion";
+import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /**
  * Acceptance criteria under test (docs/features/adaptive-lesson-start/product-spec.md):
@@ -21,7 +22,6 @@ import { answerViaNotebook } from "./helpers/notebookAnswer";
  * where the previous visit left off.
  */
 
-const MIKA = 0;
 const GRADE_B = 1; // כיתה ב׳
 
 async function open(page: Page) {
@@ -31,7 +31,7 @@ async function open(page: Page) {
 }
 
 async function toGradeB(page: Page) {
-  await page.locator(".student-card").nth(MIKA).click();
+  await createAndSelectStudent(page);
   await page.locator(".grade-card").nth(GRADE_B).click();
 }
 
@@ -64,8 +64,10 @@ async function currentSubOperands(page: Page): Promise<[number, number]> {
 }
 
 async function answerAdd(page: Page, a: number, b: number) {
-  await answerViaNotebook(page, a + b);
-  await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
+  await answerQuestion(page, a + b); // always correct
+  // A correct answer advances on its own (docs/features/scored-answer-practice/) — no
+  // "הבא" button for this path.
+  await page.waitForTimeout(800);
 }
 
 /** Answers add100 questions correctly until a question actually needing carrying shows

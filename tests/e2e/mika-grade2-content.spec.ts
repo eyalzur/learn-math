@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { grades } from "../../src/data/curriculum";
+import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /**
  * Acceptance criteria under test (docs/features/mika-grade2-content/product-spec.md).
@@ -11,7 +12,6 @@ import { grades } from "../../src/data/curriculum";
  * numbers wearing the old one.
  */
 
-const MIKA = 0;
 
 const GRADE_1_TOPICS = ["מספרים עד 20", "חיבור עד 10", "חיסור עד 10", "חיבור וחיסור עד 20", "עשרות ויחידות"];
 
@@ -31,7 +31,7 @@ test("picking Mika offers a choice that includes grade א׳ and grade ב׳, not 
   // Every student now sees every grade (docs/features/any-grade-any-student) — this test
   // is no longer about Mika being special, just that her original two grades are both
   // still genuinely present among the choices, in their original order.
-  await page.locator(".student-card").nth(MIKA).click();
+  await createAndSelectStudent(page);
 
   await expect(page.locator("h1")).toHaveText("באיזו כיתה מתרגלים היום?");
   await expect(page.locator(".grade-card")).toHaveCount(4);
@@ -42,7 +42,7 @@ test("picking Mika offers a choice that includes grade א׳ and grade ב׳, not 
 test("both grades stay reachable in the same visit — picking one does not lose the other", async ({
   page,
 }) => {
-  await page.locator(".student-card").nth(MIKA).click();
+  await createAndSelectStudent(page);
   await page.locator(".grade-card").first().click(); // כיתה א׳
   await expect(page.locator(".topic-card")).toHaveCount(GRADE_1_TOPICS.length);
 
@@ -58,7 +58,7 @@ test("both grades stay reachable in the same visit — picking one does not lose
 });
 
 test("grade א׳ keeps its original five topics, unchanged by the new grade", async ({ page }) => {
-  await page.locator(".student-card").nth(MIKA).click();
+  await createAndSelectStudent(page);
   await page.locator(".grade-card").first().click();
 
   await expect(page.locator(".topic-card")).toHaveCount(GRADE_1_TOPICS.length);
@@ -77,7 +77,7 @@ test("חיבור עד 1000 and חיסור עד 1000 are both adaptive, entered d
   // more topics today (כפל וחילוק וצורות וגופים from docs/features/grade2-syllabus, שעון
   // וזמן from docs/features/grade2-clock) — all three adaptive too — this test is only
   // about these original two.
-  await page.locator(".student-card").nth(MIKA).click();
+  await createAndSelectStudent(page);
   await page.locator(".grade-card").nth(1).click();
 
   for (const title of ["חיבור עד 1000", "חיסור עד 1000"]) {
@@ -93,7 +93,7 @@ test("a grade ב׳ arithmetic problem still renders left-to-right inside the RTL
 }) => {
   // The same bug that has shipped three times in this project: a bare expression handed
   // to the browser's bidi algorithm can render its operands in the wrong order.
-  await page.locator(".student-card").nth(MIKA).click();
+  await createAndSelectStudent(page);
   await page.locator(".grade-card").nth(1).click();
   await page.locator(".topic-card", { hasText: "חיסור עד 1000" }).click();
 
@@ -106,7 +106,7 @@ test("a grade ב׳ arithmetic problem still renders left-to-right inside the RTL
 test("you can walk back from the topics screen to the grade choice, and from there to the student picker", async ({
   page,
 }) => {
-  await page.locator(".student-card").nth(MIKA).click();
+  await createAndSelectStudent(page);
   await page.locator(".grade-card").nth(1).click();
   await expect(page.locator(".topic-card")).toHaveCount(5);
 
@@ -114,7 +114,7 @@ test("you can walk back from the topics screen to the grade choice, and from the
   await expect(page.locator(".grade-card")).toHaveCount(4);
 
   await page.locator(".link-button").first().click();
-  await expect(page.locator(".student-card")).toHaveCount(3);
+  await expect(page.locator(".student-card-wrap")).toHaveCount(1);
 });
 
 // ---------------------------------------------------------- content, read from the data

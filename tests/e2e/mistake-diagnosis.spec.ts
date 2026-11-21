@@ -1,8 +1,9 @@
 import { test, expect, type Page } from "@playwright/test";
-import { answerViaNotebook } from "./helpers/notebookAnswer";
+import { answerQuestion } from "./helpers/answerQuestion";
 import { grades } from "../../src/data/curriculum";
 import { diagnose } from "../../src/data/diagnose";
 import { generateDecimalsQuestion } from "../../src/data/adaptiveDecimals";
+import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /**
  * Acceptance criteria under test
@@ -21,8 +22,8 @@ async function startMedium(page: Page) {
   await page.goto("/learn-math/");
   await page.evaluate(() => localStorage.clear());
   await page.goto("/learn-math/");
-  await page.locator(".student-card").nth(0).click();
-  // Mika now has two grades available; the reported case lives in grade 1 (א׳).
+  await createAndSelectStudent(page);
+  // Two grades available; the reported case lives in grade 1 (א׳).
   await page.locator(".grade-card").first().click();
   await page.locator(".topic-card").nth(0).click();
   // Grade 1 enters this topic by style now. Every test below is about "איזה מספר בא
@@ -36,14 +37,14 @@ async function startMedium(page: Page) {
 async function walkTo(page: Page, wanted: string) {
   for (let i = 0; i < 10; i++) {
     if ((await page.locator(".problem-text").innerText()).includes(wanted)) return;
-    await answerViaNotebook(page, 999999);
+    await answerQuestion(page, 999999);
     await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
   }
   throw new Error(`never reached "${wanted}"`);
 }
 
 const answer = async (page: Page, value: string) => {
-  await answerViaNotebook(page, value);
+  await answerQuestion(page, value);
 };
 
 const answerFollowUp = async (page: Page, value: string) => {
@@ -284,7 +285,7 @@ async function enterDecimals(page: Page) {
   await page.goto("/learn-math/");
   await page.evaluate(() => localStorage.clear());
   await page.goto("/learn-math/");
-  await page.locator(".student-card").nth(1).click();
+  await createAndSelectStudent(page);
   await page.locator(".grade-card").nth(2).click(); // grade ו׳ (docs/features/any-grade-any-student)
   await page.locator(".topic-card").nth(1).click();
 }

@@ -24,35 +24,6 @@ interface TopicPickerProps {
   /** Read every question aloud for this student. Absent when there is no student yet. */
   readAloud?: boolean;
   onReadAloudChange?: (value: boolean) => void;
-  /** Which hold-to-zoom strength this student is set to — a `HOLD_ZOOM_LEVELS` id. Absent
-   *  when there is no student yet, exactly like `readAloud`. */
-  holdZoomLevel?: string;
-  onHoldZoomLevelChange?: (levelId: string) => void;
-  /** How far this student's notebook view jumps between finished strokes — an
-   *  `AUTO_SCROLL_JUMP_LEVELS` id. Absent when there is no student yet, exactly like
-   *  `readAloud`/`holdZoomLevel`. */
-  autoScrollJumpLevel?: string;
-  onAutoScrollJumpLevelChange?: (levelId: string) => void;
-  /** Which nav-button speed this student is set to — a `PAN_SPEED_LEVELS` id. Absent when
-   *  there is no student yet, exactly like `holdZoomLevel`. */
-  panSpeedLevel?: string;
-  onPanSpeedLevelChange?: (levelId: string) => void;
-  /** Which notebook toolbar button size this student is set to — a `BUTTON_SIZE_LEVELS`
-   *  id. Absent when there is no student yet, exactly like `holdZoomLevel`. */
-  buttonSizeLevel?: string;
-  onButtonSizeLevelChange?: (levelId: string) => void;
-  /** Which suggested-next-action sensitivity this student is set to — a
-   *  `SUGGESTION_SENSITIVITY_LEVELS` id. Absent when there is no student yet, exactly like
-   *  `holdZoomLevel`. */
-  suggestionSensitivityLevel?: string;
-  onSuggestionSensitivityLevelChange?: (levelId: string) => void;
-  /** Whether this student's notebook shows the directional nav pad. Absent when there is
-   *  no student yet, exactly like `holdZoomLevel`. Not rendered here — only used (together
-   *  with the other settings values above) to decide whether the ⚙️ button has anything to
-   *  open at all; the dialog itself now lives in `App.tsx` as `<SettingsDialog>`, reachable
-   *  from both this screen and the notebook practice screen. */
-  navPadVisible?: boolean;
-  onNavPadVisibleChange?: (value: boolean) => void;
   /** Opens the settings dialog — owned and rendered by `App.tsx`, not this component. See
    *  docs/features/notebook-nav-buttons-visibility/architecture.md. */
   onOpenSettings: () => void;
@@ -68,42 +39,13 @@ export function TopicPicker({
   onHistory,
   readAloud,
   onReadAloudChange,
-  holdZoomLevel,
-  onHoldZoomLevelChange,
-  autoScrollJumpLevel,
-  onAutoScrollJumpLevelChange,
-  panSpeedLevel,
-  onPanSpeedLevelChange,
-  buttonSizeLevel,
-  onButtonSizeLevelChange,
-  suggestionSensitivityLevel,
-  onSuggestionSensitivityLevelChange,
-  navPadVisible,
-  onNavPadVisibleChange,
   onOpenSettings,
 }: TopicPickerProps) {
   /* Whether there is anything to open a dialog for at all — the invariant that the ⚙️
-     button never leads to an empty dialog. Shared with `PracticeNotebook`'s own ⚙️ button
-     and with `SettingsDialog` itself via the same `hasAnySettings()` helper, so the three
-     can never disagree about whether settings exist right now.
-     See docs/features/notebook-nav-buttons-visibility/architecture.md for why the dialog
-     itself (and its open/closed state) no longer lives in this component. */
-  const showSettings = hasAnySettings({
-    readAloud,
-    onReadAloudChange,
-    holdZoomLevel,
-    onHoldZoomLevelChange,
-    autoScrollJumpLevel,
-    onAutoScrollJumpLevelChange,
-    panSpeedLevel,
-    onPanSpeedLevelChange,
-    buttonSizeLevel,
-    onButtonSizeLevelChange,
-    suggestionSensitivityLevel,
-    onSuggestionSensitivityLevelChange,
-    navPadVisible,
-    onNavPadVisibleChange,
-  });
+     button never leads to an empty dialog. Shared with `SettingsDialog` itself via the
+     same `hasAnySettings()` helper, so the two can never disagree about whether settings
+     exist right now. */
+  const showSettings = hasAnySettings({ readAloud, onReadAloudChange });
   return (
     <div className="topic-picker">
       <div className="grade-header">

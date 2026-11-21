@@ -41,3 +41,19 @@ export function saveAdaptiveTier(
     // ignore
   }
 }
+
+/** Deleting a student deletes every tier they've reached with them — same no-undo rule
+ *  as `progress.ts`'s `clearStudent`. Keys are `studentId:gradeId:topicId` (see
+ *  `keyFor`), so this is every key whose prefix up to the first `:` matches. */
+export function clearStudent(studentId: string): void {
+  try {
+    const all = readAll();
+    const prefix = `${studentId}:`;
+    for (const key of Object.keys(all)) {
+      if (key.startsWith(prefix)) delete all[key];
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+  } catch {
+    // ignore
+  }
+}

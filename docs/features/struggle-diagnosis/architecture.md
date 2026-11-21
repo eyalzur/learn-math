@@ -126,3 +126,28 @@ Built exactly as planned, no deviations.
   **490/491 passing** — the one failure is the pre-existing
   `grade8-angles-congruence.spec.ts` flake (unrelated, already documented against
   PR #88/#89/#90/#91).
+
+## Revision — merging `main` in before merge (2026-11-21)
+
+`main` had added its own `StatsSection` (per-topic/per-difficulty score summaries) to
+`History.tsx` in parallel with this feature's stuck-topic cards — both insert content
+between the `<h1>` and the practice-history list, so `History.tsx` conflicted on the
+import block and the component signature. Resolved by keeping both: `StatsSection` stays
+exactly as `main` built it, `.stuck-topics` renders above it exactly as this feature built
+it, neither one's code touched.
+
+`tests/e2e/struggle-diagnosis.spec.ts` needed a real rewrite, not just an import swap:
+it assumed a fixed `.student-card` roster (`מיקה`/`רותם`/`עומר`, hardcoded `studentId:
+"rotem"`) that no longer exists — `docs/features/manage-students/` made the roster start
+empty per profile, and student ids are now real `crypto.randomUUID()`s assigned at
+creation, unknowable in advance. Fixed by creating a real student through
+`createAndSelectStudent` (`tests/e2e/helpers/selectStudent.ts`) first, then reading its
+actual id back from `localStorage.getItem("learn-math:users")` before seeding
+`learn-math:history` records against it — same "seed storage directly, don't play through
+the UI" technique as before, just anchored to a real id instead of a guessed one.
+
+`npm run build` and `npm run lint` clean. `tests/e2e/struggle-diagnosis.spec.ts` itself:
+`7/7` passing, single clean run. Version re-bumped on top of the merge,
+`1.50.1 → 1.51.0` (the branch's own prior bump predates the merge and no longer reflects
+`main`'s real version). Full single-run `npm run test:e2e --workers=1`: **350/351** — the
+one failure is the pre-existing `grade8-angles-congruence.spec.ts` flake, unrelated.
