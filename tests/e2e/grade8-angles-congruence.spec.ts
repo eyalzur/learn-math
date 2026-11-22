@@ -165,6 +165,7 @@ async function playSessions(page: Page, count: number): Promise<string[]> {
     if (s > 0) {
       await page.getByRole("button", { name: "חזרה לתפריט" }).click();
       await page.locator(".topic-card", { hasText: TOPIC_TITLE }).click();
+      await page.getByRole("button", { name: "דלג לתרגול →" }).click();
     }
     prompts.push(...(await playSession(page)));
   }
@@ -223,6 +224,7 @@ test("a streak of correct answers reaches triangle-congruence questions, a strea
 
   await page.getByRole("button", { name: "חזרה לתפריט" }).click();
   await page.locator(".topic-card", { hasText: TOPIC_TITLE }).click();
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
   const correctRunPrompts = await playSession(page);
   expect(correctRunPrompts.some((p) => p.includes("חופף למשולש")), "a streak of correct answers never reached congruence").toBe(
     true,

@@ -43,6 +43,9 @@ async function toGradeB(page: Page) {
 async function openTopic(page: Page, name: string) {
   await toGradeB(page);
   await page.locator(".topic-card", { hasText: name }).click();
+  // A topic card now opens its lesson first (docs/features/lesson-always-first) — skip
+  // straight to practice, same as every other call site that used to land there directly.
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
 }
 
 async function nextOrFinish(page: Page) {

@@ -57,6 +57,7 @@ test("works the same way for a different grade/student (עומר, כיתה ח׳)
   await createAndSelectStudent(page);
   await page.getByRole("button", { name: "כיתה ח׳" }).click();
   await page.locator(".topic-card").first().click();
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
   await expect(page.locator(".answer-input")).toBeVisible();
   await expect(page.locator("canvas")).toHaveCount(0);
 });

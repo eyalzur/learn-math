@@ -141,6 +141,9 @@ test("a level practises only its own topic", async ({ page }) => {
   await createAndSelectStudent(page);
   await page.locator(".grade-card").first().click();
   await page.getByText("חיסור עד 10", { exact: true }).click();
+  // A topic card now opens its lesson first (docs/features/lesson-always-first) — skip
+  // straight to practice, same as every other call site that used to land there directly.
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
 
   for (let i = 0; i < 10; i++) {
     const prompt = await page.locator(".problem-text").innerText();
