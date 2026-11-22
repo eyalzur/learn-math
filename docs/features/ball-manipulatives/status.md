@@ -9,11 +9,13 @@
       + השוואת-גודל, + ניווט-ימינה-שמאלה לתוכן-ארוך)
 - [x] Design — designer — 2026-11-22 (הוכרע: מלא/מוקווקו כמו TenFrame, מיקום
       מרחבי תואם ל-LTR של הביטוי, "מי גדול ממי" נדחה לסבב-המשך)
-- [ ] Architecture — tech-lead — not started
+- [x] Architecture — tech-lead — 2026-11-22 (CSS transition בלבד, לא
+      keyframes/ספרייה; גילוי אמיתי: סטייל add10/sub10 כולל אופרנדים
+      דו-ספרתיים — ballDiagram חוסם אותם בבדיקת-גבול מפורשת, לא בבדיקת-style)
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** tech-lead
+**Current phase:** developer
 **Branch:** `feature/ball-manipulatives`
 **PR:** not opened yet
 
@@ -22,7 +24,8 @@ None — "מי גדול ממי" הוכרע ב-design.md כ-Out of Scope לסבב
 Question עוד): הוא נדחה בכוונה לפיצ'ר-המשך נפרד שיכלול גם תוכן-שאלות חדש; לא
 חוסם חיבור/חיסור. היקף ה-MVP (`add10`/`sub10`, יחידות בלבד) ומנגנון-הניווט
 ימינה-שמאלה (לא בנוי בפועל בהיקף הזה — הטווח הנוכחי תמיד נכנס במסך אחד) גם
-הוכרעו ב-design.md.
+הוכרעו ב-design.md. architecture.md מצא שהגבול האמיתי חייב להיות על ערכי
+האופרנדים (≤9), לא על שם ה-style — מתועד שם, לא חוסם.
 
 ## Docs
 - [Product spec](./product-spec.md)
