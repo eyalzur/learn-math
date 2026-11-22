@@ -8,12 +8,15 @@
 - [x] Design — designer — 2026-11-21
 - [x] Architecture — tech-lead — 2026-11-21
 - [x] Implementation — developer — 2026-11-21
-- [ ] Tests — qa — not started
+- [x] Tests — qa — 2026-11-21, 362/363 (known flake only, --workers=1)
 
-**Current phase:** qa — ממתין לפורט 5173 (תפוס זמנית על ידי ריצת בדיקות-רקע
-של PR אחר, לא קשור) לפני אימות-ויזואלי ו-e2e.
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `fix/idle-spotlight-direction-visibility`
-**PR:** not opened yet
+**PR:** https://github.com/eyalzur/learn-math/pull/108 — מוזג 2026-11-22
+
+אומת ויזואלית (claude-in-chrome): סדר-מעבר נכון (שורה-עליונה לפני תחתונה,
+ימין-לפני-שמאל בתוך שורה — נבדק דרך `--spot-i` בפועל על מסך 2×2), ועוצמת-זוהר
+13px/38px מאומתת ב-computed style החי. אין שגיאות קונסול.
 
 ## Open questions / blockers
 None.
