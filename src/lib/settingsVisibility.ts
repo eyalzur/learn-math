@@ -10,6 +10,8 @@ import { speechSupported } from "../data/speech";
 export interface SettingsValues {
   readAloud?: boolean;
   onReadAloudChange?: (value: boolean) => void;
+  paceLevel?: string;
+  onPaceLevelChange?: (levelId: string) => void;
 }
 
 /**
@@ -19,5 +21,7 @@ export interface SettingsValues {
  * itself, so none of them can ever disagree about whether settings currently exist.
  */
 export function hasAnySettings(props: SettingsValues): boolean {
-  return props.readAloud !== undefined && props.onReadAloudChange !== undefined && speechSupported();
+  const showReadAloud = props.readAloud !== undefined && props.onReadAloudChange !== undefined && speechSupported();
+  const showPaceLevel = props.paceLevel !== undefined && props.onPaceLevelChange !== undefined;
+  return showReadAloud || showPaceLevel;
 }

@@ -1,3 +1,4 @@
+import type { PaceLevel } from "./adaptivePace";
 import { grade1Topics } from "./grade1";
 import { grade2Topics } from "./grade2";
 import { grade6Topics } from "./grade6";
@@ -97,10 +98,10 @@ export interface AdaptiveConfig {
   minDifficulty: number;
   maxDifficulty: number;
   initialDifficulty: number;
-  /** `streak` is the run of same-direction answers just closed — positive for consecutive
-   *  correct, reset on a wrong one. A single wrong answer still drops difficulty on its
-   *  own; climbing back up asks for more than one lucky guess. */
-  nextDifficulty: (current: number, wasCorrect: boolean, streak: number) => number;
+  /** `streak` is the run just closed: positive for N consecutive correct, negative for
+   *  N consecutive wrong. How many of each `pace` requires before difficulty actually
+   *  moves is decided by `nextAdaptiveDifficulty` (adaptivePace.ts), not by this topic. */
+  nextDifficulty: (current: number, wasCorrect: boolean, streak: number, pace: PaceLevel) => number;
   questionCount: number;
 }
 
