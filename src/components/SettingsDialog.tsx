@@ -1,3 +1,4 @@
+import { PACE_LEVELS } from "../data/adaptivePace";
 import { speechSupported } from "../data/speech";
 import type { SettingsValues } from "../lib/settingsVisibility";
 
@@ -14,11 +15,19 @@ export interface SettingsDialogProps extends SettingsValues {
   onClose: () => void;
 }
 
-export function SettingsDialog({ readAloud, onReadAloudChange, open, onClose }: SettingsDialogProps) {
+export function SettingsDialog({
+  readAloud,
+  onReadAloudChange,
+  paceLevel,
+  onPaceLevelChange,
+  open,
+  onClose,
+}: SettingsDialogProps) {
   const showReadAloud = readAloud !== undefined && onReadAloudChange !== undefined && speechSupported();
+  const showPaceLevel = paceLevel !== undefined && onPaceLevelChange !== undefined;
 
   if (!open) return null;
-  if (!showReadAloud) return null;
+  if (!showReadAloud && !showPaceLevel) return null;
 
   return (
     /* Same anatomy as the notebook's confirm dialog, but `dialog` rather than `alertdialog`
@@ -38,25 +47,54 @@ export function SettingsDialog({ readAloud, onReadAloudChange, open, onClose }: 
         </h2>
 
         <div className="settings-body">
-          <div className="read-aloud-setting">
-            <span className="read-aloud-icon" aria-hidden="true">
-              🔊
-            </span>
-            <span className="read-aloud-text">
-              <span className="read-aloud-title">להקריא את השאלות בקול</span>
-              <span className="read-aloud-note">מומלץ למי שעדיין לומד/ת לקרוא</span>
-            </span>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={readAloud}
-              className={`read-aloud-switch ${readAloud ? "on" : "off"}`}
-              onClick={() => onReadAloudChange!(!readAloud)}
-            >
-              <span className="read-aloud-knob" />
-              <span className="visually-hidden">להקריא את השאלות בקול</span>
-            </button>
-          </div>
+          {showReadAloud && (
+            <div className="read-aloud-setting">
+              <span className="read-aloud-icon" aria-hidden="true">
+                🔊
+              </span>
+              <span className="read-aloud-text">
+                <span className="read-aloud-title">להקריא את השאלות בקול</span>
+                <span className="read-aloud-note">מומלץ למי שעדיין לומד/ת לקרוא</span>
+              </span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={readAloud}
+                className={`read-aloud-switch ${readAloud ? "on" : "off"}`}
+                onClick={() => onReadAloudChange!(!readAloud)}
+              >
+                <span className="read-aloud-knob" />
+                <span className="visually-hidden">להקריא את השאלות בקול</span>
+              </button>
+            </div>
+          )}
+
+          {showPaceLevel && (
+            <div className="pace-setting">
+              <div className="pace-header">
+                <span className="pace-icon" aria-hidden="true">
+                  🎯
+                </span>
+                <span className="read-aloud-text">
+                  <span className="read-aloud-title">קצב שינוי הקושי</span>
+                  <span className="read-aloud-note">כמה מהר רמת הקושי עולה ויורדת</span>
+                </span>
+              </div>
+              <div className="pace-options" role="group" aria-label="קצב שינוי הקושי">
+                {PACE_LEVELS.map((level) => (
+                  <button
+                    key={level.id}
+                    type="button"
+                    className="pace-option"
+                    aria-pressed={level.id === paceLevel}
+                    onClick={() => onPaceLevelChange!(level.id)}
+                  >
+                    {level.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="settings-actions">

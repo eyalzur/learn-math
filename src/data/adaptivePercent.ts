@@ -1,5 +1,6 @@
 import type { Question } from "./curriculum";
 import { type Rng, randInt, pick, makeFreshId, withoutLeakingHints, wantsDecimal, round2 } from "./adaptiveHelpers";
+import { nextAdaptiveDifficulty, type PaceLevel } from "./adaptivePace";
 
 /**
  * "אחוזים" (רותם, כיתה ו׳), built at runtime — see
@@ -238,7 +239,11 @@ export const PERCENT_MAX_DIFFICULTY = 5;
 export const PERCENT_INITIAL_DIFFICULTY = 1;
 export const PERCENT_QUESTION_COUNT = 20;
 
-export function nextPercentDifficulty(current: number, wasCorrect: boolean, streak: number): number {
-  if (!wasCorrect) return Math.max(PERCENT_MIN_DIFFICULTY, current - 1);
-  return streak >= 2 ? Math.min(PERCENT_MAX_DIFFICULTY, current + 1) : current;
+export function nextPercentDifficulty(
+  current: number,
+  wasCorrect: boolean,
+  streak: number,
+  pace: PaceLevel,
+): number {
+  return nextAdaptiveDifficulty(current, wasCorrect, streak, PERCENT_MIN_DIFFICULTY, PERCENT_MAX_DIFFICULTY, pace);
 }

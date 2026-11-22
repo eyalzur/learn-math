@@ -1,5 +1,6 @@
 import type { Question } from "./curriculum";
 import { type Rng, randInt, pick, makeFreshId } from "./adaptiveHelpers";
+import { nextAdaptiveDifficulty, type PaceLevel } from "./adaptivePace";
 
 /**
  * "שברים עשרוניים" (רותם, כיתה ו׳), built at runtime — see
@@ -161,7 +162,11 @@ export const DECIMALS_MAX_DIFFICULTY = 5;
 export const DECIMALS_INITIAL_DIFFICULTY = 1;
 export const DECIMALS_QUESTION_COUNT = 20;
 
-export function nextDecimalsDifficulty(current: number, wasCorrect: boolean, streak: number): number {
-  if (!wasCorrect) return Math.max(DECIMALS_MIN_DIFFICULTY, current - 1);
-  return streak >= 2 ? Math.min(DECIMALS_MAX_DIFFICULTY, current + 1) : current;
+export function nextDecimalsDifficulty(
+  current: number,
+  wasCorrect: boolean,
+  streak: number,
+  pace: PaceLevel,
+): number {
+  return nextAdaptiveDifficulty(current, wasCorrect, streak, DECIMALS_MIN_DIFFICULTY, DECIMALS_MAX_DIFFICULTY, pace);
 }
