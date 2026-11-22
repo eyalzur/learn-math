@@ -9,11 +9,50 @@
  * visit primary choices (student/grade/topic/level/style cards, "בדיקה"/"יצירה"/etc.),
  * not every small utility icon (🔊/💡/⚙️/🗑/text links) — those would make the cycle
  * long and defeat "gentle".
+ *
+ * The visit order itself is screen-position order (top row before bottom row,
+ * right-to-left within a row), not DOM order — see `sortByScreenPosition` below and
+ * docs/features/idle-spotlight-direction-visibility/.
  */
 const SELECTOR =
   ".student-card, .grade-card, .topic-card, .level-card, .style-card, " +
   "button:not(.app-version):not(.speak-button):not(.hint-button)" +
   ":not(.link-button):not(.student-card-delete):not(.settings-button)";
+
+/**
+ * Orders elements the way an eye scanning the screen would: top row first, and
+ * right-to-left within a row (RTL reading order) — not DOM order, which the idle
+ * cycle used to rely on and which doesn't always match visual position (see
+ * docs/features/idle-spotlight-direction-visibility/product-spec.md).
+ *
+ * "Row" is a visual grouping, not a layout concept this function can read off
+ * CSS (grid/flex) directly — so two elements are the same row when their `top`s
+ * are within half of the first element's own height of each other. Half-height is
+ * forgiving enough to tolerate small height differences within one real row (e.g. a
+ * slightly taller icon) without merging two genuinely different rows, which a typical
+ * row-to-row gap comfortably exceeds. Every element on a single screen here is the
+ * same kind of card (a uniform grid), so this hasn't needed to handle very
+ * mixed-height rows in practice.
+ */
+function sortByScreenPosition(elements: HTMLElement[]): HTMLElement[] {
+  const withRects = elements.map((el) => ({ el, rect: el.getBoundingClientRect() }));
+  withRects.sort((a, b) => a.rect.top - b.rect.top);
+
+  const rows: (typeof withRects)[] = [];
+  for (const item of withRects) {
+    const row = rows.at(-1);
+    const rowTop = row?.[0].rect.top;
+    if (row && rowTop !== undefined && Math.abs(item.rect.top - rowTop) <= item.rect.height / 2) {
+      row.push(item);
+    } else {
+      rows.push([item]);
+    }
+  }
+
+  // Right-first within a row, matching RTL reading order.
+  rows.forEach((row) => row.sort((a, b) => b.rect.right - a.rect.right));
+  return rows.flat().map((item) => item.el);
+}
 
 /**
  * Indexes only elements that are both laid out (`offsetParent`) and currently
@@ -29,7 +68,7 @@ function reindex(inViewport: ReadonlySet<Element>): void {
   const all = [...document.querySelectorAll<HTMLElement>(SELECTOR)].filter(
     (el) => el.offsetParent !== null,
   );
-  const visible = all.filter((el) => inViewport.has(el));
+  const visible = sortByScreenPosition(all.filter((el) => inViewport.has(el)));
   const offscreen = all.filter((el) => !inViewport.has(el));
 
   visible.forEach((el, i) => {

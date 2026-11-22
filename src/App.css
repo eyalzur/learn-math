@@ -894,7 +894,7 @@ button:not(.app-version):not(.speak-button):not(.hint-button):not(.link-button):
     box-shadow: 0 5px 0 var(--accent-border);
   }
   12.5% {
-    box-shadow: 0 5px 0 var(--accent-border), 0 0 0 9px var(--accent-bg), 0 0 26px var(--accent-border);
+    box-shadow: 0 5px 0 var(--accent-border), 0 0 0 13px var(--accent-bg), 0 0 38px var(--accent-border);
   }
   25% {
     box-shadow: 0 5px 0 var(--accent-border);
