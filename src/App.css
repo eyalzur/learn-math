@@ -1996,7 +1996,8 @@ body:has(
 .pythagoras-figure,
 .percent-figure,
 .ratio-figure,
-.linear-figure {
+.linear-figure,
+.ball-diagram-figure {
   margin: 0 0 16px;
   display: flex;
   flex-direction: column;
@@ -2022,10 +2023,70 @@ body:has(
 .percent-strip,
 .ratio-strips,
 .linear-graph,
-.angle-shape {
+.angle-shape,
+.ball-diagram {
   direction: ltr;
   max-width: 100%;
   height: auto;
+}
+
+/* ---- ball manipulatives: animated ball-pile for addition/subtraction
+   (docs/features/ball-manipulatives) — the first ANIMATED diagram in this bundle. */
+
+/* Two stacked static snapshots ("לפני"/"אחרי") shown instead of the animated version
+   under prefers-reduced-motion — see BallDiagram.tsx. */
+.ball-diagram-frames {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.ball-diagram-frame {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.ball-diagram-frame-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* Filled versus outlined, never one hue against another — the same colourblind-safe
+   convention every other shape in this bundle already uses (.tf-dot.filled,
+   .gs-filled, .ps-filled, .rs-block.rs-filled all share this exact fill). A ball that's
+   "part of the pile" is filled; one that hasn't joined yet (addition) or has just been
+   taken out (subtraction) is outlined. */
+.bd-ball {
+  fill: none;
+  stroke: var(--text-h);
+  stroke-width: 1.5;
+  transition: fill 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.bd-ball.filled {
+  fill: #c4b5fd;
+}
+
+/* The "mobile" group (the second addend, or the subtrahend) — merges into or splits
+   away from the stationary group via this one transform, soft-eased per the approved
+   mock, never a bouncy one. */
+.bd-group {
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.bd-group.bd-shifted {
+  transform: translate(46px, 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bd-ball,
+  .bd-group {
+    transition: none !important;
+  }
 }
 
 /* Filled versus outlined, never one hue against another: which one is which is the

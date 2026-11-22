@@ -12,10 +12,12 @@
 - [x] Architecture — tech-lead — 2026-11-22 (CSS transition בלבד, לא
       keyframes/ספרייה; גילוי אמיתי: סטייל add10/sub10 כולל אופרנדים
       דו-ספרתיים — ballDiagram חוסם אותם בבדיקת-גבול מפורשת, לא בבדיקת-style)
-- [ ] Implementation — developer — not started
+- [x] Implementation — developer — 2026-11-22 (src/data/ballDiagram.ts +
+      src/components/BallDiagram.tsx, wired into questionExplanation.ts/
+      QuestionExplanation.tsx; build+lint clean; version 1.54.0)
 - [ ] Tests — qa — not started
 
-**Current phase:** developer
+**Current phase:** qa
 **Branch:** `feature/ball-manipulatives`
 **PR:** not opened yet
 
