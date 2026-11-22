@@ -19,6 +19,11 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.53.2",
+    icon: "📌",
+    description: "בלוג הגרסאות, כפתור הסגירה נשאר קבוע על המסך גם כשגוללים ברשימה.",
+  },
+  {
     version: "1.53.1",
     icon: "✨",
     description: "זרקור-המנוחה עובר בין כפתורים לפי הסדר שהעין רואה (מלמעלה למטה, מימין לשמאל), ובולט יותר.",
