@@ -1,6 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import { answerQuestion } from "./helpers/answerQuestion";
 import { createAndSelectStudent } from "./helpers/selectStudent";
+import { hebrewNumberWords } from "../../src/data/hebrewMathSpeech";
 
 /**
  * Acceptance criteria under test
@@ -155,10 +156,14 @@ test("a hint is read too — help that cannot be read is not help", async ({ pag
   await page.getByRole("button", { name: /רמז/ }).click();
   await expect.poll(() => spokenText(page)).not.toHaveLength(beforeHint);
 
-  // What was spoken last is the hint that just appeared, not the question again.
+  // What was spoken last is the hint that just appeared, not the question again — compared
+  // through the same normalization the app itself applies before speaking (hebrew-math-tts:
+  // arithmetic inside the hint is spoken as Hebrew number words, e.g. "10" → "עשר", so the
+  // spoken text and the on-screen text are no longer the same characters by design).
   const hintOnScreen = await page.locator(".hint").first().innerText();
   const lastSpoken = (await spokenText(page)).slice(beforeHint).join(" ");
-  expect(lastSpoken.slice(0, 12)).toBe(hintOnScreen.slice(0, 12));
+  const expectedSpoken = hintOnScreen.replace(/\d+/g, (digits) => hebrewNumberWords(Number(digits)));
+  expect(lastSpoken.slice(0, 12)).toBe(expectedSpoken.slice(0, 12));
 });
 
 // ------------------------------------------------------------------- the setting
