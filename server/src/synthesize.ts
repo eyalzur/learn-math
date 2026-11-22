@@ -25,7 +25,7 @@ const client = new textToSpeech.TextToSpeechClient();
  * *persona* for a specific voice name is a product/content taste call, not an engineering
  * one — see this feature's architecture doc for that specific open call.
  */
-const VOICE_NAME = process.env.TTS_VOICE_NAME ?? "he-IL-Chirp3-HD-Leda";
+const VOICE_NAME = process.env.TTS_VOICE_NAME ?? "he-IL-Chirp3-HD-Aoede";
 
 /** A text well past anything a real explanation or question could need (the whole app's
  *  longest spoken explanation is a few sentences). Rejecting past this protects the free
