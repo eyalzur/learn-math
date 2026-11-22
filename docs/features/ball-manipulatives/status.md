@@ -7,24 +7,22 @@
 ## Progress
 - [x] Product spec — product-manager — 2026-11-21 (הורחב 2026-11-21: + חיבור,
       + השוואת-גודל, + ניווט-ימינה-שמאלה לתוכן-ארוך)
-- [ ] Design — designer — not started
+- [x] Design — designer — 2026-11-22 (הוכרע: מלא/מוקווקו כמו TenFrame, מיקום
+      מרחבי תואם ל-LTR של הביטוי, "מי גדול ממי" נדחה לסבב-המשך)
 - [ ] Architecture — tech-lead — not started
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** designer
+**Current phase:** tech-lead
 **Branch:** `feature/ball-manipulatives`
 **PR:** not opened yet
 
 ## Open questions / blockers
-- **Product:** "מי גדול ממי" — נושא-שאלות חדש, או ציור חדש לנושא קיים? לא
-  נמצא סגנון-שאלה קיים שמבקש השוואת-גודל. לא חוסם את חיבור/חיסור, רק את חלק-
-  ההשוואה.
-- **Product:** טווח ה-MVP המדויק בתוך חיבור/חיסור (`add10`/`sub10` בלבד מול
-  כולל `sub20`) לא נאמר במספר מפורש — לא חוסם, designer/tech-lead יכולים
-  לבחור יחידות-בלבד כברירת-מחדל סבירה.
-- **Product/Tech:** היקף מנגנון-הניווט-ימינה-שמאלה — ממוקד לבלוק-ההסבר-הזה
-  בלבד, או תשתית-משותפת רחבה-יותר? לא חוסם.
+None — "מי גדול ממי" הוכרע ב-design.md כ-Out of Scope לסבב הזה (לא Open
+Question עוד): הוא נדחה בכוונה לפיצ'ר-המשך נפרד שיכלול גם תוכן-שאלות חדש; לא
+חוסם חיבור/חיסור. היקף ה-MVP (`add10`/`sub10`, יחידות בלבד) ומנגנון-הניווט
+ימינה-שמאלה (לא בנוי בפועל בהיקף הזה — הטווח הנוכחי תמיד נכנס במסך אחד) גם
+הוכרעו ב-design.md.
 
 ## Docs
 - [Product spec](./product-spec.md)
