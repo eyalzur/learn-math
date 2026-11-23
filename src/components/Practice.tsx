@@ -257,10 +257,18 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
       <div className="answer-row">
         <input
           type="text"
-          inputMode="decimal"
+          inputMode="none"
+          /* Read-only on purpose, not just visually: the on-screen number pad below is
+             now the only way to answer (reported live — the native keyboard popping up
+             was worse than the pad, not a fallback worth keeping). `readOnly` is what
+             actually stops the virtual keyboard across browsers; `inputMode="none"` is
+             the matching semantic hint for assistive tech, but isn't reliable alone. A
+             physical/external keyboard still reaches this input for Enter-to-submit
+             below (readOnly blocks value edits, not every keyboard event) — only typing
+             a new value is blocked. */
+          readOnly
           className="answer-input"
           value={answerInput}
-          onChange={(e) => setAnswerInput(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter") checkAnswer();
           }}

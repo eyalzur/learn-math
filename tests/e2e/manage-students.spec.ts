@@ -105,7 +105,12 @@ async function finishWithWrongAnswers(page: Page) {
   const progress = await page.locator(".progress").innerText();
   const total = Number(progress.match(/(\d+)\s*$/)![1]);
   for (let i = 0; i < total; i++) {
-    await page.locator(".answer-input").fill("999999");
+    // `.answer-input` is `readOnly` (docs/features/stitch-visual-refresh/) — typed
+    // through the number pad instead, same reason answerQuestion.ts's helper is.
+    const pad = page.locator(".number-pad");
+    for (const digit of "999999") {
+      await pad.getByRole("button", { name: digit, exact: true }).click();
+    }
     await page.getByRole("button", { name: "בדיקה" }).click();
     await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
   }
