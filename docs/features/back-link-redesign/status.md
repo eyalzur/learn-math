@@ -10,9 +10,9 @@
 - [x] Implementation — developer — 2026-11-21
 - [x] Tests — qa — 2026-11-21, 336/337 (known flake only)
 
-**Current phase:** done — ready for PR
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `feature/back-link-redesign`
-**PR:** not opened yet
+**PR:** https://github.com/eyalzur/learn-math/pull/105 — מוזג 2026-11-20
 
 ## Open questions / blockers
 None.
