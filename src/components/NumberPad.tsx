@@ -1,9 +1,6 @@
 interface NumberPadProps {
   onDigit: (digit: string) => void;
   onBackspace: () => void;
-  /** Mirrors the answer field's own disabled condition exactly — never typeable once
-   *  there's feedback on screen, same as the text input beside it. */
-  disabled: boolean;
 }
 
 const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "⌫"] as const;
@@ -11,8 +8,12 @@ const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "⌫"] as c
 /** An on-screen keypad beside the existing text field, not instead of it — writes into
  *  the same answer string a physical keyboard would. The "." matters: the field it
  *  feeds is `inputMode="decimal"`, and grade 6 topics have decimal answers — without it
- *  the pad couldn't produce an answer a physical keyboard could. */
-export function NumberPad({ onDigit, onBackspace, disabled }: NumberPadProps) {
+ *  the pad couldn't produce an answer a physical keyboard could.
+ *
+ *  Unmounted by the caller once feedback is on screen, rather than disabled in place —
+ *  the correct/wrong screen has no use for it, and a disabled grid left sitting under the
+ *  feedback was exactly the extra screen real-estate this removed. */
+export function NumberPad({ onDigit, onBackspace }: NumberPadProps) {
   return (
     <div className="number-pad">
       {KEYS.map((key) =>
@@ -23,7 +24,6 @@ export function NumberPad({ onDigit, onBackspace, disabled }: NumberPadProps) {
             className="number-pad-button number-pad-backspace"
             aria-label="מחיקת ספרה"
             onClick={onBackspace}
-            disabled={disabled}
           >
             {key}
           </button>
@@ -34,7 +34,6 @@ export function NumberPad({ onDigit, onBackspace, disabled }: NumberPadProps) {
             className="number-pad-button"
             aria-label={key === "." ? "נקודה עשרונית" : undefined}
             onClick={() => onDigit(key)}
-            disabled={disabled}
           >
             {key}
           </button>

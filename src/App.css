@@ -2493,11 +2493,6 @@ body:has(
   cursor: pointer;
 }
 
-.number-pad-button:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-
 .history-stats-group {
   padding-bottom: 8px;
   margin-bottom: 16px;
