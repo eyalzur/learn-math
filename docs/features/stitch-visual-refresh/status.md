@@ -42,9 +42,11 @@
   mika-adaptive-difficulty ×2 עם "19/20" — בדיוק התבנית שה-CLAUDE.md כבר חישד בה).
   קריטריון #7 (flag בזמן-ריצה) מתועד כסטייה מכוונת של tech-lead — ראו tests.md.)
 
-**Current phase:** done — ממתין ל-PR
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `feature/stitch-visual-refresh`
-**PR:** not opened yet
+**PR:** [#114](https://github.com/eyalzur/learn-math/pull/114) — מוזג 2026-11-23 (מוזג main
+  פנימה שוב אחרי מיזוג PRs #111/#112/#113 במקביל, re-bump ל-`1.57.0`; CI נכשל פעמיים על
+  `grade8-angles-congruence.spec.ts` בלבד — flake מתועד-מראש לא קשור, לא על זה)
 
 ## Open questions / blockers
 None.
