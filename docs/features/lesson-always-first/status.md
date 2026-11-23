@@ -7,19 +7,25 @@
 - [x] Product spec — product-manager — 2026-11-21
 - [x] Design — designer — 2026-11-21
 - [x] Architecture — tech-lead — 2026-11-21
-- [ ] Implementation — developer — component changes built and demoed,
-      App.tsx wiring not yet done (see below)
-- [ ] Tests — qa — not started
+- [x] Implementation — developer — 2026-11-22. מוק אושר ("א', נראה לי טוב"),
+      `App.tsx` חווט (`onSelect={enterLesson}` בשני המקומות)
+- [x] Tests — qa — 2026-11-23, 362/364 (שני הכשלים — `grade8-angles-congruence.spec.ts`
+      — ה-flake הקיים-מראש, לא קשור)
 
-**Current phase:** ממתין לאישור-מוק לפני חיווט ב-`App.tsx`
+**Current phase:** done — ready for PR
 **Branch:** `feature/lesson-always-first`
 **PR:** not opened yet
 
-**מוק לאישור:** https://claude.ai/artifact/K9Bdi3rpUqxNCyBjStLA1h — `TopicLesson.tsx`
-ו-`TopicPicker.tsx` כבר שונו בפועל (לא placeholder), מודגמים כאן עם נתונים
-אמיתיים (כיתה ו׳) מחוץ ל-`App.tsx`. אחרי אישור: שינוי-חיווט אחד ב-`App.tsx`
-(`onSelect={enterLesson}` במקום `enterTopic` בשני מקומות) + build/lint/e2e
-מלאים + טסטים חדשים — ראו architecture.md's "תהליך-אישור".
+**מוק שאושר:** https://claude.ai/artifact/K9Bdi3rpUqxNCyBjStLA1h — `TopicLesson.tsx`
+ו-`TopicPicker.tsx` הודגמו כאן עם נתונים אמיתיים (כיתה ו׳) לפני החיווט ל-`App.tsx`.
+
+**היקף-הבדיקות שהתברר גדול משוער:** חיווט `enterLesson` במקום `enterTopic` שינה
+את מסך-הנחיתה של **כל** כרטיס-נושא באפליקציה, כולל במקביליות שלא עברו דרך
+`.topic-card` הישיר (`getByText`, כפתורי-נושא ישירים, עזרי-כניסה-חוזרת
+באמצע-בדיקה) — 39 אתרי-כניסה שונים ב-15 קבצי-בדיקה נדרשו תיקון (לא רק 31
+שזוהו בסבב הראשון), כולל כאלה שהתגלו רק אחרי מיזוג `main` (קבצים חדשים
+ממוזגים שמעולם לא נבדקו מול המנגנון הזה). כל אחד קיבל `await page.getByRole(
+"button", { name: "דלג לתרגול →" }).click()` מיד אחרי כניסה-לנושא.
 
 ## Open questions / blockers
 None.
