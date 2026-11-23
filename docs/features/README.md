@@ -6,7 +6,7 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
-| רענון חזותי של 5 מסכים (Stitch) | 🟡 in progress — בעיצוב | [status](./stitch-visual-refresh/status.md) |
+| רענון חזותי של 5 מסכים (Stitch) | 🟡 in progress — בארכיטקטורה | [status](./stitch-visual-refresh/status.md) |
 | אנימציית-כניסה למסך (מסכי-תפריטים) | 🟢 done — ממתין ל-PR | [status](./screen-entrance-animation/status.md) |
 | אבחון קשיים לאורך זמן | 🟢 done — מוזג ל-main | [status](./struggle-diagnosis/status.md) |
 | שתי שאלות זהות לא יוצאות ברצף | 🟢 done — מוזג ל-main | [status](./no-repeat-consecutive-questions/status.md) |
