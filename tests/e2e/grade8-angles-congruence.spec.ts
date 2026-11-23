@@ -158,12 +158,30 @@ async function playSession(page: Page): Promise<string[]> {
  *  every prompt seen across all of them. A single 20-question run climbs difficulty but
  *  still picks randomly *within* each tier (`pick()` in `adaptiveAngles.ts`) — with two or
  *  three patterns sharing a tier, one run can easily spend its few questions at that tier
- *  on the other pattern by chance. Several runs make that coincidence not decide the test. */
+ *  on the other pattern by chance. Several runs make that coincidence not decide the test.
+ *
+ *  **Must clear the saved adaptive tier between sessions, or this guarantee is false.**
+ *  Every correct answer climbs by one tier once `streak >= 2` (medium pace) and never
+ *  resets — confirmed in `adaptivePace.ts`/`App.tsx`'s own comments and by direct
+ *  simulation against the real generator — so an all-correct 20-question run visits each
+ *  tier above the first for **exactly one question** (2 draws at tier 1, 1 draw at tier 2,
+ *  then tier 3.. climbed through at one draw each before capping at the max tier for the
+ *  rest of the session). `docs/features/adaptive-lesson-start/` then has every *re-entry*
+ *  of the same topic resume from the student's last-reached tier instead of restarting at
+ *  tier 1 — which that feature is supposed to do for a real student, but it means sessions
+ *  2..count here don't restart the climb at all: they resume already at the tier session 1
+ *  ended on (the max tier, after an all-correct run) and never touch tier 1/2 again. That
+ *  collapses "several independent draws" into exactly one, with no error or indication —
+ *  measured (simulating the real `generateAnglesQuestion`/`nextAnglesDifficulty` directly,
+ *  3000 runs) at a **~50% chance of missing a tier-2 pattern per whole test run**, not the
+ *  "~1 in 4000" this file's "covers angle questions" test used to assume. Clearing the
+ *  saved tier here restores a genuinely fresh tier-1 climb every session. */
 async function playSessions(page: Page, count: number): Promise<string[]> {
   const prompts: string[] = [];
   for (let s = 0; s < count; s++) {
     if (s > 0) {
       await page.getByRole("button", { name: "חזרה לתפריט" }).click();
+      await page.evaluate(() => localStorage.removeItem("learn-math:adaptive-tier"));
       await page.locator(".topic-card", { hasText: TOPIC_TITLE }).click();
       await page.getByRole("button", { name: "דלג לתרגול →" }).click();
     }
