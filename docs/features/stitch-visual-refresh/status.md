@@ -33,9 +33,16 @@
   שני הכשלים הם flakes מתועדים-מראש ב-CLAUDE.md (grade8-angles-congruence,
   no-repeat-consecutive-questions), לא קשורים. ראו "Implementation Notes" בסוף
   architecture.md לפרטים המלאים כולל סדרת האימות.)
-- [ ] Tests — qa — not started
+- [x] Tests — qa — 2026-11-23 (7 בדיקות חדשות, אחת לכל קריטריון-קבלה — נגד product-spec,
+  לא נגד הקוד. 4 באגים אמיתיים בבדיקות עצמן נתפסו ותוקנו לפני שעברו: `goto` חסר,
+  קינון-כפול של helper-ים (יצר תלמיד/ה שני/ה בלי משים), שם-נגישות שגוי לכפתור המחיקה
+  (`aria-label` גובר על הטקסט הנראה), וחוסר ב-`=?` בביטוי הרגולרי (הפרומפט המוצג כולל
+  "=", בניגוד להנחה הראשונית). שלוש ריצות-סוויטה-מלאות נפרדות: `367/370` עקבי, שלושת
+  הכשלים הם flakes מתועדים-מראש ב-CLAUDE.md (grade8-angles-congruence,
+  mika-adaptive-difficulty ×2 עם "19/20" — בדיוק התבנית שה-CLAUDE.md כבר חישד בה).
+  קריטריון #7 (flag בזמן-ריצה) מתועד כסטייה מכוונת של tech-lead — ראו tests.md.)
 
-**Current phase:** qa
+**Current phase:** done — ממתין ל-PR
 **Branch:** `feature/stitch-visual-refresh`
 **PR:** not opened yet
 
