@@ -7,11 +7,12 @@ architecture, implementation notes, and tests.
 | Feature | Status | Details |
 |---|---|---|
 | ויזואליזציית-כדורים — חיבור, חיסור, והשוואה | 🟢 done — ממתין ל-PR | [status](./ball-manipulatives/status.md) |
+| הקראה בקול טבעי — נורמליזטור עברי + Google Cloud TTS | 🟢 done — מוזג ל-main | [status](./hebrew-math-tts/status.md) |
 | אנימציית-כניסה למסך (מסכי-תפריטים) | 🟢 done — ממתין ל-PR | [status](./screen-entrance-animation/status.md) |
 | אבחון קשיים לאורך זמן | 🟢 done — מוזג ל-main | [status](./struggle-diagnosis/status.md) |
 | שתי שאלות זהות לא יוצאות ברצף | 🟢 done — מוזג ל-main | [status](./no-repeat-consecutive-questions/status.md) |
 | קצב התקדמות בקושי — ניתן לכיוון | 🟢 done — מוזג ל-main | [status](./adaptive-pace-setting/status.md) |
-| קישורי-טקסט (חזרה/החלף תלמיד) — עיצוב מחדש | 🟢 done — ממתין ל-PR | [status](./back-link-redesign/status.md) |
+| קישורי-טקסט (חזרה/החלף תלמיד) — עיצוב מחדש | 🟢 done — מוזג ל-main | [status](./back-link-redesign/status.md) |
 | זרקור-מנוחה — תנועה עדינה ומתמשכת | 🟢 done — מוזג ל-main | [status](./idle-spotlight/status.md) |
 | זרקור-מנוחה — סדר לפי מיקום-מסך, ובולטות גבוהה יותר | 🟢 done — מוזג ל-main | [status](./idle-spotlight-direction-visibility/status.md) |
 | התקנת האפליקציה כ-PWA באייפון ובאנדרואיד | 🟢 done — מוזג ל-main | [status](./pwa-install/status.md) |

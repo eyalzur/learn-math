@@ -33,6 +33,12 @@ jobs:
           # server/README.md for why). Keeping it here means the address the live site
           # uses is version-controlled and reviewable, not hidden in a repo setting.
           VITE_NOTEBOOK_SERVER_URL: https://notebook-server-864901299725.me-west1.run.app
+          # The Hebrew math-aware TTS server on Cloud Run (docs/features/hebrew-math-tts/).
+          # Same reasoning as VITE_NOTEBOOK_SERVER_URL above: the browser must know this
+          # address to call it, so it's in the published bundle regardless — keeping it
+          # here keeps it version-controlled and reviewable. Service is public
+          # (--allow-unauthenticated, see server/README.md).
+          VITE_HEBREW_TTS_SERVER_URL: https://hebrew-tts-server-864901299725.me-west1.run.app
       - uses: actions/upload-pages-artifact@v4
         with:
           path: dist

@@ -1,38 +1,33 @@
 import type { Explanation } from "./explain";
+import { normalizeMathSpeech } from "./hebrewMathSpeech";
+import { cloudSpeechConfigured, fetchCloudAudio } from "./cloudSpeech";
 
 /**
- * Reading aloud runs on the browser's built-in speech synthesis: no server, no API key,
- * no cost, and it keeps working offline. All access to it is funnelled through this
- * module because `speechSynthesis` is a global with its own state — spreading calls
- * across components makes "is something still talking?" impossible to reason about.
+ * Reading aloud runs on the browser's built-in speech synthesis by default, with Google
+ * Cloud Text-to-Speech preferred when it is reachable (see `cloudSpeech.ts`) — no API key
+ * ever ships to the browser either way, and reading still works fully offline. All access
+ * to speech is funnelled through this module because `speechSynthesis` is a global with
+ * its own state — spreading calls across components makes "is something still talking?"
+ * impossible to reason about.
  */
 export function speechSupported(): boolean {
   return typeof window !== "undefined" && "speechSynthesis" in window;
 }
 
-const SYMBOLS: [RegExp, string][] = [
-  [/√/g, " שורש "],
-  [/²/g, " בריבוע "],
-  [/³/g, " בשלישית "],
-  [/\+/g, " ועוד "],
-  [/[−-]/g, " פחות "],
-  [/×/g, " כפול "],
-  [/÷/g, " חלקי "],
-  [/=/g, " שווה "],
-  [/\bx\b/gi, " איקס "],
-];
-
 /**
- * Turns "20 ÷ 2 = 10" into "20 חלקי 2 שווה 10".
+ * Turns "20 ÷ 2 = 10" into "עשרים חלקי שתיים שווה עשר" — operators *and* numbers as Hebrew
+ * words, not just the operators.
  *
- * This is an accessibility requirement rather than a nicety: handed the raw symbols in a
- * Hebrew context, a speech engine either names them in English or skips them, and the
- * central step of the explanation vanishes into thin air.
+ * This used to be this module's own job (symbol swap only, digits left as digits — the
+ * actual reading of "20" as a Hebrew word was left entirely to whatever TTS engine got the
+ * text). It now delegates to `hebrewMathSpeech.ts`'s `normalizeMathSpeech`, written for
+ * this feature (docs/features/hebrew-math-tts/) specifically so every number is spelled out
+ * in the correct Hebrew grammatical form and so the exact same normalized text can be sent
+ * to either the device engine or a cloud TTS call. Kept here, under the same name, so every
+ * existing caller (`speechParts`, `explanationToSpeechParts` below) needed no changes.
  */
 export function mathToWords(expression: string): string {
-  let spoken = expression;
-  for (const [pattern, word] of SYMBOLS) spoken = spoken.replace(pattern, word);
-  return spoken.replace(/\s+/g, " ").trim();
+  return normalizeMathSpeech(expression);
 }
 
 /**
@@ -132,12 +127,22 @@ const ANALOGY_PAUSE_MS = 800;
  */
 let sequenceId = 0;
 let pendingTimer: ReturnType<typeof setTimeout> | undefined;
+/** The in-flight Google Cloud Text-to-Speech playback, if any part is currently being
+ *  spoken through a cloud voice rather than the device one. Needs the same stop-tracking
+ *  as `pendingTimer` above, for the same reason: `speechSynthesis.cancel()` knows nothing
+ *  about it. */
+let currentAudio: HTMLAudioElement | undefined;
 
 export function stopSpeaking(): void {
   if (!speechSupported()) return;
   sequenceId++;
   clearTimeout(pendingTimer);
   pendingTimer = undefined;
+  if (currentAudio) {
+    currentAudio.pause();
+    URL.revokeObjectURL(currentAudio.src);
+    currentAudio = undefined;
+  }
   window.speechSynthesis.cancel();
 }
 
@@ -156,11 +161,31 @@ function utteranceFor(text: string): SpeechSynthesisUtterance {
 }
 
 /**
+ * Speaks one part through the device's own voice — the fallback path, and also the only
+ * path before this feature existed. Extracted on its own so `speak()` below can reach it
+ * from two places: the normal cloud-unavailable case, and the cloud-call-failed case after
+ * already starting to wait on it.
+ */
+function speakWithDeviceVoice(text: string, onDone: () => void): void {
+  const utterance = utteranceFor(text);
+  utterance.onend = onDone;
+  utterance.onerror = onDone;
+  window.speechSynthesis.speak(utterance);
+}
+
+/**
  * Speaks the parts in order, with a deliberate pause at each boundary.
  *
- * The Web Speech API has no SSML and no <break>, and the gap the engine happens to leave
- * between queued utterances is neither controllable nor guaranteed. Chaining one part at a
- * time is what makes the pause real, and what allows a longer one before the analogy.
+ * Each part first tries Google Cloud Text-to-Speech (`cloudSpeech.ts` — cached, and with
+ * its own short timeout) for a more natural voice; `fetchCloudAudio` returns `null` for
+ * every failure mode (not configured, offline, slow, broken), and that `null` is simply the
+ * signal to fall back to the device voice for that exact part instead — never a dead,
+ * silent failure, per CLAUDE.md's rule on this.
+ *
+ * The device voice has no SSML and no <break>, and the gap an engine happens to leave
+ * between queued utterances is neither controllable nor guaranteed — so whichever voice
+ * spoke a part, the next part is only requested after a deliberate pause scheduled here,
+ * never left to whatever gap the engine or the network happened to leave on its own.
  *
  * `onDone` fires exactly once, after the last part — never between parts. That is what
  * keeps the button showing "stop" for the whole reading, pauses included; if it flickered
@@ -186,7 +211,7 @@ export function speak(parts: string[], onDone?: () => void): void {
   const speakFrom = (i: number) => {
     if (runId !== sequenceId) return;
 
-    const utterance = utteranceFor(queue[i]);
+    const text = queue[i];
     const advance = () => {
       if (runId !== sequenceId) return;
       if (i === queue.length - 1) {
@@ -197,9 +222,54 @@ export function speak(parts: string[], onDone?: () => void): void {
       const gap = i === queue.length - 2 ? ANALOGY_PAUSE_MS : STEP_PAUSE_MS;
       pendingTimer = setTimeout(() => speakFrom(i + 1), gap);
     };
-    utterance.onend = advance;
-    utterance.onerror = advance;
-    window.speechSynthesis.speak(utterance);
+
+    // No cloud voice to even try (see `cloudSpeechConfigured`'s docstring for why this
+    // stays fully synchronous rather than going through the async branch below and
+    // immediately resolving to `null` anyway) — true for every environment today.
+    if (!cloudSpeechConfigured()) {
+      speakWithDeviceVoice(text, advance);
+      return;
+    }
+
+    void fetchCloudAudio(text).then((blob) => {
+      // A stop (or a restart from a double tap) happened while this part's audio was
+      // still being fetched/read from cache — do not speak a part nobody asked for any
+      // more, exactly like the existing onend/onerror guards below.
+      if (runId !== sequenceId) return;
+
+      if (!blob) {
+        speakWithDeviceVoice(text, advance);
+        return;
+      }
+
+      const audio = new Audio(URL.createObjectURL(blob));
+      currentAudio = audio;
+      // A failed `play()` call and the audio element's own `error` event can both fire
+      // for the same underlying failure — this guard is what keeps that from falling back
+      // to the device voice twice (which would advance the queue twice for one part).
+      let settled = false;
+      const cleanup = () => {
+        URL.revokeObjectURL(audio.src);
+        if (currentAudio === audio) currentAudio = undefined;
+      };
+      audio.onended = () => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        advance();
+      };
+      // A blob that fetched fine but fails to actually play (corrupt audio, a codec the
+      // device lacks) falls back to the device voice for this one part rather than just
+      // giving up on it.
+      const fallBackToDevice = () => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        speakWithDeviceVoice(text, advance);
+      };
+      audio.onerror = fallBackToDevice;
+      void audio.play().catch(fallBackToDevice);
+    });
   };
 
   speakFrom(0);
