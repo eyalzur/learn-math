@@ -4,11 +4,14 @@ import { isHebrewPrompt, promptWithEquals } from "../data/curriculum";
 import type { Diagnosis } from "../data/diagnose";
 import { diagnose } from "../data/diagnose";
 import { buildExplanation, explanationSpeechParts } from "../data/questionExplanation";
+import { quantityDots } from "../data/quantityDots";
 import { AngleShape } from "./AngleShape";
 import { ClockFace } from "./ClockFace";
+import { NumberPad } from "./NumberPad";
+import { QuantityDots } from "./QuantityDots";
 import { QuestionExplanation } from "./QuestionExplanation";
 import { segmented } from "./segmented";
-import { primeVoices, speak, speechParts, speechSupported, stopSpeaking } from "../data/speech";
+import { mathToWords, primeVoices, speak, speechParts, speechSupported, stopSpeaking } from "../data/speech";
 
 /** Which box is talking. One engine, three speak buttons — a boolean would light up "stop"
  *  on all of them while only one is being read. */
@@ -61,6 +64,9 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
    *  identical bundle for the same question, off the same function. */
   const bundle = buildExplanation(question);
   const { explanation } = bundle;
+  /** Shown proactively above the problem, not gated behind a hint — null for anything
+   *  but a small bare addition/subtraction expression. See quantityDots.ts. */
+  const dots = quantityDots(question);
 
   /**
    * What has already been read out on its own, so it is never read twice.
@@ -226,6 +232,8 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
       </div>
       <h2>{lesson.title}</h2>
 
+      {dots && <QuantityDots data={dots} label={mathToWords(question.prompt)} />}
+
       {/* Same prompt-parsing/LTR-isolation pattern TopicLesson.tsx already uses for the
           identical question shape — see docs/features/scored-answer-practice/design.md. */}
       <div className={`problem-box ${isWordProblem ? "box-rtl" : "box-ltr"}`}>
@@ -272,6 +280,12 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
           </button>
         )}
       </div>
+
+      <NumberPad
+        onDigit={(d) => setAnswerInput((v) => v + d)}
+        onBackspace={() => setAnswerInput((v) => v.slice(0, -1))}
+        disabled={feedback !== null}
+      />
 
       {feedback !== null && (feedback === "correct" || revealed) && (
         <p className={`feedback ${feedback}`}>

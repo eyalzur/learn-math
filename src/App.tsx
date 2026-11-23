@@ -470,6 +470,7 @@ function App() {
     return (
       <>
         <TopicPicker
+          studentId={student.id}
           gradeLabel={`שלום ${student.name}! · ${grade.label}`}
           topics={grade.topicSets}
           onSelect={enterLesson}
@@ -580,6 +581,7 @@ function App() {
   }
 
   return <TopicPicker
+    studentId={student.id}
     gradeLabel={grade.label}
     topics={grade.topicSets}
     onSelect={enterLesson}
