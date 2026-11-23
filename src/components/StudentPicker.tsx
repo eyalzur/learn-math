@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { grades } from "../data/curriculum";
 import type { Student } from "../data/curriculum";
+import { studentBadge } from "../data/studentBadge";
 import { APP_VERSION } from "../data/version";
 import { VersionLog } from "./VersionLog";
 import { CreateStudentDialog } from "./CreateStudentDialog";
@@ -24,9 +25,13 @@ export function StudentPicker({ students, onSelect, onCreate, onDelete }: Studen
       <div className="student-list">
         {students.map((student) => {
           const grade = grades.find((g) => g.id === student.gradeId);
+          const badge = studentBadge(student.id);
           return (
             <div key={student.id} className="student-card-wrap">
               <button className="student-card" onClick={() => onSelect(student)}>
+                <span className="student-badge" aria-hidden="true" style={{ color: badge.color }}>
+                  {badge.glyph}
+                </span>
                 <span className="student-name">{student.name}</span>
                 <span className="student-grade">{grade?.label}</span>
               </button>

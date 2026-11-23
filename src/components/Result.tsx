@@ -1,4 +1,5 @@
 import type { Lesson } from "../data/style";
+import { starsForAccuracy } from "../data/progress";
 interface ResultProps {
   /**
    * What is being practised: a difficulty level, or a lesson on one style of exercise.
@@ -14,24 +15,22 @@ export function Result({ lesson, correctCount, onRetry, onHome }: ResultProps) {
   const total = lesson.questions.length;
   const percent = Math.round((correctCount / total) * 100);
 
-  // Every tier gets its own icon and star count — a game-style "how well did I do"
-  // readout, not just a plain sentence. Stars: 1 for a real pass, up to 3 for mastery.
+  // Every tier gets its own icon — a game-style "how well did I do" readout, not just a
+  // plain sentence. The star count itself is shared with TopicPicker's cumulative rating
+  // (starsForAccuracy), so "3 stars" means the same thing in both places.
   let icon = "💪";
   let message = "כדאי לתרגל עוד קצת";
-  let stars = 1;
   if (percent >= 100) {
     icon = "🌟";
     message = "ציון מושלם! פתרת הכל נכון!";
-    stars = 3;
   } else if (percent >= 80) {
     icon = "🎉";
     message = "מצוין! שליטה מלאה!";
-    stars = 3;
   } else if (percent >= 50) {
     icon = "😊";
     message = "יפה מאוד, המשיכו כך!";
-    stars = 2;
   }
+  const stars = starsForAccuracy(correctCount, total);
 
   return (
     <div className="result">

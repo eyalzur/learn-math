@@ -54,11 +54,12 @@ test("picking a student shows the grade's topics, and a topic leads somewhere to
   await expect(topics).toHaveCount(5);
   await expect(topics.first().locator(".topic-title")).not.toBeEmpty();
 
-  // A topic card shows its name and nothing else — the level count told a child
-  // nothing they could act on, and every card said the same number anyway.
-  await expect(topics.first()).toHaveText(
-    await topics.first().locator(".topic-title").innerText(),
-  );
+  // A topic card used to show its name and nothing else — the level count told a child
+  // nothing they could act on, and every card said the same number anyway. It now also
+  // shows a star rating (docs/features/stitch-visual-refresh/), which is data-driven and
+  // deliberately approved content, not a repeat of that old decision — so this only checks
+  // that the rating itself renders, not that the card is text-equal to just its title.
+  await expect(topics.first().locator(".topic-stars")).toBeAttached();
 
   // A topic leads to a level, a style, or straight into practice (an adaptive topic,
   // docs/features/mika-adaptive-difficulty) — which one is this test's sibling below.

@@ -64,8 +64,10 @@ export function History({ student, onBack, onStartTopic }: HistoryProps) {
         <p className="history-empty">עוד לא תרגלת. אחרי התרגול הראשון הוא יופיע כאן.</p>
       ) : (
         <>
-          <StatsSection title="סיכום לפי נושא" rows={statsByTopic(student.id)} />
-          <StatsSection title="סיכום לפי רמת קושי" rows={statsByDifficulty(student.id)} />
+          <div className="history-stats-group">
+            <StatsSection title="סיכום לפי נושא" rows={statsByTopic(student.id)} />
+            <StatsSection title="סיכום לפי רמת קושי" rows={statsByDifficulty(student.id)} />
+          </div>
           <ul className="history-list">
             {records.map((record, i) => (
               <li key={i} className="history-row">

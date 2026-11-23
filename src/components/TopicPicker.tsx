@@ -1,7 +1,10 @@
 import type { Topic } from "../data/curriculum";
 import { hasAnySettings } from "../lib/settingsVisibility";
+import { statsByTopic, starsForAccuracy } from "../data/progress";
 
 interface TopicPickerProps {
+  /** Whose history the star rating below each topic is computed from. */
+  studentId: string;
   gradeLabel: string;
   topics: Topic[];
   onSelect: (topic: Topic) => void;
@@ -30,6 +33,7 @@ interface TopicPickerProps {
 }
 
 export function TopicPicker({
+  studentId,
   gradeLabel,
   topics,
   onSelect,
@@ -46,6 +50,9 @@ export function TopicPicker({
      same `hasAnySettings()` helper, so the two can never disagree about whether settings
      exist right now. */
   const showSettings = hasAnySettings({ readAloud, onReadAloudChange });
+  // Computed once per render, not once per card — statsByTopic's `label` is exactly
+  // `topic.title` (how PracticeRecord.topicTitle is saved), so a direct lookup is enough.
+  const statsByTitle = new Map(statsByTopic(studentId).map((row) => [row.label, row]));
   return (
     <div className="topic-picker">
       <div className="grade-header">
@@ -82,7 +89,10 @@ export function TopicPicker({
       )}
 
       <div className="topic-grid">
-        {topics.map((topic) => (
+        {topics.map((topic) => {
+          const row = statsByTitle.get(topic.title);
+          const stars = starsForAccuracy(row?.correct ?? 0, row?.total ?? 0);
+          return (
           <div key={topic.id} className="topic-row">
             <button
               className="topic-card"
@@ -93,6 +103,23 @@ export function TopicPicker({
               disabled={!topic.reviewed}
             >
               <span className="topic-title">{topic.title}</span>
+              {/* Decorative, like Result.tsx's own .result-stars: an aria-label here (even
+                  on a hidden child) still gets pulled into *this* button's accessible name
+                  by the accname algorithm, which is exactly what broke
+                  topics-and-progress.spec.ts's "shows its name and nothing else" and every
+                  getByRole('button', { name: <topic title>, exact: true }) lookup in
+                  scored-answer-practice.spec.ts. The card's own title is still read by a
+                  screen reader; the rating itself just isn't announced, same tradeoff
+                  Result.tsx already made for its stars. */}
+              {topic.reviewed && (
+                <span className="topic-stars" aria-hidden="true">
+                  {[1, 2, 3].map((n) => (
+                    <span key={n} className={`topic-star ${n <= stars ? "topic-star-on" : ""}`}>
+                      ⭐
+                    </span>
+                  ))}
+                </span>
+              )}
               {!topic.reviewed && <span className="topic-soon">בקרוב</span>}
             </button>
             {onLesson && topic.reviewed && (
@@ -110,7 +137,8 @@ export function TopicPicker({
               </button>
             )}
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

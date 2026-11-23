@@ -22,10 +22,20 @@
   שווה בדיוק ל-`topic.title`, נבדק בקוד. caption נגיש לאיור-הכמות הוא `mathToWords`
   הקיים מ-speech.ts (ממיר מפעילים למילים, לא ספרות — תיקון לתיאור לא-מדויק ב-design.md
   שדיבר על "המרת מספרים למילים").)
-- [ ] Implementation — developer — not started
+- [x] Implementation — developer — 2026-11-23 (גרסה `1.53.2 → 1.54.0`, `build`/`lint`
+  נקיים. **שלושה באגים אמיתיים** נתפסו רק בבדיקות/אימות ידני (לא ב-build/lint),
+  כולם תוקנו: (1) מקלדת-המספרים הציגה טקסט לבן-על-לבן; (2) `aria-label` על שורת
+  הכוכבים זיהם את שם-הנגישות של כל כרטיס-נושא ושבר 5 בדיקות קיימות — תוקן ל-
+  `aria-hidden` מלא, כמו ש-`.result-stars` הקיים כבר עושה; (3) חסרה שורת `CHANGELOG`
+  לגרסה `1.54.0`, נוספה. בדיקה קיימת אחת (`topics-and-progress.spec.ts`) עודכנה
+  בכוונה — קריטריון ישן ("כרטיס מציג שם ושום דבר אחר") סתר קריטריון מאושר חדש
+  (כוכבים), תועד בקובץ הבדיקה עצמו. ריצת סוויטה מלאה סופית, נקייה: **361/363**,
+  שני הכשלים הם flakes מתועדים-מראש ב-CLAUDE.md (grade8-angles-congruence,
+  no-repeat-consecutive-questions), לא קשורים. ראו "Implementation Notes" בסוף
+  architecture.md לפרטים המלאים כולל סדרת האימות.)
 - [ ] Tests — qa — not started
 
-**Current phase:** developer
+**Current phase:** qa
 **Branch:** `feature/stitch-visual-refresh`
 **PR:** not opened yet
 

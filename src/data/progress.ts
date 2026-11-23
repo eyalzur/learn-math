@@ -95,6 +95,22 @@ export function statsByDifficulty(studentId: string): StatsRow[] {
   });
 }
 
+/**
+ * How many of 3 stars a given accuracy earns — the same thresholds Result.tsx has always
+ * used for a single finished session (≥80% → 3, ≥50% → 2, otherwise 1), shared here so a
+ * cumulative view (TopicPicker, across every session ever) can't quietly drift from what
+ * "3 stars" means there. `total === 0` is its own case — no practice yet, not a failing
+ * grade — and returns 0, which callers treat as an empty/neutral state, not "0 stars
+ * earned".
+ */
+export function starsForAccuracy(correct: number, total: number): 0 | 1 | 2 | 3 {
+  if (total === 0) return 0;
+  const percent = (correct / total) * 100;
+  if (percent >= 80) return 3;
+  if (percent >= 50) return 2;
+  return 1;
+}
+
 function groupAndSum(records: PracticeRecord[], keysFor: (r: PracticeRecord) => string[]): StatsRow[] {
   const byLabel = new Map<string, StatsRow>();
   for (const record of records) {

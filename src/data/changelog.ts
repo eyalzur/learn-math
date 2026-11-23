@@ -19,6 +19,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.54.0",
+    icon: "🎨",
+    description:
+      "עיצוב מרענן: תג צבעוני לכל תלמיד/ה, כוכבים לפי ההתקדמות על כל נושא, מקלדת מספרים ואיור כמות בתרגול.",
+  },
+  {
     version: "1.53.2",
     icon: "📌",
     description: "בלוג הגרסאות, כפתור הסגירה נשאר קבוע על המסך גם כשגוללים ברשימה.",

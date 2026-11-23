@@ -1087,7 +1087,8 @@ body:has(
 }
 
 .score {
-  font-size: 20px;
+  font-size: 22px;
+  font-weight: 600;
   margin: 8px 0 28px;
   color: var(--text-h);
 }
@@ -2354,4 +2355,103 @@ body:has(
 
 .clock-pivot {
   fill: var(--accent);
+}
+
+/* ---- stitch-visual-refresh: student badge, topic stars, quantity-dots, number pad,
+   history grouping — see docs/features/stitch-visual-refresh/ ---- */
+
+.student-badge {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.topic-stars {
+  display: inline-flex;
+  gap: 2px;
+  font-size: 15px;
+  letter-spacing: 1px;
+}
+
+.topic-star {
+  opacity: 0.25;
+  filter: grayscale(1);
+}
+
+.topic-star-on {
+  opacity: 1;
+  filter: none;
+}
+
+.quantity-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 4px 0 12px;
+}
+
+.qd-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 4px;
+  max-width: 140px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--code-bg);
+}
+
+.qd-sign {
+  font-size: 20px;
+  color: var(--text-h);
+}
+
+.qd-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+
+.qd-dot-a {
+  background: #8a7fd1;
+}
+
+.qd-dot-b {
+  background: #2f9e73;
+}
+
+.qd-dot-outline {
+  background: transparent;
+  border: 2px solid #8a7fd1;
+}
+
+.number-pad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  max-width: 240px;
+  margin: 12px auto 0;
+}
+
+.number-pad-button {
+  padding: 12px 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--code-bg);
+  color: var(--text-h);
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.number-pad-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.history-stats-group {
+  padding-bottom: 8px;
+  margin-bottom: 16px;
+  border-bottom: 1px dashed var(--border);
 }
