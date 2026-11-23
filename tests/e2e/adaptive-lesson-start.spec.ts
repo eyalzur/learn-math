@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { answerQuestion } from "./helpers/answerQuestion";
+import { answerQuestion, waitForNextQuestionOrEnd } from "./helpers/answerQuestion";
 import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /**
@@ -70,7 +70,7 @@ async function answerAdd(page: Page, a: number, b: number) {
   await answerQuestion(page, a + b); // always correct
   // A correct answer advances on its own (docs/features/scored-answer-practice/) — no
   // "הבא" button for this path.
-  await page.waitForTimeout(800);
+  await waitForNextQuestionOrEnd(page);
 }
 
 /** Answers add100 questions correctly until a question actually needing carrying shows

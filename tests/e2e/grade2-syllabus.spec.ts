@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { answerQuestion } from "./helpers/answerQuestion";
+import { answerQuestion, waitForNextQuestionOrEnd } from "./helpers/answerQuestion";
 import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /**
@@ -123,7 +123,7 @@ test("a wrong answer in כפל וחילוק still shows two hints and a real exp
   await expect(page.locator(".hint")).toHaveCount(2);
   await expect(page.locator(".hint-button")).toHaveCount(0);
 
-  await answerQuestion(page, -1); // guaranteed wrong for every question in this topic
+  await answerQuestion(page, 99999); // guaranteed wrong for every question in this topic
   await expect(page.locator(".feedback.wrong")).toBeVisible();
   await expect(page.locator(".explanation")).toBeVisible();
   expect(await page.locator(".explanation-step").count()).toBeGreaterThan(0);
@@ -152,7 +152,7 @@ test("a full practice session of כפל וחילוק ends on a score summary", a
 
   const total = Number((await page.locator(".progress").innerText()).match(/מתוך (\d+)/)![1]);
   for (let i = 0; i < total; i++) {
-    await answerQuestion(page, -1); // wrong every time — the score itself isn't the point here
+    await answerQuestion(page, 99999); // wrong every time — the score itself isn't the point here
     await nextOrFinish(page);
   }
   await expect(page.locator(".result .score")).toContainText(`מתוך ${total}`);
@@ -175,7 +175,7 @@ async function answerCorrectly(page: Page, operator: "+" | "−") {
   await answerQuestion(page, operator === "+" ? a + b : a - b);
   // A correct answer advances on its own (docs/features/scored-answer-practice/) — no
   // "הבא" button exists for this path, unlike a wrong one.
-  await page.waitForTimeout(800);
+  await waitForNextQuestionOrEnd(page);
 }
 
 test("a streak of correct answers on חיבור עד 1000 eventually reaches a three-digit problem", async ({
@@ -224,7 +224,7 @@ test("a streak of correct answers on כפל וחילוק eventually reaches a ba
       throw new Error(`not a bare multiplication or division: "${prompt}"`);
     }
     // A correct answer advances on its own — no "הבא" button for this path.
-    await page.waitForTimeout(800);
+    await waitForNextQuestionOrEnd(page);
   }
   expect(sawDivision, "a full streak of correct answers never reached a division question").toBe(true);
 });

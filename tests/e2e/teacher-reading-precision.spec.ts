@@ -107,7 +107,7 @@ test("end-to-end: an additive-equation analogy actually renders on screen, in th
     // .problem-text, same as TopicLesson.tsx — see docs/features/scored-answer-practice/.
     const prompt = (await page.locator(".problem-text").innerText()).trim();
     if (additiveDirection(prompt)) {
-      await answerQuestion(page, -1); // never a real equation's answer, always "wrong"
+      await answerQuestion(page, 99999); // never a real equation's answer, always "wrong"
       const analogy = page.locator(".explanation-analogy");
       await analogy.waitFor({ state: "visible" });
       const text = (await analogy.textContent())?.trim() ?? "";

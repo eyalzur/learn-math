@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { answerQuestion } from "./helpers/answerQuestion";
+import { answerQuestion, waitForNextQuestionOrEnd } from "./helpers/answerQuestion";
 import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /**
@@ -134,7 +134,7 @@ async function answerAndNext(page: Page, value: number) {
   if (await nextButton.count()) {
     await nextButton.click();
   } else {
-    await page.waitForTimeout(800);
+    await waitForNextQuestionOrEnd(page);
   }
 }
 
@@ -149,7 +149,7 @@ async function playSession(page: Page): Promise<string[]> {
     const prompt = await currentPrompt(page);
     prompts.push(prompt);
     const answer = computeAnswer(prompt);
-    await answerAndNext(page, answer ?? -999999);
+    await answerAndNext(page, answer ?? 9999999);
   }
   return prompts;
 }
@@ -218,7 +218,7 @@ test("every question has a prompt, two hints, and — after a wrong answer — s
   await page.locator(".hint-button").click();
   await expect(page.locator(".hint")).toHaveCount(2);
 
-  await answerQuestion(page, -999999);
+  await answerQuestion(page, 9999999);
   await expect(page.locator(".explanation-step").first()).toBeVisible();
   await expect(page.locator(".explanation-analogy")).not.toBeEmpty();
 });
@@ -233,7 +233,7 @@ test("a streak of correct answers reaches triangle-congruence questions, a strea
   for (let i = 0; i < 20; i++) {
     const prompt = await currentPrompt(page);
     wrongRunPrompts.push(prompt);
-    await answerAndNext(page, -999999);
+    await answerAndNext(page, 9999999);
   }
   expect(wrongRunPrompts.some((p) => p.includes("חופף למשולש")), "a streak of wrong answers still reached congruence").toBe(
     false,
@@ -307,7 +307,7 @@ test("the diagram appears next to the question itself, before any answer", async
   await expect(page.locator(".angle-figure-inline")).toBeVisible();
   await expect(page.locator(".angle-figure-inline")).toHaveAttribute("role", "img");
   // Still there after a wrong answer too — the picture doesn't disappear or duplicate.
-  await answerQuestion(page, -999999);
+  await answerQuestion(page, 9999999);
   await expect(page.locator(".angle-figure-inline")).toHaveCount(1);
 });
 
@@ -347,7 +347,7 @@ test("the congruent-triangles diagram marks all six correspondences, not just th
   // technique as the streak test above), rather than playing a whole session and losing
   // track of which page is currently showing the diagram under test.
   for (let i = 0; i < 20 && !prompt.includes("חופף למשולש"); i++) {
-    await answerAndNext(page, computeAnswer(prompt) ?? -999999);
+    await answerAndNext(page, computeAnswer(prompt) ?? 9999999);
     prompt = await currentPrompt(page);
   }
   expect(prompt, "never reached a congruent-triangles question to check").toContain("חופף למשולש");
@@ -408,14 +408,14 @@ test("the triangle-angle-sum step shows the calculation with explicit brackets",
         break;
       }
       const isUnwantedExteriorSibling = prompt.includes("הזווית החיצונית") && prompt.includes("∡A") && prompt.includes("∡B");
-      const answer = isUnwantedExteriorSibling ? -999999 : computeAnswer(prompt) ?? -999999;
+      const answer = isUnwantedExteriorSibling ? 9999999 : computeAnswer(prompt) ?? 9999999;
       await answerAndNext(page, answer);
       prompt = await currentPromptOrSessionEnd(page);
     }
   }
   expect(found, "never encountered a triangle-angle-sum question across 5 sessions").toBe(true);
 
-  await answerQuestion(page, -999999);
+  await answerQuestion(page, 9999999);
   const mathSteps = await page.locator(".explanation-math").allInnerTexts();
   expect(mathSteps.some((s) => s.includes("(") && s.includes(")"))).toBeTruthy();
 });
@@ -423,7 +423,7 @@ test("the triangle-angle-sum step shows the calculation with explicit brackets",
 test("a finished practice records the topic and score in history", async ({ page }) => {
   await openTopic(page);
   for (let i = 0; i < 20; i++) {
-    await answerAndNext(page, -999999);
+    await answerAndNext(page, 9999999);
   }
   await expect(page.locator(".result")).toBeVisible();
 

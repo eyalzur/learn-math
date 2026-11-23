@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { answerQuestion } from "./helpers/answerQuestion";
+import { answerQuestion, waitForNextQuestionOrEnd } from "./helpers/answerQuestion";
 import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /**
@@ -127,7 +127,7 @@ test("taking a hint does not cost anything in the score", async ({ page }) => {
     await expect(page.locator(".feedback.correct")).toBeVisible();
     // A correct answer advances on its own (docs/features/scored-answer-practice/) — no
     // "הבא" button for this path, unlike a wrong one.
-    await page.waitForTimeout(800);
+    await waitForNextQuestionOrEnd(page);
   }
 
   // A perfect score after using every hint available.
