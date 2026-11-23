@@ -2472,12 +2472,19 @@ body:has(
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
+  /* `max-width` alone leaves the grid with no definite width to divide into columns —
+     `.practice` is a flex column with `align-items: center` (shrink-to-fit, not
+     stretch), so without an actual `width` here the grid collapsed to each column's
+     min-content (~20px), not to the 240px cap: every key rendered as a tall, barely-
+     wider-than-the-glyph pill instead of a square-ish button. */
+  width: 100%;
   max-width: 240px;
   margin: 12px auto 0;
 }
 
 .number-pad-button {
-  padding: 12px 0;
+  aspect-ratio: 1;
+  padding: 0;
   border: 1px solid var(--border);
   border-radius: 12px;
   background: var(--code-bg);

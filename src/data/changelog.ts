@@ -19,6 +19,11 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.57.1",
+    icon: "🔧",
+    description: "מקלדת המספרים בתרגול: כפתורים מרובעים במקום מתוחים, והוספת נקודה עשרונית.",
+  },
+  {
     version: "1.57.0",
     icon: "🎨",
     description:
