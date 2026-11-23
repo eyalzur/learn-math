@@ -124,6 +124,10 @@ test("a long streak of correct answers stays fast — regression guard", async (
     // perfect-score-message.spec.ts's completeLevel).
     const nextButton = page.getByRole("button", { name: /^(הבא|סיום)$/ });
     if (await nextButton.count()) await nextButton.click();
+    // Deliberately not waitForNextQuestionOrEnd here — this test's own elapsed-time
+    // assertion below is calibrated assuming a fixed per-iteration settle-wait (see its
+    // comment), not an adaptive one; swapping the mechanism would change what the
+    // regression guard is actually measuring.
     else await page.waitForTimeout(800);
   }
   const elapsedMs = Date.now() - started;

@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { answerQuestion } from "./helpers/answerQuestion";
+import { answerQuestion, waitForNextQuestionOrEnd } from "./helpers/answerQuestion";
 import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /**
@@ -31,7 +31,7 @@ async function practiceDeterministicLesson(page: Page) {
   await page.getByRole("button", { name: "מה בא אחרי" }).click();
   for (const value of DETERMINISTIC_ANSWERS) {
     await answerQuestion(page, value);
-    await page.waitForTimeout(800); // give the auto-advance effect a moment to fire
+    await waitForNextQuestionOrEnd(page);
   }
   await expect(page.locator(".score")).toBeVisible({ timeout: 3000 });
 }

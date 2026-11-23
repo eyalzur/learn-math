@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { answerQuestion } from "./helpers/answerQuestion";
+import { answerQuestion, waitForNextQuestionOrEnd } from "./helpers/answerQuestion";
 import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /**
@@ -79,7 +79,7 @@ test("finishing a lesson records cumulative score stats, viewable by topic and b
   for (const value of answers) {
     await answerQuestion(page, value);
     // Correct every time — the "wait for auto-advance" effect needs a moment to fire.
-    await page.waitForTimeout(800);
+    await waitForNextQuestionOrEnd(page);
   }
   // Last question's auto-advance calls onFinish, landing on the result screen.
   await expect(page.locator(".score")).toBeVisible({ timeout: 3000 });

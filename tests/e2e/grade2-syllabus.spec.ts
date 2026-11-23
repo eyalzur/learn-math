@@ -224,7 +224,7 @@ test("a streak of correct answers on כפל וחילוק eventually reaches a ba
       throw new Error(`not a bare multiplication or division: "${prompt}"`);
     }
     // A correct answer advances on its own — no "הבא" button for this path.
-    await page.waitForTimeout(800);
+    await waitForNextQuestionOrEnd(page);
   }
   expect(sawDivision, "a full streak of correct answers never reached a division question").toBe(true);
 });

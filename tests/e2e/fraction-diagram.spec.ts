@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { answerQuestion } from "./helpers/answerQuestion";
+import { answerQuestion, waitForNextQuestionOrEnd } from "./helpers/answerQuestion";
 import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /**
@@ -142,7 +142,7 @@ test("questions the circle cannot describe get no circle, and still explain them
       await submit(page, parsed.answer);
       // A correct answer advances on its own (docs/features/scored-answer-practice/) —
       // no "הבא" button for this path.
-      await page.waitForTimeout(800);
+      await waitForNextQuestionOrEnd(page);
       continue;
     }
     odd = { prompt };

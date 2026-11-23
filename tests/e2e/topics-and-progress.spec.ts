@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { answerQuestion } from "./helpers/answerQuestion";
+import { answerQuestion, waitForNextQuestionOrEnd } from "./helpers/answerQuestion";
 import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /**
@@ -32,7 +32,7 @@ async function playLevel(page: Page, answerWith: string) {
     if (await nextButton.count()) {
       await nextButton.click();
     } else {
-      await page.waitForTimeout(800);
+      await waitForNextQuestionOrEnd(page);
     }
   }
   return total;
@@ -156,7 +156,7 @@ test("a level practises only its own topic", async ({ page }) => {
     if (await nextButton.count()) {
       await nextButton.click();
     } else {
-      await page.waitForTimeout(800);
+      await waitForNextQuestionOrEnd(page);
     }
   }
 });
