@@ -9,6 +9,7 @@ import { PythagorasTriangle } from "./PythagorasTriangle";
 import { PercentStrip } from "./PercentStrip";
 import { RatioStrips } from "./RatioStrips";
 import { LinearGraph } from "./LinearGraph";
+import { BallDiagram } from "./BallDiagram";
 
 interface QuestionExplanationProps {
   bundle: ExplanationBundle;
@@ -38,6 +39,7 @@ export function QuestionExplanation({ bundle, speak }: QuestionExplanationProps)
     ratio,
     linear,
     angle,
+    balls,
   } = bundle;
   if (explanation === null) return null;
 
@@ -149,6 +151,12 @@ export function QuestionExplanation({ bundle, speak }: QuestionExplanationProps)
         <figure className="linear-figure">
           <LinearGraph graph={linear} label={linear.caption.replace(/`/g, "")} />
           <figcaption className="figure-caption">{segmented(linear.caption)}</figcaption>
+        </figure>
+      )}
+      {balls && (
+        <figure className="ball-diagram-figure">
+          <BallDiagram diagram={balls} label={balls.caption.replace(/`/g, "")} />
+          <figcaption className="figure-caption">{segmented(balls.caption)}</figcaption>
         </figure>
       )}
       {/* No <AngleShape> here — the picture already sits next to the question itself

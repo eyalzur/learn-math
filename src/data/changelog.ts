@@ -19,6 +19,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.55.0",
+    icon: "🔵",
+    description:
+      "חדש: בהסבר של שאלת חיבור/חיסור (עד 10), ציור כדורים מונפש מראה את הפעולה עצמה.",
+  },
+  {
     version: "1.54.0",
     icon: "🗣️",
     description: "ההקראה: המספרים בביטוי חשבוני נשמעים כמילים בעברית (לא רק הסימנים), וקול טבעי יותר כשיש רשת.",
