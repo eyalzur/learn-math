@@ -1,0 +1,107 @@
+name: Deploy Hebrew TTS server to Cloud Run
+
+# Deliberately no `paths:` filter, even though this only ever deploys server/.
+# A paths filter produces no run at all when nothing under server/ changed — which makes
+# "nothing needed deploying" and "this broke before it started" look identical from the
+# Actions list: both are simply absent. The person reading that list is not a programmer,
+# and the failure this whole workflow exists to prevent is exactly the silent one (a merged
+# server change that never reached Cloud Run, with nothing on screen saying so). So the run
+# always happens, decides for itself whether there is anything to deploy, and says which.
+# This mirrors the old server/deploy-server.yml this repo had before (removed along with
+# server/ itself in docs/features/scored-answer-practice/) — see git history.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  # Required for Workload Identity Federation: this is what lets the job mint the OIDC
+  # token Google verifies. Without it authentication fails with an error that does not
+  # mention permissions at all, which sends whoever reads it looking in the wrong place.
+  id-token: write
+
+concurrency:
+  group: deploy-hebrew-tts-server
+  # A Cloud Run deploy is a build followed by a traffic switch; cancelling midway can leave
+  # a half-finished build and an unclear idea of which revision is actually serving. Queue
+  # instead of cancelling, same reasoning as the old deploy-server.yml.
+  cancel-in-progress: false
+
+env:
+  # Neither of these is a secret — see server/README.md for why Workload Identity
+  # Federation makes that true. Keeping them here rather than in repository settings means
+  # the setup is one terminal session with nothing to paste into a second UI, and the
+  # values stay reviewable in git.
+  WIF_PROVIDER: projects/864901299725/locations/global/workloadIdentityPools/github/providers/github
+  SERVICE_ACCOUNT: github-deployer@learn-math-506923.iam.gserviceaccount.com
+  SERVICE_NAME: hebrew-tts-server
+  REGION: me-west1
+  # The identity hebrew-tts-server itself runs as at runtime — not SERVICE_ACCOUNT above,
+  # which is who *performs* the deploy. Passed explicitly on every deploy: `gcloud run
+  # deploy` without --service-account does not reliably carry the previous revision's
+  # service account forward (discovered the hard way on the old notebook-server, 2026-08-31
+  # — see git history, server/README.md as it was then — so this repeats the fix from day
+  # one instead of waiting to rediscover it).
+  RUNTIME_SERVICE_ACCOUNT: hebrew-tts-server@learn-math-506923.iam.gserviceaccount.com
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # The change check below compares two commits. A shallow clone does not contain
+          # the earlier one.
+          fetch-depth: 0
+
+      - id: changed
+        name: Did anything under server/ change?
+        run: |
+          if [ "${{ github.event_name }}" != "push" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          elif [ -z "${{ github.event.before }}" ] || [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          elif git diff --quiet "${{ github.event.before }}" "${{ github.sha }}" -- server/; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Report that there was nothing to deploy
+        if: steps.changed.outputs.changed != 'true'
+        run: |
+          echo "no changes under server/ — nothing to deploy" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - uses: google-github-actions/auth@v2
+        if: steps.changed.outputs.changed == 'true'
+        with:
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.SERVICE_ACCOUNT }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+        if: steps.changed.outputs.changed == 'true'
+
+      - name: Deploy to Cloud Run
+        if: steps.changed.outputs.changed == 'true'
+        run: |
+          gcloud run deploy "$SERVICE_NAME" \
+            --source server/ \
+            --region "$REGION" \
+            --service-account "$RUNTIME_SERVICE_ACCOUNT" \
+            --allow-unauthenticated \
+            --quiet
+
+          url="$(gcloud run services describe "$SERVICE_NAME" --region "$REGION" --format='value(status.url)')"
+          echo "deployed: $url" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Explain what to check
+        if: failure()
+        run: |
+          cat <<'EOF' | tee -a "$GITHUB_STEP_SUMMARY"
+          deploy failed. the usual causes, in order of likelihood:
+            1. the GitHub->Google Cloud permission (WIF) was never set up, or expired
+            2. the billing account got unlinked from the project
+            3. the server code itself does not build
+          see: server/README.md
+          EOF

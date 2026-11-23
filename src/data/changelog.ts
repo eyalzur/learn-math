@@ -19,6 +19,11 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.54.0",
+    icon: "🗣️",
+    description: "ההקראה: המספרים בביטוי חשבוני נשמעים כמילים בעברית (לא רק הסימנים), וקול טבעי יותר כשיש רשת.",
+  },
+  {
     version: "1.53.2",
     icon: "📌",
     description: "בלוג הגרסאות, כפתור הסגירה נשאר קבוע על המסך גם כשגוללים ברשימה.",

@@ -6,6 +6,7 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
+| הקראה בקול טבעי — נורמליזטור עברי + Google Cloud TTS | 🟢 done — מוזג ל-main | [status](./hebrew-math-tts/status.md) |
 | אנימציית-כניסה למסך (מסכי-תפריטים) | 🟢 done — ממתין ל-PR | [status](./screen-entrance-animation/status.md) |
 | אבחון קשיים לאורך זמן | 🟢 done — מוזג ל-main | [status](./struggle-diagnosis/status.md) |
 | שתי שאלות זהות לא יוצאות ברצף | 🟢 done — מוזג ל-main | [status](./no-repeat-consecutive-questions/status.md) |
