@@ -19,6 +19,11 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.57.2",
+    icon: "🔧",
+    description: "מקלדת המספרים נעלמת כשמופיע משוב נכון/לא נכון, במקום להישאר מושבתת על המסך.",
+  },
+  {
     version: "1.57.1",
     icon: "🔧",
     description: "מקלדת המספרים בתרגול: כפתורים מרובעים במקום מתוחים, והוספת נקודה עשרונית.",
