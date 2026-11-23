@@ -12,9 +12,9 @@
 - [x] Tests — qa — 2026-11-23, 362/364 (שני הכשלים — `grade8-angles-congruence.spec.ts`
       — ה-flake הקיים-מראש, לא קשור)
 
-**Current phase:** done — ready for PR
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `feature/lesson-always-first`
-**PR:** not opened yet
+**PR:** https://github.com/eyalzur/learn-math/pull/113 — מוזג 2026-11-23
 
 **מוק שאושר:** https://claude.ai/artifact/K9Bdi3rpUqxNCyBjStLA1h — `TopicLesson.tsx`
 ו-`TopicPicker.tsx` הודגמו כאן עם נתונים אמיתיים (כיתה ו׳) לפני החיווט ל-`App.tsx`.
