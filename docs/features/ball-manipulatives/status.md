@@ -19,9 +19,9 @@
 - [x] Tests — qa — 2026-11-23 (tests/e2e/ball-manipulatives.spec.ts, 14/14;
       סוויטה מלאה 375/379, הכשל היחיד שלא flake-ידוע תוקן — ראו tests.md)
 
-**Current phase:** done — ממתין ל-PR
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `feature/ball-manipulatives`
-**PR:** [#112](https://github.com/eyalzur/learn-math/pull/112)
+**PR:** [#112](https://github.com/eyalzur/learn-math/pull/112) — מוזג 2026-11-23
 
 **הערת-גרסה:** `npm run bump:feature` רץ פעמיים על הבראנץ' הזה, לא בגלל חריגה
 מהכלל "bump אחת לבראנץ'" — `main` עצמו התקדם ל-`1.54.0` (מיזוג #111,

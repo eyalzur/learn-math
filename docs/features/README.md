@@ -6,7 +6,7 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
-| ויזואליזציית-כדורים — חיבור, חיסור, והשוואה | 🟢 done — ממתין ל-PR ([#112](https://github.com/eyalzur/learn-math/pull/112)) | [status](./ball-manipulatives/status.md) |
+| ויזואליזציית-כדורים — חיבור, חיסור (והשוואה — נדחתה לסבב-המשך) | 🟢 done — מוזג ל-main | [status](./ball-manipulatives/status.md) |
 | הקראה בקול טבעי — נורמליזטור עברי + Google Cloud TTS | 🟢 done — מוזג ל-main | [status](./hebrew-math-tts/status.md) |
 | אנימציית-כניסה למסך (מסכי-תפריטים) | 🟢 done — ממתין ל-PR | [status](./screen-entrance-animation/status.md) |
 | אבחון קשיים לאורך זמן | 🟢 done — מוזג ל-main | [status](./struggle-diagnosis/status.md) |
