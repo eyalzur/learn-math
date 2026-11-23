@@ -14,13 +14,22 @@
       דו-ספרתיים — ballDiagram חוסם אותם בבדיקת-גבול מפורשת, לא בבדיקת-style)
 - [x] Implementation — developer — 2026-11-22 (src/data/ballDiagram.ts +
       src/components/BallDiagram.tsx, wired into questionExplanation.ts/
-      QuestionExplanation.tsx; build+lint clean; version 1.54.0)
+      QuestionExplanation.tsx; build+lint clean; גרסה עודכנה פעמיים —
+      ראו הערה למטה)
 - [x] Tests — qa — 2026-11-23 (tests/e2e/ball-manipulatives.spec.ts, 14/14;
       סוויטה מלאה 375/379, הכשל היחיד שלא flake-ידוע תוקן — ראו tests.md)
 
-**Current phase:** done
+**Current phase:** done — ממתין ל-PR
 **Branch:** `feature/ball-manipulatives`
-**PR:** not opened yet
+**PR:** [#112](https://github.com/eyalzur/learn-math/pull/112)
+
+**הערת-גרסה:** `npm run bump:feature` רץ פעמיים על הבראנץ' הזה, לא בגלל חריגה
+מהכלל "bump אחת לבראנץ'" — `main` עצמו התקדם ל-`1.54.0` (מיזוג #111,
+hebrew-math-tts) **אחרי** שהבראנץ' הזה כבר בומפ ל-`1.54.0` משלו, מה שיצר
+התנגשות-גרסה אמיתית (לא רק קונפליקט-מיזוג טריוויאלי). הפתרון תאם את הכלל
+הקיים ב-git-workflow.md ("אם ה-check נכשל... התיקון הוא להחזיר את package.json
+בעבודת-יד למספר הצפוי"): אחרי מיזוג `main` מחדש, `package.json` תוקן ביד
+ל-`1.55.0` (main's `1.54.0` middle+1), ולא הופעל `bump:feature` שוב.
 
 ## Open questions / blockers
 None — "מי גדול ממי" הוכרע ב-design.md כ-Out of Scope לסבב הזה (לא Open
