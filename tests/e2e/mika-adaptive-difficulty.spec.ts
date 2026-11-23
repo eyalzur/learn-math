@@ -63,6 +63,9 @@ async function toGrade(page: Page, gradeIndex: number) {
 async function enterTopic(page: Page, topic: AdaptiveTopic) {
   await toGrade(page, topic.gradeIndex);
   await page.locator(".topic-card", { hasText: topic.name }).click();
+  // A topic card opens its lesson first now (docs/features/lesson-always-first) — skip
+  // straight through to practice, same screen this used to land on directly.
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
 }
 
 function operands(prompt: string, operator: "+" | "−"): [number, number] {
@@ -127,6 +130,7 @@ for (const topic of TOPICS) {
     // at least one question should land on the hardest tier.
     await page.getByRole("button", { name: "חזרה לתפריט" }).click();
     await page.locator(".topic-card", { hasText: topic.name }).click();
+    await page.getByRole("button", { name: "דלג לתרגול →" }).click();
     const correctRunHardest: boolean[] = [];
     for (let i = 0; i < 12; i++) {
       const [a, b] = await currentOperands(page, topic);
@@ -165,6 +169,7 @@ for (const topic of TOPICS) {
     const seen = new Set<string>();
     for (let i = 0; i < 6; i++) {
       await page.locator(".topic-card", { hasText: topic.name }).click();
+      await page.getByRole("button", { name: "דלג לתרגול →" }).click();
       seen.add((await page.locator(".problem-text").innerText()).trim());
       await page.locator(".link-button").first().click(); // ← חזרה
     }

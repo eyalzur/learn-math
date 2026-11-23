@@ -31,6 +31,7 @@ async function openTopic(page: Page, student: number, topic: number) {
   // (first card) for MIKA's topics above, grade ו׳ (third card) for ROTEM's.
   await page.locator(".grade-card").nth(student === MIKA ? 0 : 2).click();
   await page.locator(".topic-card").nth(topic).click();
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
 }
 
 // ------------------------------------------------- which screen a topic opens on
@@ -194,6 +195,7 @@ test("a child who cannot read gets the example spoken, one button per card", asy
   await page.getByRole("switch", { name: "להקריא את השאלות בקול" }).click();
   await page.getByRole("button", { name: "סגירה" }).click();
   await page.locator(".topic-card").nth(PLACE).click();
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
   await expect(page.locator(".style-speak")).toHaveCount(6);
 
   // The speaker must not double as the card: tapping it stays on the screen.

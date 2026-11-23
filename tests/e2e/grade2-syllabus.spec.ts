@@ -43,6 +43,9 @@ async function toGradeB(page: Page) {
 async function openTopic(page: Page, name: string) {
   await toGradeB(page);
   await page.locator(".topic-card", { hasText: name }).click();
+  // A topic card now opens its lesson first (docs/features/lesson-always-first) — skip
+  // straight to practice, same as every other call site that used to land there directly.
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
 }
 
 async function nextOrFinish(page: Page) {
@@ -65,13 +68,15 @@ test("grade ב׳ shows five topics, including כפל וחילוק and צורות
   }
 });
 
-test("both new topics still offer a lesson (📖) alongside practice, like every other topic", async ({
+test("both new topics enter a real lesson on click, like every other topic", async ({
   page,
 }) => {
   await toGradeB(page);
   for (const title of ["כפל וחילוק", "צורות וגופים"]) {
-    const row = page.locator(".topic-row", { has: page.locator(".topic-card", { hasText: title }) });
-    await expect(row.locator(".lesson-link")).toBeVisible();
+    await page.locator(".topic-card", { hasText: title }).click();
+    await expect(page.locator(".problem-box").first()).toBeVisible();
+    await expect(page.locator(".answer-input")).toHaveCount(0);
+    await page.getByRole("button", { name: "← חזרה" }).click();
   }
 });
 

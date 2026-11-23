@@ -37,6 +37,9 @@ test("a student can choose a grade that isn't their usual one and actually pract
   await page.locator(".grade-card-1").click(); // grade א׳ instead
   await expect(page.locator(".topic-card").first()).toBeVisible();
   await page.locator(".topic-card").first().click();
+  // A topic card opens its lesson first now (docs/features/lesson-always-first) — skip
+  // straight through to what "actually practising" used to land on directly.
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
   // Landing on either a style/level picker or straight into practice both count as
   // "actually practising" — either way something concrete from grade א׳ shows up.
   await expect(
@@ -75,6 +78,7 @@ test("remembered position holds at the topic list and the style picker, forgets 
   await createAndSelectStudent(page);
   await page.locator(".grade-card").first().click(); // grade א׳
   await page.locator(".topic-card").first().click(); // a style-based topic
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
   await expect(page.locator(".style-card").first()).toBeVisible();
   await page.reload();
   await expect(page.locator(".student-card")).toHaveCount(0);
@@ -94,6 +98,7 @@ test("remembered position holds at the topic list and the style picker, forgets 
   await createAndSelectStudent(page);
   await page.locator(".grade-card").first().click(); // grade א׳
   await page.locator(".topic-card").nth(1).click(); // "חיבור עד 10" — adaptive, straight to practice
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
   await expect(page.locator(".progress")).toBeVisible();
   await page.reload();
   await expect(page.locator(".progress")).toHaveCount(0);

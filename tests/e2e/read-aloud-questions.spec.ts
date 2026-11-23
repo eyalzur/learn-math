@@ -93,6 +93,7 @@ async function fresh(page: Page) {
 /** Mika → the topic that carries hints → its first level. First question is `12 + 5`. */
 async function startHintedLevel(page: Page) {
   await page.locator(".topic-card").nth(3).click();
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
   // "חיבור וחיסור עד 20" holds two styles, so it opens on the style screen now.
   await page.locator(".style-card").first().click();
 }

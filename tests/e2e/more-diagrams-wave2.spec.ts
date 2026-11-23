@@ -50,6 +50,7 @@ async function open(page: Page, student: string, topic: string) {
   await createAndSelectStudent(page);
   await page.locator(".grade-card").nth(GRADE_CARD_INDEX[student]).click();
   await page.locator(".topic-card").filter({ hasText: topic }).click();
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
 }
 
 async function currentPrompt(page: Page): Promise<string> {

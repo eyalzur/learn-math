@@ -40,6 +40,9 @@ async function toGradeB(page: Page) {
 async function enterAdd100(page: Page) {
   await toGradeB(page);
   await page.locator(".topic-card", { hasText: "חיבור עד 1000" }).click();
+  // A topic card now opens its lesson first (docs/features/lesson-always-first) — skip
+  // straight to practice, same as every other call site that used to land there directly.
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
 }
 
 /** `"47 + 8 ="` → `[47, 8]`. Every add100 question, written or generated, is this shape. */
@@ -71,9 +74,11 @@ test.beforeEach(async ({ page }) => {
   await open(page);
 });
 
-test("חיבור עד 1000 skips the level picker and lands straight on practice", async ({ page }) => {
+test("חיבור עד 1000 skips the level picker, and practice is one skip-to-practice away", async ({ page }) => {
   await toGradeB(page);
   await page.locator(".topic-card", { hasText: "חיבור עד 1000" }).click();
+  await expect(page.locator(".level-card")).toHaveCount(0);
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
 
   await expect(page.locator(".level-card")).toHaveCount(0);
   await expect(page.locator(".problem-text")).toBeVisible();
@@ -100,6 +105,7 @@ test("a streak of correct answers climbs to needing carrying, a streak of wrong 
   // the end of the run at least one question should require carrying.
   await page.getByRole("button", { name: "חזרה לתפריט" }).click(); // back to the topics screen
   await page.locator(".topic-card", { hasText: "חיבור עד 1000" }).click();
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
   const correctRunCarries: boolean[] = [];
   for (let i = 0; i < 10; i++) {
     const ops = await currentPrompt(page);
@@ -134,6 +140,7 @@ test("questions vary between sessions, even at the same starting difficulty", as
   const seen = new Set<string>();
   for (let i = 0; i < 6; i++) {
     await page.locator(".topic-card", { hasText: "חיבור עד 1000" }).click();
+    await page.getByRole("button", { name: "דלג לתרגול →" }).click();
     seen.add((await page.locator(".problem-text").innerText()).trim());
     await page.locator(".link-button").first().click(); // ← חזרה
   }

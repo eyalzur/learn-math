@@ -152,8 +152,10 @@ test("the version appears on the first screen only", async ({ page }) => {
   await expect(page.locator(".topic-card").first()).toBeVisible();
   await expect(version).toHaveCount(0);
 
-  // Level picker
+  // Lesson screen first now (docs/features/lesson-always-first), then skip to level picker
   await page.locator(".topic-card").first().click();
+  await expect(version).toHaveCount(0);
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
   await expect(page.locator(".style-card, .level-card").first()).toBeVisible();
   await expect(version).toHaveCount(0);
 

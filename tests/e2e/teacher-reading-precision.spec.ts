@@ -76,6 +76,7 @@ async function openEquationsTopic(page: Page) {
   await createAndSelectStudent(page);
   await page.locator(".grade-card", { hasText: "כיתה ח" }).click();
   await page.locator(".topic-card", { hasText: "משוואות" }).first().click();
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
 }
 
 /** Clicks "הבא"/"סיום" and reports which one it was — "סיום" ends the session (moves to a

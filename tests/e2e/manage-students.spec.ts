@@ -118,6 +118,7 @@ test("deleting a student deletes their saved progress — a new student with the
   const name = await createAndSelectStudent(page, "1", "דנה");
   await page.locator(".grade-card").first().click();
   await page.locator(".topic-card").first().click();
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
   await page.locator(".style-card, .level-card").first().click();
   await finishWithWrongAnswers(page);
   await expect(page.locator(".result")).toBeVisible();

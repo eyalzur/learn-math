@@ -32,6 +32,7 @@ async function open(page: Page, topicIdx: number, style: string) {
   // Two grades available; every topic this file tests is grade 1 (א׳).
   await page.locator(".grade-card").first().click();
   await page.locator(".topic-card").nth(topicIdx).click();
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
   await page.locator(".style-card").filter({ hasText: style }).first().click();
 }
 

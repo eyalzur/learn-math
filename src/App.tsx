@@ -472,8 +472,7 @@ function App() {
         <TopicPicker
           gradeLabel={`שלום ${student.name}! · ${grade.label}`}
           topics={grade.topicSets}
-          onSelect={enterTopic}
-          onLesson={enterLesson}
+          onSelect={enterLesson}
           onBack={() => chooseGrade(null)}
           backLabel="← חזרה"
           onHistory={() => setScreen({ name: "history" })}
@@ -583,8 +582,7 @@ function App() {
   return <TopicPicker
     gradeLabel={grade.label}
     topics={grade.topicSets}
-    onSelect={enterTopic}
-    onLesson={enterLesson}
+    onSelect={enterLesson}
     onBack={() => chooseGrade(null)}
     backLabel="← חזרה"
     onHistory={() => setScreen({ name: "history" })}

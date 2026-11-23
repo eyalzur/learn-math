@@ -27,6 +27,9 @@ async function enterAdd10(page: Page) {
   await createAndSelectStudent(page); // default gradeId "1" — כיתה א׳
   await page.locator(".grade-card").nth(0).click(); // כיתה א׳
   await page.locator(".topic-card", { hasText: "חיבור עד 10" }).click();
+  // A topic card now opens its lesson first (docs/features/lesson-always-first) — skip
+  // straight to practice, same as every other call site that used to land there directly.
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
 }
 
 function operands(prompt: string): [number, number] {

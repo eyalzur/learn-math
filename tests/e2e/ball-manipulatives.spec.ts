@@ -37,6 +37,9 @@ async function enterTopic(page: Page, topic: Topic) {
   await createAndSelectStudent(page);
   await page.locator(".grade-card").first().click();
   await page.locator(".topic-card", { hasText: topic.name }).click();
+  // A topic card now opens its lesson first (docs/features/lesson-always-first) — skip
+  // straight to practice, same as every other call site that used to land there directly.
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
 }
 
 function parseOperands(prompt: string, op: "add" | "sub"): [number, number] {
@@ -166,6 +169,7 @@ for (const topic of TOPICS) {
     await createAndSelectStudent(page);
     await page.locator(".grade-card").first().click();
     await page.locator(".topic-card", { hasText: "עשרות ויחידות" }).click();
+    await page.getByRole("button", { name: "דלג לתרגול →" }).click();
     await page.locator(".style-card", { hasText: "כמה עשרות" }).first().click();
     await answerQuestion(page, 999999);
     await expect(page.locator(".explanation")).toBeVisible();

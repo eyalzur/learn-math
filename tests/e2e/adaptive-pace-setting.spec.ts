@@ -143,6 +143,7 @@ test("'מהיר' climbs difficulty within a couple of correct answers", async ({
   await toGradeB(page);
   await choosePace(page, "מהיר");
   await page.locator(".topic-card", { hasText: "חיבור עד 1000" }).click();
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
 
   const carries: boolean[] = [];
   for (let i = 0; i < 5; i++) {
@@ -156,6 +157,7 @@ test("'אטי' does not climb difficulty before four correct answers in a row", 
   await toGradeB(page);
   await choosePace(page, "אטי");
   await page.locator(".topic-card", { hasText: "חיבור עד 1000" }).click();
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
 
   // Three correct in a row is one short of 'אטי''s threshold (4) — difficulty must stay at
   // its easiest tier throughout, exactly like a run of wrong answers does

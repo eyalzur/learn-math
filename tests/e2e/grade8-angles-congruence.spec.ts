@@ -61,6 +61,9 @@ async function openOmerTopics(page: Page) {
 async function openTopic(page: Page) {
   await openOmerTopics(page);
   await page.locator(".topic-card", { hasText: TOPIC_TITLE }).click();
+  // A topic card opens its lesson first now (docs/features/lesson-always-first) — skip
+  // straight through to practice, same screen this used to land on directly.
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
 }
 
 /** Pulls the number right after a fixed anchor phrase — targeted, so a prompt with more
@@ -162,6 +165,7 @@ async function playSessions(page: Page, count: number): Promise<string[]> {
     if (s > 0) {
       await page.getByRole("button", { name: "חזרה לתפריט" }).click();
       await page.locator(".topic-card", { hasText: TOPIC_TITLE }).click();
+      await page.getByRole("button", { name: "דלג לתרגול →" }).click();
     }
     prompts.push(...(await playSession(page)));
   }
@@ -220,6 +224,7 @@ test("a streak of correct answers reaches triangle-congruence questions, a strea
 
   await page.getByRole("button", { name: "חזרה לתפריט" }).click();
   await page.locator(".topic-card", { hasText: TOPIC_TITLE }).click();
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
   const correctRunPrompts = await playSession(page);
   expect(correctRunPrompts.some((p) => p.includes("חופף למשולש")), "a streak of correct answers never reached congruence").toBe(
     true,
@@ -292,7 +297,9 @@ test("the topic-lesson screen explains why the exterior-angle and corresponding-
   page,
 }) => {
   await openOmerTopics(page);
-  await page.getByRole("button", { name: `שיעור: ${TOPIC_TITLE}` }).click();
+  // The topic card now opens its lesson directly (docs/features/lesson-always-first) —
+  // no separate lesson button any more.
+  await page.locator(".topic-card", { hasText: TOPIC_TITLE }).click();
   await expect(page.locator(".problem-text")).toBeVisible();
 
   // Tier 1 (straight/right angle) carries no proof — the lesson doesn't show one it has

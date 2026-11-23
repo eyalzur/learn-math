@@ -140,6 +140,8 @@ test("a continuous ambient animation doesn't destabilize repeated real clicks �
   // no separate level-picker screen to click through any more.
   for (let i = 0; i < 5; i++) {
     await page.locator(".topic-card").first().click();
+    // A topic card opens its lesson first now (docs/features/lesson-always-first).
+    await page.getByRole("button", { name: "דלג לתרגול →" }).click();
     await expect(page.locator(".answer-input")).toBeVisible();
     await page.getByRole("button", { name: "← חזרה" }).click();
     await expect(page.locator(".topic-card").first()).toBeVisible();
@@ -155,6 +157,7 @@ test("the spotlight does not interfere with answering — a real streak stays fa
   // Same first-visit grade-picker step as the regression-guard test above.
   await page.locator(".grade-card-1").click();
   await page.locator(".topic-card").first().click();
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
   await page.locator(".style-card").first().click();
 
   // A wildly-wrong answer (999999) reliably skips the mistake-diagnosis follow-up

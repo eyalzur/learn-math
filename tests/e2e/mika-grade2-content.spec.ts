@@ -82,6 +82,7 @@ test("חיבור עד 1000 and חיסור עד 1000 are both adaptive, entered d
 
   for (const title of ["חיבור עד 1000", "חיסור עד 1000"]) {
     await page.locator(".topic-card", { hasText: title }).click();
+    await page.getByRole("button", { name: "דלג לתרגול →" }).click();
     await expect(page.locator(".level-card")).toHaveCount(0);
     await expect(page.locator(".progress")).toContainText("מתוך 20");
     await page.locator(".link-button").first().click(); // ← חזרה, back to the topics list
@@ -96,6 +97,7 @@ test("a grade ב׳ arithmetic problem still renders left-to-right inside the RTL
   await createAndSelectStudent(page);
   await page.locator(".grade-card").nth(1).click();
   await page.locator(".topic-card", { hasText: "חיסור עד 1000" }).click();
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
 
   const box = page.locator(".problem-box, .problem-text").first();
   await expect(box).toBeVisible();

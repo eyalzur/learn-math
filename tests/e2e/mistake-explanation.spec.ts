@@ -8,6 +8,7 @@ async function openLevels(page: Page, topicIndex = 0) {
   // Two grades available; every route here is grade 1 (א׳).
   await page.locator(".grade-card").first().click();
   await page.locator(".topic-card").nth(topicIndex).click();
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
 }
 
 
