@@ -15,11 +15,17 @@
   רכיב **חדש**, לא שימוש-חוזר ב-TenFrame הקיים — נבדק בקוד: TenFrame מחושב רק לדפוסי
   "עשרות/יחידות" ספציפיים, לא לחיבור/חיסור כללי. דירוג-הכוכבים משתמש באותם ספי-אחוזים
   ש-Result.tsx כבר מגדיר, לא סף חדש.)
-- [ ] Architecture — tech-lead — not started
+- [x] Architecture — tech-lead — 2026-11-23 (בכוונה בלי flag בזמן-ריצה — שינוי
+  ויזואלי קודם בפרויקט (candy/playful/back-link redesign) תמיד עבר דרך בראנץ'+build
+  עצמאי לתצוגה מקדימה, לא toggle חי; `uiFlags.ts` שהוזכר בבקשה שייך לפרויקט אחר עם
+  rollout הדרגתי אמיתי. דירוג-כוכבים משתמש ב-`statsByTopic` הקיים ישירות — `label`
+  שווה בדיוק ל-`topic.title`, נבדק בקוד. caption נגיש לאיור-הכמות הוא `mathToWords`
+  הקיים מ-speech.ts (ממיר מפעילים למילים, לא ספרות — תיקון לתיאור לא-מדויק ב-design.md
+  שדיבר על "המרת מספרים למילים").)
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** tech-lead
+**Current phase:** developer
 **Branch:** `feature/stitch-visual-refresh`
 **PR:** not opened yet
 
