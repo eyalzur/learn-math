@@ -289,11 +289,12 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
         )}
       </div>
 
-      <NumberPad
-        onDigit={(d) => setAnswerInput((v) => v + d)}
-        onBackspace={() => setAnswerInput((v) => v.slice(0, -1))}
-        disabled={feedback !== null}
-      />
+      {feedback === null && (
+        <NumberPad
+          onDigit={(d) => setAnswerInput((v) => v + d)}
+          onBackspace={() => setAnswerInput((v) => v.slice(0, -1))}
+        />
+      )}
 
       {feedback !== null && (feedback === "correct" || revealed) && (
         <p className={`feedback ${feedback}`}>
