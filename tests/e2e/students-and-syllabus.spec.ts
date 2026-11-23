@@ -36,6 +36,7 @@ async function openLevels(page: Page, studentIndex: number, topicIndex = 0) {
   // Mika (index 0) now has two grades available; every route here is grade 1 (א׳).
   if (studentIndex === 0) await page.locator(".grade-card").first().click();
   await page.locator(".topic-card").nth(topicIndex).click();
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
 }
 
 async function open(page: Page) {
@@ -187,6 +188,7 @@ test("a Hebrew sentence keeps its own direction while the maths inside stays LTR
   // sentence — and exercise the identical rendering path.
   await pickStudent(page, 0);
   await page.locator(".topic-card", { hasText: "חיבור וחיסור עד 20" }).click();
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
   await page.locator(".style-card").first().click();
 
   await page.getByRole("button", { name: "רמז 💡" }).click();

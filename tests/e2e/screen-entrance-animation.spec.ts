@@ -52,6 +52,7 @@ test("the entrance fade does not apply inside the practice screen itself", async
   await createAndSelectStudent(page, "1");
   await page.locator(".grade-card-1").click();
   await page.locator(".topic-card").first().click();
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
   await page.locator(".style-card").first().click();
 
   const animationName = await page

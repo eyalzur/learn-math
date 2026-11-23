@@ -50,6 +50,9 @@ async function enterClock(page: Page) {
   await createAndSelectStudent(page);
   await page.locator(".grade-card-2").click();
   await page.locator(".topic-card", { hasText: "שעון וזמן" }).click();
+  // A topic card now opens its lesson first (docs/features/lesson-always-first) — skip
+  // straight to practice, same as every other call site that used to land there directly.
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
 }
 
 /** Reads a single clock's aria-label the way a child would read the picture itself —
@@ -158,13 +161,12 @@ test("every clock's svg renders left-to-right, inside the RTL page", async ({ pa
   expect(direction).toBe("ltr");
 });
 
-test("the lesson (📖) screen shows the clock face too, for every difficulty tier", async ({
+test("the lesson screen shows the clock face too, for every difficulty tier", async ({
   page,
 }) => {
   await createAndSelectStudent(page);
   await page.locator(".grade-card-2").click();
-  const row = page.locator(".topic-row", { has: page.locator(".topic-card", { hasText: "שעון וזמן" }) });
-  await row.locator(".lesson-link").click();
+  await page.locator(".topic-card", { hasText: "שעון וזמן" }).click();
 
   // Easy tier's example.
   await expect(page.locator(".clock-face")).toHaveCount(1);

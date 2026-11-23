@@ -92,9 +92,31 @@ export function TopicLesson({ topicTitle, gradeLabel, questions, onBack, onPract
         >
           ← חזרה
         </button>
+        {/* Visible and identical on every page, not just the last — the lesson is now
+           the default entry point for every reviewed topic (docs/features/
+           lesson-always-first), so whoever already knows the material needs an
+           immediate way out, not just the "→ לתרגול" button waiting at the end. */}
+        <button
+          type="button"
+          className="link-button"
+          onClick={() => {
+            stopSpeaking();
+            onPractice();
+          }}
+        >
+          דלג לתרגול →
+        </button>
         <span className="progress">{gradeLabel}</span>
       </div>
-      <h2>{topicTitle}</h2>
+      <h2>
+        {topicTitle}
+        {/* Condensed onto the title's own line, not a second stacked heading — this is
+           still just a small "you're looking at an example" marker, not content that
+           deserves its own full-width row. */}
+        {showTierHeadings && (
+          <span className="lesson-page-badge">{`דוגמה ${currentPage + 1} מתוך ${questions.length}`}</span>
+        )}
+      </h2>
       {speechSupported() && (
         <div className="question-speech">
           <button
@@ -106,9 +128,6 @@ export function TopicLesson({ topicTitle, gradeLabel, questions, onBack, onPract
             {speaking ? "⏹" : "🔊"}
           </button>
         </div>
-      )}
-      {showTierHeadings && (
-        <h3 className="lesson-page-heading">{`דוגמה ${currentPage + 1} מתוך ${questions.length}`}</h3>
       )}
       <div className={`problem-box ${isWordProblem ? "box-rtl" : "box-ltr"}`}>
         <span className={`problem-text ${isWordProblem ? "prompt-rtl" : "prompt-ltr"}`}>

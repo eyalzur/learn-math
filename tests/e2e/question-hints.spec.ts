@@ -30,6 +30,7 @@ async function openTopic(page: Page, topicTitle: string) {
   // Two grades available; every topic this file tests is grade 1 (א׳).
   await page.locator(".grade-card").first().click();
   await page.locator(".topic-card", { hasText: topicTitle }).click();
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
   // Grade 1's multi-style topics are entered by style; a written-level topic still asks
   // for a level; an adaptive topic (docs/features/mika-adaptive-difficulty) skips both
   // and lands straight on practice.

@@ -342,9 +342,9 @@
 }
 
 /* Solid accent + white text on hover, not a darker pink tint — var(--accent-border) is a
-   translucent pink meant for borders/strokes (see .lesson-link:hover above), and pink text
-   on a pink-tinted background would be a real contrast problem. This mirrors the same
-   accent+white combination the base `button` rule already uses for primary actions. */
+   translucent pink meant for borders/strokes, and pink text on a pink-tinted background
+   would be a real contrast problem. This mirrors the same accent+white combination the
+   base `button` rule already uses for primary actions. */
 .link-button:hover {
   background: var(--accent);
   color: #fff;
@@ -592,13 +592,21 @@
   margin-top: 12px;
 }
 
-/* "דוגמה N מתוך M" heading on the lesson screen's current page (only shown when the
-   topic has more than one worked example — see TopicLesson.tsx's showTierHeadings). */
-.lesson-page-heading {
-  margin: 0 0 12px;
-  font-size: 16px;
-  color: var(--text-h);
-  text-align: center;
+/* "דוגמה N מתוך M" marker on the lesson screen's current page (only shown when the topic
+   has more than one worked example — see TopicLesson.tsx's showTierHeadings). Inline next
+   to the topic title, not a separate full-width heading — it's a small "you're looking at
+   an example" note, not content that needs its own row (found live: the two stacked
+   headings read as a wall of white space before the actual lesson content). */
+.lesson-page-badge {
+  display: inline-block;
+  margin-inline-start: 10px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--code-bg);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 400;
+  vertical-align: middle;
 }
 
 .explanation {
@@ -1203,34 +1211,6 @@ body:has(
   font-size: 19px;
   font-weight: 600;
   color: var(--text-h);
-}
-
-.topic-row {
-  display: flex;
-  align-items: stretch;
-  gap: 8px;
-}
-
-.topic-row .topic-card {
-  flex: 1;
-  min-width: 0;
-}
-
-/* The topic card's secondary action — open the lesson instead of practice. Same shape as
-   StylePicker's .style-speak: a small square button beside the card, not inside it. */
-.lesson-link {
-  flex: 0 0 auto;
-  width: 48px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--bg);
-  font-size: 20px;
-  cursor: pointer;
-  transition: border-color 0.15s;
-}
-
-.lesson-link:hover {
-  border-color: var(--accent-border);
 }
 
 /* ---- history ---- */
@@ -1997,7 +1977,8 @@ body:has(
 .pythagoras-figure,
 .percent-figure,
 .ratio-figure,
-.linear-figure {
+.linear-figure,
+.ball-diagram-figure {
   margin: 0 0 16px;
   display: flex;
   flex-direction: column;
@@ -2023,10 +2004,70 @@ body:has(
 .percent-strip,
 .ratio-strips,
 .linear-graph,
-.angle-shape {
+.angle-shape,
+.ball-diagram {
   direction: ltr;
   max-width: 100%;
   height: auto;
+}
+
+/* ---- ball manipulatives: animated ball-pile for addition/subtraction
+   (docs/features/ball-manipulatives) — the first ANIMATED diagram in this bundle. */
+
+/* Two stacked static snapshots ("לפני"/"אחרי") shown instead of the animated version
+   under prefers-reduced-motion — see BallDiagram.tsx. */
+.ball-diagram-frames {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.ball-diagram-frame {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.ball-diagram-frame-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* Filled versus outlined, never one hue against another — the same colourblind-safe
+   convention every other shape in this bundle already uses (.tf-dot.filled,
+   .gs-filled, .ps-filled, .rs-block.rs-filled all share this exact fill). A ball that's
+   "part of the pile" is filled; one that hasn't joined yet (addition) or has just been
+   taken out (subtraction) is outlined. */
+.bd-ball {
+  fill: none;
+  stroke: var(--text-h);
+  stroke-width: 1.5;
+  transition: fill 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.bd-ball.filled {
+  fill: #c4b5fd;
+}
+
+/* The "mobile" group (the second addend, or the subtrahend) — merges into or splits
+   away from the stationary group via this one transform, soft-eased per the approved
+   mock, never a bouncy one. */
+.bd-group {
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.bd-group.bd-shifted {
+  transform: translate(46px, 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bd-ball,
+  .bd-group {
+    transition: none !important;
+  }
 }
 
 /* Filled versus outlined, never one hue against another: which one is which is the

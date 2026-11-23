@@ -37,6 +37,9 @@ async function start(page: Page, topicIdx: number, pick: number | string | null)
   await createAndSelectStudent(page, "1");
   await page.locator(".grade-card").first().click();
   await page.locator(".topic-card").nth(topicIdx).click();
+  // A topic card now opens its lesson first (docs/features/lesson-always-first) — skip
+  // straight through to the same screen `enterTopic` used to land on directly.
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
   if (pick === null) {
     // Adaptive: already on practice, nothing left to click.
   } else if (typeof pick === "string") {
@@ -55,6 +58,7 @@ async function enterDecimals(page: Page) {
   await createAndSelectStudent(page);
   await page.locator(".grade-card-6").click();
   await page.locator(".topic-card").nth(1).click(); // שברים עשרוניים
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
 }
 
 const answerWrong = async (page: Page) => {

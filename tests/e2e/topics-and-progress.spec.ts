@@ -64,6 +64,7 @@ test("picking a student shows the grade's topics, and a topic leads somewhere to
   // A topic leads to a level, a style, or straight into practice (an adaptive topic,
   // docs/features/mika-adaptive-difficulty) — which one is this test's sibling below.
   await topics.nth(1).click();
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
   const landed =
     (await page.locator(".level-card").count()) ||
     (await page.locator(".style-card").count()) ||
@@ -82,6 +83,7 @@ test("grade 1 has three levels of ten questions for every topic", async ({ page 
 
   for (let t = 0; t < topicCount; t++) {
     await page.locator(".topic-card").nth(t).click();
+    await page.getByRole("button", { name: "דלג לתרגול →" }).click();
     const levels = page.locator(".level-card");
     if (!(await levels.count())) {
       const styles = page.locator(".style-card");
@@ -140,6 +142,9 @@ test("a level practises only its own topic", async ({ page }) => {
   await createAndSelectStudent(page);
   await page.locator(".grade-card").first().click();
   await page.getByText("חיסור עד 10", { exact: true }).click();
+  // A topic card now opens its lesson first (docs/features/lesson-always-first) — skip
+  // straight to practice, same as every other call site that used to land there directly.
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
 
   for (let i = 0; i < 10; i++) {
     const prompt = await page.locator(".problem-text").innerText();
@@ -160,6 +165,7 @@ test("you can walk back from level to topic to student", async ({ page }) => {
   await createAndSelectStudent(page);
   await page.locator(".grade-card").first().click();
   await page.locator(".topic-card").first().click();
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
   await expect(page.locator(".style-card, .level-card").first()).toBeVisible();
 
   await page.getByRole("button", { name: "← חזרה" }).click();
@@ -192,6 +198,7 @@ test("finishing a practice records the topic, level and score, and it survives a
   await page.locator(".grade-card").first().click();
   const topicTitle = await page.locator(".topic-card").first().locator(".topic-title").innerText();
   await page.locator(".topic-card").first().click();
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
   const levelTitle = await enterFirstLesson(page);
 
   const total = await playLevel(page, "999999");
@@ -222,6 +229,7 @@ test("history is newest first", async ({ page }) => {
 
   for (const topicIndex of [0, 1]) {
     await page.locator(".topic-card").nth(topicIndex).click();
+    await page.getByRole("button", { name: "דלג לתרגול →" }).click();
     await enterFirstLesson(page);
     await playLevel(page, "999999");
     await page.getByRole("button", { name: "חזרה לתפריט" }).click();
@@ -247,6 +255,7 @@ test("each student's history is their own", async ({ page }) => {
   const studentA = await createAndSelectStudent(page, "1");
   await page.locator(".grade-card").first().click();
   await page.locator(".topic-card").first().click();
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
   await enterFirstLesson(page);
   await playLevel(page, "999999");
   await page.getByRole("button", { name: "חזרה לתפריט" }).click();

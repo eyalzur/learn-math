@@ -114,6 +114,7 @@ test("the app keeps working completely normally in an ordinary browser tab", asy
   await createAndSelectStudent(page);
   await page.locator(".grade-card").first().click();
   await page.locator(".topic-card").first().click();
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
   const landed =
     (await page.locator(".level-card").count()) ||
     (await page.locator(".style-card").count()) ||

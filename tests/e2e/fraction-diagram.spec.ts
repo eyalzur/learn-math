@@ -57,6 +57,7 @@ async function openFractions(page: Page) {
   await createAndSelectStudent(page);
   await page.locator(".grade-card").nth(2).click(); // grade ו׳ (docs/features/any-grade-any-student)
   await page.locator(".topic-card").nth(0).click();
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
 }
 
 async function currentPrompt(page: Page): Promise<string> {
@@ -210,6 +211,7 @@ test("a grade with no fractions is untouched", async ({ page }) => {
   // Two grades available; this test is about grade 1 (א׳) content.
   await page.locator(".grade-card").first().click();
   await page.locator(".topic-card").nth(0).click();
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
   // Grade 1 enters this topic by style, not by level.
   await page.locator(".style-card").first().click();
   await answerWrong(page);

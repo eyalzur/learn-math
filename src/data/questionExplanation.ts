@@ -13,6 +13,7 @@ import { ratioStrips } from "./ratioStrips";
 import { linearGraph } from "./linearGraph";
 import { angleShape } from "./angleShape";
 import { clockFace } from "./clockFace";
+import { ballDiagram } from "./ballDiagram";
 import { explanationToSpeechParts, speechParts } from "./speech";
 
 /**
@@ -42,6 +43,11 @@ export interface ExplanationBundle {
    *  here anyway so `Practice.tsx` and `TopicLesson.tsx` share one lookup, the same
    *  reason this whole bundle exists. */
   clock: ReturnType<typeof clockFace>;
+  /** First animated diagram in the bundle — see docs/features/ball-manipulatives. Only
+   *  `add10`/`sub10` questions whose two operands are both single-digit qualify; see
+   *  ballDiagram.ts's own doc comment for why that bound is narrower than the style
+   *  name alone would suggest. */
+  balls: ReturnType<typeof ballDiagram>;
 }
 
 export function buildExplanation(question: Question): ExplanationBundle {
@@ -60,6 +66,7 @@ export function buildExplanation(question: Question): ExplanationBundle {
     linear: linearGraph(question),
     angle: angleShape(question),
     clock: clockFace(question),
+    balls: ballDiagram(question),
   };
 }
 
@@ -86,6 +93,7 @@ export function explanationSpeechParts(bundle: ExplanationBundle): string[] {
     ...(bundle.ratio ? speechParts(bundle.ratio.caption) : []),
     ...(bundle.linear ? speechParts([bundle.linear.caption]) : []),
     ...(bundle.angle ? speechParts([bundle.angle.caption]) : []),
+    ...(bundle.balls ? speechParts([bundle.balls.caption]) : []),
     ...explanationToSpeechParts(bundle.explanation),
   ];
 }

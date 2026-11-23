@@ -22,9 +22,12 @@ async function openDeterministicTopic(page: Page) {
 
 /** Assumes the caller already navigated to the topic list (openDeterministicTopic) —
  *  does not navigate itself, so it composes with a test that needs to look at that list
- *  before practicing. */
+ *  before practicing. Picking a reviewed topic now opens its lesson first
+ *  (lesson-always-first), so "דלג לתרגול" (skip to practice) is needed to reach the
+ *  same style picker a direct topic click used to land on. */
 async function practiceDeterministicLesson(page: Page) {
   await page.getByRole("button", { name: "מספרים עד 20", exact: true }).click();
+  await page.getByRole("button", { name: "דלג לתרגול" }).click();
   await page.getByRole("button", { name: "מה בא אחרי" }).click();
   for (const value of DETERMINISTIC_ANSWERS) {
     await answerQuestion(page, value);
@@ -80,6 +83,7 @@ test("digits can be entered on-screen, and the quantity illustration matches thi
 }) => {
   await openDeterministicTopic(page);
   await page.getByRole("button", { name: "חיבור עד 10", exact: true }).click();
+  await page.getByRole("button", { name: "דלג לתרגול" }).click(); // lesson-always-first
 
   // On-screen digit entry writes into the same answer field a physical keyboard would.
   const pad = page.locator(".number-pad");
@@ -115,6 +119,7 @@ test("a subtraction question's illustration shows the starting amount, with the 
 }) => {
   await openDeterministicTopic(page);
   await page.getByRole("button", { name: "חיסור עד 10", exact: true }).click();
+  await page.getByRole("button", { name: "דלג לתרגול" }).click(); // lesson-always-first
 
   const prompt = (await page.locator(".problem-text").innerText()).trim();
   const match = prompt.match(/^(\d+)\s*[−-]\s*(\d+)\s*=?$/);

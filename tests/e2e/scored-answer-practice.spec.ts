@@ -17,6 +17,8 @@ async function openDeterministicLesson(page: Page) {
   await createAndSelectStudent(page);
   await page.getByRole("button", { name: "כיתה א׳" }).click();
   await page.getByRole("button", { name: "מספרים עד 20", exact: true }).click();
+  // A topic card opens its lesson first now (docs/features/lesson-always-first).
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
   await page.getByRole("button", { name: "מה בא אחרי" }).click();
 }
 
@@ -55,6 +57,7 @@ test("works the same way for a different grade/student (עומר, כיתה ח׳)
   await createAndSelectStudent(page);
   await page.getByRole("button", { name: "כיתה ח׳" }).click();
   await page.locator(".topic-card").first().click();
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
   await expect(page.locator(".answer-input")).toBeVisible();
   await expect(page.locator("canvas")).toHaveCount(0);
 });

@@ -38,6 +38,9 @@ async function toGradeB(page: Page) {
 async function enterAdd100(page: Page) {
   await toGradeB(page);
   await page.locator(".topic-card", { hasText: "חיבור עד 1000" }).click();
+  // A topic card now opens its lesson first (docs/features/lesson-always-first) — skip
+  // straight to practice, same as every other call site that used to land there directly.
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
 }
 
 function addOperands(prompt: string): [number, number] {
@@ -101,6 +104,7 @@ test("leaving mid-session through the back button still resumes from the reached
   await page.getByRole("button", { name: "← חזרה" }).click();
 
   await page.locator(".topic-card", { hasText: "חיבור עד 1000" }).click();
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
   const ops = await currentAddOperands(page);
   expect(needsCarrying(ops), `expected a resumed (carrying) question, got ${ops[0]} + ${ops[1]}`).toBe(
     true,
@@ -125,6 +129,7 @@ test("finishing a full session also resumes from the reached tier next time", as
   await page.getByRole("button", { name: "חזרה לתפריט" }).click();
 
   await page.locator(".topic-card", { hasText: "חיבור עד 1000" }).click();
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
   const ops = await currentAddOperands(page);
   expect(needsCarrying(ops), `expected a resumed (carrying) question, got ${ops[0]} + ${ops[1]}`).toBe(
     true,
@@ -140,6 +145,7 @@ test("a different adaptive topic for the same student is unaffected by another t
 
   // חיסור עד 1000 — a sibling adaptive topic, never visited before in this test.
   await page.locator(".topic-card", { hasText: "חיסור עד 1000" }).click();
+  await page.getByRole("button", { name: "דלג לתרגול →" }).click();
   const ops = await currentSubOperands(page);
   expect(needsBorrowing(ops), `expected an easy first question, got ${ops[0]} − ${ops[1]}`).toBe(false);
 });
