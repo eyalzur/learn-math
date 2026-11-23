@@ -1,4 +1,4 @@
-# ויזואליזציית-כדורים — חיבור, חיסור, והשוואה
+# ויזואליזציית-כדורים — חיבור, חיסור (והשוואה — נדחתה לסבב-המשך)
 
 ציור-כדורים מונפש בהסבר של שאלת חיבור/חיסור/השוואת-גודל (טווח-יחידות בשלב
 זה) — מראה את הפעולה עצמה, לא רק טקסט. חלק מהציור: אם ארוך מדי למסך אחד,
@@ -15,9 +15,10 @@
 - [x] Implementation — developer — 2026-11-22 (src/data/ballDiagram.ts +
       src/components/BallDiagram.tsx, wired into questionExplanation.ts/
       QuestionExplanation.tsx; build+lint clean; version 1.54.0)
-- [ ] Tests — qa — not started
+- [x] Tests — qa — 2026-11-23 (tests/e2e/ball-manipulatives.spec.ts, 14/14;
+      סוויטה מלאה 375/379, הכשל היחיד שלא flake-ידוע תוקן — ראו tests.md)
 
-**Current phase:** qa
+**Current phase:** done
 **Branch:** `feature/ball-manipulatives`
 **PR:** not opened yet
 
