@@ -17,11 +17,10 @@ jobs:
     # מקבילות" section — that's about *one* server with several workers against it;
     # sharding here gives each shard a server of its own, the same as two people each
     # running `npm run test:e2e` on their own machine). Was a single ~20-30 minute job;
-    # this plus playwright.config.ts's CI-only `preview` webServer (see its own comment)
-    # is the e2e-speed follow-up from fix/feedback-celebration-and-hints (2026-11-24) —
-    # together with the fake-clock fixes in the individual spec files for the handful of
-    # tests that used to be the suite's biggest single cost (grade8-angles-congruence.spec.ts
-    # alone dropped from ~15 real minutes to under 2).
+    # this is the e2e-speed follow-up from fix/feedback-celebration-and-hints
+    # (2026-11-24), together with the fake-clock fixes in the individual spec files for
+    # the handful of tests that used to be the suite's biggest single cost
+    # (grade8-angles-congruence.spec.ts alone dropped from ~15 real minutes to under 2).
     strategy:
       fail-fast: false
       matrix:

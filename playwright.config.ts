@@ -16,13 +16,15 @@ export default defineConfig({
     baseURL: 'http://localhost:5173',
   },
   webServer: {
-    // CI already runs `npm run build` right before this (tests.yml) — serving that build
-    // via `preview` instead of `dev` drops React StrictMode's intentional double-render,
-    // a real (if secondary) cost on every adaptive/random-state test. Locally stays on
-    // `dev` for reuseExistingServer + fast edit-reload while iterating.
-    command: process.env.CI
-      ? 'npm run preview -- --port 5173 --strictPort'
-      : 'npm run dev -- --port 5173 --strictPort',
+    // Stays on `dev`, in CI too — tried switching CI to `vite preview` (serving the
+    // already-built dist/) to drop StrictMode's double-render, but
+    // students-and-syllabus.spec.ts deliberately `import()`s a raw .ts source file at
+    // its Vite dev-server path to read the app's own data (see that test's own
+    // comment) — `preview` serves only the built bundle, with no route for that file at
+    // all, so it broke under CI. Not worth rewriting a passing test for a secondary
+    // speed gain; the real one is the fake-clock fix in the individual spec files plus
+    // sharding below (tests.yml).
+    command: 'npm run dev -- --port 5173 --strictPort',
     url: 'http://localhost:5173/learn-math/',
     reuseExistingServer: !process.env.CI,
     env: {
