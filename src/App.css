@@ -970,25 +970,42 @@ button:not(.app-version):not(.speak-button):not(.hint-button):not(.link-button):
    (0,2,1) lost outright to the idle-breathe button rule's (0,6,1) for any element that
    also matches it, so :hover/:focus/:active never paused anything. Matching the same
    specificity here is what makes the override actually win. */
-.student-card:hover,
 .student-card:focus,
 .student-card:active,
-.grade-card:hover,
 .grade-card:focus,
 .grade-card:active,
-.topic-card:hover,
 .topic-card:focus,
 .topic-card:active,
-.level-card:hover,
 .level-card:focus,
 .level-card:active,
-.style-card:hover,
 .style-card:focus,
 .style-card:active,
-button:not(.app-version):not(.speak-button):not(.hint-button):not(.link-button):not(.student-card-delete):not(.settings-button):not(.student-card):not(.grade-card):not(.topic-card):not(.level-card):not(.style-card):hover,
 button:not(.app-version):not(.speak-button):not(.hint-button):not(.link-button):not(.student-card-delete):not(.settings-button):not(.student-card):not(.grade-card):not(.topic-card):not(.level-card):not(.style-card):focus,
 button:not(.app-version):not(.speak-button):not(.hint-button):not(.link-button):not(.student-card-delete):not(.settings-button):not(.student-card):not(.grade-card):not(.topic-card):not(.level-card):not(.style-card):active {
   animation-play-state: paused;
+}
+
+/* `:hover` gated to real hover-capable pointers — on a touchscreen there's no mouse to
+   ever leave, so a tap leaves `:hover` stuck on whatever button was under the finger.
+   Worse, it travels: navigating to a new screen re-renders the card grid in place, and
+   if a different card ends up at the same screen position the old one occupied, the
+   browser re-evaluates `:hover` there (DOM changed, pointer didn't move) and the NEW
+   card inherits the stuck hover — found live on an iPhone as a card randomly missing
+   (a different one each time, matching whichever position was last tapped): its
+   playful-pop-in entrance got paused by this very rule before it ever ran, freezing it
+   at the `backwards`-fill start state (opacity:0). Confirmed via `el.matches(':hover')`
+   returning true with the mouse nowhere near it. `(hover: hover)` is true only for a
+   pointer that can actually hover (a real mouse/trackpad) — false for touch, so this
+   whole failure mode doesn't exist there. */
+@media (hover: hover) {
+  .student-card:hover,
+  .grade-card:hover,
+  .topic-card:hover,
+  .level-card:hover,
+  .style-card:hover,
+  button:not(.app-version):not(.speak-button):not(.hint-button):not(.link-button):not(.student-card-delete):not(.settings-button):not(.student-card):not(.grade-card):not(.topic-card):not(.level-card):not(.style-card):hover {
+    animation-play-state: paused;
+  }
 }
 
 /* Paused screen-wide whenever any modal dialog is open — the spotlight shouldn't keep
