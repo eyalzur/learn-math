@@ -762,7 +762,15 @@ button:not(.app-version):not(.link-button) {
    N≥3; for N=1/2 the floor stretches the cycle without stretching the step, landing
    peaks unevenly. `(cycle / N) * -spot-i` keeps the step proportional to the real
    cycle length, so peaks stay evenly spaced regardless of N — and is a no-op change
-   for N≥3, where cycle/N is already 1s. */
+   for N≥3, where cycle/N is already 1s.
+
+   The entrance stagger (playful-pop-in's own delay, first slot) used to be four
+   `:nth-child(2..4)` overrides — DOM order, not screen position, and nothing past
+   the 4th card staggered at all. Reusing --spot-i (src/data/idleSpotlight.ts's own
+   real top-to-bottom/right-to-left screen-position index, already computed for
+   idle-breathe on this same rule) instead fixes both: every card gets a step, in
+   actual visual order, not DOM order — reported live as wanting the entrance to read
+   top-to-bottom by real position. Same 0.05s-per-card pace the nth-child version used. */
 .student-card,
 .grade-card,
 .topic-card,
@@ -771,29 +779,9 @@ button:not(.app-version):not(.link-button) {
   animation:
     playful-pop-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) backwards,
     idle-breathe max(3s, calc(var(--spot-n, 1) * 1s)) ease-in-out infinite;
-  animation-delay: 0s, calc(max(3s, calc(var(--spot-n, 1) * 1s)) / var(--spot-n, 1) * var(--spot-i, 0) * -1);
-}
-
-.student-card:nth-child(2),
-.grade-card:nth-child(2),
-.topic-card:nth-child(2),
-.level-card:nth-child(2),
-.style-card:nth-child(2) {
-  animation-delay: 0.05s, calc(max(3s, calc(var(--spot-n, 1) * 1s)) / var(--spot-n, 1) * var(--spot-i, 0) * -1);
-}
-.student-card:nth-child(3),
-.grade-card:nth-child(3),
-.topic-card:nth-child(3),
-.level-card:nth-child(3),
-.style-card:nth-child(3) {
-  animation-delay: 0.1s, calc(max(3s, calc(var(--spot-n, 1) * 1s)) / var(--spot-n, 1) * var(--spot-i, 0) * -1);
-}
-.student-card:nth-child(4),
-.grade-card:nth-child(4),
-.topic-card:nth-child(4),
-.level-card:nth-child(4),
-.style-card:nth-child(4) {
-  animation-delay: 0.15s, calc(max(3s, calc(var(--spot-n, 1) * 1s)) / var(--spot-n, 1) * var(--spot-i, 0) * -1);
+  animation-delay:
+    calc(var(--spot-i, 0) * 0.05s),
+    calc(max(3s, calc(var(--spot-n, 1) * 1s)) / var(--spot-n, 1) * var(--spot-i, 0) * -1);
 }
 
 @keyframes playful-pop-in {

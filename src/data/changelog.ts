@@ -19,6 +19,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.57.4",
+    icon: "✨",
+    description:
+      "כניסת הכפתורים למסך: הסדר של הניתור בין כפתורים עכשיו באמת לפי המיקום שלהם על המסך (מלמעלה למטה), לא לפי סדר הקוד.",
+  },
+  {
     version: "1.57.3",
     icon: "🎉",
     description:
