@@ -114,6 +114,9 @@ for (const topic of TOPICS) {
     // Run A: never answer correctly — difficulty can only back off, so no question in
     // this run should land on the topic's hardest pattern. Runs the full 20-question
     // session so it actually reaches the result screen below.
+    // Run B's 12 correct answers each wait out the post-answer celebration delay (2s,
+    // src/components/Practice.tsx) — comfortably over the default 30s test timeout.
+    test.setTimeout(60000);
     await enterTopic(page, topic);
     const wrongRunHardest: boolean[] = [];
     for (let i = 0; i < 20; i++) {
@@ -177,6 +180,9 @@ for (const topic of TOPICS) {
   });
 
   test(`${topic.name}: history records the topic without a level suffix`, async ({ page }) => {
+    // 20 correct answers in a row, each waiting out the post-answer celebration delay
+    // (2s, src/components/Practice.tsx) — comfortably over the default 30s test timeout.
+    test.setTimeout(60000);
     await enterTopic(page, topic);
     for (let i = 0; i < 20; i++) {
       const [a, b] = await currentOperands(page, topic);

@@ -88,6 +88,10 @@ test("חיבור עד 1000 skips the level picker, and practice is one skip-to-p
 test("a streak of correct answers climbs to needing carrying, a streak of wrong answers never does", async ({
   page,
 }) => {
+  // Run B's 10 correct answers each wait out the post-answer celebration delay (2s,
+  // src/components/Practice.tsx) — close enough to the default 30s test timeout to be
+  // flaky on its own; not borderline with real margin.
+  test.setTimeout(60000);
   // Run A: never answer correctly. Difficulty can only ever back off from its starting
   // point, so no question in this run should require carrying past a ten. Runs the full
   // session (20 questions, not 10) so it actually reaches the result screen below.
@@ -148,6 +152,10 @@ test("questions vary between sessions, even at the same starting difficulty", as
 });
 
 test("history records the topic without a level suffix", async ({ page }) => {
+  // 20 correct answers in a row, each waiting out the post-answer celebration delay
+  // (2s, src/components/Practice.tsx) before the next question appears — comfortably
+  // over the default 30s test timeout on its own.
+  test.setTimeout(60000);
   await enterAdd100(page);
   for (let i = 0; i < 20; i++) {
     const ops = await currentPrompt(page);

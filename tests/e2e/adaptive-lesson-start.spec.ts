@@ -112,6 +112,10 @@ test("leaving mid-session through the back button still resumes from the reached
 });
 
 test("finishing a full session also resumes from the reached tier next time", async ({ page }) => {
+  // Climbing to a carrying question plus running out the rest of a 20-question session,
+  // each correct answer waiting out the post-answer celebration delay (2s,
+  // src/components/Practice.tsx) — comfortably over the default 30s test timeout.
+  test.setTimeout(90000);
   await enterAdd100(page);
   await climbAddUntilCarrying(page);
   // Finish the rest of the 20-question session rather than leaving early.

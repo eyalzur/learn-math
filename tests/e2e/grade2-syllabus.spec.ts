@@ -181,6 +181,9 @@ async function answerCorrectly(page: Page, operator: "+" | "−") {
 test("a streak of correct answers on חיבור עד 1000 eventually reaches a three-digit problem", async ({
   page,
 }) => {
+  // 20 correct answers in a row, each waiting out the post-answer celebration delay
+  // (2s, src/components/Practice.tsx) — comfortably over the default 30s test timeout.
+  test.setTimeout(60000);
   await openTopic(page, "חיבור עד 1000");
   let sawThreeDigits = false;
   for (let i = 0; i < 20; i++) {
@@ -194,6 +197,9 @@ test("a streak of correct answers on חיבור עד 1000 eventually reaches a t
 test("a streak of correct answers on חיסור עד 1000 eventually reaches a three-digit problem", async ({
   page,
 }) => {
+  // 20 correct answers in a row, each waiting out the post-answer celebration delay
+  // (2s, src/components/Practice.tsx) — comfortably over the default 30s test timeout.
+  test.setTimeout(60000);
   await openTopic(page, "חיסור עד 1000");
   let sawThreeDigits = false;
   for (let i = 0; i < 20; i++) {
@@ -207,6 +213,9 @@ test("a streak of correct answers on חיסור עד 1000 eventually reaches a t
 test("a streak of correct answers on כפל וחילוק eventually reaches a basic division question", async ({
   page,
 }) => {
+  // 20 correct answers in a row, each waiting out the post-answer celebration delay
+  // (2s, src/components/Practice.tsx) — comfortably over the default 30s test timeout.
+  test.setTimeout(60000);
   await openTopic(page, "כפל וחילוק");
   let sawDivision = false;
   for (let i = 0; i < 20; i++) {

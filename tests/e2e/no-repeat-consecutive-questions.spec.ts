@@ -85,6 +85,9 @@ test.beforeEach(async ({ page }) => {
 test("a run of correct answers (climbing difficulty) never repeats the question just answered", async ({
   page,
 }) => {
+  // 20 correct answers in a row, each waiting out the post-answer celebration delay
+  // (2s, src/components/Practice.tsx) — comfortably over the default 30s test timeout.
+  test.setTimeout(60000);
   const prompts = await runFullSession(page, true);
   assertNoAdjacentRepeat(prompts);
 });
