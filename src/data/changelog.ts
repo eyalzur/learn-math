@@ -19,6 +19,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.57.5",
+    icon: "✨",
+    description:
+      "זרקור-המנוחה בין הכפתורים עובר באמת מלמעלה למטה עכשיו (היה הפוך), וכפתורי הכיתה בדיאלוג \"הוספת תלמיד/ה\" כבר לא נעלמים.",
+  },
+  {
     version: "1.57.4",
     icon: "✨",
     description:
