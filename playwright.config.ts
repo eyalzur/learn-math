@@ -16,7 +16,13 @@ export default defineConfig({
     baseURL: 'http://localhost:5173',
   },
   webServer: {
-    command: 'npm run dev -- --port 5173 --strictPort',
+    // CI already runs `npm run build` right before this (tests.yml) — serving that build
+    // via `preview` instead of `dev` drops React StrictMode's intentional double-render,
+    // a real (if secondary) cost on every adaptive/random-state test. Locally stays on
+    // `dev` for reuseExistingServer + fast edit-reload while iterating.
+    command: process.env.CI
+      ? 'npm run preview -- --port 5173 --strictPort'
+      : 'npm run dev -- --port 5173 --strictPort',
     url: 'http://localhost:5173/learn-math/',
     reuseExistingServer: !process.env.CI,
     env: {

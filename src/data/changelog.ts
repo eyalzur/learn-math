@@ -19,6 +19,11 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.57.4",
+    icon: "⚡",
+    description: "הבדיקות האוטומטיות של האפליקציה רצות הרבה יותר מהר — לא משפיע על האפליקציה עצמה.",
+  },
+  {
     version: "1.57.3",
     icon: "🎉",
     description:

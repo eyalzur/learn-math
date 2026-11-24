@@ -112,12 +112,17 @@ test("leaving mid-session through the back button still resumes from the reached
 });
 
 test("finishing a full session also resumes from the reached tier next time", async ({ page }) => {
-  // Climbing to a carrying question plus running out the rest of a 20-question session,
-  // each correct answer waiting out the post-answer celebration delay (2s,
-  // src/components/Practice.tsx) — comfortably over the default 30s test timeout.
-  test.setTimeout(90000);
+  // Climbing to a carrying question plus running out the rest of a 20-question session —
+  // up to 20 correct answers, each normally waiting out the real 2s post-answer
+  // celebration delay (src/components/Practice.tsx). A fake clock, installed once no
+  // further page.goto() happens below, fast-forwards past that instead of waiting it out.
+  test.setTimeout(60000);
   await enterAdd100(page);
   await climbAddUntilCarrying(page);
+  // Installed only now, not before climbAddUntilCarrying() above — that helper is shared
+  // with tests that rely on its real (short) wait, and once installed a fake clock never
+  // auto-advances, so any caller that doesn't explicitly fast-forward it would hang.
+  await page.clock.install();
   // Finish the rest of the 20-question session rather than leaving early.
   let reachedResult = false;
   for (let i = 0; i < 20 && !reachedResult; i++) {
@@ -127,7 +132,9 @@ test("finishing a full session also resumes from the reached tier next time", as
       break;
     }
     const ops = await currentAddOperands(page);
-    await answerAdd(page, ops[0], ops[1]);
+    await answerQuestion(page, ops[0] + ops[1]); // always correct
+    await page.clock.runFor(2000);
+    await waitForNextQuestionOrEnd(page);
   }
   await expect(page.locator(".result")).toBeVisible();
   await page.getByRole("button", { name: "חזרה לתפריט" }).click();

@@ -52,6 +52,10 @@ async function answerUsingPrompt(page: Page, prompt: string, correct: boolean) {
   if (await nextButton.count()) {
     await nextButton.click();
   } else {
+    // Only the correct-answer path lands here, and only runFullSession(page, true)
+    // installs a fake clock (right below) — fast-forward past the real 2s post-answer
+    // celebration delay (src/components/Practice.tsx) instead of actually waiting it out.
+    await page.clock.runFor(2000);
     await waitForNextQuestionOrEnd(page);
   }
 }
@@ -60,6 +64,7 @@ async function answerUsingPrompt(page: Page, prompt: string, correct: boolean) {
  *  always wrong), and returns every prompt shown, in order. */
 async function runFullSession(page: Page, correct: boolean): Promise<string[]> {
   await enterAdd10(page);
+  if (correct) await page.clock.install();
   const prompts: string[] = [];
   for (let i = 0; i < 20; i++) {
     const prompt = await currentPrompt(page);

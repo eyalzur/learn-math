@@ -88,9 +88,6 @@ test("חיבור עד 1000 skips the level picker, and practice is one skip-to-p
 test("a streak of correct answers climbs to needing carrying, a streak of wrong answers never does", async ({
   page,
 }) => {
-  // Run B's 10 correct answers each wait out the post-answer celebration delay (2s,
-  // src/components/Practice.tsx) — close enough to the default 30s test timeout to be
-  // flaky on its own; not borderline with real margin.
   test.setTimeout(60000);
   // Run A: never answer correctly. Difficulty can only ever back off from its starting
   // point, so no question in this run should require carrying past a ten. Runs the full
@@ -106,15 +103,21 @@ test("a streak of correct answers climbs to needing carrying, a streak of wrong 
   await expect(page.locator(".result")).toBeVisible();
 
   // Run B: always answer correctly. The difficulty should climb over ten questions, so by
-  // the end of the run at least one question should require carrying.
+  // the end of the run at least one question should require carrying. Install a fake
+  // clock first (no further page.goto() in this test) to fast-forward past the real 2s
+  // post-answer celebration delay (src/components/Practice.tsx) on each of the 10
+  // correct answers below, instead of actually waiting it out.
   await page.getByRole("button", { name: "חזרה לתפריט" }).click(); // back to the topics screen
+  await page.clock.install();
   await page.locator(".topic-card", { hasText: "חיבור עד 1000" }).click();
   await page.getByRole("button", { name: "דלג לתרגול →" }).click();
   const correctRunCarries: boolean[] = [];
   for (let i = 0; i < 10; i++) {
     const ops = await currentPrompt(page);
     correctRunCarries.push(needsCarrying(ops));
-    await answer(page, ops[0] + ops[1]);
+    await answerQuestion(page, ops[0] + ops[1]); // always correct
+    await page.clock.runFor(2000);
+    await waitForNextQuestionOrEnd(page);
   }
   expect(correctRunCarries.some(Boolean), "a streak of correct answers never needed carrying").toBe(true);
 });
@@ -152,14 +155,17 @@ test("questions vary between sessions, even at the same starting difficulty", as
 });
 
 test("history records the topic without a level suffix", async ({ page }) => {
-  // 20 correct answers in a row, each waiting out the post-answer celebration delay
-  // (2s, src/components/Practice.tsx) before the next question appears — comfortably
-  // over the default 30s test timeout on its own.
+  // 20 correct answers in a row — install a fake clock (no further page.goto() in this
+  // test) to fast-forward past the real 2s post-answer celebration delay
+  // (src/components/Practice.tsx) each time, instead of actually waiting it out.
   test.setTimeout(60000);
   await enterAdd100(page);
+  await page.clock.install();
   for (let i = 0; i < 20; i++) {
     const ops = await currentPrompt(page);
-    await answer(page, ops[0] + ops[1]);
+    await answerQuestion(page, ops[0] + ops[1]); // always correct
+    await page.clock.runFor(2000);
+    await waitForNextQuestionOrEnd(page);
   }
   await expect(page.locator(".result")).toBeVisible();
 

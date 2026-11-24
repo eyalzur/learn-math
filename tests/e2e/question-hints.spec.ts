@@ -111,10 +111,12 @@ test("the next question starts over with no hints shown", async ({ page }) => {
 });
 
 test("taking a hint does not cost anything in the score", async ({ page }) => {
-  // Every question answered correctly, each waiting out the post-answer celebration
-  // delay (2s, src/components/Practice.tsx) — comfortably over the default 30s timeout.
+  // Every question answered correctly — fake clock, installed below (no further
+  // page.goto() in this test), fast-forwards past the real 2s post-answer celebration
+  // delay (src/components/Practice.tsx) each time instead of actually waiting it out.
   test.setTimeout(60000);
   await openHinted(page);
+  await page.clock.install();
 
   // How many questions this lesson holds is a property of the lesson, not a fixed ten —
   // read it rather than assume it.
@@ -133,6 +135,7 @@ test("taking a hint does not cost anything in the score", async ({ page }) => {
     await expect(page.locator(".feedback.correct")).toBeVisible();
     // A correct answer advances on its own (docs/features/scored-answer-practice/) — no
     // "הבא" button for this path, unlike a wrong one.
+    await page.clock.runFor(2000);
     await waitForNextQuestionOrEnd(page);
   }
 
