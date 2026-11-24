@@ -19,6 +19,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.57.6",
+    icon: "🔧",
+    description:
+      "תיקון: כפתור/כרטיס שנלחץ לפני מעבר מסך יכול היה להישאר שקוף לגמרי במסך הבא (בעיקר במובייל) — לא יקרה יותר.",
+  },
+  {
     version: "1.57.5",
     icon: "✨",
     description:
