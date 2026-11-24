@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import type { Lesson } from "../data/style";
 import { useEffect, useRef, useState } from "react";
 import { isHebrewPrompt, promptWithEquals } from "../data/curriculum";
@@ -33,9 +34,41 @@ interface PracticeProps {
   onAnswered?: (correct: boolean) => void;
 }
 
+/** One burst-star particle's randomized path — picked once per correct answer in
+ *  checkAnswer(), not in render, so StrictMode's double-render can't roll the dice
+ *  twice and the spray stays the one the student actually sees. */
+interface BurstStar {
+  emoji: string;
+  dx: number;
+  dy: number;
+  rot: number;
+  dur: number;
+  size: number;
+  delay: number;
+}
+
+const BURST_EMOJI = ["⭐", "✨", "⭐", "✨", "⭐"];
+
+/** A fresh random spray, scattered to both sides and mostly downward — approved
+ *  live against a preview artifact (2026-11-24) after a "לצדדים, רנדומלי" revision,
+ *  so no two correct answers look exactly the same. */
+function randomBurst(): BurstStar[] {
+  const count = 6 + Math.floor(Math.random() * 2); // 6-7
+  return Array.from({ length: count }, (_, i) => ({
+    emoji: BURST_EMOJI[i % BURST_EMOJI.length],
+    dx: -140 + Math.random() * 240, // -140..100: both sides, left-heavy
+    dy: -20 + Math.random() * 140, // mostly downward, a touch of lift
+    rot: -40 + Math.random() * 260,
+    dur: 0.75 + Math.random() * 0.35,
+    size: 14 + Math.random() * 14,
+    delay: Math.random() * 0.1,
+  }));
+}
+
 export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: PracticeProps) {
   const [index, setIndex] = useState(0);
   const [feedback, setFeedback] = useState<"correct" | "wrong" | null>(null);
+  const [burst, setBurst] = useState<BurstStar[]>([]);
   const [correctCount, setCorrectCount] = useState(0);
   const [speakingBox, setSpeakingBox] = useState<SpeakingBox>(null);
   /** How many hints the student has asked for: 0, 1 or 2. A counter rather than two
@@ -112,7 +145,10 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
   // it calls setCorrectCount — see docs/features/scored-answer-practice/architecture.md).
   useEffect(() => {
     if (feedback !== "correct") return;
-    const timer = setTimeout(() => next(), 700);
+    // Long enough for the celebration (burst + text pop, under 1s) to actually finish
+    // and sit on screen for a moment, not just flash past — reported live as too quick
+    // at the old 700ms.
+    const timer = setTimeout(() => next(), 2000);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [feedback]);
@@ -150,7 +186,10 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
     if (Number.isNaN(parsed)) return;
     const isCorrect = parsed === question.answer;
     setFeedback(isCorrect ? "correct" : "wrong");
-    if (isCorrect) setCorrectCount((c) => c + 1);
+    if (isCorrect) {
+      setCorrectCount((c) => c + 1);
+      setBurst(randomBurst());
+    }
     onAnswered?.(isCorrect);
     if (!isCorrect) setDiagnosis(diagnose(question, parsed));
   }
@@ -297,14 +336,32 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
       )}
 
       {feedback !== null && (feedback === "correct" || revealed) && (
-        <p className={`feedback ${feedback}`}>
-          {feedback === "correct" ? "נכון מאוד! 🎉" : `לא נכון. התשובה היא ${question.answer}`}
-          {feedback === "correct" && (
-            <span className="feedback-star" aria-hidden="true">
-              ⭐
-            </span>
-          )}
-        </p>
+        <div className="feedback-burst-anchor">
+          {feedback === "correct" && <div className="corner-flash" aria-hidden="true" />}
+          {feedback === "correct" &&
+            burst.map((star, i) => (
+              <span
+                key={i}
+                className="burst-star"
+                aria-hidden="true"
+                style={
+                  {
+                    "--dx": `${star.dx}px`,
+                    "--dy": `${star.dy}px`,
+                    "--rot": `${star.rot}deg`,
+                    "--dur": `${star.dur}s`,
+                    fontSize: `${star.size}px`,
+                    animationDelay: `${star.delay}s`,
+                  } as CSSProperties
+                }
+              >
+                {star.emoji}
+              </span>
+            ))}
+          <p className={`feedback ${feedback}`}>
+            {feedback === "correct" ? "נכון מאוד! 🎉" : `לא נכון. התשובה היא ${question.answer}`}
+          </p>
+        </div>
       )}
 
       {feedback === "wrong" && diagnosis !== null && (
@@ -372,7 +429,10 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
         />
       )}
 
-      {hintsShown > 0 && (
+      {/* Hints are only useful on the way to an answer — once feedback is up, the
+          correct answer (and for a wrong one, the explanation) already says more than
+          a hint did, so they'd just be clutter under the solution. */}
+      {feedback === null && hintsShown > 0 && (
         <div className="hints">
           {question.hints.slice(0, hintsShown).map((hint, i) => (
             <p key={i} className="hint">

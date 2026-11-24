@@ -50,17 +50,17 @@ async function harvestAnswers(page: Page): Promise<number[]> {
   return answers;
 }
 
-test("a correct answer shows a star; a wrong answer does not", async ({ page }) => {
+test("a correct answer bursts stars; a wrong answer does not", async ({ page }) => {
   await freshStart(page);
   await startFixedLesson(page);
   const answers = await harvestAnswers(page);
 
   await answerQuestion(page, 999999);
-  await expect(page.locator(".feedback-star")).toHaveCount(0);
+  await expect(page.locator(".burst-star")).toHaveCount(0);
   await page.getByRole("button", { name: /^(הבא|סיום)$/ }).click();
 
   await answerQuestion(page, answers[1]);
-  await expect(page.locator(".feedback-star")).toBeVisible();
+  await expect(page.locator(".burst-star").first()).toBeVisible();
 });
 
 test("prefers-reduced-motion actually removes the motion, not just in theory", async ({

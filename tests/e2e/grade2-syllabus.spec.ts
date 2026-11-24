@@ -174,14 +174,22 @@ async function answerCorrectly(page: Page, operator: "+" | "−") {
   const [a, b] = await currentOperands(page, operator);
   await answerQuestion(page, operator === "+" ? a + b : a - b);
   // A correct answer advances on its own (docs/features/scored-answer-practice/) — no
-  // "הבא" button exists for this path, unlike a wrong one.
+  // "הבא" button exists for this path, unlike a wrong one. The caller installs a fake
+  // clock first, so fast-forward it past the real 2s post-answer celebration delay
+  // (src/components/Practice.tsx) instead of actually waiting it out.
+  await page.clock.runFor(2000);
   await waitForNextQuestionOrEnd(page);
 }
 
 test("a streak of correct answers on חיבור עד 1000 eventually reaches a three-digit problem", async ({
   page,
 }) => {
+  // 20 correct answers in a row — a fake clock (installed below, no further page.goto()
+  // in this test) fast-forwards past the real 2s post-answer celebration delay
+  // (src/components/Practice.tsx) each time, instead of actually waiting it out.
+  test.setTimeout(60000);
   await openTopic(page, "חיבור עד 1000");
+  await page.clock.install();
   let sawThreeDigits = false;
   for (let i = 0; i < 20; i++) {
     const [a, b] = await currentOperands(page, "+");
@@ -194,7 +202,11 @@ test("a streak of correct answers on חיבור עד 1000 eventually reaches a t
 test("a streak of correct answers on חיסור עד 1000 eventually reaches a three-digit problem", async ({
   page,
 }) => {
+  // 20 correct answers in a row — same fake-clock fast-forward as the חיבור עד 1000 test
+  // above.
+  test.setTimeout(60000);
   await openTopic(page, "חיסור עד 1000");
+  await page.clock.install();
   let sawThreeDigits = false;
   for (let i = 0; i < 20; i++) {
     const [a] = await currentOperands(page, "−");
@@ -207,7 +219,10 @@ test("a streak of correct answers on חיסור עד 1000 eventually reaches a t
 test("a streak of correct answers on כפל וחילוק eventually reaches a basic division question", async ({
   page,
 }) => {
+  // 20 correct answers in a row — same fake-clock fast-forward as the two tests above.
+  test.setTimeout(60000);
   await openTopic(page, "כפל וחילוק");
+  await page.clock.install();
   let sawDivision = false;
   for (let i = 0; i < 20; i++) {
     const prompt = (await page.locator(".problem-text").innerText()).trim();
@@ -224,6 +239,7 @@ test("a streak of correct answers on כפל וחילוק eventually reaches a ba
       throw new Error(`not a bare multiplication or division: "${prompt}"`);
     }
     // A correct answer advances on its own — no "הבא" button for this path.
+    await page.clock.runFor(2000);
     await waitForNextQuestionOrEnd(page);
   }
   expect(sawDivision, "a full streak of correct answers never reached a division question").toBe(true);

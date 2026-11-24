@@ -32,8 +32,9 @@ test("a correct answer gives brief positive feedback and advances on its own", a
   await openDeterministicLesson(page);
   await answerQuestion(page, 4); // "איזה מספר בא אחרי 3?" → 4
   await expect(page.locator(".feedback")).toContainText("נכון מאוד");
-  // No further click — the next question should appear by itself.
-  await expect(page.locator(".progress")).toContainText("שאלה 2 מתוך", { timeout: 2000 });
+  // No further click — the next question should appear by itself, after the post-answer
+  // celebration delay (2s, src/components/Practice.tsx).
+  await expect(page.locator(".progress")).toContainText("שאלה 2 מתוך", { timeout: 3000 });
 });
 
 test("a wrong answer shows the right answer and an explanation, and waits for a manual continue", async ({

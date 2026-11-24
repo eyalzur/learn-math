@@ -12,6 +12,19 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    # Split across 4 isolated runners instead of 1 — each gets its own checkout, its own
+    # build, and its own dev server (no server-sharing flake, see CLAUDE.md's "שתי ריצות
+    # מקבילות" section — that's about *one* server with several workers against it;
+    # sharding here gives each shard a server of its own, the same as two people each
+    # running `npm run test:e2e` on their own machine). Was a single ~20-30 minute job;
+    # this is the e2e-speed follow-up from fix/feedback-celebration-and-hints
+    # (2026-11-24), together with the fake-clock fixes in the individual spec files for
+    # the handful of tests that used to be the suite's biggest single cost
+    # (grade8-angles-congruence.spec.ts alone dropped from ~15 real minutes to under 2).
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@v5
 
@@ -28,13 +41,16 @@ jobs:
       - run: npx playwright install --with-deps chromium
 
       - run: npm run build
-      - run: npm run lint
-      - run: npm run test:e2e
+      # Lint is cheap and the same on every shard — running it once, on shard 1 only,
+      # keeps the other three shards from redoing identical work for no reason.
+      - if: matrix.shard == 1
+        run: npm run lint
+      - run: npx playwright test --shard=${{ matrix.shard }}/4
 
       # The report is what makes a red run diagnosable without re-running it locally.
       - uses: actions/upload-artifact@v5
         if: failure()
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.shard }}
           path: playwright-report/
           retention-days: 7

@@ -84,11 +84,15 @@ const computeAnswer = (topic: AdaptiveTopic, a: number, b: number) =>
 
 async function answer(page: Page, value: number) {
   await answerQuestion(page, value);
-  // A correct answer advances on its own — no "הבא" button for that path.
+  // A correct answer advances on its own — no "הבא" button for that path. Both callers
+  // of this helper install a fake clock first, so fast-forward it past the real 2s
+  // post-answer celebration delay (src/components/Practice.tsx) instead of actually
+  // waiting it out — a no-op on the wrong-answer branch above, which never reaches here.
   const nextButton = page.getByRole("button", { name: /^(הבא|סיום)$/ });
   if (await nextButton.count()) {
     await nextButton.click();
   } else {
+    await page.clock.runFor(2000);
     await waitForNextQuestionOrEnd(page);
   }
 }
@@ -114,7 +118,12 @@ for (const topic of TOPICS) {
     // Run A: never answer correctly — difficulty can only back off, so no question in
     // this run should land on the topic's hardest pattern. Runs the full 20-question
     // session so it actually reaches the result screen below.
+    // Run B's 12 correct answers would each wait out the real 2s post-answer celebration
+    // delay (src/components/Practice.tsx) — the fake clock installed below (no further
+    // page.goto() in this test) fast-forwards past it instead, via answer() above.
+    test.setTimeout(60000);
     await enterTopic(page, topic);
+    await page.clock.install();
     const wrongRunHardest: boolean[] = [];
     for (let i = 0; i < 20; i++) {
       const [a, b] = await currentOperands(page, topic);
@@ -177,7 +186,11 @@ for (const topic of TOPICS) {
   });
 
   test(`${topic.name}: history records the topic without a level suffix`, async ({ page }) => {
+    // 20 correct answers in a row — fake-clock fast-forward, same as the streak test
+    // above.
+    test.setTimeout(60000);
     await enterTopic(page, topic);
+    await page.clock.install();
     for (let i = 0; i < 20; i++) {
       const [a, b] = await currentOperands(page, topic);
       await answer(page, computeAnswer(topic, a, b));

@@ -9,7 +9,9 @@ import { createAndSelectStudent } from "./helpers/selectStudent";
  *  2. No hint shows itself — it appears only on request.
  *  3. First press gives the method hint; the second is a separate request.
  *  4. There is no third hint and no way to ask for one.
- *  5. Hints stay visible, including after the answer is checked.
+ *  5. Hints disappear once the answer is checked — the answer (and, for a wrong one,
+ *     the explanation) already says more than a hint did, so it would just be
+ *     clutter under the solution (revised 2026-11-24, see Practice.tsx).
  *  6. Moving to the next question starts over with nothing shown.
  *  7. Taking a hint does not change the score.
  *  8. After an answer is checked, no more hints can be asked for.
@@ -74,7 +76,7 @@ test("there is no third hint to ask for", async ({ page }) => {
   await expect(page.locator(".hint")).toHaveCount(2);
 });
 
-test("hints stay on screen after the answer is checked", async ({ page }) => {
+test("hints disappear once the answer is checked", async ({ page }) => {
   await openHinted(page);
 
   await page.getByRole("button", { name: HINT }).click();
@@ -82,8 +84,9 @@ test("hints stay on screen after the answer is checked", async ({ page }) => {
 
   await answerQuestion(page, 999999);
 
-  // The mistake does not erase what the student tried with.
-  await expect(page.locator(".hint")).toHaveCount(2);
+  // The explanation that comes with a wrong answer already says more than the hints
+  // did, so they're gone rather than left sitting under it.
+  await expect(page.locator(".hint")).toHaveCount(0);
 });
 
 test("no more hints can be asked for once an answer is checked", async ({ page }) => {
@@ -108,7 +111,12 @@ test("the next question starts over with no hints shown", async ({ page }) => {
 });
 
 test("taking a hint does not cost anything in the score", async ({ page }) => {
+  // Every question answered correctly — fake clock, installed below (no further
+  // page.goto() in this test), fast-forwards past the real 2s post-answer celebration
+  // delay (src/components/Practice.tsx) each time instead of actually waiting it out.
+  test.setTimeout(60000);
   await openHinted(page);
+  await page.clock.install();
 
   // How many questions this lesson holds is a property of the lesson, not a fixed ten —
   // read it rather than assume it.
@@ -127,6 +135,7 @@ test("taking a hint does not cost anything in the score", async ({ page }) => {
     await expect(page.locator(".feedback.correct")).toBeVisible();
     // A correct answer advances on its own (docs/features/scored-answer-practice/) — no
     // "הבא" button for this path, unlike a wrong one.
+    await page.clock.runFor(2000);
     await waitForNextQuestionOrEnd(page);
   }
 

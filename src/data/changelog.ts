@@ -19,6 +19,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.57.3",
+    icon: "🎉",
+    description:
+      "תשובה נכונה: פיצוץ כוכבים רנדומלי לצדדים והמסך נשאר קצת יותר זמן על המסך; רמזים נעלמים כשמוצגת התשובה.",
+  },
+  {
     version: "1.57.2",
     icon: "🔧",
     description: "מקלדת המספרים נעלמת כשמופיע משוב נכון/לא נכון, במקום להישאר מושבתת על המסך.",
