@@ -6,7 +6,7 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
-| תרגול שנקטע חוזר לנקודה המדויקת | 🟡 in testing | [status](./resume-interrupted-practice/status.md) |
+| תרגול שנקטע חוזר לנקודה המדויקת | 🟡 PR פתוח, ממתין לריוויו | [status](./resume-interrupted-practice/status.md) |
 | טמפלייט משותף למסכי שאלה | 🟢 done — מוזג ל-main | [status](./question-screen-template/status.md) |
 | רענון חזותי של 5 מסכים (Stitch) | 🟢 done — מוזג ל-main | [status](./stitch-visual-refresh/status.md) |
 | השיעור הוא הכניסה הדיפולטיבית לנושא | 🟢 done — מוזג ל-main | [status](./lesson-always-first/status.md) |

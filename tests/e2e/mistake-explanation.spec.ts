@@ -81,7 +81,11 @@ test("the explanation refers to the numbers of the problem that was failed", asy
 });
 
 test("a correct answer shows no explanation", async ({ page }) => {
-  // Learn the answer from a first wrong pass, then replay the level and get it right.
+  // Learn the answer from a first wrong pass, then start a brand-new session — not a
+  // "← חזרה" + re-pick of the same style, which now resumes the interrupted run right
+  // where it was left (docs/features/resume-interrupted-practice/) instead of replaying
+  // the same first question. A fresh student/localStorage has nothing saved to resume,
+  // and lands on the same (fixed, not randomly generated) first question either way.
   const answer = (await (async () => {
     await answerWrong(page);
     return (await page.locator(".feedback.wrong").innerText()).match(
@@ -90,9 +94,7 @@ test("a correct answer shows no explanation", async ({ page }) => {
   })())!;
   expect(answer).toBeTruthy();
 
-  // Back lands on the styles, because that is where this lesson was entered from.
-  await page.getByRole("button", { name: "← חזרה" }).click();
-  await page.locator(".style-card").first().click();
+  await startGrade1Easy(page);
 
   await answerQuestion(page, answer);
 

@@ -60,8 +60,12 @@ test("a correct answer still shows no explanation", async ({ page }) => {
   )?.[1];
   expect(answer).toBeTruthy();
 
-  await page.getByRole("button", { name: "← חזרה" }).click();
-  await page.locator(".style-card, .level-card").first().click();
+  // A brand-new session, not "← חזרה" + re-pick of the same level/style — that now
+  // resumes the interrupted run right where it was left
+  // (docs/features/resume-interrupted-practice/) instead of replaying the same first
+  // question. Starting over fresh has nothing saved to resume, and lands on the same
+  // (fixed, not randomly generated) first question either way.
+  await startLevel(page, 0);
   await answerQuestion(page, answer!);
 
   await expect(page.locator(".feedback.correct")).toBeVisible();
