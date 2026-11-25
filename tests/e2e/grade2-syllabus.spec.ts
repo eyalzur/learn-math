@@ -6,12 +6,12 @@ import { createAndSelectStudent } from "./helpers/selectStudent";
  * Acceptance criteria under test (docs/features/grade2-syllabus/product-spec.md and
  * design.md):
  *
- *  1. חיבור עד 1000 / חיסור עד 1000 (already adaptive) now also reach three-digit
- *     problems — not just carrying/borrowing under 100 — when answered correctly enough.
+ *  1. (Superseded by docs/features/grade2-addsub-to-100) חיבור/חיסור used to reach
+ *     three-digit problems; now they must stay at or under 100.
  *  2. Grade ב׳ shows four topic cards, including the two new ones: כפל וחילוק and
  *     צורות וגופים.
  *  3. כפל וחילוק and צורות וגופים are both **adaptive** — no level to pick, straight into
- *     a 20-question practice session — the same mechanism חיבור/חיסור עד 1000 already
+ *     a 20-question practice session — the same mechanism חיבור/חיסור עד 100 already
  *     use (corrected 2026-09-01: an earlier pass built them as three fixed levels, which
  *     was wrong).
  *  4. A כפל וחילוק question is a bare expression, rendered left-to-right inside the RTL
@@ -63,7 +63,7 @@ test("grade ב׳ shows five topics, including כפל וחילוק and צורות
   await toGradeB(page);
   const topics = page.locator(".topic-card");
   await expect(topics).toHaveCount(5);
-  for (const title of ["חיבור עד 1000", "חיסור עד 1000", "כפל וחילוק", "צורות וגופים", "שעון וזמן"]) {
+  for (const title of ["חיבור עד 100", "חיסור עד 100", "כפל וחילוק", "צורות וגופים", "שעון וזמן"]) {
     await expect(page.locator(".topic-card", { hasText: title })).toHaveCount(1);
   }
 });
@@ -181,39 +181,36 @@ async function answerCorrectly(page: Page, operator: "+" | "−") {
   await waitForNextQuestionOrEnd(page);
 }
 
-test("a streak of correct answers on חיבור עד 1000 eventually reaches a three-digit problem", async ({
+test("a streak of correct answers on חיבור עד 100 never leaves the 100 range", async ({
   page,
 }) => {
-  // 20 correct answers in a row — a fake clock (installed below, no further page.goto()
-  // in this test) fast-forwards past the real 2s post-answer celebration delay
-  // (src/components/Practice.tsx) each time, instead of actually waiting it out.
+  // Superseded 2026-11-25 (docs/features/grade2-addsub-to-100): the user capped grade ב׳
+  // add/sub at 100, so the old "eventually reaches a three-digit problem" is now the
+  // opposite: the top tier (reached by a full streak) must still stay at or under 100.
   test.setTimeout(60000);
-  await openTopic(page, "חיבור עד 1000");
+  await openTopic(page, "חיבור עד 100");
   await page.clock.install();
-  let sawThreeDigits = false;
   for (let i = 0; i < 20; i++) {
     const [a, b] = await currentOperands(page, "+");
-    if (a >= 100 || b >= 100 || a + b >= 100) sawThreeDigits = true;
+    expect(a, "operand over 100").toBeLessThanOrEqual(100);
+    expect(b, "operand over 100").toBeLessThanOrEqual(100);
+    expect(a + b, "sum over 100").toBeLessThanOrEqual(100);
     await answerCorrectly(page, "+");
   }
-  expect(sawThreeDigits, "a full streak of correct answers never reached a 3-digit problem").toBe(true);
 });
 
-test("a streak of correct answers on חיסור עד 1000 eventually reaches a three-digit problem", async ({
+test("a streak of correct answers on חיסור עד 100 never leaves the 100 range", async ({
   page,
 }) => {
-  // 20 correct answers in a row — same fake-clock fast-forward as the חיבור עד 1000 test
-  // above.
   test.setTimeout(60000);
-  await openTopic(page, "חיסור עד 1000");
+  await openTopic(page, "חיסור עד 100");
   await page.clock.install();
-  let sawThreeDigits = false;
   for (let i = 0; i < 20; i++) {
-    const [a] = await currentOperands(page, "−");
-    if (a >= 100) sawThreeDigits = true;
+    const [a, b] = await currentOperands(page, "−");
+    expect(a, "minuend over 100").toBeLessThanOrEqual(100);
+    expect(b).toBeLessThanOrEqual(a);
     await answerCorrectly(page, "−");
   }
-  expect(sawThreeDigits, "a full streak of correct answers never reached a 3-digit problem").toBe(true);
 });
 
 test("a streak of correct answers on כפל וחילוק eventually reaches a basic division question", async ({

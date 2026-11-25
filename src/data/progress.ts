@@ -21,6 +21,14 @@ export interface PracticeRecord {
 
 const STORAGE_KEY = "learn-math:history";
 
+/** Grade-2 add/sub topics were renamed "עד 1000" → "עד 100" (docs/features/grade2-addsub-to-100).
+ *  Records are keyed by title, so old ones are re-labelled on read — otherwise the stats
+ *  table and struggle diagnosis would lose them. Stored data is rewritten on the next save. */
+const RENAMED_TOPICS: Record<string, string> = {
+  "חיבור עד 1000": "חיבור עד 100",
+  "חיסור עד 1000": "חיסור עד 100",
+};
+
 /**
  * History lives in localStorage, which can throw in private mode. Losing a record is a
  * small disappointment; taking the app down mid-practice over it is not acceptable, so
@@ -31,7 +39,12 @@ function readAll(): PracticeRecord[] {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
     const parsed: unknown = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as PracticeRecord[]) : [];
+    return Array.isArray(parsed)
+      ? (parsed as PracticeRecord[]).map((record) => ({
+          ...record,
+          topicTitle: RENAMED_TOPICS[record.topicTitle] ?? record.topicTitle,
+        }))
+      : [];
   } catch {
     return [];
   }

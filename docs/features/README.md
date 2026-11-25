@@ -44,6 +44,7 @@ architecture, implementation notes, and tests.
 | תיקוני שימושיות במחברת התרגול | 🟢 done — מוזג ל-main | [status](./notebook-usability-fixes/status.md) |
 | משוב לתלמיד/ה על מה שהמורה קראה | 🟢 done — מוזג ל-main | [status](./notebook-teacher-feedback/status.md) |
 | שעון וזמן — כיתה ב׳ | 🟢 done — מוזג ל-main | [status](./grade2-clock/status.md) |
+| חיבור וחיסור עד 100 בלבד — כיתה ב׳ | 🟢 done — מוזג ל-main | [status](./grade2-addsub-to-100/status.md) |
 | סילבוס מלא לכיתה ב׳ (כפל, צורות, טווח 1000) | 🟢 done — מוזג ל-main | [status](./grade2-syllabus/status.md) |
 | שמות קבועים לדמויות בדימויים | 🟢 done — מוזג ל-main | [status](./analogy-character-names/status.md) |
 | מחברת כמצב התרגול היחיד | 🟢 done — מוזג ל-main (כולל סבב רוויזיה א׳, גודל משטח הכתיבה) | [status](./notebook-default-practice/status.md) |

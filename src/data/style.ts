@@ -58,7 +58,7 @@ export const STYLE_META: Record<string, { title: string }> = {
   digitGap: { title: "איזו ספרה גדולה יותר" },
   toTwenty: { title: "כמה חסר עד עשרים" },
 
-  // חיבור עד 1000 · חיסור עד 1000 — one style each, so no picker ever shows them
+  // חיבור עד 100 · חיסור עד 100 — one style each, so no picker ever shows them
   add100: { title: "חיבור" },
   sub100: { title: "חיסור" },
 

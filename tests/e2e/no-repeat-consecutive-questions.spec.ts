@@ -6,7 +6,7 @@ import { createAndSelectStudent } from "./helpers/selectStudent";
  * Acceptance criteria under test
  * (docs/features/no-repeat-consecutive-questions/product-spec.md).
  *
- * Uses חיבור עד 10 (Mika, grade א׳) on purpose, not a wider-range topic like חיבור עד 1000:
+ * Uses חיבור עד 10 (Mika, grade א׳) on purpose, not a wider-range topic like חיבור עד 100:
  * its sums are small and its patterns few, so a coincidental back-to-back repeat is far more
  * likely to slip through by chance if the fix weren't working — the same reasoning
  * mika-adaptive-difficulty.spec.ts documents for picking it as a tight-range topic.
