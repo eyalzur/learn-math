@@ -2751,3 +2751,72 @@ body:has(
   margin-bottom: 16px;
   border-bottom: 1px dashed var(--border);
 }
+
+/* ---- question screen fits one phone screen (quiet-speaker-lesson-parity, round 2) ----
+   Reported live: a question with a figure (angles, clock) pushed the keypad below the
+   fold and the whole page scrolled. The screen is now exactly one viewport tall; every
+   region keeps its natural size EXCEPT the figure, which is the one thing that can shrink
+   (an SVG scales without losing meaning). Anything that genuinely grows afterwards — the
+   hints and the post-answer explanation — scrolls inside .practice, not the page. */
+.practice {
+  height: 100svh;
+  overflow-y: auto;
+  padding: 12px 24px 10px;
+}
+
+.practice > * {
+  flex-shrink: 0;
+}
+
+.practice > .angle-figure-inline,
+.practice > .clock-face,
+.practice > .figure-slot {
+  flex: 1 1 0;
+  flex-shrink: 1;
+  min-height: 72px;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+.practice > .angle-figure-inline > svg,
+.practice > .clock-face > svg {
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+}
+
+.practice-header {
+  margin-bottom: 6px;
+}
+
+.problem-box-card {
+  margin: 8px 0 10px;
+}
+
+.number-pad {
+  margin-top: 6px;
+  gap: 6px;
+}
+
+.number-pad-button {
+  height: 44px;
+}
+
+.hint-button {
+  margin-top: 8px;
+}
+
+.practice .prompt-rtl {
+  font-size: 19px;
+  line-height: 140%;
+}
+
+.practice .practice-header {
+  padding-block: 4px;
+}
+
+.practice > .angle-figure-inline,
+.practice > .clock-face,
+.practice > .figure-slot {
+  min-height: 56px;
+}

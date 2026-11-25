@@ -112,3 +112,22 @@ test("History's empty state is unaffected by the new scrolling region", async ({
   await expect(page.locator(".history-empty")).toBeVisible();
   await fitsWithoutScrolling(page);
 });
+
+test("Practice screen with a figure (grade ח angles) fits one phone screen — the figure shrinks, the keypad stays visible", async ({ page }) => {
+  await page.goto("/learn-math/");
+  await createAndSelectStudent(page, "8");
+  await page.locator(".grade-card").nth(3).click();
+  await page.locator(".topic-card", { hasText: "זוויות" }).click();
+  const skip = page.getByRole("button", { name: "דלג לתרגול" }).first();
+  if (await skip.count()) await skip.click();
+  for (let i = 0; i < 4; i++) {
+    await expect(page.locator(".angle-figure-inline")).toBeVisible();
+    await fitsWithoutScrolling(page);
+    const pad = await page.locator(".number-pad").boundingBox();
+    const viewport = page.viewportSize()!;
+    expect(pad!.y + pad!.height).toBeLessThanOrEqual(viewport.height);
+    await page.locator(".number-pad-button").first().click();
+    await page.getByRole("button", { name: "בדיקה" }).click();
+    await page.getByRole("button", { name: /הבא|המשך/ }).first().click().catch(() => {});
+  }
+});
