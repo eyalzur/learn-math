@@ -19,7 +19,7 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
-    version: "1.60.1",
+    version: "1.61.0",
     icon: "💯",
     description:
       "בכיתה ב׳ חיבור וחיסור הם רק עד 100 — הנושאים נקראים עכשיו \"חיבור עד 100\" ו\"חיסור עד 100\", והשאלות לא עוברות את 100.",
