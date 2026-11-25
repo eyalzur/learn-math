@@ -211,3 +211,10 @@ Built exactly as planned, no deviations from the Technical Approach above.
 
 `npm run build` and `npm run lint` both clean. Version bumped `1.58.0 → 1.59.0`
 (`npm run bump:feature`, this branch's first touch of `src/`).
+
+**Follow-up (caught during qa's full-suite run):** the initial implementation commit
+bumped `package.json` but missed adding the matching entry to `src/data/changelog.ts` —
+that file's own header comment says every bump adds one entry there too, in the same
+commit, and a pre-existing test (`tests/e2e/version-log.spec.ts`, "marks the version
+currently open on this device as today's") fails without one. Fixed in a separate
+follow-up commit on this branch once the full e2e suite surfaced it.

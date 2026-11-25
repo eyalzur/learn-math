@@ -8,14 +8,16 @@
 - [x] Design — designer — 2026-11-25
 - [x] Architecture — tech-lead — 2026-11-25
 - [x] Implementation — developer — 2026-11-25
-- [ ] Tests — qa — not started
+- [x] Tests — qa — 2026-11-25
 
-**Current phase:** qa
+**Current phase:** done
 **Branch:** `feature/ask-before-disabling-autoread`
 **PR:** not opened yet
 
 ## Open questions / blockers
-None.
+None. `408/410` בדיקות e2e עוברות, ריצה בודדת ונקייה (`--workers=1`) — ה-`2`
+הנותרות `test.skip()` קיים-מראש לא-קשור (`adaptive-pace-setting.spec.ts`). ראו
+tests.md.
 
 ## Docs
 - [Product spec](./product-spec.md)
