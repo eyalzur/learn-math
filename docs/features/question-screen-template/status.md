@@ -6,17 +6,19 @@ optional piece (new hint type, animation, ...) is added once, not per-screen.
 
 ## Progress
 - [x] Product spec — product-manager — 2026-11-25
-- [ ] Design — designer — not started
+- [x] Design — designer — 2026-11-25
 - [ ] Architecture — tech-lead — not started
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** designer
+**Current phase:** tech-lead
 **Branch:** `feature/question-screen-template`
 **PR:** not opened yet
 
 ## Open questions / blockers
-None.
+None. (Design flagged one pre-existing inconsistency — the speak button sits in
+two different places on the two current screens — as deliberately *not* fixed
+here; see design.md's Problem box section.)
 
 ## Docs
 - [Product spec](./product-spec.md)
