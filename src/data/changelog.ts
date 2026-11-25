@@ -19,6 +19,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.57.7",
+    icon: "🎨",
+    description:
+      "מסך התרגול (כיתה א׳): השאלה בכרטיס ברור יותר, מקלדת המספרים בכיוון הנכון וקומפקטית יותר, והכל נכנס במסך אחד בלי גלילה.",
+  },
+  {
     version: "1.57.6",
     icon: "🔧",
     description:

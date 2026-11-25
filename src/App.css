@@ -368,6 +368,60 @@
   flex-wrap: wrap;
 }
 
+/* Quiet label, not a second heading — reported live as redundant with the question
+   right below it ("מה בא אחרי" above "איזה מספר בא אחרי 3?" says the same thing
+   twice) and as taking real vertical room on a screen that already needs to scroll.
+   Scoped to Practice.tsx's own h2 only (TopicLesson.tsx's h2 stays the normal size —
+   there the title is the only heading on screen, nothing restates it right below). */
+.practice-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  text-align: center;
+  margin: 0 0 4px;
+}
+
+/* Practice screen only (Practice.tsx adds this class beside .problem-box;
+   TopicLesson.tsx's identical .problem-box markup does not, so its lesson-page
+   question keeps the plain look). A 7-year-old who cannot read yet needs the
+   question itself to be the one object the eye lands on, not just bold text sitting
+   at the same visual weight as the header above it — a card (background + shadow +
+   rounded corners) gives it that anchor. Margin is also tightened here (was the
+   shared 40px/0 above) since this block is one of several fighting for room on a
+   phone screen that already needs to scroll to show everything below it — see the
+   no-scroll-on-screens idea still pending a decision. */
+.problem-box-card {
+  margin: 12px 0 14px;
+  padding: 16px 14px;
+  background: var(--code-bg);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+}
+
+/* The speaker button is the ONLY way this child (still learning to read) can hear
+   the question — a pale, label-less emoji pill the same weight as every other small
+   button is easy to miss entirely. Filled accent circle, bigger tap target, only on
+   the main question (not every .speak-button elsewhere, which sit in already-text-
+   heavy explanation/diagnosis boxes where this much weight would be too loud). */
+.problem-box-card .speak-button {
+  width: 50px;
+  height: 50px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent);
+  border: none;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 20px;
+}
+
+.problem-box-card .speak-button:hover {
+  opacity: 0.85;
+  border-color: transparent;
+}
+
 /* A bare expression reads left-to-right with the input after it; a Hebrew word
    problem reads right-to-left and gets the input on its own line below, since the
    sentence is too long to sit beside it. */
@@ -375,10 +429,15 @@
   direction: ltr;
 }
 
+/* Beside the text, not stacked below it — reported live: the speaker button was
+   eating its own row of vertical space under the question for no reason a word
+   problem actually needs. `.problem-box`'s own default (row, inherited, no override
+   here) is enough once this no longer forces a column; `flex-wrap: wrap` on the base
+   rule still lets a long sentence drop the icon onto its own line if it truly needs
+   the room, rather than ever overlapping it. */
 .problem-box.box-rtl {
   direction: rtl;
-  flex-direction: column;
-  gap: 20px;
+  gap: 12px;
 }
 
 .problem-text {
@@ -412,20 +471,36 @@
 /* Stacked, not side by side — reported live as cramped, and a full-width field above
    a full-width button reads more clearly as "type here, then press this" than two
    small controls competing for the same row. */
+/* Side by side, not stacked — two centered blocks each with their own padding/margin
+   cost more height than this screen can spare (it already needs to scroll to show
+   everything below it). A field and its own check button sitting on one row is a
+   pattern this age group already meets in any keypad-entry UI, so nothing is lost
+   by not stacking them. */
 .answer-row {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 14px;
-  margin: 20px 0;
+  justify-content: center;
+  gap: 12px;
+  margin: 16px 0;
+  width: 100%;
+  max-width: 320px;
 }
 
+/* Fluid, not fixed px: 160+130+12 fits this app's own 606px test viewport with room
+   to spare, but a real phone runs ~360-390px CSS-wide minus side padding, leaving as
+   little as ~8px of slack for safe-area insets or OS font scaling — found on review,
+   not observed failing here, since the dev-tooling viewport can't reproduce a real
+   phone's width. `flex` + `min-width: 0` lets each side give way before either
+   control is forced to wrap or overflow. */
 .answer-input {
-  width: 200px;
-  font-size: 32px;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 180px;
+  font-size: 28px;
   text-align: center;
   direction: ltr;
-  padding: 14px;
+  padding: 12px;
   border: 2px solid var(--border);
   border-radius: 16px;
   background: var(--bg);
@@ -433,7 +508,16 @@
 }
 
 .answer-row button {
-  width: 200px;
+  flex: 0 1 auto;
+  /* Not `min-width: 0` — that strips the browser's normal "never shrink below your own
+     content" floor, which is exactly what you don't want on a button: under real
+     pressure (a genuinely narrow phone, not this dev environment's widest-available
+     test window) it would let the label clip or overlap instead of refusing to. 100px
+     comfortably covers the widest label here ("בדיקה", measured at 97px natural
+     width) with a few px to spare for "הבא"/"סיום", which are both shorter. */
+  min-width: 100px;
+  max-width: 120px;
+  width: auto;
 }
 
 .answer-input:focus {
@@ -2555,22 +2639,36 @@ body:has(
   border: 2px solid #8a7fd1;
 }
 
+/* `direction: ltr`, same as `.problem-box.box-ltr`/`.answer-input` elsewhere in this
+   file — CLAUDE.md's recurring RTL bug class, just never caught here before: digits
+   are DOM-ordered 1,2,3 (see NumberPad.tsx's KEYS array), but a grid with no explicit
+   direction inherits the page's RTL and places DOM-first at the inline-start, which in
+   RTL is the *right* edge — so "1" rendered top-RIGHT and the row read 3,2,1 left to
+   right instead of the 1,2,3 every physical keypad/calculator uses. Numerals are
+   math content, exactly like the expression in `.problem-box.box-ltr` — they don't
+   mirror for RTL either, on the same rule. */
 .number-pad {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
+  direction: ltr;
   gap: 8px;
   /* `max-width` alone leaves the grid with no definite width to divide into columns —
      `.practice` is a flex column with `align-items: center` (shrink-to-fit, not
      stretch), so without an actual `width` here the grid collapsed to each column's
-     min-content (~20px), not to the 240px cap: every key rendered as a tall, barely-
-     wider-than-the-glyph pill instead of a square-ish button. */
+     min-content (~20px), not to the max-width cap: every key rendered as a tall,
+     barely-wider-than-the-glyph pill instead of a proper button. */
   width: 100%;
-  max-width: 240px;
-  margin: 12px auto 0;
+  max-width: 260px;
+  margin: 10px auto 0;
 }
 
+/* Fixed height, not `aspect-ratio: 1` — width and height don't have to grow together
+   (growing a square grid's width once grew its height by the same amount, which made
+   the screen's known scroll problem worse, not better — caught on review). 48px is a
+   deliberately compact size reported live as preferred over an earlier, larger pass —
+   still clears Android's 48dp touch-target floor. */
 .number-pad-button {
-  aspect-ratio: 1;
+  height: 48px;
   padding: 0;
   border: 1px solid var(--border);
   border-radius: 12px;
