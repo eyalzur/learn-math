@@ -10,9 +10,9 @@
 - [x] Implementation — developer — 2026-11-25
 - [x] Tests — qa — 2026-11-25
 
-**Current phase:** done
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `feature/ask-before-disabling-autoread`
-**PR:** https://github.com/eyalzur/learn-math/pull/125
+**PR:** https://github.com/eyalzur/learn-math/pull/125 — מוזג 2026-11-25
 
 ## Open questions / blockers
 None. `408/410` בדיקות e2e עוברות, ריצה בודדת ונקייה (`--workers=1`) — ה-`2`
