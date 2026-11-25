@@ -182,7 +182,8 @@
 }
 
 .profile-recent-score {
-  direction: ltr;
+  /* Hebrew phrase around the numbers: keep RTL (ltr here rendered "5 מתוך 10" backwards),
+     just isolated from the row. */
   unicode-bidi: isolate;
   white-space: nowrap;
 }
