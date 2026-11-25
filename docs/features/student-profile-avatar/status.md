@@ -6,15 +6,16 @@
 - [x] Product spec — product-manager — 2026-11-26
 - [x] Design — designer — 2026-11-26
 - [x] Architecture — tech-lead — 2026-11-26
-- [ ] Implementation — developer — not started
-- [ ] Tests — qa — not started
+- [x] Implementation — developer — 2026-11-26
+- [x] Tests — qa — 2026-11-26
 
-**Current phase:** developer
+**Current phase:** done — ממתין לריוויו ומיזוג
 **Branch:** `feature/student-profile-avatar`
 **PR:** not opened yet
 
 ## Open questions / blockers
-None.
+- **Review:** האם 12 החיות מתאימות לשלושת הילדים? ושאר ההחלטות ב-product-spec.md, "Decisions".
+- **Merge:** גרסה 1.63.0; ב-#126/#129 גם מעלים גרסה, צפוי bump מחדש במיזוג.
 
 ## Docs
 - [Product spec](./product-spec.md)
