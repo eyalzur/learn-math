@@ -9,8 +9,9 @@
 - [x] Implementation — developer — 2026-11-25
 - [x] Tests — qa — 2026-11-25 (ללא בדיקה חדשה — שינוי חזותי טהור; ראו tests.md)
 
-**Current phase:** ממתין לריוויו
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `feature/quiet-speaker-lesson-parity`
+**PR:** https://github.com/eyalzur/learn-math/pull/128 — מוזג 2026-11-26
 
 ## Open questions / blockers
 None.
