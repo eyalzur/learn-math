@@ -19,6 +19,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.62.1",
+    icon: "🔺",
+    description:
+      "בציורי המשולשים והישרים המקבילים מופיעות עכשיו האותיות A, B, C ו-a, b, c — כמו בשאלה.",
+  },
+  {
     version: "1.62.0",
     icon: "🔈",
     description:
