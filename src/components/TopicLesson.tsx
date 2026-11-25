@@ -5,6 +5,7 @@ import { buildExplanation, explanationSpeechParts } from "../data/questionExplan
 import { AngleShape } from "./AngleShape";
 import { ClockFace } from "./ClockFace";
 import { QuestionExplanation } from "./QuestionExplanation";
+import { QuestionScreenTemplate } from "./QuestionScreenTemplate";
 import { segmented } from "./segmented";
 import { speak, speechParts, speechSupported, stopSpeaking } from "../data/speech";
 
@@ -81,21 +82,16 @@ export function TopicLesson({ topicTitle, gradeLabel, questions, onBack, onPract
   }
 
   return (
-    <div className="practice">
-      <div className="practice-header">
-        <button
-          className="link-button"
-          onClick={() => {
-            stopSpeaking();
-            onBack();
-          }}
-        >
-          ← חזרה
-        </button>
-        {/* Visible and identical on every page, not just the last — the lesson is now
-           the default entry point for every reviewed topic (docs/features/
-           lesson-always-first), so whoever already knows the material needs an
-           immediate way out, not just the "→ לתרגול" button waiting at the end. */}
+    <QuestionScreenTemplate
+      onBack={() => {
+        stopSpeaking();
+        onBack();
+      }}
+      headerSecondaryAction={
+        // Visible and identical on every page, not just the last — the lesson is now
+        // the default entry point for every reviewed topic (docs/features/
+        // lesson-always-first), so whoever already knows the material needs an
+        // immediate way out, not just the "→ לתרגול" button waiting at the end.
         <button
           type="button"
           className="link-button"
@@ -106,36 +102,42 @@ export function TopicLesson({ topicTitle, gradeLabel, questions, onBack, onPract
         >
           דלג לתרגול →
         </button>
-        <span className="progress">{gradeLabel}</span>
-      </div>
-      <h2>
-        {topicTitle}
-        {/* Condensed onto the title's own line, not a second stacked heading — this is
-           still just a small "you're looking at an example" marker, not content that
-           deserves its own full-width row. */}
-        {showTierHeadings && (
-          <span className="lesson-page-badge">{`דוגמה ${currentPage + 1} מתוך ${questions.length}`}</span>
-        )}
-      </h2>
-      {speechSupported() && (
-        <div className="question-speech">
-          <button
-            type="button"
-            className="speak-button"
-            onClick={toggleSpeak}
-            aria-label={speaking ? "עצרו את ההקראה" : "הקריאו לי את השיעור"}
-          >
-            {speaking ? "⏹" : "🔊"}
-          </button>
-        </div>
-      )}
-      <div className={`problem-box ${isWordProblem ? "box-rtl" : "box-ltr"}`}>
-        <span className={`problem-text ${isWordProblem ? "prompt-rtl" : "prompt-ltr"}`}>
-          {isWordProblem ? segmented(question.prompt) : <>{promptWithEquals(question.prompt)}</>}
-        </span>
-      </div>
-      {bundle.clock && <ClockFace data={bundle.clock} label={bundle.clock.caption} />}
-      {bundle.angle && <AngleShape shape={bundle.angle} label={bundle.angle.srLabel} />}
+      }
+      headerRightLabel={gradeLabel}
+      title={
+        <h2>
+          {topicTitle}
+          {/* Condensed onto the title's own line, not a second stacked heading — this is
+             still just a small "you're looking at an example" marker, not content that
+             deserves its own full-width row. */}
+          {showTierHeadings && (
+            <span className="lesson-page-badge">{`דוגמה ${currentPage + 1} מתוך ${questions.length}`}</span>
+          )}
+        </h2>
+      }
+      standaloneSpeak={
+        speechSupported() && (
+          <div className="question-speech">
+            <button
+              type="button"
+              className="speak-button"
+              onClick={toggleSpeak}
+              aria-label={speaking ? "עצרו את ההקראה" : "הקריאו לי את השיעור"}
+            >
+              {speaking ? "⏹" : "🔊"}
+            </button>
+          </div>
+        )
+      }
+      problemText={isWordProblem ? segmented(question.prompt) : <>{promptWithEquals(question.prompt)}</>}
+      isWordProblem={isWordProblem}
+      diagrams={
+        <>
+          {bundle.clock && <ClockFace data={bundle.clock} label={bundle.clock.caption} />}
+          {bundle.angle && <AngleShape shape={bundle.angle} label={bundle.angle.srLabel} />}
+        </>
+      }
+    >
       <div className="hints">
         {question.hints.map((hint, j) => (
           <p key={j} className="hint">
@@ -160,6 +162,6 @@ export function TopicLesson({ topicTitle, gradeLabel, questions, onBack, onPract
           {isLastPage ? "→ לתרגול" : "הבא →"}
         </button>
       </div>
-    </div>
+    </QuestionScreenTemplate>
   );
 }
