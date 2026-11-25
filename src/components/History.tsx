@@ -60,31 +60,36 @@ export function History({ student, onBack, onStartTopic }: HistoryProps) {
         </ul>
       )}
 
-      {records.length === 0 ? (
-        <p className="history-empty">עוד לא תרגלת. אחרי התרגול הראשון הוא יופיע כאן.</p>
-      ) : (
-        <>
-          <div className="history-stats-group">
-            <StatsSection title="סיכום לפי נושא" rows={statsByTopic(student.id)} />
-            <StatsSection title="סיכום לפי רמת קושי" rows={statsByDifficulty(student.id)} />
-          </div>
-          <ul className="history-list">
-            {records.map((record, i) => (
-              <li key={i} className="history-row">
-                <span className="history-what">
-                  {record.topicTitle}
-                  {record.topicTitle && record.levelTitle ? " · " : ""}
-                  {record.levelTitle}
-                </span>
-                <span className="history-score">
-                  {record.correct}/{record.total}
-                </span>
-                <span className="history-when">{formatDate(record.at)}</span>
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
+      {/* docs/features/no-scroll-screens/ — everything below is the part that can grow
+          without bound (the full practice history), so it scrolls inside its own
+          region rather than the whole page; the header above stays fixed/visible. */}
+      <div className="history-body">
+        {records.length === 0 ? (
+          <p className="history-empty">עוד לא תרגלת. אחרי התרגול הראשון הוא יופיע כאן.</p>
+        ) : (
+          <>
+            <div className="history-stats-group">
+              <StatsSection title="סיכום לפי נושא" rows={statsByTopic(student.id)} />
+              <StatsSection title="סיכום לפי רמת קושי" rows={statsByDifficulty(student.id)} />
+            </div>
+            <ul className="history-list">
+              {records.map((record, i) => (
+                <li key={i} className="history-row">
+                  <span className="history-what">
+                    {record.topicTitle}
+                    {record.topicTitle && record.levelTitle ? " · " : ""}
+                    {record.levelTitle}
+                  </span>
+                  <span className="history-score">
+                    {record.correct}/{record.total}
+                  </span>
+                  <span className="history-when">{formatDate(record.at)}</span>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </div>
     </div>
   );
 }
