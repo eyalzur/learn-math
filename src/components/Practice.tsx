@@ -269,13 +269,13 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
           שאלה {index + 1} מתוך {lesson.questions.length}
         </span>
       </div>
-      <h2>{lesson.title}</h2>
+      <h2 className="practice-title">{lesson.title}</h2>
 
       {dots && <QuantityDots data={dots} label={mathToWords(question.prompt)} />}
 
       {/* Same prompt-parsing/LTR-isolation pattern TopicLesson.tsx already uses for the
           identical question shape — see docs/features/scored-answer-practice/design.md. */}
-      <div className={`problem-box ${isWordProblem ? "box-rtl" : "box-ltr"}`}>
+      <div className={`problem-box problem-box-card ${isWordProblem ? "box-rtl" : "box-ltr"}`}>
         <span className={`problem-text ${isWordProblem ? "prompt-rtl" : "prompt-ltr"}`}>
           {isWordProblem ? segmented(question.prompt) : <>{promptWithEquals(question.prompt)}</>}
         </span>
@@ -333,6 +333,26 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
           onDigit={(d) => setAnswerInput((v) => v + d)}
           onBackspace={() => setAnswerInput((v) => v.slice(0, -1))}
         />
+      )}
+
+      {/* Back at the bottom, below the keypad — reported live: moving it above the
+          keypad (tried during this screen's UI pass) wasn't wanted. Still only useful
+          on the way to an answer: once feedback is up, the correct answer (and for a
+          wrong one, the explanation) already says more than a hint did, so they'd
+          just be clutter under the solution. */}
+      {feedback === null && hintsShown > 0 && (
+        <div className="hints">
+          {question.hints.slice(0, hintsShown).map((hint, i) => (
+            <p key={i} className="hint">
+              {segmented(hint)}
+            </p>
+          ))}
+        </div>
+      )}
+      {feedback === null && hintsShown < 2 && (
+        <button type="button" className="hint-button" onClick={() => setHintsShown((n) => n + 1)}>
+          {hintsShown === 0 ? "רמז 💡" : "עוד רמז 💡"}
+        </button>
       )}
 
       {feedback !== null && (feedback === "correct" || revealed) && (
@@ -427,24 +447,6 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
               : undefined
           }
         />
-      )}
-
-      {/* Hints are only useful on the way to an answer — once feedback is up, the
-          correct answer (and for a wrong one, the explanation) already says more than
-          a hint did, so they'd just be clutter under the solution. */}
-      {feedback === null && hintsShown > 0 && (
-        <div className="hints">
-          {question.hints.slice(0, hintsShown).map((hint, i) => (
-            <p key={i} className="hint">
-              {segmented(hint)}
-            </p>
-          ))}
-        </div>
-      )}
-      {feedback === null && hintsShown < 2 && (
-        <button type="button" className="hint-button" onClick={() => setHintsShown((n) => n + 1)}>
-          {hintsShown === 0 ? "רמז 💡" : "עוד רמז 💡"}
-        </button>
       )}
     </div>
   );
