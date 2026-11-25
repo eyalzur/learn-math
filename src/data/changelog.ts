@@ -19,6 +19,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.61.0",
+    icon: "🔈",
+    description:
+      "כפתור ההקראה קטן ושקט בפינת כרטיס השאלה, והשיעור נראה כמו מסך התרגול.",
+  },
+  {
     version: "1.60.0",
     icon: "🔈",
     description:

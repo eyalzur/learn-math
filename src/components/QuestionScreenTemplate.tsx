@@ -14,11 +14,7 @@ interface QuestionScreenTemplateProps {
    *  inside this node exactly as it does today — the template has no opinion on that. */
   title: ReactNode;
 
-  /** Speak button rendered above the problem box, not inside it — `TopicLesson`'s
-   *  current placement only. See `inlineSpeak` below for the other placement. */
-  standaloneSpeak?: ReactNode;
-
-  /** Anything shown above the problem box but below the title/standalone-speak —
+  /** Anything shown above the problem box but below the title —
    *  today only `Practice`'s `QuantityDots` illustration. */
   aboveProblem?: ReactNode;
 
@@ -29,8 +25,8 @@ interface QuestionScreenTemplateProps {
    *  arithmetic expression reads left-to-right beside it. Never guess this from the
    *  text's own characters — callers already derive it correctly (`isHebrewPrompt`). */
   isWordProblem: boolean;
-  /** Speak button rendered inside the problem box, beside the text — `Practice`'s
-   *  current placement only. See `standaloneSpeak` above for the other placement. */
+  /** Speak button rendered inside the problem box — the same
+   *  placement on both screens, pinned to the card's corner by CSS. */
   inlineSpeak?: ReactNode;
 
   /** Diagrams tied to this question (clock face, angle shape, ...) — identical source
@@ -72,7 +68,6 @@ export function QuestionScreenTemplate({
   headerSecondaryAction,
   headerRightLabel,
   title,
-  standaloneSpeak,
   aboveProblem,
   problemText,
   isWordProblem,
@@ -91,7 +86,6 @@ export function QuestionScreenTemplate({
         <span className="progress">{headerRightLabel}</span>
       </div>
       {title}
-      {standaloneSpeak}
       {aboveProblem}
       <div className={`problem-box problem-box-card ${isWordProblem ? "box-rtl" : "box-ltr"}`}>
         <span className={`problem-text ${isWordProblem ? "prompt-rtl" : "prompt-ltr"}`}>{problemText}</span>
