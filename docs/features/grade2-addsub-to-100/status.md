@@ -9,9 +9,9 @@
 - [x] Implementation — developer — 2026-11-25
 - [x] Tests — qa — 2026-11-25
 
-**Current phase:** ממתין לריוויו
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `feature/grade2-addsub-to-100`
-**PR:** ראו GitHub
+**PR:** https://github.com/eyalzur/learn-math/pull/127 — מוזג 2026-11-25
 
 ## Open questions / blockers
 None. גוברת על טווח 1000 של `grade2-syllabus` (ראו ההערה שם). אימות מלא ב-`tests.md`.
