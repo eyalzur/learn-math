@@ -1,5 +1,6 @@
 import type { Topic } from "../data/curriculum";
 import { hasAnySettings } from "../lib/settingsVisibility";
+import { lessonsLeftText } from "../data/lessonAllowance";
 import { statsByTopic, starsForAccuracy } from "../data/progress";
 
 interface TopicPickerProps {
@@ -89,7 +90,7 @@ export function TopicPicker({
             className={`lessons-chip ${lessonsLeft === 0 ? "lessons-chip-empty" : ""}`}
             onClick={onOpenLessons}
           >
-            {lessonsLeft === 0 ? "נגמרו שיעורים" : `נשארו ${lessonsLeft} שיעורים`}
+            {lessonsLeftText(lessonsLeft)}
           </button>
         )}
       </div>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { LESSON_PACKS } from "../data/lessonAllowance";
+import { LESSON_PACKS, lessonsLeftText } from "../data/lessonAllowance";
 import { speak, speechParts, speechSupported, stopSpeaking } from "../data/speech";
 
 /**
@@ -32,7 +32,7 @@ export function LessonsDialog({ mode, remaining, onGrant, onClose }: LessonsDial
   const [granted, setGranted] = useState(0);
 
   const headline =
-    mode === "blocked" ? "נגמרו השיעורים של השבוע." : `נשארו ${remaining} שיעורים השבוע.`;
+    mode === "blocked" ? "נגמרו השיעורים של השבוע." : `${lessonsLeftText(remaining)} השבוע.`;
   const sub = mode === "blocked" ? "אפשר לבקש מאמא או אבא." : "";
 
   function close() {

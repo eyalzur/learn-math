@@ -119,3 +119,10 @@ export const localStorageLessonAllowance: LessonAllowanceStore = {
 };
 
 export const lessonAllowance: LessonAllowanceStore = localStorageLessonAllowance;
+
+/** "נשארו 3 שיעורים" / "נשאר שיעור אחד" / "נגמרו שיעורים" — one wording for chip and dialog. */
+export function lessonsLeftText(n: number): string {
+  if (n <= 0) return "נגמרו שיעורים";
+  if (n === 1) return "נשאר שיעור אחד";
+  return `נשארו ${n} שיעורים`;
+}

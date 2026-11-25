@@ -1334,6 +1334,10 @@ body:has(
    above it rather than crowding against it (10px → 14px top, per design.md). */
 .history-link {
   display: block;
+  margin: 14px 0 24px auto;
+}
+
+.topic-meta .history-link {
   margin: 0;
 }
 
