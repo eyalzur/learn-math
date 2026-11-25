@@ -3,6 +3,16 @@
   padding: 32px 24px;
 }
 
+/* docs/features/no-scroll-screens/ — overrides the shared rule above for
+   .student-picker only (same specificity, later source order wins), so
+   .grade-home (StylePicker/LevelPicker, already measured as fitting) is
+   untouched. Tighter padding lets the student list fit up to 5 real
+   students on a 390x664 phone viewport without scrolling — see
+   architecture.md for the measured before/after. */
+.student-picker {
+  padding: 10px 24px;
+}
+
 .subtitle {
   color: var(--text);
   margin-bottom: 20px;
@@ -13,7 +23,7 @@
 .student-list {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 6px; /* docs/features/no-scroll-screens/ — was 14px */
   max-width: 380px;
   margin: 0 auto;
 }
@@ -23,7 +33,7 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 4px;
-  padding: 20px 24px;
+  padding: 6px 24px; /* docs/features/no-scroll-screens/ — was 20px 24px */
   border: 1px solid var(--border);
   border-radius: 20px;
   background: var(--bg);
@@ -1314,7 +1324,7 @@ body:has(
 /* ---- topic picker ---- */
 
 .topic-picker {
-  padding: 32px 24px;
+  padding: 18px 24px; /* docs/features/no-scroll-screens/ — was 32px 24px */
 }
 
 /* The light-pill look (background/padding/radius/font-size) now lives on the base
@@ -1330,13 +1340,13 @@ body:has(
 .topic-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 14px;
+  gap: 8px; /* docs/features/no-scroll-screens/ — was 14px */
 }
 
 .topic-card {
   display: block;
   text-align: right;
-  padding: 22px 20px;
+  padding: 10px 20px; /* docs/features/no-scroll-screens/ — was 22px 20px */
   border: 1px solid var(--border);
   border-radius: 20px;
   background: var(--bg);
@@ -1388,6 +1398,28 @@ body:has(
 
 .history {
   padding: 32px 24px;
+  /* docs/features/no-scroll-screens/ — bounded height + internal scroll,
+     same pattern as .version-log-dialog / .version-log-scroll. The header
+     (.grade-header, h1, .stuck-topics) stays outside .history-body below,
+     so it never scrolls out of view regardless of how long the history
+     list grows. */
+  height: 100svh;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.history-body {
+  flex: 1;
+  /* Without this a flex child refuses to shrink below its content's natural
+     height, so overflow-y:auto below would never actually kick in — same
+     note already on .version-log-scroll. */
+  min-height: 0;
+  overflow-y: auto;
+  /* Scrolling to the end of a long history must not "chain" into scrolling
+     whatever's behind it — same reasoning as .version-log-scroll. */
+  overscroll-behavior: contain;
 }
 
 .stuck-topics {

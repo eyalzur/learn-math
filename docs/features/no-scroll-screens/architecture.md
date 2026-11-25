@@ -193,3 +193,47 @@ className="history-body">` החדש ב-JSX, ונשארת קבועה/גלויה �
 
 ## Open Questions
 None.
+
+## Implementation Notes
+
+נבנה בדיוק לפי המספרים שה-architecture תיעד, בלי סטייה:
+
+- `src/App.css`: `.topic-picker` padding→`18px 24px`, `.topic-grid` gap→`8px`,
+  `.topic-card` padding→`10px 20px`. כלל חדש `.student-picker { padding: 10px
+  24px; }` אחרי הכלל המשותף `.student-picker, .grade-home`. `.student-list`
+  gap→`6px`, `.student-card` padding→`6px 24px`. `.history` קיבל
+  `height:100svh`+`box-sizing:border-box`+`display:flex`+`flex-direction:column`+
+  `overflow:hidden` (ה-padding הקיים `32px 24px` נשאר). כלל חדש `.history-body`
+  (`flex:1`, `min-height:0`, `overflow-y:auto`, `overscroll-behavior:contain`).
+- `src/components/History.tsx`: הבלוק שאחרי `.stuck-topics` (מצב-ריק, או
+  `.history-stats-group`+`.history-list`) עטוף ב-`<div
+  className="history-body">` חדש. שום prop/import/לוגיקה לא השתנו.
+- `TopicPicker.tsx`, `StudentPicker.tsx`: לא נגעתי בהם בכלל — כצפוי, זה היה
+  שינוי CSS בלבד.
+
+### בעיית סביבה אמיתית שנתקלתי בה, ואיך פתרתי אותה
+בדיוק כמו שה-architecture הזהיר: worktree אחר ממשיך לתפוס את פורט `5173`
+(`feature/ask-before-disabling-autoread`, אומת לפי `.app-version-number`
+ו-`package.json` לא תואמים). הרצת `npx playwright test` הרגילה הייתה
+משתמשת בטעות בשרת הזר הזה (`reuseExistingServer: true`) ובודקת קוד לא
+קשור. כדי לקבל ריצה אמינה בלי לגעת בתהליך של סשן אחר (לא הורגים תהליכים
+של סשנים מקבילים) ובלי לשנות את `playwright.config.ts` המשותף, הקמתי קובץ
+קונפיג זמני נפרד (`playwright.local-verify.config.ts`, פורט `5199`,
+`reuseExistingServer: false`), הרצתי אותו, ומחקתי אותו בסוף — **לא הושאר
+בשום commit**. `git status` אחרי כל הריצה מציג רק את 4 קבצי הקוד
+שבאמת השתנו.
+
+### תוצאת האימות
+```
+npm run build   → עבר נקי (108 modules, 134ms)
+npm run lint    → עבר נקי (אזהרה אחת קיימת-מראש ב-scratch-preview/, לא קשורה)
+npx playwright test --workers=1 (מול השרת הנכון, דרך הקונפיג הזמני)
+  → 399 passed, 2 skipped, 0 failed (19.9 דקות, ריצה בודדת ונקייה)
+```
+אין אף כשל, ואין regression בבדיקות הקיימות (כולל כל הבדיקות שבודקות
+`.history-row`/`.history-empty`/`.stuck-topic-card`/`.app-version-number` —
+אף אחת מהן לא תלויה במבנה-ה-DOM שהשתנה).
+
+`npm run bump:feature` הורץ פעם אחת (`1.58.0 → 1.59.0`), ונוספה רשומת
+changelog תואמת ב-`src/data/changelog.ts` (לא נוצרת אוטומטית על ידי סקריפט
+ה-bump).
