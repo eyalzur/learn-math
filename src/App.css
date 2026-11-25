@@ -2820,3 +2820,18 @@ body:has(
 .practice > .figure-slot {
   min-height: 56px;
 }
+
+/* Once the explanation is on screen the page is meant to scroll inside .practice, so the
+   figure goes back to its natural size instead of being squeezed to its minimum. */
+.practice:not(:has(.number-pad)) > .angle-figure-inline,
+.practice:not(:has(.number-pad)) > .clock-face,
+.practice:not(:has(.number-pad)) > .figure-slot {
+  flex: 0 0 auto;
+  min-height: 0;
+  overflow: visible;
+}
+
+.practice:not(:has(.number-pad)) > .angle-figure-inline > svg,
+.practice:not(:has(.number-pad)) > .clock-face > svg {
+  height: auto;
+}
