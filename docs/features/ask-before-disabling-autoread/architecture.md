@@ -179,3 +179,35 @@ React מקבץ (batches) את שתי הקריאות ל-`setShowAutoReadPrompt` �
 
 ## Open Questions
 None.
+
+## Implementation Notes
+
+Built exactly as planned, no deviations from the Technical Approach above.
+
+- `src/data/preferences.ts`: added `autoReadPromptUntil?: Record<string, number>` to
+  `Preferences`, the `AUTO_READ_PROMPT_SUPPRESS_MS` constant (2 days in ms), and
+  `isAutoReadPromptSuppressed(studentId)` / `suppressAutoReadPrompt(studentId)` — same
+  try/catch-and-ignore shape as the existing `readAloud`/`paceLevel` functions.
+- `src/components/AutoReadPrompt.tsx` (new): presentational card, `{ onYes, onNo }` props
+  only. The "don't ask again" checkbox is local `useState` inside the component and is
+  never read by the parent, as architecture.md calls for.
+- `src/components/Practice.tsx`: added `studentId`/`onDisableReadAloud` props;
+  `showAutoReadPrompt` local state; the trigger check added inside `toggleSpeech`'s
+  existing `if (speakingBox === box) return;` branch (scoped to `box === "question"`,
+  checks `readAloud` and `!isAutoReadPromptSuppressed(studentId)`); `setShowAutoReadPrompt(false)`
+  added at the top of `toggleSpeech`, `checkAnswer`, `checkFollowUp`, `next`, the hint
+  button's `onClick`, the "לראות את התשובה" link's `onClick`, and `NumberPad`'s
+  `onDigit`/`onBackspace`; `<AutoReadPrompt>` rendered conditionally as a third element of
+  the `diagrams` slot, after `clockSlot`/`angleSlot`, with inline `onYes`/`onNo` that both
+  call `suppressAutoReadPrompt(studentId)`, `onYes` additionally calling
+  `onDisableReadAloud()`.
+- `src/App.tsx`: `<Practice>` now also receives `studentId={student.id}` and
+  `onDisableReadAloud={() => settingsProps.onReadAloudChange(false)}` — reuses the existing
+  `onReadAloudChange` from `settingsProps` so the `preferencesTick` bump (and therefore the
+  `readAloud` prop `Practice` receives) stays in sync, exactly as architecture.md requires.
+- `src/App.css`: new `.auto-read-prompt*` rules — plain in-flow card (no
+  `position: fixed`/backdrop), reusing `var(--code-bg)`/`var(--shadow)`/`var(--text-h)` and
+  the existing base `button`/`button.secondary` styles for the two action buttons.
+
+`npm run build` and `npm run lint` both clean. Version bumped `1.58.0 → 1.59.0`
+(`npm run bump:feature`, this branch's first touch of `src/`).

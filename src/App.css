@@ -1567,6 +1567,50 @@ body:has(
   margin-top: 16px;
 }
 
+/* ---- "stop auto-read-aloud?" ask — see docs/features/ask-before-disabling-autoread/.
+   Deliberately NOT a dialog: no backdrop, no fixed positioning, no aria-modal. It renders
+   as ordinary content (Practice.tsx's `diagrams` slot, right under the problem box) so
+   nothing it does can sit in front of the number pad or the answer row — "non-blocking" is
+   a layout fact here, not a z-index/pointer-events trick. ---- */
+
+.auto-read-prompt {
+  margin: 0 0 14px;
+  padding: 14px 16px;
+  background: var(--code-bg);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  text-align: right;
+}
+
+.auto-read-prompt-title {
+  margin: 0 0 4px;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.auto-read-prompt-body {
+  margin: 0 0 12px;
+  font-size: 15px;
+  color: var(--text-h);
+}
+
+.auto-read-prompt-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.auto-read-prompt-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  font-size: 14px;
+  color: var(--text-h);
+  cursor: pointer;
+}
+
 /* Same anatomy and values as .settings-backdrop/-dialog/-title, deliberately under its own
    name — see the comment above .settings-backdrop for why dialogs don't share classes. */
 .version-log-backdrop {

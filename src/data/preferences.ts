@@ -18,7 +18,16 @@ interface Preferences {
    *  or stale value falls back to the default rather than propagating a level nothing can
    *  render as chosen. */
   paceLevel?: Record<string, string>;
+  /** Student id → epoch ms until which "stop auto-read-aloud?" should not be asked again,
+   *  set after any answer (yes or no) to that ask — see docs/features/
+   *  ask-before-disabling-autoread/. Not a plain boolean "don't ask again": the whole
+   *  point is that it expires, so the student is asked again if their situation changes. */
+  autoReadPromptUntil?: Record<string, number>;
 }
+
+/** How long a "stop auto-read-aloud?" answer (yes or no, with or without the "don't ask
+ *  again" checkbox) silences the next ask — see product-spec.md's acceptance criteria. */
+const AUTO_READ_PROMPT_SUPPRESS_MS = 2 * 24 * 60 * 60 * 1000;
 
 /**
  * localStorage throws in private mode. Losing a setting is a small disappointment; taking
@@ -66,6 +75,31 @@ export function setPaceLevel(studentId: string, levelId: PaceLevel): void {
     localStorage.setItem(
       STORAGE_KEY,
       JSON.stringify({ ...all, paceLevel: { ...all.paceLevel, [studentId]: levelId } }),
+    );
+  } catch {
+    // ignore
+  }
+}
+
+/** Whether this student already answered the "stop auto-read-aloud?" ask recently enough
+ *  that it should stay quiet. `false` for a student who was never asked, or whose
+ *  ~2-day window already ran out. */
+export function isAutoReadPromptSuppressed(studentId: string): boolean {
+  const until = readAll().autoReadPromptUntil?.[studentId];
+  return typeof until === "number" && Date.now() < until;
+}
+
+/** Call once the student answers the "stop auto-read-aloud?" ask (yes or no) — starts a
+ *  fresh ~2-day window before it can be asked again. */
+export function suppressAutoReadPrompt(studentId: string): void {
+  try {
+    const all = readAll();
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        ...all,
+        autoReadPromptUntil: { ...all.autoReadPromptUntil, [studentId]: Date.now() + AUTO_READ_PROMPT_SUPPRESS_MS },
+      }),
     );
   } catch {
     // ignore

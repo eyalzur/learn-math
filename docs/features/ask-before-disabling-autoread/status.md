@@ -7,10 +7,10 @@
 - [x] Product spec — product-manager — 2026-11-25
 - [x] Design — designer — 2026-11-25
 - [x] Architecture — tech-lead — 2026-11-25
-- [ ] Implementation — developer — not started
+- [x] Implementation — developer — 2026-11-25
 - [ ] Tests — qa — not started
 
-**Current phase:** developer
+**Current phase:** qa
 **Branch:** `feature/ask-before-disabling-autoread`
 **PR:** not opened yet
 
