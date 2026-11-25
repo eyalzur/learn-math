@@ -11,9 +11,9 @@ optional piece (new hint type, animation, ...) is added once, not per-screen.
 - [x] Implementation — developer — 2026-11-25
 - [x] Tests — qa — 2026-11-25
 
-**Current phase:** done — ready to open PR
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `feature/question-screen-template`
-**PR:** not opened yet
+**PR:** https://github.com/eyalzur/learn-math/pull/123 — מוזג 2026-11-25
 
 ## Open questions / blockers
 None. (Design flagged one pre-existing inconsistency — the speak button sits in
