@@ -141,6 +141,7 @@ export function LessonsDialog({ mode, remaining, onGrant, onClose }: LessonsDial
                 <li key={pack.id} className="lessons-pack">
                   <span className="lessons-pack-text">
                     <span className="lessons-pack-title">{pack.lessons} שיעורים נוספים</span>
+                    <span className="lessons-pack-shared">לכל התלמידים</span>
                     <span className="lessons-pack-price">
                       {pack.priceIls === 0 ? "חינם כרגע" : `${pack.priceIls} ₪`}
                     </span>
@@ -169,7 +170,7 @@ export function LessonsDialog({ mode, remaining, onGrant, onClose }: LessonsDial
         {step === "done" && (
           <>
             <h2 className="settings-title" id="lessons-title">
-              נוספו {granted} שיעורים!
+              נוספו {granted} שיעורים לכולם!
             </h2>
             <div className="lessons-actions">
               <button type="button" onClick={close}>

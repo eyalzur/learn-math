@@ -9,9 +9,9 @@
 - [x] Implementation — developer — 2026-11-25
 - [x] Tests — qa — 2026-11-25
 
-**Current phase:** done — ממתין לריוויו
+**Current phase:** done — ממתין לריוויו (סבב ב׳: מאגר משותף)
 **Branch:** `feature/weekly-lesson-cap`
-**PR:** not opened yet
+**PR:** [#129](https://github.com/eyalzur/learn-math/pull/129)
 
 ## Open questions / blockers
 - **Product:** (פתוח, החלטת הורה) האם 5 שיעורים חינם בשבוע נכון? (קבוע יחיד, קל לשינוי)
@@ -22,4 +22,7 @@
 - [Architecture](./architecture.md)
 - [Tests](./tests.md)
 
-בדיקות: build + lint נקיים, `422/423` e2e ב-`--workers=1` (הכשל היחיד, `back-link-redesign`, נגרם מהשינוי ותוקן, ואומת בריצה ממוקדת).
+בדיקות (סבב ב׳, `--workers=1`, 1.63.0): build + lint נקיים; `425/426` e2e (2 skipped) — הכשל היחיד `screen-entrance-animation` (תזמון אנימציה, תחת עומס של ריצות מקבילות של סוכנים אחרים) עבר בהרצה בודדת.
+
+**סבב ב׳ (2026-11-26):** משוב המשתמש — הרכישה חלה על כל התלמידים, לא על אחד. עבר למאגר אחד
+משותף (החינם נשאר פר תלמיד/ה); ראו "עדכון" ב-product spec. גרסה 1.63.0.

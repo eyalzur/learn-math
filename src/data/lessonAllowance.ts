@@ -3,12 +3,14 @@
  *
  * One "lesson" = one finished practice (a `PracticeRecord`), so usage is *derived* from the
  * history that already exists rather than counted separately: there is no second counter
- * that could drift from the journal. Only the purchased extras need storage of their own.
+ * that could drift from the journal. Only the purchased extras need storage of their own,
+ * and they are one household-wide pool (bought once, any student draws from it after their
+ * own free weekly lessons are used).
  *
  * Everything the UI needs goes through `LessonAllowanceStore`, so a server (and real
  * payment) can replace the localStorage implementation without touching a component.
  */
-import { historyFor } from "./progress";
+import { allHistory } from "./progress";
 
 /** Free lessons per student per week. The one number to change. */
 export const FREE_LESSONS_PER_WEEK = 5;
@@ -57,38 +59,38 @@ export function weekKey(date: Date): string {
 }
 
 export interface LessonAllowanceStore {
-  /** Lessons the student can still start this week (never negative). */
+  /** Lessons the student can still start this week: their own free ones left plus what is
+   *  left of the household's shared extras pool (never negative). */
   remaining(studentId: string): number;
-  /** Adds the pack's lessons to the current week. Unknown pack ids are ignored. */
-  grantPack(studentId: string, packId: string): void;
-  /** Forgets a deleted student's purchases. */
-  clearStudent(studentId: string): void;
+  /** Adds the pack's lessons to the household pool for the current week (all students
+   *  draw from it). Unknown pack ids are ignored. */
+  grantPack(packId: string): void;
 }
 
-const STORAGE_KEY = "learn-math:lessons";
+const STORAGE_KEY = "learn-math:lessons-pool";
 
-interface Extras {
-  /** The `weekKey` these extras belong to; extras of any other week have expired. */
+interface Pool {
+  /** The `weekKey` the extras belong to; extras of any other week have expired. */
   week: string;
   extra: number;
 }
 
-function readAll(): Record<string, Extras> {
+function readPool(): Pool | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return {};
-    const parsed: unknown = JSON.parse(raw);
-    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
-      ? (parsed as Record<string, Extras>)
-      : {};
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<Pool> | null;
+    return parsed && typeof parsed.week === "string" && Number.isFinite(parsed.extra)
+      ? { week: parsed.week, extra: Number(parsed.extra) }
+      : null;
   } catch {
-    return {};
+    return null;
   }
 }
 
-function writeAll(all: Record<string, Extras>): void {
+function writePool(pool: Pool): void {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(pool));
   } catch {
     // ignore
   }
@@ -98,23 +100,26 @@ export const localStorageLessonAllowance: LessonAllowanceStore = {
   remaining(studentId) {
     const now = new Date();
     const since = weekStartDate(now).getTime();
-    const used = historyFor(studentId).filter((r) => new Date(r.at).getTime() >= since).length;
-    const entry = readAll()[studentId];
-    const extra = entry && entry.week === weekKey(now) && Number.isFinite(entry.extra) ? entry.extra : 0;
-    return Math.max(0, freeLessonsPerWeek() + extra - used);
+    const free = freeLessonsPerWeek();
+    // Each student spends their own free lessons first; whatever a student used beyond
+    // that was drawn from the shared pool, whoever it was.
+    const usedBy = new Map<string, number>();
+    for (const r of allHistory()) {
+      if (new Date(r.at).getTime() >= since) usedBy.set(r.studentId, (usedBy.get(r.studentId) ?? 0) + 1);
+    }
+    let drawn = 0;
+    for (const used of usedBy.values()) drawn += Math.max(0, used - free);
+    const pool = readPool();
+    const extra = pool && pool.week === weekKey(now) ? pool.extra : 0;
+    const freeLeft = Math.max(0, free - (usedBy.get(studentId) ?? 0));
+    return freeLeft + Math.max(0, extra - drawn);
   },
-  grantPack(studentId, packId) {
+  grantPack(packId) {
     const pack = LESSON_PACKS.find((p) => p.id === packId);
     if (!pack) return;
-    const all = readAll();
     const week = weekKey(new Date());
-    const current = all[studentId]?.week === week ? all[studentId].extra : 0;
-    writeAll({ ...all, [studentId]: { week, extra: current + pack.lessons } });
-  },
-  clearStudent(studentId) {
-    const all = readAll();
-    delete all[studentId];
-    writeAll(all);
+    const pool = readPool();
+    writePool({ week, extra: (pool && pool.week === week ? pool.extra : 0) + pack.lessons });
   },
 };
 

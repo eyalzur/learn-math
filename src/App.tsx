@@ -272,7 +272,6 @@ function App() {
     });
     clearStudentProgress(id);
     clearStudentAdaptiveTiers(id);
-    lessonAllowance.clearStudent(id);
   }
 
   function switchStudent() {
@@ -633,7 +632,7 @@ function App() {
           mode={lessonsDialog}
           remaining={lessonAllowance.remaining(student.id)}
           onGrant={(packId) => {
-            lessonAllowance.grantPack(student.id, packId);
+            lessonAllowance.grantPack(packId);
             setLessonsTick((n) => n + 1);
           }}
           onClose={() => setLessonsDialog(null)}

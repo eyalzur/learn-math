@@ -137,7 +137,7 @@ test("the parent gate rejects a wrong answer, then the free pack adds 10 lessons
   await expect(dialog).toContainText("חינם כרגע");
   await expect(dialog.locator("input")).toHaveCount(0); // no card / payment fields
   await dialog.getByRole("button", { name: "קבלו" }).click();
-  await expect(dialog).toContainText("נוספו 10 שיעורים!");
+  await expect(dialog).toContainText("נוספו 10 שיעורים לכולם!");
   await dialog.getByRole("button", { name: "סגירה" }).click();
   await expect(page.locator(".lessons-chip")).toHaveText("נשארו 10 שיעורים");
 
@@ -152,35 +152,74 @@ test("extra lessons belong to their week and expire", async ({ page }) => {
   await toGradeB(page);
   await seedFinishedPractices(page, 2);
   await page.evaluate(() => {
-    const users = JSON.parse(localStorage.getItem("learn-math:users") ?? "[]");
-    localStorage.setItem(
-      "learn-math:lessons",
-      JSON.stringify({ [users[users.length - 1].id]: { week: "2020-01-05", extra: 10 } }),
-    );
+    localStorage.setItem("learn-math:lessons-pool", JSON.stringify({ week: "2020-01-05", extra: 10 }));
   });
   await page.reload();
   await expect(page.locator(".lessons-chip")).toHaveText("נגמרו שיעורים");
 });
 
-test("extra lessons are per student", async ({ page }) => {
-  await openWithAllowance(page, 1);
-  await toGradeB(page);
-  await seedFinishedPractices(page, 1);
+/** Parent gate + the free pack, from the topics screen of a student who has 0 left. */
+async function buyPack(page: Page) {
   await page.locator(".lessons-chip").click();
   const dialog = page.getByRole("dialog");
   await dialog.getByRole("button", { name: /בקשו מההורים|עוד שיעורים/ }).click();
   const math = (await dialog.locator(".lessons-gate-math").innerText()).match(/(\d+)\s*×\s*(\d+)/)!;
   await dialog.getByLabel("תשובה").fill(String(Number(math[1]) * Number(math[2])));
   await dialog.getByRole("button", { name: "המשך" }).click();
+  await expect(dialog).toContainText("לכל התלמידים");
   await dialog.getByRole("button", { name: "קבלו" }).click();
   await dialog.getByRole("button", { name: "סגירה" }).click();
+}
 
-  // A second student starts with just the free allowance.
+async function switchToNewStudent(page: Page) {
   await page.getByRole("button", { name: /חזרה/ }).first().click(); // to the grade picker
   await page.getByRole("button", { name: /החלף תלמיד/ }).click(); // to the student picker
+  const name = await createAndSelectStudent(page);
+  await page.locator(".grade-card").nth(1).click();
+  return name;
+}
+
+test("extra lessons are one household pool: another student sees them too, on top of their own free lessons", async ({ page }) => {
+  await openWithAllowance(page, 1);
+  await toGradeB(page);
+  await seedFinishedPractices(page, 1);
+  await buyPack(page);
+  await expect(page.locator(".lessons-chip")).toHaveText("נשארו 10 שיעורים");
+
+  // A second student: own 1 free lesson + the shared 10.
+  await switchToNewStudent(page);
+  await expect(page.locator(".lessons-chip")).toHaveText("נשארו 11 שיעורים");
+});
+
+test("a lesson drawn from the pool by one student is gone for the other", async ({ page }) => {
+  await openWithAllowance(page, 1);
+  await toGradeB(page);
+  await seedFinishedPractices(page, 1);
+  await buyPack(page);
+  // Student A uses 4 more lessons: 1 free (already used) + 4 from the pool -> pool 6 left.
+  await page.evaluate(() => {
+    const rec = JSON.parse(localStorage.getItem("learn-math:history") ?? "[]");
+    for (let i = 0; i < 4; i++) rec.push({ ...rec[0] });
+    localStorage.setItem("learn-math:history", JSON.stringify(rec));
+  });
+  await page.reload();
+  await expect(page.locator(".lessons-chip")).toHaveText("נשארו 6 שיעורים");
+  await switchToNewStudent(page);
+  await expect(page.locator(".lessons-chip")).toHaveText("נשארו 7 שיעורים"); // 1 free + 6 pool
+});
+
+test("deleting a student does not delete the purchased pool", async ({ page }) => {
+  await openWithAllowance(page, 1);
+  const first = await toGradeB(page);
+  await seedFinishedPractices(page, 1);
+  await buyPack(page);
+  await page.getByRole("button", { name: /חזרה/ }).first().click();
+  await page.getByRole("button", { name: /החלף תלמיד/ }).click();
+  await page.getByRole("button", { name: `מחיקת ${first}` }).click();
+  await page.getByRole("button", { name: "מחיקה" }).click();
   await createAndSelectStudent(page);
   await page.locator(".grade-card").nth(1).click();
-  await expect(page.locator(".lessons-chip")).toHaveText("נשאר שיעור אחד");
+  await expect(page.locator(".lessons-chip")).toHaveText("נשארו 11 שיעורים");
 });
 
 test("the lessons dialog fits a short phone", async ({ page }) => {

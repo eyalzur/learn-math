@@ -10,7 +10,9 @@
 | 3, 4: חסימה והודעה, הסתכלות בשיעור עדיין עובדת | "at zero, starting a practice is blocked..." |
 | 5, 9: שער הורים, חבילה חינם, בלי שדות תשלום, תרגול מתחיל שוב | "the parent gate rejects a wrong answer..." |
 | 6: פקיעה בסוף שבוע | "extra lessons belong to their week and expire" |
-| 5: פר תלמיד/ה | "extra lessons are per student" |
+| 5: מאגר משותף לכל הבית (חינם משלו + מאגר) | "extra lessons are one household pool..." |
+| 5: משיכה של תלמיד/ה מורידה גם לאחר/ת | "a lesson drawn from the pool by one student is gone for the other" |
+| מחיקת תלמיד/ה לא מוחקת את המאגר | "deleting a student does not delete the purchased pool" |
 | דיאלוג נכנס ב-664px | "the lessons dialog fits a short phone" |
 
 עקיפת מכסה לשאר הבדיקות: `VITE_FREE_LESSONS_PER_WEEK=9999` ב-`playwright.config.ts`;
