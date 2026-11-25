@@ -12,7 +12,7 @@
 
 **Current phase:** done
 **Branch:** `feature/ask-before-disabling-autoread`
-**PR:** not opened yet
+**PR:** https://github.com/eyalzur/learn-math/pull/125
 
 ## Open questions / blockers
 None. `408/410` בדיקות e2e עוברות, ריצה בודדת ונקייה (`--workers=1`) — ה-`2`
