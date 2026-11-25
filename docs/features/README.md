@@ -6,6 +6,7 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
+| שאלה לפני כיבוי הקראה אוטומטית | 🟢 done — מוזג ל-main | [status](./ask-before-disabling-autoread/status.md) |
 | מסכים שמתאימים למסך בלי גלילה | 🟢 done — מוזג ל-main | [status](./no-scroll-screens/status.md) |
 | טמפלייט משותף למסכי שאלה | 🟢 done — מוזג ל-main | [status](./question-screen-template/status.md) |
 | רענון חזותי של 5 מסכים (Stitch) | 🟢 done — מוזג ל-main | [status](./stitch-visual-refresh/status.md) |

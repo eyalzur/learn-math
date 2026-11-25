@@ -561,6 +561,8 @@ function App() {
             setScreen(insideTopic(topic));
           }}
           readAloud={readAloud}
+          studentId={student.id}
+          onDisableReadAloud={() => settingsProps.onReadAloudChange(false)}
           onAnswered={topic?.adaptive ? (correct) => handleAdaptiveAnswered(topic, correct) : undefined}
         />
         {settingsOpen && <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} {...settingsProps} />}
