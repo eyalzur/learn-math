@@ -10,9 +10,9 @@
 - [x] Implementation — developer — 2026-11-25
 - [x] Tests — qa — 2026-11-25
 
-**Current phase:** done — ready for PR
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `feature/no-scroll-screens`
-**PR:** not opened yet
+**PR:** https://github.com/eyalzur/learn-math/pull/124 — מוזג 2026-11-25
 
 ## Open questions / blockers
 None.
