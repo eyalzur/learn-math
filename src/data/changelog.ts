@@ -19,6 +19,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.59.0",
+    icon: "🔈",
+    description:
+      "מי שעוצר/ת הקראה אוטומטית באמצע נשאל/ת פעם אחת אם לכבות אותה — אפשר גם לסמן שלא לשאול יותר, וזה מתחדש כל יומיים.",
+  },
+  {
     version: "1.58.0",
     icon: "🧩",
     description: "שיפור מאחורי הקלעים: איחוד הקוד של מסכי התרגול והשיעור לבסיס משותף אחד — בלי שינוי במה שרואים.",
