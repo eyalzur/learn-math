@@ -1002,7 +1002,7 @@ button:active:not(:disabled):not(.app-version):not(.link-button) {
    looking like the right rule should apply, including beating the hover/focus/active
    pause rule below (which is why that rule also repeats this full selector for its
    button branch, not just `button:not(.app-version)`). */
-button:not(.app-version):not(.speak-button):not(.hint-button):not(.link-button):not(.student-card-delete):not(.settings-button):not(.student-card):not(.grade-card):not(.topic-card):not(.level-card):not(.style-card) {
+button:not(.app-version):not(.speak-button):not(.hint-button):not(.link-button):not(.student-card-delete):not(.settings-button):not(.profile-chip):not(.avatar-option):not(.profile-close):not(.student-card):not(.grade-card):not(.topic-card):not(.level-card):not(.style-card) {
   /* Every matching element gets the identical animation; a negative delay equal to its
      own index means each one is already partway through its own timeline from frame
      one — the classic "staggered cycle" trick, no JS timing involved. The delay-per-step
@@ -1066,8 +1066,8 @@ button:not(.app-version):not(.speak-button):not(.hint-button):not(.link-button):
 .level-card:active,
 .style-card:focus,
 .style-card:active,
-button:not(.app-version):not(.speak-button):not(.hint-button):not(.link-button):not(.student-card-delete):not(.settings-button):not(.student-card):not(.grade-card):not(.topic-card):not(.level-card):not(.style-card):focus,
-button:not(.app-version):not(.speak-button):not(.hint-button):not(.link-button):not(.student-card-delete):not(.settings-button):not(.student-card):not(.grade-card):not(.topic-card):not(.level-card):not(.style-card):active {
+button:not(.app-version):not(.speak-button):not(.hint-button):not(.link-button):not(.student-card-delete):not(.settings-button):not(.profile-chip):not(.avatar-option):not(.profile-close):not(.student-card):not(.grade-card):not(.topic-card):not(.level-card):not(.style-card):focus,
+button:not(.app-version):not(.speak-button):not(.hint-button):not(.link-button):not(.student-card-delete):not(.settings-button):not(.profile-chip):not(.avatar-option):not(.profile-close):not(.student-card):not(.grade-card):not(.topic-card):not(.level-card):not(.style-card):active {
   animation-play-state: paused;
 }
 
@@ -1089,7 +1089,7 @@ button:not(.app-version):not(.speak-button):not(.hint-button):not(.link-button):
   .topic-card:hover,
   .level-card:hover,
   .style-card:hover,
-  button:not(.app-version):not(.speak-button):not(.hint-button):not(.link-button):not(.student-card-delete):not(.settings-button):not(.student-card):not(.grade-card):not(.topic-card):not(.level-card):not(.style-card):hover {
+  button:not(.app-version):not(.speak-button):not(.hint-button):not(.link-button):not(.student-card-delete):not(.settings-button):not(.profile-chip):not(.avatar-option):not(.profile-close):not(.student-card):not(.grade-card):not(.topic-card):not(.level-card):not(.style-card):hover {
     animation-play-state: paused;
   }
 }

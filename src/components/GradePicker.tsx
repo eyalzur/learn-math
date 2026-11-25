@@ -1,4 +1,6 @@
 import type { Grade } from "../data/curriculum";
+import type { Avatar } from "../data/avatars";
+import { ProfileChip } from "./ProfileChip";
 
 interface GradePickerProps {
   grades: Grade[];
@@ -7,6 +9,8 @@ interface GradePickerProps {
   /** Only offered when this is the first screen after picking a student — same
    *  convention as `TopicPicker`'s `onHistory`. */
   onHistory?: () => void;
+  avatar?: Avatar;
+  onOpenProfile?: () => void;
 }
 
 /**
@@ -14,13 +18,14 @@ interface GradePickerProps {
  * Mika). A single large letter per card — not just the label text — because this can be
  * the very first screen a pre-reader meets after picking her name.
  */
-export function GradePicker({ grades, onSelect, onBack, onHistory }: GradePickerProps) {
+export function GradePicker({ grades, onSelect, onBack, onHistory, avatar, onOpenProfile }: GradePickerProps) {
   return (
     <div className="grade-picker">
       <div className="grade-header">
         <button className="link-button" onClick={onBack}>
           {onHistory ? "← החלף תלמיד" : "← חזרה"}
         </button>
+        {avatar && onOpenProfile && <ProfileChip avatar={avatar} onClick={onOpenProfile} />}
       </div>
       {onHistory && (
         <button className="link-button history-link" onClick={onHistory}>

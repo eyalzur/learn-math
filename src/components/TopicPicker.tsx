@@ -1,4 +1,6 @@
 import type { Topic } from "../data/curriculum";
+import type { Avatar } from "../data/avatars";
+import { ProfileChip } from "./ProfileChip";
 import { hasAnySettings } from "../lib/settingsVisibility";
 import { statsByTopic, starsForAccuracy } from "../data/progress";
 
@@ -28,6 +30,9 @@ interface TopicPickerProps {
   /** Opens the settings dialog — owned and rendered by `App.tsx`, not this component. See
    *  docs/features/notebook-nav-buttons-visibility/architecture.md. */
   onOpenSettings: () => void;
+  /** The profile chip (docs/features/student-profile-avatar/) — shown only when both are given. */
+  avatar?: Avatar;
+  onOpenProfile?: () => void;
 }
 
 export function TopicPicker({
@@ -41,6 +46,8 @@ export function TopicPicker({
   readAloud,
   onReadAloudChange,
   onOpenSettings,
+  avatar,
+  onOpenProfile,
 }: TopicPickerProps) {
   /* Whether there is anything to open a dialog for at all — the invariant that the ⚙️
      button never leads to an empty dialog. Shared with `SettingsDialog` itself via the
@@ -57,18 +64,23 @@ export function TopicPicker({
           {backLabel}
         </button>
         <span className="greeting">{gradeLabel}</span>
-        {showSettings && (
+        {(showSettings || (avatar && onOpenProfile)) && (
           /* Third child of a `space-between` row, so in RTL it lands at the far left —
              the opposite end from "← חזרה", which is what the design asks for, with no
              CSS change to `.grade-header`. */
-          <button
-            type="button"
-            className="settings-button"
-            aria-label="הגדרות"
-            onClick={onOpenSettings}
-          >
-            <span aria-hidden="true">⚙️</span>
-          </button>
+          <span className="header-end">
+            {showSettings && (
+              <button
+                type="button"
+                className="settings-button"
+                aria-label="הגדרות"
+                onClick={onOpenSettings}
+              >
+                <span aria-hidden="true">⚙️</span>
+              </button>
+            )}
+            {avatar && onOpenProfile && <ProfileChip avatar={avatar} onClick={onOpenProfile} />}
+          </span>
         )}
       </div>
       {onHistory && (
