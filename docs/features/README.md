@@ -6,7 +6,7 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
-| שאלה לפני כיבוי הקראה אוטומטית | 🟡 in progress — בתכנון עיצוב | [status](./ask-before-disabling-autoread/status.md) |
+| שאלה לפני כיבוי הקראה אוטומטית | 🟡 in progress — בתכנון ארכיטקטורה | [status](./ask-before-disabling-autoread/status.md) |
 | טמפלייט משותף למסכי שאלה | 🟢 done — מוזג ל-main | [status](./question-screen-template/status.md) |
 | רענון חזותי של 5 מסכים (Stitch) | 🟢 done — מוזג ל-main | [status](./stitch-visual-refresh/status.md) |
 | השיעור הוא הכניסה הדיפולטיבית לנושא | 🟢 done — מוזג ל-main | [status](./lesson-always-first/status.md) |
