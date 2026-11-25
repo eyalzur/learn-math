@@ -4,12 +4,12 @@
 
 ## Progress
 - [x] Product spec — product-manager — 2026-11-25
-- [ ] Design — designer — not started
-- [ ] Architecture — tech-lead — not started
+- [x] Design — designer — 2026-11-25
+- [x] Architecture — tech-lead — 2026-11-25
 - [ ] Implementation — developer — not started
 - [ ] Tests — qa — not started
 
-**Current phase:** designer
+**Current phase:** developer
 **Branch:** `feature/weekly-lesson-cap`
 **PR:** not opened yet
 
