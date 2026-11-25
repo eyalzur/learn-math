@@ -174,3 +174,35 @@
 
 ## Open Questions
 None.
+
+## Implementation Notes
+מומש כמתוכנן, עם שתי תוספות קטנות שלא נדרשו במפורש בתכנון אבל נבעו ממנו באופן ישיר:
+
+- `src/data/interruptedSession.ts` (חדש) — `loadInterruptedSession` מקבל פרמטר חמישי
+  אופציונלי `adaptiveValidity: { questionCount, minDifficulty, maxDifficulty }`
+  (רק לקריאה מצד נושא אדפטיבי) שמבצע את בדיקת "תוכן שהשתנה" בתוך הפונקציה עצמה, לא
+  בקוד הקורא — כפי שה-architecture כבר קבע ("כל הבדיקות האלה חיות בתוך
+  `loadInterruptedSession` עצמה").
+- `src/components/Practice.tsx`: `onAnswered` הפך לפרמטר חובה (לא אופציונלי) בחתימה
+  החדשה; `checkAnswer()` מחשב `updatedCorrectCount` מקומית (`isCorrect ? correctCount +
+  1 : correctCount`) ולא קורא את ה-state אחרי `setCorrectCount`, בדיוק לפי האזהרה
+  שב-architecture.md. `initialIndex`/`initialCorrectCount` עם ברירת-מחדל `0` ב-destructuring
+  עצמו (`= 0`), לא תוך קריאה ל-`?? 0` בכל `useState`.
+- `src/App.tsx`:
+  - **תוספת מעבר לתכנון:** `Screen`'s `"result"` variant קיבל גם הוא `lessonKey?: string`
+    (לא רק `"practice"`), ו-`Result`'s `onRetry` מעביר אותו קדימה כש-`setScreen`-ל-`"practice"`.
+    בלי זה, "ניסיון נוסף" (retry) שנקטע היה נכתב תחת מפתח בלי `lessonKey` (שלא נקרא
+    על ידי אף נתיב-קריאה אמיתי — לא `LevelPicker`/`StylePicker`'s `onSelect`, ששתיהן
+    תמיד מעבירות `lessonKey` אמיתי) — לא באג-קורס, אבל כתיבות-מתות ו"הזדמנות-החמצה"
+    שקטה לחידוש. התיקון עולה כמעט אפס (שדה אופציונלי אחד + העברה אחת).
+  - `handleAdaptiveAnswered` שונה מ-updater-עם-`prev` לערכים מקומיים רגילים, ומחזיר
+    `{ difficulty, streak, questions } | null` במקום `void` — כדי ש-`handleAnswered`
+    (חדש) יוכל להעביר אותם ישר ל-`saveInterruptedSession`, בלי לקרוא state שעדיין לא
+    התעדכן. בדיוק לפי התכנון.
+  - `handleAnswered(topic, lesson, lessonKey, correct, progress)` — כפי שתוכנן: עוטף
+    את `handleAdaptiveAnswered` (רק לאדפטיבי) ותמיד כותב ל-`interruptedSession.ts`.
+  - `enterTopicInGrade`'s ענף האדפטיבי ו-`LevelPicker`/`StylePicker`'s `onSelect` —
+    כל השלושה בודקים `loadInterruptedSession` לפני בניית ריצה חדשה, כפי שתוכנן.
+
+`build`/`lint` נקיים. גרסה `1.58.0 → 1.59.0` (`npm run bump:feature`, פעם אחת
+בבראנץ' הזה).
