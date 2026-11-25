@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { grades } from "../../src/data/curriculum";
+import { historyFor } from "../../src/data/progress";
 import { createAndSelectStudent } from "./helpers/selectStudent";
 
 /**
@@ -53,8 +54,8 @@ test("both grades stay reachable in the same visit — picking one does not lose
   // The other grade is right there, still offering its own topics.
   await page.locator(".grade-card").nth(1).click(); // כיתה ב׳
   await expect(page.locator(".topic-card")).toHaveCount(5);
-  await expect(page.locator(".topic-card", { hasText: "חיבור עד 1000" })).toHaveCount(1);
-  await expect(page.locator(".topic-card", { hasText: "חיסור עד 1000" })).toHaveCount(1);
+  await expect(page.locator(".topic-card", { hasText: "חיבור עד 100" })).toHaveCount(1);
+  await expect(page.locator(".topic-card", { hasText: "חיסור עד 100" })).toHaveCount(1);
 });
 
 test("grade א׳ keeps its original five topics, unchanged by the new grade", async ({ page }) => {
@@ -67,12 +68,12 @@ test("grade א׳ keeps its original five topics, unchanged by the new grade", as
   }
 });
 
-test("חיבור עד 1000 and חיסור עד 1000 are both adaptive, entered directly with no level to pick", async ({
+test("חיבור עד 100 and חיסור עד 100 are both adaptive, entered directly with no level to pick", async ({
   page,
 }) => {
   // This test used to describe the opposite: three written levels of ten questions, the
-  // same shape as grade א׳'s topics. חיבור עד 1000 became adaptive first (see
-  // docs/features/adaptive-difficulty), and חיסור עד 1000 — its "untouched twin" at the
+  // same shape as grade א׳'s topics. חיבור עד 100 became adaptive first (see
+  // docs/features/adaptive-difficulty), and חיסור עד 100 — its "untouched twin" at the
   // time — followed later (docs/features/mika-adaptive-difficulty). Grade ב׳ has three
   // more topics today (כפל וחילוק וצורות וגופים from docs/features/grade2-syllabus, שעון
   // וזמן from docs/features/grade2-clock) — all three adaptive too — this test is only
@@ -80,7 +81,7 @@ test("חיבור עד 1000 and חיסור עד 1000 are both adaptive, entered d
   await createAndSelectStudent(page);
   await page.locator(".grade-card").nth(1).click();
 
-  for (const title of ["חיבור עד 1000", "חיסור עד 1000"]) {
+  for (const title of ["חיבור עד 100", "חיסור עד 100"]) {
     await page.locator(".topic-card", { hasText: title }).click();
     await page.getByRole("button", { name: "דלג לתרגול →" }).click();
     await expect(page.locator(".level-card")).toHaveCount(0);
@@ -96,7 +97,7 @@ test("a grade ב׳ arithmetic problem still renders left-to-right inside the RTL
   // to the browser's bidi algorithm can render its operands in the wrong order.
   await createAndSelectStudent(page);
   await page.locator(".grade-card").nth(1).click();
-  await page.locator(".topic-card", { hasText: "חיסור עד 1000" }).click();
+  await page.locator(".topic-card", { hasText: "חיסור עד 100" }).click();
   await page.getByRole("button", { name: "דלג לתרגול →" }).click();
 
   const box = page.locator(".problem-box, .problem-text").first();
@@ -134,7 +135,7 @@ function grade2Topic(id: string) {
   return topic;
 }
 
-test("every hard חיבור עד 1000 question requires carrying past a ten, not just bigger numbers", () => {
+test("every hard חיבור עד 100 question requires carrying past a ten, not just bigger numbers", () => {
   const hard = grade2Topic("add100").levels.find((l) => l.id === "hard")!;
   const notCarrying = hard.questions
     .map((q) => ({ id: q.id, ops: operands(q.prompt) }))
@@ -143,11 +144,43 @@ test("every hard חיבור עד 1000 question requires carrying past a ten, not
   expect(notCarrying, `\n${notCarrying.join("\n")}\n`).toEqual([]);
 });
 
-test("every hard חיסור עד 1000 question requires borrowing, not just bigger numbers", () => {
+test("every hard חיסור עד 100 question requires borrowing, not just bigger numbers", () => {
   const hard = grade2Topic("sub100").levels.find((l) => l.id === "hard")!;
   const notBorrowing = hard.questions
     .map((q) => ({ id: q.id, ops: operands(q.prompt) }))
     .filter(({ ops: [a, b] }) => a % 10 >= b % 10)
     .map(({ id }) => id);
   expect(notBorrowing, `\n${notBorrowing.join("\n")}\n`).toEqual([]);
+});
+
+test("every written חיבור/חיסור עד 100 question (all levels) stays at or under 100", () => {
+  const tooBig: string[] = [];
+  for (const id of ["add100", "sub100"]) {
+    for (const level of grade2Topic(id).levels) {
+      for (const q of level.questions) {
+        const nums = (q.prompt.match(/\d+/g) ?? []).map(Number);
+        if (q.answer > 100 || nums.some((n) => n > 100)) tooBig.push(`${q.id}: ${q.prompt} = ${q.answer}`);
+      }
+    }
+  }
+  expect(tooBig, `\n${tooBig.join("\n")}\n`).toEqual([]);
+});
+
+test("history saved under the old 'עד 1000' titles is read back under the renamed 'עד 100' titles", () => {
+  const store = new Map<string, string>();
+  (globalThis as unknown as { localStorage: Storage }).localStorage = {
+    getItem: (k: string) => store.get(k) ?? null,
+    setItem: (k: string, v: string) => void store.set(k, v),
+  } as unknown as Storage;
+  const rec = (topicTitle: string) => ({
+    at: "2026-11-01T00:00:00.000Z",
+    studentId: "s1",
+    gradeLabel: "כיתה ב׳",
+    topicTitle,
+    levelTitle: "",
+    correct: 5,
+    total: 20,
+  });
+  store.set("learn-math:history", JSON.stringify([rec("חיבור עד 1000"), rec("חיסור עד 1000"), rec("כפל וחילוק")]));
+  expect(historyFor("s1").map((r) => r.topicTitle).sort()).toEqual(["חיבור עד 100", "חיסור עד 100", "כפל וחילוק"].sort());
 });

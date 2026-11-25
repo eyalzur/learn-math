@@ -7,7 +7,7 @@ import { createAndSelectStudent } from "./helpers/selectStudent";
  * and the screen/flow they were built against (design.md).
  *
  * Not automated here: the numeric thresholds for the remaining 18 adaptive topics besides
- * חיבור עד 1000 — they all share the one `nextAdaptiveDifficulty` function this feature
+ * חיבור עד 100 — they all share the one `nextAdaptiveDifficulty` function this feature
  * added (architecture.md), so this suite exercises that shared mechanism through one real
  * topic rather than re-proving the same arithmetic 19 times.
  */
@@ -142,7 +142,7 @@ test("the setting belongs to the student, not the device", async ({ page }) => {
 test("'מהיר' climbs difficulty within a couple of correct answers", async ({ page }) => {
   await toGradeB(page);
   await choosePace(page, "מהיר");
-  await page.locator(".topic-card", { hasText: "חיבור עד 1000" }).click();
+  await page.locator(".topic-card", { hasText: "חיבור עד 100" }).click();
   await page.getByRole("button", { name: "דלג לתרגול →" }).click();
 
   const carries: boolean[] = [];
@@ -156,7 +156,7 @@ test("'מהיר' climbs difficulty within a couple of correct answers", async ({
 test("'אטי' does not climb difficulty before four correct answers in a row", async ({ page }) => {
   await toGradeB(page);
   await choosePace(page, "אטי");
-  await page.locator(".topic-card", { hasText: "חיבור עד 1000" }).click();
+  await page.locator(".topic-card", { hasText: "חיבור עד 100" }).click();
   await page.getByRole("button", { name: "דלג לתרגול →" }).click();
 
   // Three correct in a row is one short of 'אטי''s threshold (4) — difficulty must stay at
@@ -191,7 +191,7 @@ test("'אטי' does not climb difficulty before four correct answers in a row", 
 test.skip("'אטי' does not drop difficulty after a single wrong answer", async ({ page }) => {
   await toGradeB(page);
   await choosePace(page, "מהיר"); // climb fast first, so there's something to protect from dropping
-  await page.locator(".topic-card", { hasText: "חיבור עד 1000" }).click();
+  await page.locator(".topic-card", { hasText: "חיבור עד 100" }).click();
 
   let climbed = false;
   for (let i = 0; i < 6 && !climbed; i++) {
@@ -221,7 +221,7 @@ test.skip("'אטי' does not drop difficulty after a single wrong answer", async
 test.skip("switching pace takes effect on the very next answer, without restarting the session", async ({ page }) => {
   await toGradeB(page);
   await choosePace(page, "אטי");
-  await page.locator(".topic-card", { hasText: "חיבור עד 1000" }).click();
+  await page.locator(".topic-card", { hasText: "חיבור עד 100" }).click();
 
   // Two correct under 'אטי' (short of its threshold of 4) ...
   await answerCorrect(page);

@@ -6,8 +6,8 @@ import { createAndSelectStudent } from "./helpers/selectStudent";
  * Acceptance criteria under test (docs/features/adaptive-difficulty/product-spec.md),
  * and the flow they were built against (docs/features/adaptive-difficulty/design.md).
  *
- *  1. חיבור עד 1000 is built from a template — entering it skips the level picker
- *     entirely and lands straight on practice (design.md, "לחיצה על 'חיבור עד 1000'").
+ *  1. חיבור עד 100 is built from a template — entering it skips the level picker
+ *     entirely and lands straight on practice (design.md, "לחיצה על 'חיבור עד 100'").
  *  2. The difficulty responds to real-time success: a run of correct answers should
  *     eventually need carrying past a ten (a wider range), a run of wrong answers should
  *     not (product-spec.md, "מעברי עשרה/שאילה שכיחים יותר").
@@ -17,9 +17,9 @@ import { createAndSelectStudent } from "./helpers/selectStudent";
  *  5. History keeps recording the topic, without inventing a level label that no longer
  *     exists (design.md, "היסטוריה").
  *
- * Criterion 6 used to live here: "חיסור עד 1000, the topic not in the pilot, still shows
+ * Criterion 6 used to live here: "חיסור עד 100, the topic not in the pilot, still shows
  * three levels exactly like before" (this feature's own product-spec.md explicitly left
- * it Out of Scope). docs/features/mika-adaptive-difficulty converted חיסור עד 1000 too,
+ * it Out of Scope). docs/features/mika-adaptive-difficulty converted חיסור עד 100 too,
  * so that criterion is superseded, not broken; see tests/e2e/mika-adaptive-difficulty.spec.ts
  * for its replacement coverage. docs/features/grade2-syllabus later added two more, unrelated
  * topics to grade ב׳ (כפל וחילוק, צורות וגופים) that are level-based like grade א׳'s — this
@@ -39,7 +39,7 @@ async function toGradeB(page: Page) {
 
 async function enterAdd100(page: Page) {
   await toGradeB(page);
-  await page.locator(".topic-card", { hasText: "חיבור עד 1000" }).click();
+  await page.locator(".topic-card", { hasText: "חיבור עד 100" }).click();
   // A topic card now opens its lesson first (docs/features/lesson-always-first) — skip
   // straight to practice, same as every other call site that used to land there directly.
   await page.getByRole("button", { name: "דלג לתרגול →" }).click();
@@ -74,9 +74,9 @@ test.beforeEach(async ({ page }) => {
   await open(page);
 });
 
-test("חיבור עד 1000 skips the level picker, and practice is one skip-to-practice away", async ({ page }) => {
+test("חיבור עד 100 skips the level picker, and practice is one skip-to-practice away", async ({ page }) => {
   await toGradeB(page);
-  await page.locator(".topic-card", { hasText: "חיבור עד 1000" }).click();
+  await page.locator(".topic-card", { hasText: "חיבור עד 100" }).click();
   await expect(page.locator(".level-card")).toHaveCount(0);
   await page.getByRole("button", { name: "דלג לתרגול →" }).click();
 
@@ -109,7 +109,7 @@ test("a streak of correct answers climbs to needing carrying, a streak of wrong 
   // correct answers below, instead of actually waiting it out.
   await page.getByRole("button", { name: "חזרה לתפריט" }).click(); // back to the topics screen
   await page.clock.install();
-  await page.locator(".topic-card", { hasText: "חיבור עד 1000" }).click();
+  await page.locator(".topic-card", { hasText: "חיבור עד 100" }).click();
   await page.getByRole("button", { name: "דלג לתרגול →" }).click();
   const correctRunCarries: boolean[] = [];
   for (let i = 0; i < 10; i++) {
@@ -146,7 +146,7 @@ test("questions vary between sessions, even at the same starting difficulty", as
 
   const seen = new Set<string>();
   for (let i = 0; i < 6; i++) {
-    await page.locator(".topic-card", { hasText: "חיבור עד 1000" }).click();
+    await page.locator(".topic-card", { hasText: "חיבור עד 100" }).click();
     await page.getByRole("button", { name: "דלג לתרגול →" }).click();
     seen.add((await page.locator(".problem-text").innerText()).trim());
     await page.locator(".link-button").first().click(); // ← חזרה
@@ -175,6 +175,6 @@ test("history records the topic without a level suffix", async ({ page }) => {
 
   const row = page.locator(".history-row").first();
   await expect(row).toBeVisible();
-  await expect(row.locator(".history-what")).toHaveText("חיבור עד 1000");
+  await expect(row.locator(".history-what")).toHaveText("חיבור עד 100");
   await expect(row.locator(".history-score")).toHaveText("20/20");
 });
