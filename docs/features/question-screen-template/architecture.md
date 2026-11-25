@@ -180,3 +180,29 @@ being a sibling further down the same `<div className="practice">`.
 
 ## Open Questions
 None.
+
+## Implementation Notes
+
+Built exactly as planned, with the `children`-based tail from the start (no
+attempt at fixed hints/explanation slots that then had to be walked back).
+
+- **`src/components/QuestionScreenTemplate.tsx`** *(new)* — matches the
+  `QuestionScreenTemplateProps` shape above field-for-field. `title` is typed
+  as the *whole* heading element (`<h2 className="practice-title">...</h2>` /
+  `<h2>...</h2>`), not just its text content — `Practice.tsx`'s `<h2>` carries
+  a `practice-title` class (from the already-merged `practice-numpad-ui-polish`
+  work) that `TopicLesson.tsx`'s plain `<h2>` doesn't, so the template renders
+  whatever element it's handed rather than wrapping a string in its own `<h2>`
+  and losing that class.
+- **`src/components/Practice.tsx`** — migrated against the post-merge (i.e.
+  post-#122) JSX, per the sequencing note above: `main` was merged into this
+  branch before this edit, so `problem-box-card`, `practice-title`, and the
+  hints-above-feedback ordering from that PR are exactly what got lifted into
+  template props, not the pre-merge version architecture.md was drafted
+  against.
+- **`src/components/TopicLesson.tsx`** — migrated as planned; its `children`
+  keeps the exact existing order (hints → `QuestionExplanation` → proof →
+  page actions).
+- `npm run build && npm run lint` both clean. No deviations from the planned
+  props shape.
+

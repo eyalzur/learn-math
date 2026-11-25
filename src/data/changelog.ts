@@ -19,6 +19,11 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.58.0",
+    icon: "🧩",
+    description: "שיפור מאחורי הקלעים: איחוד הקוד של מסכי התרגול והשיעור לבסיס משותף אחד — בלי שינוי במה שרואים.",
+  },
+  {
     version: "1.57.7",
     icon: "🎨",
     description:

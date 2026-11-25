@@ -11,6 +11,7 @@ import { ClockFace } from "./ClockFace";
 import { NumberPad } from "./NumberPad";
 import { QuantityDots } from "./QuantityDots";
 import { QuestionExplanation } from "./QuestionExplanation";
+import { QuestionScreenTemplate } from "./QuestionScreenTemplate";
 import { segmented } from "./segmented";
 import { mathToWords, primeVoices, speak, speechParts, speechSupported, stopSpeaking } from "../data/speech";
 
@@ -254,32 +255,18 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
   const angleSlot = bundle.angle ? <AngleShape shape={bundle.angle} label={bundle.angle.srLabel} /> : null;
 
   return (
-    <div className="practice">
-      <div className="practice-header">
-        <button
-          className="link-button"
-          onClick={() => {
-            stopSpeaking();
-            onExit();
-          }}
-        >
-          ← חזרה
-        </button>
-        <span className="progress">
-          שאלה {index + 1} מתוך {lesson.questions.length}
-        </span>
-      </div>
-      <h2 className="practice-title">{lesson.title}</h2>
-
-      {dots && <QuantityDots data={dots} label={mathToWords(question.prompt)} />}
-
-      {/* Same prompt-parsing/LTR-isolation pattern TopicLesson.tsx already uses for the
-          identical question shape — see docs/features/scored-answer-practice/design.md. */}
-      <div className={`problem-box problem-box-card ${isWordProblem ? "box-rtl" : "box-ltr"}`}>
-        <span className={`problem-text ${isWordProblem ? "prompt-rtl" : "prompt-ltr"}`}>
-          {isWordProblem ? segmented(question.prompt) : <>{promptWithEquals(question.prompt)}</>}
-        </span>
-        {speechSupported() && (
+    <QuestionScreenTemplate
+      onBack={() => {
+        stopSpeaking();
+        onExit();
+      }}
+      headerRightLabel={`שאלה ${index + 1} מתוך ${lesson.questions.length}`}
+      title={<h2 className="practice-title">{lesson.title}</h2>}
+      aboveProblem={dots && <QuantityDots data={dots} label={mathToWords(question.prompt)} />}
+      problemText={isWordProblem ? segmented(question.prompt) : <>{promptWithEquals(question.prompt)}</>}
+      isWordProblem={isWordProblem}
+      inlineSpeak={
+        speechSupported() && (
           <button
             type="button"
             className="speak-button"
@@ -288,11 +275,15 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
           >
             {speakingBox === "question" ? "⏹" : "🔊"}
           </button>
-        )}
-      </div>
-      {clockSlot}
-      {angleSlot}
-
+        )
+      }
+      diagrams={
+        <>
+          {clockSlot}
+          {angleSlot}
+        </>
+      }
+    >
       <div className="answer-row">
         <input
           type="text"
@@ -448,6 +439,6 @@ export function Practice({ lesson, onFinish, onExit, readAloud, onAnswered }: Pr
           }
         />
       )}
-    </div>
+    </QuestionScreenTemplate>
   );
 }
