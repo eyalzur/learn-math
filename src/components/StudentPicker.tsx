@@ -2,6 +2,7 @@ import { useState } from "react";
 import { grades } from "../data/curriculum";
 import type { Student } from "../data/curriculum";
 import { studentBadge } from "../data/studentBadge";
+import { avatarFor } from "../data/avatars";
 import { APP_VERSION } from "../data/version";
 import { VersionLog } from "./VersionLog";
 import { CreateStudentDialog } from "./CreateStudentDialog";
@@ -10,7 +11,7 @@ import { DeleteStudentDialog } from "./DeleteStudentDialog";
 interface StudentPickerProps {
   students: Student[];
   onSelect: (student: Student) => void;
-  onCreate: (name: string, gradeId: string) => void;
+  onCreate: (name: string, gradeId: string, avatar?: string) => void;
   onDelete: (id: string) => void;
 }
 
@@ -26,11 +27,12 @@ export function StudentPicker({ students, onSelect, onCreate, onDelete }: Studen
         {students.map((student) => {
           const grade = grades.find((g) => g.id === student.gradeId);
           const badge = studentBadge(student.id);
+          const avatar = avatarFor(student);
           return (
             <div key={student.id} className="student-card-wrap">
               <button className="student-card" onClick={() => onSelect(student)}>
                 <span className="student-badge" aria-hidden="true" style={{ color: badge.color }}>
-                  {badge.glyph}
+                  {avatar.emoji}
                 </span>
                 <span className="student-name">{student.name}</span>
                 <span className="student-grade">{grade?.label}</span>
@@ -66,8 +68,8 @@ export function StudentPicker({ students, onSelect, onCreate, onDelete }: Studen
       <CreateStudentDialog
         open={createOpen}
         grades={grades}
-        onCreate={(name, gradeId) => {
-          onCreate(name, gradeId);
+        onCreate={(name, gradeId, avatar) => {
+          onCreate(name, gradeId, avatar);
           setCreateOpen(false);
         }}
         onClose={() => setCreateOpen(false)}

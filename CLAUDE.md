@@ -61,6 +61,8 @@ kb/             בסיס הידע (OKF v0.2) + kb/tools                         
 * הצד השרת: [`kb/infra/notebook-server.md`](kb/infra/notebook-server.md).
 
 ## מה פתוח
+**רשימת הרעיונות והבקשות שטרם התחילו:** `docs/BACKLOG.md` — קראו אותו בתחילת סשן. (מנוי הורים: ענף `feature/parent-subscription`, החלטות התקבלו ב-2026-11-26, מסמכים בלבד.)
+
 > רק מה שעוד לא נעשה. מה שמוזג — ב-`docs/features/README.md` וב-`kb/features/`. `/resume-proj` ו-`/status` קוראים את הסעיף הזה.
 
 ### מתוכנן ומאושר, טרם נבנה

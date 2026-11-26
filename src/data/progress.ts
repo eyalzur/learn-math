@@ -71,6 +71,12 @@ export function clearStudent(studentId: string): void {
   }
 }
 
+/** Every student's practices (oldest first) — for household-wide counts such as the shared
+ *  extra-lessons pool (docs/features/weekly-lesson-cap). */
+export function allHistory(): PracticeRecord[] {
+  return readAll();
+}
+
 /** One student's practices, newest first. */
 export function historyFor(studentId: string): PracticeRecord[] {
   return readAll()

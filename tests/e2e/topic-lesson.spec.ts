@@ -137,7 +137,7 @@ test("an adaptive topic's lesson pages through one worked example per difficulty
   await expect(page.locator(".problem-box")).toHaveCount(1);
   await expect(prev).toHaveCount(0);
   await expect(next).toHaveCount(1);
-  const heading1 = await page.locator(".lesson-page-badge").innerText();
+  const heading1 = await page.locator(".practice-header .progress").innerText();
   expect(heading1).toMatch(/^דוגמה 1 מתוך \d+$/);
   const total = Number(heading1.match(/מתוך (\d+)/)![1]);
   expect(total).toBeGreaterThan(1);
@@ -148,7 +148,7 @@ test("an adaptive topic's lesson pages through one worked example per difficulty
   let prevPrompt = prompt1;
   for (let i = 2; i <= total; i++) {
     await next.click();
-    await expect(page.locator(".lesson-page-badge")).toHaveText(`דוגמה ${i} מתוך ${total}`);
+    await expect(page.locator(".practice-header .progress")).toHaveText(`דוגמה ${i} מתוך ${total}`);
     await expect(prev).toHaveCount(1);
     const stillOnALaterPage = i < total;
     await expect(next).toHaveCount(stillOnALaterPage ? 1 : 0);
@@ -161,7 +161,7 @@ test("an adaptive topic's lesson pages through one worked example per difficulty
   // Paging back from the last page returns to the previous page's own content, not stuck
   // showing the last page's.
   await prev.click();
-  await expect(page.locator(".lesson-page-badge")).toHaveText(`דוגמה ${total - 1} מתוך ${total}`);
+  await expect(page.locator(".practice-header .progress")).toHaveText(`דוגמה ${total - 1} מתוך ${total}`);
   await expect(next).toHaveCount(1);
   await expect(toPractice).toHaveCount(0);
 });
@@ -174,7 +174,7 @@ test("a non-adaptive topic's lesson shows exactly one example, with no page mark
   await page.locator(".topic-card").first().click();
 
   await expect(page.locator(".problem-box")).toHaveCount(1);
-  await expect(page.locator(".lesson-page-badge")).toHaveCount(0);
+  await expect(page.getByText(/דוגמה \d+ מתוך/)).toHaveCount(0);
   await expect(page.getByRole("button", { name: "← הקודם" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "הבא →" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "→ לתרגול" })).toHaveCount(1);

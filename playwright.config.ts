@@ -33,6 +33,10 @@ export default defineConfig({
       // tests/e2e/notebook-server-relay.spec.ts. No real notebook server is deployed yet,
       // and even if this ever escaped mocking, .invalid can never resolve to a real host.
       VITE_NOTEBOOK_SERVER_URL: 'https://notebook-server.invalid',
+      // The real weekly lesson cap (docs/features/weekly-lesson-cap/) would stop specs that
+      // run many practices in a row. Raised here only; weekly-lesson-cap.spec.ts seeds the
+      // real default back through the localStorage override key.
+      VITE_FREE_LESSONS_PER_WEEK: '9999',
     },
   },
   projects: [

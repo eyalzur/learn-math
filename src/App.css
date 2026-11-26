@@ -381,8 +381,7 @@
 /* Quiet label, not a second heading — reported live as redundant with the question
    right below it ("מה בא אחרי" above "איזה מספר בא אחרי 3?" says the same thing
    twice) and as taking real vertical room on a screen that already needs to scroll.
-   Scoped to Practice.tsx's own h2 only (TopicLesson.tsx's h2 stays the normal size —
-   there the title is the only heading on screen, nothing restates it right below). */
+   Used by both Practice and the lesson screen so the two read as the same screen. */
 .practice-title {
   font-size: 14px;
   font-weight: 500;
@@ -408,28 +407,26 @@
   box-shadow: var(--shadow);
 }
 
-/* The speaker button is the ONLY way this child (still learning to read) can hear
-   the question — a pale, label-less emoji pill the same weight as every other small
-   button is easy to miss entirely. Filled accent circle, bigger tap target, only on
-   the main question (not every .speak-button elsewhere, which sit in already-text-
-   heavy explanation/diagnosis boxes where this much weight would be too loud). */
-.problem-box-card .speak-button {
-  width: 50px;
-  height: 50px;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--accent);
-  border: none;
-  border-radius: 50%;
-  color: #fff;
-  font-size: 20px;
+/* The speaker sits in the card's corner, small and quiet — it is a tool beside the
+   question, not part of it (reported live: a 50px filled pink circle inline with the
+   text competed with the question itself). The card is its positioning context. The
+   visual is a small low-emphasis icon (see .speak-button below); the hit area stays
+   40px for a seven-year-old's finger. Physical `left`, not `inset-inline-end`: the card
+   flips direction (box-ltr / box-rtl) per question, and the speaker must not jump. */
+.problem-box-card {
+  position: relative;
 }
 
-.problem-box-card .speak-button:hover {
-  opacity: 0.85;
-  border-color: transparent;
+.problem-box-card .speak-button {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+}
+
+/* A Hebrew word problem fills the card's width; reserve the corner's column so the first
+   line never runs under the speaker. A bare expression is short and centred — no need. */
+.problem-box-card.box-rtl {
+  padding-left: 44px;
 }
 
 /* A bare expression reads left-to-right with the input after it; a Hebrew word
@@ -686,23 +683,6 @@
   margin-top: 12px;
 }
 
-/* "דוגמה N מתוך M" marker on the lesson screen's current page (only shown when the topic
-   has more than one worked example — see TopicLesson.tsx's showTierHeadings). Inline next
-   to the topic title, not a separate full-width heading — it's a small "you're looking at
-   an example" note, not content that needs its own row (found live: the two stacked
-   headings read as a wall of white space before the actual lesson content). */
-.lesson-page-badge {
-  display: inline-block;
-  margin-inline-start: 10px;
-  padding: 2px 10px;
-  border-radius: 999px;
-  background: var(--code-bg);
-  color: var(--text);
-  font-size: 13px;
-  font-weight: 400;
-  vertical-align: middle;
-}
-
 .explanation {
   max-width: 420px;
   margin: 0 auto 24px;
@@ -722,19 +702,31 @@
 }
 
 /* Icon only, no label: it has to be usable by a child who cannot read yet, which is the
-   whole point of the feature. The name lives in aria-label. */
+   whole point of the feature. The name lives in aria-label. One quiet style everywhere
+   (question card, lesson card, "איך פותרים?" header): small icon, no fill, no border, a
+   40px hit area. It must not out-shout the content it reads. */
 .speak-button {
-  padding: 4px 10px;
-  font-size: 18px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  font-size: 17px;
   line-height: 1;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  box-shadow: none;
   cursor: pointer;
+  opacity: 0.6;
 }
 
-.speak-button:hover {
-  border-color: var(--accent-border);
+.speak-button:hover,
+.speak-button:focus-visible {
+  opacity: 1;
+  background: var(--accent-bg);
 }
 
 .explanation h3 {
@@ -830,7 +822,7 @@ button.secondary {
 .topic-card,
 .level-card,
 .style-card,
-button:not(.app-version):not(.link-button) {
+button:not(.app-version):not(.link-button):not(.speak-button) {
   box-shadow: 0 5px 0 var(--accent-border);
   /* No transition on transform/box-shadow here on purpose: an animated press looked
      nicer by eye, but a transition keeps the element's bounding box moving between
@@ -1010,7 +1002,7 @@ button:active:not(:disabled):not(.app-version):not(.link-button) {
    looking like the right rule should apply, including beating the hover/focus/active
    pause rule below (which is why that rule also repeats this full selector for its
    button branch, not just `button:not(.app-version)`). */
-button:not(.app-version):not(.speak-button):not(.hint-button):not(.link-button):not(.student-card-delete):not(.settings-button):not(.student-card):not(.grade-card):not(.topic-card):not(.level-card):not(.style-card) {
+button:not(.app-version):not(.speak-button):not(.hint-button):not(.link-button):not(.student-card-delete):not(.settings-button):not(.profile-chip):not(.avatar-option):not(.profile-close):not(.student-card):not(.grade-card):not(.topic-card):not(.level-card):not(.style-card) {
   /* Every matching element gets the identical animation; a negative delay equal to its
      own index means each one is already partway through its own timeline from frame
      one — the classic "staggered cycle" trick, no JS timing involved. The delay-per-step
@@ -1074,8 +1066,8 @@ button:not(.app-version):not(.speak-button):not(.hint-button):not(.link-button):
 .level-card:active,
 .style-card:focus,
 .style-card:active,
-button:not(.app-version):not(.speak-button):not(.hint-button):not(.link-button):not(.student-card-delete):not(.settings-button):not(.student-card):not(.grade-card):not(.topic-card):not(.level-card):not(.style-card):focus,
-button:not(.app-version):not(.speak-button):not(.hint-button):not(.link-button):not(.student-card-delete):not(.settings-button):not(.student-card):not(.grade-card):not(.topic-card):not(.level-card):not(.style-card):active {
+button:not(.app-version):not(.speak-button):not(.hint-button):not(.link-button):not(.student-card-delete):not(.settings-button):not(.profile-chip):not(.avatar-option):not(.profile-close):not(.student-card):not(.grade-card):not(.topic-card):not(.level-card):not(.style-card):focus,
+button:not(.app-version):not(.speak-button):not(.hint-button):not(.link-button):not(.student-card-delete):not(.settings-button):not(.profile-chip):not(.avatar-option):not(.profile-close):not(.student-card):not(.grade-card):not(.topic-card):not(.level-card):not(.style-card):active {
   animation-play-state: paused;
 }
 
@@ -1097,7 +1089,7 @@ button:not(.app-version):not(.speak-button):not(.hint-button):not(.link-button):
   .topic-card:hover,
   .level-card:hover,
   .style-card:hover,
-  button:not(.app-version):not(.speak-button):not(.hint-button):not(.link-button):not(.student-card-delete):not(.settings-button):not(.student-card):not(.grade-card):not(.topic-card):not(.level-card):not(.style-card):hover {
+  button:not(.app-version):not(.speak-button):not(.hint-button):not(.link-button):not(.student-card-delete):not(.settings-button):not(.profile-chip):not(.avatar-option):not(.profile-close):not(.student-card):not(.grade-card):not(.topic-card):not(.level-card):not(.style-card):hover {
     animation-play-state: paused;
   }
 }
@@ -1335,6 +1327,118 @@ body:has(
 .history-link {
   display: block;
   margin: 14px 0 24px auto;
+}
+
+.topic-meta .history-link {
+  margin: 0;
+}
+
+/* docs/features/weekly-lesson-cap/ — the history link and the lessons-left chip share one
+   row (same height the link alone had), so adding the chip costs no vertical space. */
+.topic-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 14px 0 24px;
+}
+
+.lessons-chip {
+  padding: 4px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--code-bg);
+  color: var(--text-h);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.lessons-chip-empty {
+  border-color: var(--accent-border);
+  font-weight: 600;
+}
+
+.lessons-dialog {
+  text-align: right;
+}
+
+.lessons-sub {
+  margin: 0 0 16px;
+  font-size: 17px;
+  color: var(--text-h);
+}
+
+.lessons-gate-math {
+  display: inline-block;
+  unicode-bidi: isolate;
+  font-weight: 600;
+}
+
+.lessons-wrong {
+  margin: 0 0 8px;
+  color: #b3261e;
+}
+
+.lessons-gate-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.lessons-gate-input {
+  font: inherit;
+  font-size: 20px;
+  text-align: center;
+  direction: ltr;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--text-h);
+}
+
+.lessons-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+}
+
+.lessons-packs {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lessons-pack {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+
+.lessons-pack-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.lessons-pack-title {
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.lessons-pack-shared,
+.lessons-pack-price {
+  font-size: 14px;
 }
 
 .topic-grid {
@@ -2409,6 +2513,15 @@ body:has(
   unicode-bidi: isolate;
 }
 
+/* Vertex / line names (A, B, C, a, b, c): the letters the question text uses, so the
+   student can map text to picture. Slightly larger and darker than the angle numbers —
+   the figure is shrunk to ~100px tall on the practice screen, and these must survive it. */
+.as-vertex {
+  font-size: 18px;
+  font-weight: 700;
+  fill: var(--text-h);
+}
+
 .ps-track {
   fill: none;
   stroke: var(--text-h);
@@ -2758,4 +2871,88 @@ body:has(
   padding-bottom: 8px;
   margin-bottom: 16px;
   border-bottom: 1px dashed var(--border);
+}
+
+/* ---- question screen fits one phone screen (quiet-speaker-lesson-parity, round 2) ----
+   Reported live: a question with a figure (angles, clock) pushed the keypad below the
+   fold and the whole page scrolled. The screen is now exactly one viewport tall; every
+   region keeps its natural size EXCEPT the figure, which is the one thing that can shrink
+   (an SVG scales without losing meaning). Anything that genuinely grows afterwards — the
+   hints and the post-answer explanation — scrolls inside .practice, not the page. */
+.practice {
+  height: 100svh;
+  overflow-y: auto;
+  padding: 12px 24px 10px;
+}
+
+.practice > * {
+  flex-shrink: 0;
+}
+
+.practice > .angle-figure-inline,
+.practice > .clock-face,
+.practice > .figure-slot {
+  flex: 1 1 0;
+  flex-shrink: 1;
+  min-height: 72px;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+.practice > .angle-figure-inline > svg,
+.practice > .clock-face > svg {
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+}
+
+.practice-header {
+  margin-bottom: 6px;
+}
+
+.problem-box-card {
+  margin: 8px 0 10px;
+}
+
+.number-pad {
+  margin-top: 6px;
+  gap: 6px;
+}
+
+.number-pad-button {
+  height: 44px;
+}
+
+.hint-button {
+  margin-top: 8px;
+}
+
+.practice .prompt-rtl {
+  font-size: 19px;
+  line-height: 140%;
+}
+
+.practice .practice-header {
+  padding-block: 4px;
+}
+
+.practice > .angle-figure-inline,
+.practice > .clock-face,
+.practice > .figure-slot {
+  min-height: 56px;
+}
+
+/* Once the explanation is on screen the page is meant to scroll inside .practice, so the
+   figure goes back to its natural size instead of being squeezed to its minimum. */
+.practice:not(:has(.number-pad)) > .angle-figure-inline,
+.practice:not(:has(.number-pad)) > .clock-face,
+.practice:not(:has(.number-pad)) > .figure-slot {
+  flex: 0 0 auto;
+  min-height: 0;
+  overflow: visible;
+}
+
+.practice:not(:has(.number-pad)) > .angle-figure-inline > svg,
+.practice:not(:has(.number-pad)) > .clock-face > svg {
+  height: auto;
 }

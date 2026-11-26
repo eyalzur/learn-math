@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { StudentPicker } from "./components/StudentPicker";
 import { GradePicker } from "./components/GradePicker";
 import { TopicPicker } from "./components/TopicPicker";
@@ -9,6 +9,9 @@ import { History } from "./components/History";
 import { Practice } from "./components/Practice";
 import { Result } from "./components/Result";
 import { SettingsDialog } from "./components/SettingsDialog";
+import { ProfileDrawer } from "./components/ProfileDrawer";
+import { avatarFor } from "./data/avatars";
+import { LessonsDialog, type LessonsDialogMode } from "./components/LessonsDialog";
 import { grades, gradeById } from "./data/curriculum";
 import type { Student, Topic, Question } from "./data/curriculum";
 import type { Lesson } from "./data/style";
@@ -21,6 +24,13 @@ import {
   saveAdaptiveTier,
   clearStudent as clearStudentAdaptiveTiers,
 } from "./data/adaptiveProgress";
+import {
+  loadInterruptedSession,
+  saveInterruptedSession,
+  clearInterruptedSession,
+  clearStudent as clearStudentInterruptedSessions,
+} from "./data/interruptedSession";
+import { lessonAllowance } from "./data/lessonAllowance";
 import { userStore } from "./data/userStore";
 import { startIdleSpotlightObserver } from "./data/idleSpotlight";
 import {
@@ -96,8 +106,20 @@ type Screen =
   | { name: "levels"; topic: Topic | null }
   | { name: "styles"; topic: Topic }
   | { name: "history" }
-  | { name: "practice"; topic: Topic | null; lesson: Lesson }
-  | { name: "result"; topic: Topic | null; lesson: Lesson; correctCount: number };
+  | {
+      name: "practice";
+      topic: Topic | null;
+      lesson: Lesson;
+      /** The level/style `id` this lesson was entered with — absent for an adaptive topic
+       *  (no level/style to pick). Carried on `screen` so the answer handler below knows
+       *  which key to write the interrupted-session snapshot to; see
+       *  docs/features/resume-interrupted-practice/architecture.md. */
+      lessonKey?: string;
+      /** Where to resume into `Practice` — set only when entering on top of a saved,
+       *  not-yet-finished run. Absent means start at question 1 as always. */
+      resume?: { index: number; correctCount: number };
+    }
+  | { name: "result"; topic: Topic | null; lesson: Lesson; lessonKey?: string; correctCount: number };
 
 /**
  * Where a topic is entered, and where leaving it returns to — computed, never remembered.
@@ -212,6 +234,15 @@ function App() {
    *  (docs/features/notebook-hold-to-zoom/architecture.md, "סבב ו׳" — that warning was about
    *  a changing `key` specifically, not about where the state lives). */
   const [settingsOpen, setSettingsOpen] = useState(false);
+  /** The profile drawer (docs/features/student-profile-avatar/) — lives here for the same
+   *  reason as `settingsOpen`: the chip that opens it sits on two sibling screens. */
+  const [profileOpen, setProfileOpen] = useState(false);
+  /** The weekly-lessons dialog (docs/features/weekly-lesson-cap/) — opened by the cap
+   *  stopping a practice ("blocked") or by tapping the counter chip ("info"). Lives here,
+   *  like `settingsOpen`, so it can sit on top of any screen. The tick re-reads the stored
+   *  allowance after a pack is granted. */
+  const [lessonsDialog, setLessonsDialog] = useState<LessonsDialogMode | null>(null);
+  const [, setLessonsTick] = useState(0);
 
   /** Live state for a topic's runtime-generated questions — `null` outside one. Not part
    *  of `Screen`, for the same reason `gradeId` isn't: the questions for an adaptive
@@ -226,6 +257,18 @@ function App() {
     questions: Question[];
   } | null>(null);
 
+  /** Every way into a practice asks this first: at 0 lessons left the weekly-lessons
+   *  dialog opens instead, and nothing starts. Browsing, lessons and history never ask. */
+  function canStartPractice(): boolean {
+    if (student && lessonAllowance.remaining(student.id) <= 0) {
+      setLessonsDialog("blocked");
+      return false;
+    }
+    return true;
+  }
+
+  const paceLevel = paceLevelFor(student?.id ?? "");
+
   function selectStudent(next: Student) {
     rememberStudent(next.id);
     setStudent(next);
@@ -237,8 +280,8 @@ function App() {
   /** New user: added to the roster but deliberately not auto-selected — stays on the
    *  picker (design.md's explicit call), so creating several students in a row doesn't
    *  jump into practice after each one. */
-  function createStudent(name: string, gradeId: string) {
-    userStore.create(name, gradeId).then((created) => {
+  function createStudent(name: string, gradeId: string, avatar?: string) {
+    userStore.create(name, gradeId, avatar).then((created) => {
       setStudents((prev) => [...prev, created]);
     });
   }
@@ -252,9 +295,20 @@ function App() {
     });
     clearStudentProgress(id);
     clearStudentAdaptiveTiers(id);
+    clearStudentInterruptedSessions(id);
+  }
+
+  /** Saved immediately, and mirrored into both the roster and the current student so the
+   *  chip and the picker's card update without a reload. */
+  function changeAvatar(avatarId: string) {
+    if (!student) return;
+    userStore.setAvatar(student.id, avatarId);
+    setStudents((prev) => prev.map((s) => (s.id === student.id ? { ...s, avatar: avatarId } : s)));
+    setStudent({ ...student, avatar: avatarId });
   }
 
   function switchStudent() {
+    setProfileOpen(false);
     rememberStudent(null);
     setStudent(null);
     setGradeId(null);
@@ -281,8 +335,35 @@ function App() {
    *  caller's unchanged entry point, now just a thin wrapper over this. */
   function enterTopicInGrade(topic: Topic, forGradeId: string) {
     if (topic.adaptive) {
+      if (!canStartPractice()) return;
       if (student) rememberMenuPosition(student.id, { gradeId: forGradeId });
       const { adaptive } = topic;
+      // An interrupted run (if fresh and still valid for today's content) always wins over
+      // starting a new one at a saved difficulty tier — resuming the exact same run makes
+      // "which tier to start a *new* run at" moot. See
+      // docs/features/resume-interrupted-practice/architecture.md.
+      const interrupted = student
+        ? loadInterruptedSession(student.id, forGradeId, topic.id, undefined, {
+            questionCount: adaptive.questionCount,
+            minDifficulty: adaptive.minDifficulty,
+            maxDifficulty: adaptive.maxDifficulty,
+          })
+        : null;
+      if (interrupted) {
+        setAdaptiveSession({
+          difficulty: interrupted.difficulty ?? adaptive.initialDifficulty,
+          streak: interrupted.streak ?? 0,
+          answeredCount: interrupted.answeredCount,
+          questions: interrupted.questions,
+        });
+        setScreen({
+          name: "practice",
+          topic,
+          lesson: { title: topic.title, questions: interrupted.questions },
+          resume: { index: interrupted.answeredCount, correctCount: interrupted.correctCount },
+        });
+        return;
+      }
       const savedTier = student ? loadAdaptiveTier(student.id, forGradeId, topic.id) : null;
       const startingDifficulty =
         savedTier === null
@@ -354,10 +435,16 @@ function App() {
 
   /** The one thing an adaptive lesson adds to answering a question: the next not-yet-seen
    *  question is regenerated at the updated difficulty. Questions already shown are left
-   *  alone — only what the child hasn't reached yet ever changes under them. */
-  function handleAdaptiveAnswered(topic: Topic, correct: boolean) {
-    const adaptive = topic.adaptive;
-    if (!adaptive || !adaptiveSession) return;
+   *  alone — only what the child hasn't reached yet ever changes under them.
+   *
+   *  Computes `difficulty`/`streak`/`questions` as plain local values, read from the
+   *  `adaptiveSession` closure rather than from `prev` inside an updater — the same
+   *  simplification `adaptive-lesson-start` already made (there is only one answer being
+   *  processed at a time), needed here so the freshly computed values are also available,
+   *  synchronously, to `handleAnswered` below for the interrupted-session write. */
+  function handleAdaptiveAnswered(topic: Topic & { adaptive: NonNullable<Topic["adaptive"]> }, correct: boolean) {
+    const { adaptive } = topic;
+    if (!adaptiveSession) return null;
     const streak = correct
       ? adaptiveSession.streak > 0
         ? adaptiveSession.streak + 1
@@ -366,28 +453,64 @@ function App() {
         ? adaptiveSession.streak - 1
         : -1;
     const difficulty = adaptive.nextDifficulty(adaptiveSession.difficulty, correct, streak, paceLevel);
+    const answeredCount = adaptiveSession.answeredCount + 1;
+    // Only the question at exactly `answeredCount` is ever shown as generated here — every
+    // index past it gets regenerated again (and discarded) the next time this runs, so only
+    // this one needs to avoid repeating the question just answered. See
+    // docs/features/no-repeat-consecutive-questions/architecture.md, "Edge Cases".
+    const questions = adaptiveSession.questions.map((q, i) => {
+      if (i < answeredCount) return q;
+      if (i === answeredCount) {
+        return withoutRepeatingPrompt(
+          () => adaptive.generate(difficulty),
+          adaptiveSession.questions[answeredCount - 1].prompt,
+        );
+      }
+      return adaptive.generate(difficulty);
+    });
     // Written on every answer, not only at the end of a session — this is also the save
     // point for a session abandoned via "חזרה" (there is no separate save there), see
     // docs/features/adaptive-lesson-start/architecture.md.
     if (student && gradeId) saveAdaptiveTier(student.id, gradeId, topic.id, difficulty);
-    setAdaptiveSession((prev) => {
-      if (!prev) return prev;
-      const answeredCount = prev.answeredCount + 1;
-      // Only the question at exactly `answeredCount` is ever shown as generated here — every
-      // index past it gets regenerated again (and discarded) the next time this runs, so only
-      // this one needs to avoid repeating the question just answered. See
-      // docs/features/no-repeat-consecutive-questions/architecture.md, "Edge Cases".
-      const questions = prev.questions.map((q, i) => {
-        if (i < answeredCount) return q;
-        if (i === answeredCount) {
-          return withoutRepeatingPrompt(() => adaptive.generate(difficulty), prev.questions[answeredCount - 1].prompt);
-        }
-        return adaptive.generate(difficulty);
-      });
-      return { difficulty, streak, answeredCount, questions };
-    });
+    setAdaptiveSession({ difficulty, streak, answeredCount, questions });
+    return { difficulty, streak, questions };
   }
 
+  /** Fires after every answer, for every lesson — not only adaptive ones. Runs the
+   *  adaptive-only difficulty bookkeeping above when relevant, then always persists the
+   *  interrupted-session snapshot a later visit can resume from. See
+   *  docs/features/resume-interrupted-practice/architecture.md. */
+  function handleAnswered(
+    topic: Topic | null,
+    lesson: Lesson,
+    lessonKey: string | undefined,
+    correct: boolean,
+    progress: { answeredCount: number; correctCount: number },
+  ) {
+    if (!topic) return;
+    let questions = lesson.questions;
+    let difficulty: number | undefined;
+    let streak: number | undefined;
+    if (topic.adaptive) {
+      const result = handleAdaptiveAnswered(topic as Topic & { adaptive: NonNullable<Topic["adaptive"]> }, correct);
+      if (result) {
+        questions = result.questions;
+        difficulty = result.difficulty;
+        streak = result.streak;
+      }
+    }
+    if (student && gradeId) {
+      saveInterruptedSession(student.id, gradeId, topic.id, lessonKey, {
+        answeredCount: progress.answeredCount,
+        correctCount: progress.correctCount,
+        questions,
+        difficulty,
+        streak,
+      });
+    }
+  }
+
+  function renderScreen(): ReactNode {
   if (student === null) {
     return (
       <StudentPicker
@@ -398,6 +521,22 @@ function App() {
       />
     );
   }
+
+  /** Rendered next to whichever main screen shows the chip. `extras` is the extension point
+   *  for more profile items (see docs/features/student-profile-avatar/architecture.md). */
+  const profileDrawer = profileOpen ? (
+    <ProfileDrawer
+      student={student}
+      gradeLabel={grades.find((g) => g.id === student.gradeId)?.label ?? ""}
+      onClose={() => setProfileOpen(false)}
+      onAvatarChange={changeAvatar}
+      onOpenHistory={() => {
+        setProfileOpen(false);
+        setScreen({ name: "history" });
+      }}
+      onSwitchStudent={switchStudent}
+    />
+  ) : null;
 
   // Checked before the grade gate below, not after: history needs a student but never a
   // grade, and the grade-choice screen's own history link would otherwise be unreachable
@@ -411,20 +550,34 @@ function App() {
   // into `Screen`, see the `gradeId` declaration above.
   if (gradeId === null) {
     return (
-      <GradePicker
-        grades={grades}
-        onSelect={(g) => chooseGrade(g.id)}
-        onBack={switchStudent}
-        onHistory={() => setScreen({ name: "history" })}
-      />
+      <>
+        <GradePicker
+          grades={grades}
+          onSelect={(g) => chooseGrade(g.id)}
+          onBack={switchStudent}
+          onHistory={() => setScreen({ name: "history" })}
+          avatar={avatarFor(student)}
+          onOpenProfile={() => setProfileOpen(true)}
+        />
+        {profileDrawer}
+      </>
     );
   }
 
   const grade = grades.find((g) => g.id === gradeId)!;
+  const lessonsLeft = lessonAllowance.remaining(student.id);
   const readAloud = readAloudFor(student.id);
-  const paceLevel = paceLevelFor(student.id);
 
-  function finish(topic: Topic | null, lesson: Lesson, correctCount: number) {
+  function finish(
+    topic: Topic | null,
+    lesson: Lesson,
+    correctCount: number,
+    lessonKey: string | undefined,
+  ) {
+    // A run that reached the result screen is done — no saved position should be offered
+    // back on the next visit (leaving mid-practice, not finishing, is the only thing that
+    // should resume). See docs/features/resume-interrupted-practice/architecture.md.
+    if (student && gradeId && topic) clearInterruptedSession(student.id, gradeId, topic.id, lessonKey);
     recordPractice({
       at: new Date().toISOString(),
       studentId: student!.id,
@@ -446,7 +599,7 @@ function App() {
     // handleAdaptiveAnswered) — clearing this in-memory session doesn't lose it, see
     // docs/features/adaptive-lesson-start/architecture.md.
     setAdaptiveSession(null);
-    setScreen({ name: "result", topic, lesson, correctCount });
+    setScreen({ name: "result", topic, lesson, lessonKey, correctCount });
   }
 
   // Shared between whichever screen's own ⚙️ button decides whether to show itself (via
@@ -478,8 +631,13 @@ function App() {
           backLabel="← חזרה"
           onHistory={() => setScreen({ name: "history" })}
           onOpenSettings={() => setSettingsOpen(true)}
+          avatar={avatarFor(student)}
+          onOpenProfile={() => setProfileOpen(true)}
+          lessonsLeft={lessonsLeft}
+          onOpenLessons={() => setLessonsDialog("info")}
           {...settingsProps}
         />
+        {profileDrawer}
         {settingsOpen && <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} {...settingsProps} />}
       </>
     );
@@ -511,7 +669,18 @@ function App() {
         heading={topic.title}
         subheading={grade.label}
         levels={topic.levels}
-        onSelect={(level) => setScreen({ name: "practice", topic, lesson: level })}
+        onSelect={(level) => {
+          if (!canStartPractice()) return;
+          const interrupted =
+            student && gradeId ? loadInterruptedSession(student.id, gradeId, topic.id, level.id) : null;
+          setScreen({
+            name: "practice",
+            topic,
+            lesson: interrupted ? { title: level.title, questions: interrupted.questions } : level,
+            lessonKey: level.id,
+            resume: interrupted ? { index: interrupted.answeredCount, correctCount: interrupted.correctCount } : undefined,
+          });
+        }}
         onBack={() => {
           if (student && gradeId) rememberMenuPosition(student.id, { gradeId });
           setScreen({ name: "home" });
@@ -527,13 +696,21 @@ function App() {
         heading={topic.title}
         subheading={grade.label}
         styles={stylesOf(topic)}
-        onSelect={(style) =>
+        onSelect={(style) => {
+          if (!canStartPractice()) return;
+          const interrupted =
+            student && gradeId ? loadInterruptedSession(student.id, gradeId, topic.id, style.id) : null;
           setScreen({
             name: "practice",
             topic,
-            lesson: { title: style.title, questions: style.questions },
-          })
-        }
+            lesson: {
+              title: style.title,
+              questions: interrupted ? interrupted.questions : style.questions,
+            },
+            lessonKey: style.id,
+            resume: interrupted ? { index: interrupted.answeredCount, correctCount: interrupted.correctCount } : undefined,
+          });
+        }}
         onBack={() => {
           if (student && gradeId) rememberMenuPosition(student.id, { gradeId });
           setScreen({ name: "home" });
@@ -555,7 +732,7 @@ function App() {
       <>
         <Practice
           lesson={lesson}
-          onFinish={(correctCount) => finish(topic, lesson, correctCount)}
+          onFinish={(correctCount) => finish(topic, lesson, correctCount, screen.lessonKey)}
           onExit={() => {
             setAdaptiveSession(null);
             setScreen(insideTopic(topic));
@@ -563,7 +740,9 @@ function App() {
           readAloud={readAloud}
           studentId={student.id}
           onDisableReadAloud={() => settingsProps.onReadAloudChange(false)}
-          onAnswered={topic?.adaptive ? (correct) => handleAdaptiveAnswered(topic, correct) : undefined}
+          onAnswered={(correct, progress) => handleAnswered(topic, lesson, screen.lessonKey, correct, progress)}
+          initialIndex={screen.resume?.index}
+          initialCorrectCount={screen.resume?.correctCount}
         />
         {settingsOpen && <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} {...settingsProps} />}
       </>
@@ -571,12 +750,15 @@ function App() {
   }
 
   if (screen.name === "result") {
-    const { topic, lesson, correctCount } = screen;
+    const { topic, lesson, lessonKey, correctCount } = screen;
     return (
       <Result
         lesson={lesson}
         correctCount={correctCount}
-        onRetry={() => (topic?.adaptive ? enterTopic(topic) : setScreen({ name: "practice", topic, lesson }))}
+        onRetry={() => {
+          if (topic?.adaptive) enterTopic(topic);
+          else if (canStartPractice()) setScreen({ name: "practice", topic, lesson, lessonKey });
+        }}
         onHome={() => setScreen(insideTopic(topic))}
       />
     );
@@ -592,6 +774,24 @@ function App() {
     onHistory={() => setScreen({ name: "history" })}
     onOpenSettings={() => setSettingsOpen(true)}
   />;
+  }
+
+  return (
+    <>
+      {renderScreen()}
+      {student && lessonsDialog && (
+        <LessonsDialog
+          mode={lessonsDialog}
+          remaining={lessonAllowance.remaining(student.id)}
+          onGrant={(packId) => {
+            lessonAllowance.grantPack(packId);
+            setLessonsTick((n) => n + 1);
+          }}
+          onClose={() => setLessonsDialog(null)}
+        />
+      )}
+    </>
+  );
 }
 
 export default App;
