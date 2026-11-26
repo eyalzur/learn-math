@@ -85,3 +85,8 @@ test("log groups by date, newest first", () => {
   assert.ok(md.indexOf("2026-11-26") < md.indexOf("2026-11-25"));
   assert.equal(md.match(/## 2026-11-26/g).length, 1);
 });
+
+test("search matches Hebrew prefixes and plurals", () => {
+  const root = bundle({ "traps/a.md": doc({ title: "בדיקות מקביליות", description: "ריצה." }) });
+  assert.equal(search(loadBundle(root), "הבדיקה")[0]?.rel, "/traps/a.md");
+});

@@ -23,6 +23,22 @@ export function norm(s) {
 }
 export const tokens = (s) => norm(s).split(" ").filter(Boolean);
 
+/**
+ * Cheap Hebrew stemming for search. Returns every plausible form of a token: as-is, without its
+ * plural/feminine ending (ים ות ה), and with/without one leading prefix letter (ה ו ב כ ל מ ש).
+ * All variants are indexed; a query token hits if any of its variants does ("בדיקות" ~ "הבדיקה").
+ */
+export function variants(t) {
+  if (!/^[\u05D0-\u05EA]+$/.test(t)) return [t];
+  const noSuffix = (w) => (w.length > 3 && (w.endsWith("ימ") || w.endsWith("ות")) ? w.slice(0, -2) : w.length > 3 && w.endsWith("ה") ? w.slice(0, -1) : w);
+  const out = new Set([t, noSuffix(t)]);
+  if (t.length > 3 && "הובכלמש".includes(t[0])) { out.add(t.slice(1)); out.add(noSuffix(t.slice(1))); }
+  return [...out];
+}
+const STOP = new Set(["מה", "למה", "איך", "מתי", "איפה", "מי", "כמה", "של", "את", "על", "עם", "זה", "זאת", "רק", "גם", "או", "אם", "כי", "לא", "יש", "אני", "הוא", "היא", "אנחנו", "ה", "אל", "מן", "the", "a", "of", "is", "to", "how", "why", "what"]);
+const content = (s) => tokens(s).filter((t) => !STOP.has(t));
+export const stems = (s) => content(s).flatMap(variants);
+
 export function jaccard(a, b) {
   const A = new Set(a), B = new Set(b);
   if (!A.size || !B.size) return 0;
@@ -86,26 +102,29 @@ export function resolveLink(bundle, fromRel, target) {
 
 // ───────── search ─────────
 export function search(bundle, query, k = 5) {
-  const q = tokens(query);
+  const q = content(query).map(variants);
   const qn = norm(query);
   const out = [];
   for (const d of bundle.docs) {
     if (!d.fm || isHidden(d)) continue;
     const title = norm(titleOf(d));
     const aliases = aliasesOf(d).map(norm);
-    const tags = [].concat(d.fm.tags ?? []).map(norm);
-    const desc = tokens(d.fm.description);
-    const body = tokens(d.body);
+    const titleS = new Set(stems(titleOf(d)));
+    const aliasS = new Set(aliasesOf(d).flatMap(stems));
+    const tagS = new Set([].concat(d.fm.tags ?? []).flatMap((t) => stems(String(t))));
+    const descS = new Set(stems(d.fm.description));
+    const bodyS = stems(d.body);
     let score = 0;
     const exact = title === qn || aliases.includes(qn);
     if (exact) score += 100;
-    for (const t of q) {
-      if (title.split(" ").includes(t)) score += 5;
-      if (aliases.some((a) => a.split(" ").includes(t))) score += 5;
-      if (tags.includes(t)) score += 3;
-      if (desc.includes(t)) score += 2;
-      if (norm(d.rel).includes(t)) score += 1;
-      score += Math.min(3, body.filter((b) => b === t).length) * 0.5;
+    for (const vs of q) {
+      const has = (set) => vs.some((v) => set.has(v));
+      if (has(titleS)) score += 5;
+      if (has(aliasS)) score += 5;
+      if (has(tagS)) score += 3;
+      if (has(descS)) score += 2;
+      if (vs.some((v) => norm(d.rel).includes(v))) score += 1;
+      score += Math.min(3, bodyS.filter((b) => vs.includes(b)).length) * 0.5;
     }
     if (score > 0) out.push({ score, exact, rel: d.rel, title: titleOf(d), description: d.fm.description ?? "" });
   }
@@ -210,7 +229,8 @@ export function lint(bundle, { dupes = false } = {}) {
   }
 
   for (const d of [...bundle.docs, ...bundle.reserved.map((r) => ({ ...r, body: r.raw }))]) {
-    for (const m of d.body.matchAll(/\]\(([^)\s]+?)\)/g)) {
+    const prose = d.body.replace(/```[\s\S]*?```/g, "").replace(/`[^`\n]*`/g, "");
+    for (const m of prose.matchAll(/\]\(([^)\s]+?)\)/g)) {
       const target = resolveLink(bundle, d.rel, m[1]);
       if (target && m[1].split("#")[0].endsWith(".md") && !fs.existsSync(target)) err(d.rel, `broken link ${m[1]}`);
     }

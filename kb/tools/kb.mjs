@@ -23,7 +23,7 @@ switch (cmd) {
   case "search": {
     const kIdx = args.indexOf("-k");
     const k = kIdx >= 0 ? Number(args[kIdx + 1]) : 5;
-    const q = args.filter((a, i) => a !== "-k" && i !== kIdx + 1 && !a.startsWith("--")).join(" ");
+    const q = args.filter((a, i) => a !== "-k" && !(kIdx >= 0 && i === kIdx + 1) && !a.startsWith("--")).join(" ");
     const hits = search(loadBundle(root), q, k);
     if (flag("--json")) console.log(JSON.stringify(hits, null, 1));
     else if (!hits.length) console.log("no match");
