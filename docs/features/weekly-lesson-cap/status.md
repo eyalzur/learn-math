@@ -9,9 +9,9 @@
 - [x] Implementation — developer — 2026-11-25
 - [x] Tests — qa — 2026-11-25
 
-**Current phase:** done — ממתין לריוויו (סבב ב׳: מאגר משותף)
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `feature/weekly-lesson-cap`
-**PR:** [#129](https://github.com/eyalzur/learn-math/pull/129)
+**PR:** https://github.com/eyalzur/learn-math/pull/129 — מוזג 2026-11-26
 
 ## Open questions / blockers
 - **Product:** (פתוח, החלטת הורה) האם 5 שיעורים חינם בשבוע נכון? (קבוע יחיד, קל לשינוי)

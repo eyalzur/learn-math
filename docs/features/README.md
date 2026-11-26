@@ -6,6 +6,7 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
+| אותיות קודקוד על ציורי זוויות ומשולשים | 🟢 done — מוזג ל-main | [status](./triangle-vertex-labels/status.md) |
 | רמקול שקט בפינה + שיעור שדומה לתרגול | 🟢 done — מוזג ל-main | [status](./quiet-speaker-lesson-parity/status.md) |
 | שאלה לפני כיבוי הקראה אוטומטית | 🟢 done — מוזג ל-main | [status](./ask-before-disabling-autoread/status.md) |
 | מסכים שמתאימים למסך בלי גלילה | 🟢 done — מוזג ל-main | [status](./no-scroll-screens/status.md) |
@@ -84,4 +85,4 @@ architecture, implementation notes, and tests.
 | חוקי בחירת מספרים לפי קושי — 12 המחוללים האדפטיביים | 🟢 done — מוזג ל-main | [status](./difficulty-number-scaling/status.md) |
 | פתיחת סוגריים בביטויים אלגבריים — מסבירה תהליך ומושגים | 🟢 done — מוזג ל-main | [status](./algebraic-brackets-teaching/status.md) |
 | קושי מסתגל למיקה — שלב א׳ (חיבור/חיסור עד 10, חיסור עד 100) | 🟢 done — מוזג ל-main | [status](./mika-adaptive-difficulty/status.md) |
-| מכסת שיעורים שבועית (שיעורים נוספים משותפים לכל הבית) | 🟡 ממתין לריוויו | [status](./weekly-lesson-cap/status.md) |
+| מכסת שיעורים שבועית (שיעורים נוספים משותפים לכל הבית) | 🟢 done — מוזג ל-main | [status](./weekly-lesson-cap/status.md) |

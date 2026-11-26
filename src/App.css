@@ -2513,6 +2513,15 @@ body:has(
   unicode-bidi: isolate;
 }
 
+/* Vertex / line names (A, B, C, a, b, c): the letters the question text uses, so the
+   student can map text to picture. Slightly larger and darker than the angle numbers —
+   the figure is shrunk to ~100px tall on the practice screen, and these must survive it. */
+.as-vertex {
+  font-size: 18px;
+  font-weight: 700;
+  fill: var(--text-h);
+}
+
 .ps-track {
   fill: none;
   stroke: var(--text-h);
