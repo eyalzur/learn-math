@@ -85,4 +85,4 @@ Firestore (תחת `households/{hid}`):
 8. **פריסה (לפני "חי"):** בדומה לשרת המחברת — חשבון שירות ו-Workload Identity Federation ל-GitHub Actions, שיפרוס `firestore.rules` ו-`functions/` בלי סוד בריפו. את זה נכתוב יחד כשמגיעים לשם.
 
 ## Open Questions (נשארו)
-ראו "Open Questions" ב-`product-spec.md` (4 שאלות).
+אין שאלות מוצר פתוחות. שאלות טכניות ל-`tech-lead`: מה מחושב בדפדפן, ומי מאמת תשובה (ראו `product-spec.md`).
