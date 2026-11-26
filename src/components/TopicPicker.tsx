@@ -1,5 +1,6 @@
 import type { Topic } from "../data/curriculum";
 import { hasAnySettings } from "../lib/settingsVisibility";
+import { lessonsLeftText } from "../data/lessonAllowance";
 import { statsByTopic, starsForAccuracy } from "../data/progress";
 
 interface TopicPickerProps {
@@ -28,6 +29,10 @@ interface TopicPickerProps {
   /** Opens the settings dialog — owned and rendered by `App.tsx`, not this component. See
    *  docs/features/notebook-nav-buttons-visibility/architecture.md. */
   onOpenSettings: () => void;
+  /** Lessons left this week and the tap handler for the chip showing it — see
+   *  docs/features/weekly-lesson-cap/. Both absent → no chip. */
+  lessonsLeft?: number;
+  onOpenLessons?: () => void;
 }
 
 export function TopicPicker({
@@ -41,6 +46,8 @@ export function TopicPicker({
   readAloud,
   onReadAloudChange,
   onOpenSettings,
+  lessonsLeft,
+  onOpenLessons,
 }: TopicPickerProps) {
   /* Whether there is anything to open a dialog for at all — the invariant that the ⚙️
      button never leads to an empty dialog. Shared with `SettingsDialog` itself via the
@@ -71,11 +78,22 @@ export function TopicPicker({
           </button>
         )}
       </div>
-      {onHistory && (
-        <button className="link-button history-link" onClick={onHistory}>
-          ההתקדמות שלי →
-        </button>
-      )}
+      <div className="topic-meta">
+        {onHistory && (
+          <button className="link-button history-link" onClick={onHistory}>
+            ההתקדמות שלי →
+          </button>
+        )}
+        {lessonsLeft !== undefined && onOpenLessons && (
+          <button
+            type="button"
+            className={`lessons-chip ${lessonsLeft === 0 ? "lessons-chip-empty" : ""}`}
+            onClick={onOpenLessons}
+          >
+            {lessonsLeftText(lessonsLeft)}
+          </button>
+        )}
+      </div>
 
       <h1>מה נתרגל היום?</h1>
 

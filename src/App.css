@@ -1329,6 +1329,118 @@ body:has(
   margin: 14px 0 24px auto;
 }
 
+.topic-meta .history-link {
+  margin: 0;
+}
+
+/* docs/features/weekly-lesson-cap/ — the history link and the lessons-left chip share one
+   row (same height the link alone had), so adding the chip costs no vertical space. */
+.topic-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 14px 0 24px;
+}
+
+.lessons-chip {
+  padding: 4px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--code-bg);
+  color: var(--text-h);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.lessons-chip-empty {
+  border-color: var(--accent-border);
+  font-weight: 600;
+}
+
+.lessons-dialog {
+  text-align: right;
+}
+
+.lessons-sub {
+  margin: 0 0 16px;
+  font-size: 17px;
+  color: var(--text-h);
+}
+
+.lessons-gate-math {
+  display: inline-block;
+  unicode-bidi: isolate;
+  font-weight: 600;
+}
+
+.lessons-wrong {
+  margin: 0 0 8px;
+  color: #b3261e;
+}
+
+.lessons-gate-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.lessons-gate-input {
+  font: inherit;
+  font-size: 20px;
+  text-align: center;
+  direction: ltr;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--text-h);
+}
+
+.lessons-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+}
+
+.lessons-packs {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lessons-pack {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+
+.lessons-pack-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.lessons-pack-title {
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.lessons-pack-shared,
+.lessons-pack-price {
+  font-size: 14px;
+}
+
 .topic-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));

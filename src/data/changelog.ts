@@ -19,6 +19,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.63.0",
+    icon: "🎟️",
+    description:
+      "יש מכסה של 5 שיעורים בשבוע לכל תלמיד/ה. כשהיא נגמרת, הורה יכול לאשר עוד 10 שיעורים (כרגע בחינם) — ואלה משותפים לכל התלמידים באפליקציה.",
+  },
+  {
     version: "1.62.1",
     icon: "🔺",
     description:
