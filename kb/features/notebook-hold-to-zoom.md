@@ -4,11 +4,13 @@ title: "זום זמני בהחזקת מגע — התקרבות למחברת"
 description: "מגע שנשאר במקום לרגע קצר בתחילת הכתיבה מתקרב זמנית לתצוגה ממוקדת יותר, וחוזר בדיוק למה שהיה כשמרימים את האצבע — מחווה של התמקדות בכתיבה מקרוב."
 tags: [feature, notebook, hold, zoom]
 aliases: ["notebook-hold-to-zoom"]
-status: stable
+status: deprecated
 sources:
   - {resource: ../../docs/features/notebook-hold-to-zoom/status.md, hash: "120b68b1"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
+> ⚠️ **הוסר** — מחברת הציור הוחלפה ב-[תרגול בתשובה סופית](/features/scored-answer-practice.md).
+
 # סיכום
 מגע שנשאר במקום לרגע קצר בתחילת הכתיבה מתקרב זמנית לתצוגה ממוקדת יותר, וחוזר בדיוק למה שהיה כשמרימים את האצבע — מחווה של התמקדות בכתיבה מקרוב.
 

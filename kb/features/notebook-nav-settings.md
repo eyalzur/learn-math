@@ -4,11 +4,13 @@ title: "הגדרת מהירות כפתורי הניווט במחברת"
 description: "בורר מהירות חדש בדיאלוג ⚙️ הקיים — קובע כמה רחוק/מהר כפתורי הכיוון (PR #78) מזיזים את התצוגה, גם בהקשה וגם בהחזקה."
 tags: [feature, notebook, nav, settings]
 aliases: ["notebook-nav-settings"]
-status: stable
+status: deprecated
 sources:
   - {resource: ../../docs/features/notebook-nav-settings/status.md, hash: "1cd0eea0"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
+> ⚠️ **הוסר** — מחברת הציור הוחלפה ב-[תרגול בתשובה סופית](/features/scored-answer-practice.md).
+
 # סיכום
 בורר מהירות חדש בדיאלוג ⚙️ הקיים — קובע כמה רחוק/מהר כפתורי הכיוון (PR #78) מזיזים את התצוגה, גם בהקשה וגם בהחזקה.
 

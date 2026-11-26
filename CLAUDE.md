@@ -49,16 +49,16 @@ React + TypeScript + Vite. **קראו את הקובץ הזה לפני שנוגע
 src/data/       curriculum.ts (תלמידים, כיתות; Grade = איחוד מבחין topics/levels) · grade1/2/6/8.ts (בנקי שאלות)
                 level.ts · explain.ts · progress.ts · adaptive*.ts · speech.ts   (מפה מלאה: kb/topics/data-structure.md)
 src/components/ StudentPicker · TopicPicker · LevelPicker · Practice · Result · History
-server/         Node+Express ב-Cloud Run (/render-page, /read-page)      docs/features/  מסמך לכל פיצ'ר (README = אינדקס)
+server/         Node+Express ב-Cloud Run — שרת הקראה (/synthesize)         docs/features/  מסמך לכל פיצ'ר (README = אינדקס)
 kb/             בסיס הידע (OKF v0.2) + kb/tools                          .claude/        skills ו-agents
 ```
 **לכל שאלה חייב להיות `analogy`** — שדה חובה, הקומפיילר מסרב לשאלה בלי דימוי מהחיים.
 
 ## אילוצים שאינם משתנים
 * **האתר נשאר סטטי ב-GitHub Pages.** הקראה ב-`speechSynthesis`; ציורים והסברים מחושבים בדפדפן.
-* **מפתח API לעולם לא בדפדפן ולא בריפו** (השרת מאומת דרך Workload Identity Federation).
-* **הילד לעולם לא ממתין לשרת** — ההסבר הקיים מוצג מיד; יוצא מן הכלל רק פעולה שהילד/ה יזם/ה ("שלח למורה").
-* הצד השרת: [`kb/infra/notebook-server.md`](kb/infra/notebook-server.md).
+* **מפתח API לעולם לא בדפדפן ולא בריפו** (השרת רץ בזהות גוגל, בלי מפתח).
+* **הילד לעולם לא ממתין לשרת** — ההקראה נופלת בשקט להקראה המובנית. (⚠️ צפוי להשתנות עם מנוי הורים: שאלות בשרת, תרגול דורש חיבור — מעדכנים כשממוזג.)
+* הצד השרת: [`kb/infra/hebrew-tts-server.md`](kb/infra/hebrew-tts-server.md). (שרת המחברת והקריאה ב-Claude הוסרו עם `scored-answer-practice`.)
 
 ## מה פתוח
 **רשימת הרעיונות והבקשות שטרם התחילו:** `docs/BACKLOG.md` — קראו אותו בתחילת סשן. (מנוי הורים: ענף `feature/parent-subscription`, החלטות התקבלו ב-2026-11-26, מסמכים בלבד.)
@@ -68,9 +68,6 @@ kb/             בסיס הידע (OKF v0.2) + kb/tools                         
 ### מתוכנן ומאושר, טרם נבנה
 * **גל ב׳ של הסגנונות** — כיתות ו׳ ו-ח׳. המשתמש יכתוב שאלות חדשות למלא סגנונות דלילים (ב"בעיות מילוליות" אין סגנון עם `3` שאלות), ולכן זו עבודת תוכן. ראו `docs/features/style-lessons/product-spec.md`.
 
-### עוד לא התחיל
-* **מחברת בכתב יד — שיחה דו-כיוונית.** מסך מחברת שבו ה"מורה" (LLM) מנהל/ת חילופי דברים עם התלמיד/ה, לא תגובה חד-פעמית. השלב הראשון (שיקוף חד-כיווני של מה שנקרא) כבר מוזג — `docs/features/notebook-teacher-understanding/`.
-
 ### רק המשתמש יכול לעשות
 * **הגנת בראנץ'.** `main` נפרס אוטומטית ועדיין אין דרישה שהבדיקות יעברו לפני מיזוג: Settings → Branches → `main` → require `check` + `test`.
-* **תקרת שימוש ב-Anthropic.** לוודא ש-`$5`/חודש מוגדר ב-Rate limits של ה-workspace `Default` (לא אומת).
+* **ניקוי משאבי Claude ישנים.** אין היום קוד שקורא ל-Claude. אפשר למחוק את ה-federation rule ב-Anthropic Console ואת חשבון השירות `notebook-server-claude@learn-math-506923` (וכן לבדוק שה-pool של WIF עדיין נחוץ לפריסת שרת ההקראה).

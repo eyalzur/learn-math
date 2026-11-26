@@ -4,11 +4,13 @@ title: "כפתורי פעולה מחוץ לסרגל הכלים + מסך מלא �
 description: "\"שלח למורה\" ו\"הבא\" יוצאים מסרגל הכלים לכפתור משלהם, ומסך מלא נשמר מעבר לשאלה הבאה."
 tags: [feature, notebook, toolbar, actions]
 aliases: ["notebook-toolbar-actions"]
-status: stable
+status: deprecated
 sources:
   - {resource: ../../docs/features/notebook-toolbar-actions/status.md, hash: "d486b62c"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
+> ⚠️ **הוסר** — מחברת הציור הוחלפה ב-[תרגול בתשובה סופית](/features/scored-answer-practice.md).
+
 # סיכום
 "שלח למורה" ו"הבא" יוצאים מסרגל הכלים לכפתור משלהם, ומסך מלא נשמר מעבר לשאלה הבאה.
 

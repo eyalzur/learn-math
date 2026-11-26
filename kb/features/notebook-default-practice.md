@@ -4,11 +4,13 @@ title: "מחברת כמצב התרגול היחיד"
 description: "התלמיד/ה כותב/ת את כל הפתרון (כולל התשובה) רק במחברת; המורה קוראת, משקפת מה הבינה, מצביעה על טעות בדרך אם יש, והתוצאה הסופית עוברת לבדיקה המקומית הקיימת."
 tags: [feature, notebook, default, practice]
 aliases: ["notebook-default-practice"]
-status: stable
+status: deprecated
 sources:
   - {resource: ../../docs/features/notebook-default-practice/status.md, hash: "f15bdadb"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
+> ⚠️ **הוסר** — מחברת הציור הוחלפה ב-[תרגול בתשובה סופית](/features/scored-answer-practice.md).
+
 # סיכום
 התלמיד/ה כותב/ת את כל הפתרון (כולל התשובה) רק במחברת; המורה קוראת, משקפת מה הבינה, מצביעה על טעות בדרך אם יש, והתוצאה הסופית עוברת לבדיקה המקומית הקיימת.
 

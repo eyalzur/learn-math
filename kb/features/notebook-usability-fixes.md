@@ -4,11 +4,13 @@ title: "תיקוני שימושיות במחברת התרגול"
 description: "חמישה תיקונים למסך המחברת:"
 tags: [feature, notebook, usability, fixes]
 aliases: ["notebook-usability-fixes"]
-status: stable
+status: deprecated
 sources:
   - {resource: ../../docs/features/notebook-usability-fixes/status.md, hash: "1c107bda"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
+> ⚠️ **הוסר** — מחברת הציור הוחלפה ב-[תרגול בתשובה סופית](/features/scored-answer-practice.md).
+
 # סיכום
 חמישה תיקונים למסך המחברת: אישור לפני מחיקת דף, זום פתיחה קבוע (70%), ביטול המעבר האוטומטי לשאלה הבאה, פונט תרגיל קטן יותר במסך מלא, וסימון ברור לתשובה נכונה שהתהליך שלה כלל שגיאה.
 

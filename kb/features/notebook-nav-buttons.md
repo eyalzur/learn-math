@@ -4,11 +4,13 @@ title: "כפתורי ניווט במחברת — פאד כיוונים"
 description: "ארבעה כפתורי חץ (ימינה/שמאלה/למעלה/למטה) להזזת התצוגה בדף המחברת, לצד כפתורי הזום הקיימים — דרך ניווט שלא תלויה בגרירה מדויקת."
 tags: [feature, notebook, nav, buttons]
 aliases: ["notebook-nav-buttons"]
-status: stable
+status: deprecated
 sources:
   - {resource: ../../docs/features/notebook-nav-buttons/status.md, hash: "f5226fdd"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
+> ⚠️ **הוסר** — מחברת הציור הוחלפה ב-[תרגול בתשובה סופית](/features/scored-answer-practice.md).
+
 # סיכום
 ארבעה כפתורי חץ (ימינה/שמאלה/למעלה/למטה) להזזת התצוגה בדף המחברת, לצד כפתורי הזום הקיימים — דרך ניווט שלא תלויה בגרירה מדויקת.
 
