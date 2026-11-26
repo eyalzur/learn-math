@@ -6,7 +6,7 @@ tags: [feature, notebook, server, relay]
 aliases: ["notebook-server-relay"]
 status: stable
 sources:
-  - {resource: ../../docs/features/notebook-server-relay/status.md, hash: d97ff8e5}
+  - {resource: ../../docs/features/notebook-server-relay/status.md, hash: "d97ff8e5"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

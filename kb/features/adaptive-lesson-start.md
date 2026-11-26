@@ -6,7 +6,7 @@ tags: [feature, adaptive, lesson, start]
 aliases: ["adaptive-lesson-start"]
 status: stable
 sources:
-  - {resource: ../../docs/features/adaptive-lesson-start/status.md, hash: 8cc64ca1}
+  - {resource: ../../docs/features/adaptive-lesson-start/status.md, hash: "8cc64ca1"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

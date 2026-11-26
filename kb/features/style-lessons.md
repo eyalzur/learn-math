@@ -6,7 +6,7 @@ tags: [feature, style, lessons]
 aliases: ["style-lessons"]
 status: stable
 sources:
-  - {resource: ../../docs/features/style-lessons/status.md, hash: 23b09fd4}
+  - {resource: ../../docs/features/style-lessons/status.md, hash: "23b09fd4"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

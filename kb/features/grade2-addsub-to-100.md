@@ -6,7 +6,7 @@ tags: [feature, grade2, addsub, 100]
 aliases: ["grade2-addsub-to-100"]
 status: stable
 sources:
-  - {resource: ../../docs/features/grade2-addsub-to-100/status.md, hash: 9bf90954}
+  - {resource: ../../docs/features/grade2-addsub-to-100/status.md, hash: "9bf90954"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

@@ -6,7 +6,7 @@ tags: [feature, adaptive, difficulty]
 aliases: ["adaptive-difficulty"]
 status: stable
 sources:
-  - {resource: ../../docs/features/adaptive-difficulty/status.md, hash: fc1cc854}
+  - {resource: ../../docs/features/adaptive-difficulty/status.md, hash: "fc1cc854"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

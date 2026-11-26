@@ -6,7 +6,7 @@ tags: [feature, screen, entrance, animation]
 aliases: ["screen-entrance-animation"]
 status: stable
 sources:
-  - {resource: ../../docs/features/screen-entrance-animation/status.md, hash: 98d6ba73}
+  - {resource: ../../docs/features/screen-entrance-animation/status.md, hash: "98d6ba73"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

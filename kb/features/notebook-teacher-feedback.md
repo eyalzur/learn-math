@@ -6,7 +6,7 @@ tags: [feature, notebook, teacher, feedback]
 aliases: ["notebook-teacher-feedback"]
 status: stable
 sources:
-  - {resource: ../../docs/features/notebook-teacher-feedback/status.md, hash: 52dd465e}
+  - {resource: ../../docs/features/notebook-teacher-feedback/status.md, hash: "52dd465e"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

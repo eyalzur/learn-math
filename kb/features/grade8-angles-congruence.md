@@ -6,7 +6,7 @@ tags: [feature, grade8, angles, congruence]
 aliases: ["grade8-angles-congruence"]
 status: stable
 sources:
-  - {resource: ../../docs/features/grade8-angles-congruence/status.md, hash: b6539956}
+  - {resource: ../../docs/features/grade8-angles-congruence/status.md, hash: "b6539956"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

@@ -6,7 +6,7 @@ tags: [feature, analogy, character, names]
 aliases: ["analogy-character-names"]
 status: stable
 sources:
-  - {resource: ../../docs/features/analogy-character-names/status.md, hash: 059fea9f}
+  - {resource: ../../docs/features/analogy-character-names/status.md, hash: "059fea9f"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

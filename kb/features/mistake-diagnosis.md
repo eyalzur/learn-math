@@ -6,7 +6,7 @@ tags: [feature, mistake, diagnosis]
 aliases: ["mistake-diagnosis"]
 status: stable
 sources:
-  - {resource: ../../docs/features/mistake-diagnosis/status.md, hash: dd7edb33}
+  - {resource: ../../docs/features/mistake-diagnosis/status.md, hash: "dd7edb33"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

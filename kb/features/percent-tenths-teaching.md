@@ -6,7 +6,7 @@ tags: [feature, percent, tenths, teaching]
 aliases: ["percent-tenths-teaching"]
 status: stable
 sources:
-  - {resource: ../../docs/features/percent-tenths-teaching/status.md, hash: 3fa12703}
+  - {resource: ../../docs/features/percent-tenths-teaching/status.md, hash: "3fa12703"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

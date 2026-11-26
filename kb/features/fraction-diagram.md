@@ -6,7 +6,7 @@ tags: [feature, fraction, diagram]
 aliases: ["fraction-diagram"]
 status: stable
 sources:
-  - {resource: ../../docs/features/fraction-diagram/status.md, hash: e0f1242d}
+  - {resource: ../../docs/features/fraction-diagram/status.md, hash: "e0f1242d"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

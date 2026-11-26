@@ -6,7 +6,7 @@ tags: [feature, notebook, hold, zoom]
 aliases: ["notebook-hold-to-zoom"]
 status: stable
 sources:
-  - {resource: ../../docs/features/notebook-hold-to-zoom/status.md, hash: 120b68b1}
+  - {resource: ../../docs/features/notebook-hold-to-zoom/status.md, hash: "120b68b1"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

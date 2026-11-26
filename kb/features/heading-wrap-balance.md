@@ -6,7 +6,7 @@ tags: [feature, heading, wrap, balance]
 aliases: ["heading-wrap-balance"]
 status: stable
 sources:
-  - {resource: ../../docs/features/heading-wrap-balance/status.md, hash: 19799c41}
+  - {resource: ../../docs/features/heading-wrap-balance/status.md, hash: "19799c41"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

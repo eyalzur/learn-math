@@ -6,7 +6,7 @@ tags: [feature, teaching, explanations]
 aliases: ["teaching-explanations"]
 status: stable
 sources:
-  - {resource: ../../docs/features/teaching-explanations/status.md, hash: ed1e9795}
+  - {resource: ../../docs/features/teaching-explanations/status.md, hash: "ed1e9795"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

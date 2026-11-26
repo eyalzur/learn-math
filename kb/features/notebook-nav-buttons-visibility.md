@@ -6,7 +6,7 @@ tags: [feature, notebook, nav, buttons, visibility]
 aliases: ["notebook-nav-buttons-visibility"]
 status: stable
 sources:
-  - {resource: ../../docs/features/notebook-nav-buttons-visibility/status.md, hash: fa9a1217}
+  - {resource: ../../docs/features/notebook-nav-buttons-visibility/status.md, hash: "fa9a1217"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

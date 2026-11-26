@@ -6,7 +6,7 @@ tags: [feature, notebook, question, page]
 aliases: ["notebook-question-on-page"]
 status: stable
 sources:
-  - {resource: ../../docs/features/notebook-question-on-page/status.md, hash: a555e17e}
+  - {resource: ../../docs/features/notebook-question-on-page/status.md, hash: "a555e17e"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

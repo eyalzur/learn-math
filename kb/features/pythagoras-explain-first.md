@@ -6,7 +6,7 @@ tags: [feature, pythagoras, explain, first]
 aliases: ["pythagoras-explain-first"]
 status: stable
 sources:
-  - {resource: ../../docs/features/pythagoras-explain-first/status.md, hash: e14374f3}
+  - {resource: ../../docs/features/pythagoras-explain-first/status.md, hash: "e14374f3"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

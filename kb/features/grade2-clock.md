@@ -6,7 +6,7 @@ tags: [feature, grade2, clock]
 aliases: ["grade2-clock"]
 status: stable
 sources:
-  - {resource: ../../docs/features/grade2-clock/status.md, hash: 7c5a5adf}
+  - {resource: ../../docs/features/grade2-clock/status.md, hash: "7c5a5adf"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

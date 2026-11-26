@@ -6,7 +6,7 @@ tags: [feature, back, link, redesign]
 aliases: ["back-link-redesign"]
 status: stable
 sources:
-  - {resource: ../../docs/features/back-link-redesign/status.md, hash: 662b312c}
+  - {resource: ../../docs/features/back-link-redesign/status.md, hash: "662b312c"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

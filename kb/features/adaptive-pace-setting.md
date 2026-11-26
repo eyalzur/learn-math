@@ -6,7 +6,7 @@ tags: [feature, adaptive, pace, setting]
 aliases: ["adaptive-pace-setting"]
 status: stable
 sources:
-  - {resource: ../../docs/features/adaptive-pace-setting/status.md, hash: 913ca491}
+  - {resource: ../../docs/features/adaptive-pace-setting/status.md, hash: "913ca491"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

@@ -6,7 +6,7 @@ tags: [feature, server, auto, deploy]
 aliases: ["server-auto-deploy"]
 status: stable
 sources:
-  - {resource: ../../docs/features/server-auto-deploy/status.md, hash: 71601021}
+  - {resource: ../../docs/features/server-auto-deploy/status.md, hash: "71601021"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

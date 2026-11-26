@@ -6,7 +6,7 @@ tags: [feature, offbyone, diagnosis, method]
 aliases: ["offbyone-diagnosis-method"]
 status: stable
 sources:
-  - {resource: ../../docs/features/offbyone-diagnosis-method/status.md, hash: 49e08be1}
+  - {resource: ../../docs/features/offbyone-diagnosis-method/status.md, hash: "49e08be1"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

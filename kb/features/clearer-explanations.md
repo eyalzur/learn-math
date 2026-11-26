@@ -6,7 +6,7 @@ tags: [feature, clearer, explanations]
 aliases: ["clearer-explanations"]
 status: stable
 sources:
-  - {resource: ../../docs/features/clearer-explanations/status.md, hash: 1217e735}
+  - {resource: ../../docs/features/clearer-explanations/status.md, hash: "1217e735"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

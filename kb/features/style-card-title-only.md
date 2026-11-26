@@ -6,7 +6,7 @@ tags: [feature, style, card, title, only]
 aliases: ["style-card-title-only"]
 status: stable
 sources:
-  - {resource: ../../docs/features/style-card-title-only/status.md, hash: 16747b06}
+  - {resource: ../../docs/features/style-card-title-only/status.md, hash: "16747b06"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

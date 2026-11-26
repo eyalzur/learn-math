@@ -6,7 +6,7 @@ tags: [feature, notebook, writing, smoothness]
 aliases: ["notebook-writing-smoothness"]
 status: draft
 sources:
-  - {resource: ../../docs/features/notebook-writing-smoothness/status.md, hash: b7dec7bd}
+  - {resource: ../../docs/features/notebook-writing-smoothness/status.md, hash: "b7dec7bd"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

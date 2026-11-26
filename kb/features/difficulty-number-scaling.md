@@ -6,7 +6,7 @@ tags: [feature, difficulty, number, scaling]
 aliases: ["difficulty-number-scaling"]
 status: stable
 sources:
-  - {resource: ../../docs/features/difficulty-number-scaling/status.md, hash: c2a27fb8}
+  - {resource: ../../docs/features/difficulty-number-scaling/status.md, hash: "c2a27fb8"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

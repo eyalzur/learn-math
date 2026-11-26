@@ -6,7 +6,7 @@ tags: [feature, more, diagrams]
 aliases: ["more-diagrams"]
 status: stable
 sources:
-  - {resource: ../../docs/features/more-diagrams/status.md, hash: e20082cc}
+  - {resource: ../../docs/features/more-diagrams/status.md, hash: "e20082cc"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

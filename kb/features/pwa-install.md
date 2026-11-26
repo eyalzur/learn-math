@@ -6,7 +6,7 @@ tags: [feature, pwa, install]
 aliases: ["pwa-install"]
 status: stable
 sources:
-  - {resource: ../../docs/features/pwa-install/status.md, hash: 0a71c2f0}
+  - {resource: ../../docs/features/pwa-install/status.md, hash: "0a71c2f0"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

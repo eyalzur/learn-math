@@ -6,7 +6,7 @@ tags: [feature, notebook, toolbar, redesign]
 aliases: ["notebook-toolbar-redesign"]
 status: stable
 sources:
-  - {resource: ../../docs/features/notebook-toolbar-redesign/status.md, hash: 7fa74407}
+  - {resource: ../../docs/features/notebook-toolbar-redesign/status.md, hash: "7fa74407"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

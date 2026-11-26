@@ -6,7 +6,7 @@ tags: [feature, lesson, always, first]
 aliases: ["lesson-always-first"]
 status: stable
 sources:
-  - {resource: ../../docs/features/lesson-always-first/status.md, hash: 47f4c9c4}
+  - {resource: ../../docs/features/lesson-always-first/status.md, hash: "47f4c9c4"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

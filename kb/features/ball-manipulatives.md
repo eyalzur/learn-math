@@ -6,7 +6,7 @@ tags: [feature, ball, manipulatives]
 aliases: ["ball-manipulatives"]
 status: stable
 sources:
-  - {resource: ../../docs/features/ball-manipulatives/status.md, hash: 4cafaca6}
+  - {resource: ../../docs/features/ball-manipulatives/status.md, hash: "4cafaca6"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

@@ -6,7 +6,7 @@ tags: [feature, idle, spotlight]
 aliases: ["idle-spotlight"]
 status: stable
 sources:
-  - {resource: ../../docs/features/idle-spotlight/status.md, hash: caa8ee1a}
+  - {resource: ../../docs/features/idle-spotlight/status.md, hash: "caa8ee1a"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

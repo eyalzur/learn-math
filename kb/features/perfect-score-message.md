@@ -6,7 +6,7 @@ tags: [feature, perfect, score, message]
 aliases: ["perfect-score-message"]
 status: stable
 sources:
-  - {resource: ../../docs/features/perfect-score-message/status.md, hash: 48cd7048}
+  - {resource: ../../docs/features/perfect-score-message/status.md, hash: "48cd7048"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

@@ -6,7 +6,7 @@ tags: [feature, topics, and, progress]
 aliases: ["topics-and-progress"]
 status: stable
 sources:
-  - {resource: ../../docs/features/topics-and-progress/status.md, hash: de304563}
+  - {resource: ../../docs/features/topics-and-progress/status.md, hash: "de304563"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

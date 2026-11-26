@@ -6,7 +6,7 @@ tags: [feature, question, hints]
 aliases: ["question-hints"]
 status: stable
 sources:
-  - {resource: ../../docs/features/question-hints/status.md, hash: 702092d4}
+  - {resource: ../../docs/features/question-hints/status.md, hash: "702092d4"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

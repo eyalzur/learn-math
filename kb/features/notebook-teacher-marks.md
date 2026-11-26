@@ -6,7 +6,7 @@ tags: [feature, notebook, teacher, marks]
 aliases: ["notebook-teacher-marks"]
 status: stable
 sources:
-  - {resource: ../../docs/features/notebook-teacher-marks/status.md, hash: 7deee380}
+  - {resource: ../../docs/features/notebook-teacher-marks/status.md, hash: "7deee380"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

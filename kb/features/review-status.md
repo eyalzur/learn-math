@@ -6,7 +6,7 @@ tags: [feature, review, status]
 aliases: ["review-status"]
 status: stable
 sources:
-  - {resource: ../../docs/features/review-status/status.md, hash: dad0552a}
+  - {resource: ../../docs/features/review-status/status.md, hash: "dad0552a"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

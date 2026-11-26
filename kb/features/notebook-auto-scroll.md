@@ -6,7 +6,7 @@ tags: [feature, notebook, auto, scroll]
 aliases: ["notebook-auto-scroll"]
 status: stable
 sources:
-  - {resource: ../../docs/features/notebook-auto-scroll/status.md, hash: 90b5ccc9}
+  - {resource: ../../docs/features/notebook-auto-scroll/status.md, hash: "90b5ccc9"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

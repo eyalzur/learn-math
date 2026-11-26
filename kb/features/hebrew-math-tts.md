@@ -6,7 +6,7 @@ tags: [feature, hebrew, math, tts]
 aliases: ["hebrew-math-tts"]
 status: stable
 sources:
-  - {resource: ../../docs/features/hebrew-math-tts/status.md, hash: 0762942d}
+  - {resource: ../../docs/features/hebrew-math-tts/status.md, hash: "0762942d"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

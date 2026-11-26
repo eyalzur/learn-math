@@ -6,7 +6,7 @@ tags: [feature, read, aloud, questions]
 aliases: ["read-aloud-questions"]
 status: stable
 sources:
-  - {resource: ../../docs/features/read-aloud-questions/status.md, hash: c821f742}
+  - {resource: ../../docs/features/read-aloud-questions/status.md, hash: "c821f742"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

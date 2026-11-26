@@ -6,7 +6,7 @@ tags: [feature, read, aloud]
 aliases: ["read-aloud"]
 status: stable
 sources:
-  - {resource: ../../docs/features/read-aloud/status.md, hash: 0911adb5}
+  - {resource: ../../docs/features/read-aloud/status.md, hash: "0911adb5"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

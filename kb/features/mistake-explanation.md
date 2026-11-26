@@ -6,7 +6,7 @@ tags: [feature, mistake, explanation]
 aliases: ["mistake-explanation"]
 status: deprecated
 sources:
-  - {resource: ../../docs/features/mistake-explanation/status.md, hash: 61479c2a}
+  - {resource: ../../docs/features/mistake-explanation/status.md, hash: "61479c2a"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

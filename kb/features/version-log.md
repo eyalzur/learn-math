@@ -6,7 +6,7 @@ tags: [feature, version, log]
 aliases: ["version-log"]
 status: stable
 sources:
-  - {resource: ../../docs/features/version-log/status.md, hash: 653ef737}
+  - {resource: ../../docs/features/version-log/status.md, hash: "653ef737"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

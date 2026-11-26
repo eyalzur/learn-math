@@ -6,7 +6,7 @@ tags: [feature, candy, redesign]
 aliases: ["candy-redesign"]
 status: stable
 sources:
-  - {resource: ../../docs/features/candy-redesign/status.md, hash: e29d7cff}
+  - {resource: ../../docs/features/candy-redesign/status.md, hash: "e29d7cff"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

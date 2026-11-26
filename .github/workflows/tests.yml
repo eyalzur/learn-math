@@ -10,6 +10,19 @@ on:
   workflow_dispatch:
 
 jobs:
+  # Knowledge base (kb/): format, links, duplicates, index freshness. Seconds, no browser.
+  kb:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run kb:test
+      - run: npm run kb -- lint
+
   test:
     runs-on: ubuntu-latest
     # Split across 4 isolated runners instead of 1 — each gets its own checkout, its own

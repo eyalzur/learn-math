@@ -6,7 +6,7 @@ tags: [feature, version, number]
 aliases: ["version-number"]
 status: stable
 sources:
-  - {resource: ../../docs/features/version-number/status.md, hash: 5d0ee1f4}
+  - {resource: ../../docs/features/version-number/status.md, hash: "5d0ee1f4"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

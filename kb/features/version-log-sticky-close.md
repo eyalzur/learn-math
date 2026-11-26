@@ -6,7 +6,7 @@ tags: [feature, version, log, sticky, close]
 aliases: ["version-log-sticky-close"]
 status: stable
 sources:
-  - {resource: ../../docs/features/version-log-sticky-close/status.md, hash: bf62e5d9}
+  - {resource: ../../docs/features/version-log-sticky-close/status.md, hash: "bf62e5d9"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

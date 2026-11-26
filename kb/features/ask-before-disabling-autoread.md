@@ -6,7 +6,7 @@ tags: [feature, ask, before, disabling, autoread]
 aliases: ["ask-before-disabling-autoread"]
 status: stable
 sources:
-  - {resource: ../../docs/features/ask-before-disabling-autoread/status.md, hash: 4b9bc847}
+  - {resource: ../../docs/features/ask-before-disabling-autoread/status.md, hash: "4b9bc847"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

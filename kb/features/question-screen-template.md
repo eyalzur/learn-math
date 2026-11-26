@@ -6,7 +6,7 @@ tags: [feature, question, screen, template]
 aliases: ["question-screen-template"]
 status: stable
 sources:
-  - {resource: ../../docs/features/question-screen-template/status.md, hash: c4b73857}
+  - {resource: ../../docs/features/question-screen-template/status.md, hash: "c4b73857"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

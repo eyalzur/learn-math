@@ -6,7 +6,7 @@ tags: [feature, algebraic, brackets, teaching]
 aliases: ["algebraic-brackets-teaching"]
 status: stable
 sources:
-  - {resource: ../../docs/features/algebraic-brackets-teaching/status.md, hash: 41c7e0d6}
+  - {resource: ../../docs/features/algebraic-brackets-teaching/status.md, hash: "41c7e0d6"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

@@ -6,7 +6,7 @@ tags: [feature, teacher, reading, precision]
 aliases: ["teacher-reading-precision"]
 status: stable
 sources:
-  - {resource: ../../docs/features/teacher-reading-precision/status.md, hash: 89d88e4d}
+  - {resource: ../../docs/features/teacher-reading-precision/status.md, hash: "89d88e4d"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

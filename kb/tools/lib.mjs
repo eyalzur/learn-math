@@ -15,7 +15,7 @@ const FINAL = { ך: "כ", ם: "מ", ן: "נ", ף: "פ", ץ: "צ" };
 export function norm(s) {
   return String(s ?? "")
     .normalize("NFKD")
-    .replace(/[\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7\u0300-\u036f]/g, "")
+    .replace(/\p{M}/gu, "") // niqqud and Latin accents
     .toLowerCase()
     .replace(/[ךםןףץ]/g, (c) => FINAL[c])
     .replace(/[^\p{L}\p{N}]+/gu, " ")
@@ -223,6 +223,9 @@ export function lint(bundle, { dupes = false } = {}) {
     for (const [k, v] of [["generated.at", d.fm.generated?.at], ["stale_after", d.fm.stale_after],
       ...[].concat(d.fm.verified ?? []).map((x) => ["verified.at", x?.at])]) {
       if (v != null && !HAS_OFFSET.test(String(v))) err(d.rel, `\`${k}\` must be ISO 8601 with a UTC offset (got "${v}")`);
+    }
+    for (const src of [].concat(d.fm.sources ?? [])) {
+      if (src?.hash != null && typeof src.hash !== "string") err(d.rel, `source hash must be a quoted string (YAML read ${JSON.stringify(src.hash)} as a number) — write hash: "${src.hash}"`);
     }
     if (d.lines > MAX_LINES_ERROR) err(d.rel, `${d.lines} lines — split it (limit ${MAX_LINES_ERROR})`);
     else if (d.lines > MAX_LINES_WARN) warns.push(`${d.rel}: ${d.lines} lines — consider splitting (target ≤${MAX_LINES_WARN})`);

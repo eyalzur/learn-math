@@ -20,6 +20,10 @@ Then read `.claude/skills/status/SKILL.md` and follow its steps 1–2 (gather th
 sort each open item into a pipeline stage) exactly as written there — don't re-derive the
 stage table here, it already exists.
 
+Also glance at the knowledge base's health (cheap, no LLM): `npm run kb -- stale` (concepts whose
+source docs changed) and `kb/_gaps.md` (questions `/kb-ask` could not answer). If either has entries,
+add one line to the list in step 3 — "KB: N stale / N gaps — `/kb-add` to refresh" — never more.
+
 ## 2. Summarize — short, like `/status`
 
 One line per open item: what it is, what stage. Skip finished features. This is the

@@ -6,7 +6,7 @@ tags: [feature, playful, redesign]
 aliases: ["playful-redesign"]
 status: stable
 sources:
-  - {resource: ../../docs/features/playful-redesign/status.md, hash: d1392154}
+  - {resource: ../../docs/features/playful-redesign/status.md, hash: "d1392154"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

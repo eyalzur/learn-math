@@ -6,7 +6,7 @@ tags: [feature, grade2, syllabus]
 aliases: ["grade2-syllabus"]
 status: stable
 sources:
-  - {resource: ../../docs/features/grade2-syllabus/status.md, hash: a8823c8d}
+  - {resource: ../../docs/features/grade2-syllabus/status.md, hash: "a8823c8d"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

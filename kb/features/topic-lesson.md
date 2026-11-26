@@ -6,7 +6,7 @@ tags: [feature, topic, lesson]
 aliases: ["topic-lesson"]
 status: stable
 sources:
-  - {resource: ../../docs/features/topic-lesson/status.md, hash: 50d5f8f4}
+  - {resource: ../../docs/features/topic-lesson/status.md, hash: "50d5f8f4"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

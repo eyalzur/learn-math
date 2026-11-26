@@ -6,7 +6,7 @@ tags: [feature, students, and, syllabus]
 aliases: ["students-and-syllabus"]
 status: stable
 sources:
-  - {resource: ../../docs/features/students-and-syllabus/status.md, hash: a635914e}
+  - {resource: ../../docs/features/students-and-syllabus/status.md, hash: "a635914e"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

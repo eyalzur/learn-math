@@ -6,7 +6,7 @@ tags: [feature, levels, practice]
 aliases: ["levels-as-practice"]
 status: stable
 sources:
-  - {resource: ../../docs/features/levels-as-practice/status.md, hash: 87103fa6}
+  - {resource: ../../docs/features/levels-as-practice/status.md, hash: "87103fa6"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

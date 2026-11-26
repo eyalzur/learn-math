@@ -6,7 +6,7 @@ tags: [feature, scored, answer, practice]
 aliases: ["scored-answer-practice"]
 status: stable
 sources:
-  - {resource: ../../docs/features/scored-answer-practice/status.md, hash: 706807e6}
+  - {resource: ../../docs/features/scored-answer-practice/status.md, hash: "706807e6"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

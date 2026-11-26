@@ -6,7 +6,7 @@ tags: [feature, topics, all, grades]
 aliases: ["topics-all-grades"]
 status: stable
 sources:
-  - {resource: ../../docs/features/topics-all-grades/status.md, hash: 0844222b}
+  - {resource: ../../docs/features/topics-all-grades/status.md, hash: "0844222b"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

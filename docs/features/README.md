@@ -83,3 +83,4 @@ architecture, implementation notes, and tests.
 | חוקי בחירת מספרים לפי קושי — 12 המחוללים האדפטיביים | 🟢 done — מוזג ל-main | [status](./difficulty-number-scaling/status.md) |
 | פתיחת סוגריים בביטויים אלגבריים — מסבירה תהליך ומושגים | 🟢 done — מוזג ל-main | [status](./algebraic-brackets-teaching/status.md) |
 | קושי מסתגל למיקה — שלב א׳ (חיבור/חיסור עד 10, חיסור עד 100) | 🟢 done — מוזג ל-main | [status](./mika-adaptive-difficulty/status.md) |
+| בסיס ידע (KB) בפורמט OKF | 🟡 נבנה — ממתין לריוויו | [status](./knowledge-base/status.md) |

@@ -6,7 +6,7 @@ tags: [feature, mika, grade2, content]
 aliases: ["mika-grade2-content"]
 status: stable
 sources:
-  - {resource: ../../docs/features/mika-grade2-content/status.md, hash: 3272e773}
+  - {resource: ../../docs/features/mika-grade2-content/status.md, hash: "3272e773"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

@@ -6,7 +6,7 @@ tags: [feature, idle, spotlight, direction, visibility]
 aliases: ["idle-spotlight-direction-visibility"]
 status: stable
 sources:
-  - {resource: ../../docs/features/idle-spotlight-direction-visibility/status.md, hash: 48fb0e40}
+  - {resource: ../../docs/features/idle-spotlight-direction-visibility/status.md, hash: "48fb0e40"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

@@ -6,7 +6,7 @@ tags: [feature, teacher, misread, log]
 aliases: ["teacher-misread-log"]
 status: stable
 sources:
-  - {resource: ../../docs/features/teacher-misread-log/status.md, hash: d9158e06}
+  - {resource: ../../docs/features/teacher-misread-log/status.md, hash: "d9158e06"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

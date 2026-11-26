@@ -6,7 +6,7 @@ tags: [feature, content, rules]
 aliases: ["content-rules"]
 status: stable
 sources:
-  - {resource: ../../docs/features/content-rules/status.md, hash: 7d97506a}
+  - {resource: ../../docs/features/content-rules/status.md, hash: "7d97506a"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

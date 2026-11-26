@@ -6,7 +6,7 @@ tags: [feature, countdown, next]
 aliases: ["countdown-next"]
 status: stable
 sources:
-  - {resource: ../../docs/features/countdown-next/status.md, hash: edbf1036}
+  - {resource: ../../docs/features/countdown-next/status.md, hash: "edbf1036"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

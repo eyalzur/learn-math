@@ -6,7 +6,7 @@ tags: [feature, percent, discount, wording]
 aliases: ["percent-discount-wording"]
 status: stable
 sources:
-  - {resource: ../../docs/features/percent-discount-wording/status.md, hash: 7d046286}
+  - {resource: ../../docs/features/percent-discount-wording/status.md, hash: "7d046286"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

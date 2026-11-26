@@ -6,7 +6,7 @@ tags: [feature, scroll, screens]
 aliases: ["no-scroll-screens"]
 status: stable
 sources:
-  - {resource: ../../docs/features/no-scroll-screens/status.md, hash: 9b9341e2}
+  - {resource: ../../docs/features/no-scroll-screens/status.md, hash: "9b9341e2"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

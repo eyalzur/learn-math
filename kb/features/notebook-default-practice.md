@@ -6,7 +6,7 @@ tags: [feature, notebook, default, practice]
 aliases: ["notebook-default-practice"]
 status: stable
 sources:
-  - {resource: ../../docs/features/notebook-default-practice/status.md, hash: f15bdadb}
+  - {resource: ../../docs/features/notebook-default-practice/status.md, hash: "f15bdadb"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

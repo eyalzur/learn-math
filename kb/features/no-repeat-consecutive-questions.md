@@ -6,7 +6,7 @@ tags: [feature, repeat, consecutive, questions]
 aliases: ["no-repeat-consecutive-questions"]
 status: stable
 sources:
-  - {resource: ../../docs/features/no-repeat-consecutive-questions/status.md, hash: 2f0ba04a}
+  - {resource: ../../docs/features/no-repeat-consecutive-questions/status.md, hash: "2f0ba04a"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

@@ -6,7 +6,7 @@ tags: [feature, practice, notebook]
 aliases: ["practice-notebook"]
 status: stable
 sources:
-  - {resource: ../../docs/features/practice-notebook/status.md, hash: 15532e6e}
+  - {resource: ../../docs/features/practice-notebook/status.md, hash: "15532e6e"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום

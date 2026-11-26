@@ -90,3 +90,9 @@ test("search matches Hebrew prefixes and plurals", () => {
   const root = bundle({ "traps/a.md": doc({ title: "בדיקות מקביליות", description: "ריצה." }) });
   assert.equal(search(loadBundle(root), "הבדיקה")[0]?.rel, "/traps/a.md");
 });
+
+test("lint: unquoted numeric-looking hash is rejected (YAML reads 1217e735 as a number)", () => {
+  const root = bundle({ "src.txt": "x", "traps/a.md": doc({ extra: "sources:\n  - {resource: ../src.txt, hash: 1217e735}\n" }) });
+  writeIndexes(loadBundle(root));
+  assert.match(lint(loadBundle(root)).errors.join("\n"), /quoted string/);
+});

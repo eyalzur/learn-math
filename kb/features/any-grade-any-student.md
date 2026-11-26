@@ -6,7 +6,7 @@ tags: [feature, any, grade, any, student]
 aliases: ["any-grade-any-student"]
 status: stable
 sources:
-  - {resource: ../../docs/features/any-grade-any-student/status.md, hash: 83ff755d}
+  - {resource: ../../docs/features/any-grade-any-student/status.md, hash: "83ff755d"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
 # סיכום
