@@ -1,10 +1,11 @@
 import { useState } from "react";
 import type { Grade } from "../data/curriculum";
+import { AvatarPicker } from "./AvatarPicker";
 
 export interface CreateStudentDialogProps {
   open: boolean;
   grades: Grade[];
-  onCreate: (name: string, gradeId: string) => void;
+  onCreate: (name: string, gradeId: string, avatar?: string) => void;
   onClose: () => void;
 }
 
@@ -16,6 +17,8 @@ export interface CreateStudentDialogProps {
 export function CreateStudentDialog({ open, grades, onCreate, onClose }: CreateStudentDialogProps) {
   const [name, setName] = useState("");
   const [gradeId, setGradeId] = useState(grades[0]?.id ?? "");
+  /** Optional — null means "none picked", and the student gets the id-derived default. */
+  const [avatar, setAvatar] = useState<string | null>(null);
 
   if (!open) return null;
 
@@ -23,7 +26,8 @@ export function CreateStudentDialog({ open, grades, onCreate, onClose }: CreateS
 
   function submit() {
     if (!trimmedName) return;
-    onCreate(trimmedName, gradeId);
+    onCreate(trimmedName, gradeId, avatar ?? undefined);
+    setAvatar(null);
     setName("");
     setGradeId(grades[0]?.id ?? "");
   }
@@ -72,6 +76,9 @@ export function CreateStudentDialog({ open, grades, onCreate, onClose }: CreateS
           ))}
         </div>
         <p className="create-student-hint">אפשר ללמוד מכל כיתה גם אחר כך</p>
+
+        <p className="create-student-label">תמונה (לא חובה)</p>
+        <AvatarPicker compact value={avatar} onChange={(id) => setAvatar(id === avatar ? null : id)} />
 
         <div className="settings-actions">
           <button type="button" onClick={submit} disabled={!trimmedName}>

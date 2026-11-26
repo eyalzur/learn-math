@@ -19,7 +19,7 @@ import { createAndSelectStudent } from "./helpers/selectStudent";
  *  6. "התיישנות" — a saved run older than 24 hours is not offered back; the next visit is
  *     a fresh run, exactly as if nothing had been saved.
  *
- *  Covers both an adaptive topic (חיבור עד 1000/חיסור עד 1000, גרade ב׳) and a level/style
+ *  Covers both an adaptive topic (חיבור עד 100/חיסור עד 100, גרade ב׳) and a level/style
  *  topic (חיבור וחיסור עד 20, מיקה) — the spec applies to every practice entry point, not
  *  only adaptive ones. There is currently no topic in the app's real content reachable
  *  through the plain level picker ("levels" screen, `.level-card`) rather than either the
@@ -50,12 +50,12 @@ async function setupGradeA(page: Page) {
 }
 
 async function enterAdd100(page: Page) {
-  await page.locator(".topic-card", { hasText: "חיבור עד 1000" }).click();
+  await page.locator(".topic-card", { hasText: "חיבור עד 100" }).click();
   await page.getByRole("button", { name: "דלג לתרגול →" }).click();
 }
 
 async function enterSub100(page: Page) {
-  await page.locator(".topic-card", { hasText: "חיסור עד 1000" }).click();
+  await page.locator(".topic-card", { hasText: "חיסור עד 100" }).click();
   await page.getByRole("button", { name: "דלג לתרגול →" }).click();
 }
 

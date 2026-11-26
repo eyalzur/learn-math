@@ -10,9 +10,9 @@
 - [x] Implementation — developer — 2026-11-25
 - [x] Tests — qa — 2026-11-25
 
-**Current phase:** done — PR open
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `feature/resume-interrupted-practice`
-**PR:** not opened yet
+**PR:** https://github.com/eyalzur/learn-math/pull/126 — מוזג 2026-11-26
 
 ## Open questions / blockers
 None.

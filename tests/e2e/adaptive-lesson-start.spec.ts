@@ -17,7 +17,7 @@ import { createAndSelectStudent } from "./helpers/selectStudent";
  *
  * Reuses the same "parse the prompt's operands, check whether this needs carrying" proxy
  * for difficulty tier that tests/e2e/adaptive-difficulty.spec.ts already uses for this
- * exact topic (חיבור עד 1000) — not a new mechanism, just applied to a new question:
+ * exact topic (חיבור עד 100) — not a new mechanism, just applied to a new question:
  * does a *repeat* visit's first question still land on the easy end, or does it reflect
  * where the previous visit left off.
  */
@@ -37,7 +37,7 @@ async function toGradeB(page: Page) {
 
 async function enterAdd100(page: Page) {
   await toGradeB(page);
-  await page.locator(".topic-card", { hasText: "חיבור עד 1000" }).click();
+  await page.locator(".topic-card", { hasText: "חיבור עד 100" }).click();
   // A topic card now opens its lesson first (docs/features/lesson-always-first) — skip
   // straight to practice, same as every other call site that used to land there directly.
   await page.getByRole("button", { name: "דלג לתרגול →" }).click();
@@ -103,7 +103,7 @@ test("leaving mid-session through the back button still resumes from the reached
   // Mid-session, not finished — the back button, not "סיום".
   await page.getByRole("button", { name: "← חזרה" }).click();
 
-  await page.locator(".topic-card", { hasText: "חיבור עד 1000" }).click();
+  await page.locator(".topic-card", { hasText: "חיבור עד 100" }).click();
   await page.getByRole("button", { name: "דלג לתרגול →" }).click();
   const ops = await currentAddOperands(page);
   expect(needsCarrying(ops), `expected a resumed (carrying) question, got ${ops[0]} + ${ops[1]}`).toBe(
@@ -139,7 +139,7 @@ test("finishing a full session also resumes from the reached tier next time", as
   await expect(page.locator(".result")).toBeVisible();
   await page.getByRole("button", { name: "חזרה לתפריט" }).click();
 
-  await page.locator(".topic-card", { hasText: "חיבור עד 1000" }).click();
+  await page.locator(".topic-card", { hasText: "חיבור עד 100" }).click();
   await page.getByRole("button", { name: "דלג לתרגול →" }).click();
   const ops = await currentAddOperands(page);
   expect(needsCarrying(ops), `expected a resumed (carrying) question, got ${ops[0]} + ${ops[1]}`).toBe(
@@ -154,8 +154,8 @@ test("a different adaptive topic for the same student is unaffected by another t
   await climbAddUntilCarrying(page);
   await page.getByRole("button", { name: "← חזרה" }).click();
 
-  // חיסור עד 1000 — a sibling adaptive topic, never visited before in this test.
-  await page.locator(".topic-card", { hasText: "חיסור עד 1000" }).click();
+  // חיסור עד 100 — a sibling adaptive topic, never visited before in this test.
+  await page.locator(".topic-card", { hasText: "חיסור עד 100" }).click();
   await page.getByRole("button", { name: "דלג לתרגול →" }).click();
   const ops = await currentSubOperands(page);
   expect(needsBorrowing(ops), `expected an easy first question, got ${ops[0]} − ${ops[1]}`).toBe(false);
@@ -176,7 +176,7 @@ test("history from before this feature (no saved tier) behaves like a first-ever
           at: new Date().toISOString(),
           studentId: "mika",
           gradeLabel: "כיתה ב׳",
-          topicTitle: "חיבור עד 1000",
+          topicTitle: "חיבור עד 1000", // pre-rename title; read back as עד 100
           levelTitle: "",
           correct: 18,
           total: 20,

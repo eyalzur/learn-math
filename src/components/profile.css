@@ -1,0 +1,206 @@
+/* Student profile: avatar chip + side drawer — docs/features/student-profile-avatar/ */
+
+/* Groups the settings button and the chip so the header's `space-between` still sees
+   three children. */
+.header-end {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.profile-chip {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  background: var(--code-bg);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.profile-chip:hover {
+  border-color: var(--accent);
+}
+
+.profile-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 32;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+/* Logical side, not `right`: the drawer sits on the start edge, which is the right in this
+   RTL page. */
+.profile-drawer {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: min(320px, 86vw);
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  box-shadow: var(--shadow);
+  animation: profile-slide-in 0.2s ease-out;
+}
+
+@keyframes profile-slide-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .profile-drawer {
+    animation: none;
+  }
+}
+
+.profile-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.profile-head-avatar {
+  font-size: 40px;
+  line-height: 1;
+}
+
+.profile-head-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-name {
+  font-size: 19px;
+  color: var(--text-h);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.profile-grade {
+  font-size: 14px;
+}
+
+.profile-close {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--text);
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.profile-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 8px 16px;
+}
+
+.profile-section h2 {
+  margin: 12px 0 8px;
+  font-size: 16px;
+  color: var(--text-h);
+  text-align: start;
+}
+
+.profile-extras:empty {
+  display: none;
+}
+
+.avatar-picker {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  justify-items: center;
+}
+
+.avatar-option {
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  background: var(--code-bg);
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.avatar-option-selected {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.avatar-picker-compact {
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+}
+
+.avatar-picker-compact .avatar-option {
+  width: 44px;
+  height: 44px;
+  font-size: 24px;
+  border-radius: 12px;
+}
+
+.profile-recent {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 15px;
+}
+
+.profile-recent li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.profile-recent-score {
+  /* Hebrew phrase around the numbers: keep RTL (ltr here rendered "5 מתוך 10" backwards),
+     just isolated from the row. */
+  unicode-bidi: isolate;
+  white-space: nowrap;
+}
+
+.profile-empty {
+  margin: 0 0 8px;
+  font-size: 15px;
+}
+
+.profile-link {
+  min-height: 44px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.profile-foot {
+  padding: 8px 16px 14px;
+  border-top: 1px solid var(--border);
+}

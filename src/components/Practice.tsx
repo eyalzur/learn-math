@@ -6,7 +6,9 @@ import type { Diagnosis } from "../data/diagnose";
 import { diagnose } from "../data/diagnose";
 import { buildExplanation, explanationSpeechParts } from "../data/questionExplanation";
 import { quantityDots } from "../data/quantityDots";
+import { isAutoReadPromptSuppressed, suppressAutoReadPrompt } from "../data/preferences";
 import { AngleShape } from "./AngleShape";
+import { AutoReadPrompt } from "./AutoReadPrompt";
 import { ClockFace } from "./ClockFace";
 import { NumberPad } from "./NumberPad";
 import { QuantityDots } from "./QuantityDots";
@@ -29,6 +31,16 @@ interface PracticeProps {
   onExit: () => void;
   /** This student has every new question read to them without asking. */
   readAloud: boolean;
+  /** Whose preferences `readAloud` above belongs to — needed to read/write the
+   *  "stop auto-read-aloud?" ask's own per-student suppression window (see
+   *  `preferences.ts`'s `isAutoReadPromptSuppressed`/`suppressAutoReadPrompt`). */
+  studentId: string;
+  /** Turns `readAloud` off for this student when they answer "כן, כבו" to the
+   *  "stop auto-read-aloud?" ask. Routed through the caller (not a direct
+   *  `setReadAloud` call here) because only it can also refresh the `readAloud` prop
+   *  this component receives — see docs/features/ask-before-disabling-autoread/
+   *  architecture.md. */
+  onDisableReadAloud: () => void;
   /** Fires once per question, right after right/wrong is decided — before the child even
    *  sees the feedback or explanation. Always supplied (every lesson, not only adaptive
    *  ones) — see docs/features/resume-interrupted-practice/architecture.md: the caller
@@ -78,6 +90,8 @@ export function Practice({
   onFinish,
   onExit,
   readAloud,
+  studentId,
+  onDisableReadAloud,
   onAnswered,
   initialIndex = 0,
   initialCorrectCount = 0,
@@ -87,6 +101,12 @@ export function Practice({
   const [burst, setBurst] = useState<BurstStar[]>([]);
   const [correctCount, setCorrectCount] = useState(initialCorrectCount);
   const [speakingBox, setSpeakingBox] = useState<SpeakingBox>(null);
+  /** Shows the "stop auto-read-aloud?" ask (see `AutoReadPrompt`) right after the student
+   *  manually stops a question/hint reading before it finished — see `toggleSpeech` below.
+   *  Local only: never persisted, and reset to `false` by every handler below that
+   *  represents "the student kept practicing without answering" (design.md's
+   *  "ננטש בלי תשובה" state). */
+  const [showAutoReadPrompt, setShowAutoReadPrompt] = useState(false);
   /** How many hints the student has asked for: 0, 1 or 2. A counter rather than two
    *  flags — the second is unreachable without the first, and one number resets in one
    *  line when the question changes. */
@@ -195,6 +215,7 @@ export function Practice({
   }
 
   function checkAnswer() {
+    setShowAutoReadPrompt(false);
     if (feedback !== null) return;
     const trimmed = answerInput.trim();
     if (trimmed === "") return;
@@ -215,6 +236,7 @@ export function Practice({
   }
 
   function checkFollowUp() {
+    setShowAutoReadPrompt(false);
     if (followUpInput.trim() === "" || diagnosis?.followUp === undefined || followUpResult !== null) return;
     setFollowUpResult(Number(followUpInput) === diagnosis.followUp.answer ? "right" : "wrong");
   }
@@ -223,6 +245,7 @@ export function Practice({
     // Otherwise the previous question's explanation keeps playing over the new one.
     stopSpeaking();
     setSpeakingBox(null);
+    setShowAutoReadPrompt(false);
 
     if (isLast) {
       onFinish(correctCount);
@@ -239,12 +262,28 @@ export function Practice({
   }
 
   function toggleSpeech(box: Exclude<SpeakingBox, null>) {
+    // Covers design.md's "ננטש בלי תשובה" state too: switching boxes, or replaying the
+    // same one from the top, both mean the student moved on without answering whichever
+    // prompt (if any) was already showing. If the branch below re-shows it in the very
+    // same call, that `true` wins over this `false` — React batches both within one event.
+    setShowAutoReadPrompt(false);
     if (speakingBox !== null) {
       stopSpeaking();
       setSpeakingBox(null);
       // Pressing the box that was already talking means stop; pressing the other means
       // switch to it, which the cancel above has just made room for.
-      if (speakingBox === box) return;
+      if (speakingBox === box) {
+        // Stopped before `onDone` ever ran — by construction (this button only shows ⏹
+        // while that is still true) a "manual stop before it finished" per
+        // product-spec.md. Scoped to "question" because that is the only box ever read
+        // aloud *automatically* (question + hint) — see architecture.md's Technical
+        // Approach for why this doesn't distinguish that from a manual replay of the same
+        // box, and why "diagnosis"/"explanation" (manual-only, never auto) never ask.
+        if (box === "question" && readAloud && !isAutoReadPromptSuppressed(studentId)) {
+          setShowAutoReadPrompt(true);
+        }
+        return;
+      }
     }
     const parts =
       box === "question"
@@ -300,6 +339,19 @@ export function Practice({
         <>
           {clockSlot}
           {angleSlot}
+          {showAutoReadPrompt && (
+            <AutoReadPrompt
+              onYes={() => {
+                setShowAutoReadPrompt(false);
+                suppressAutoReadPrompt(studentId);
+                onDisableReadAloud();
+              }}
+              onNo={() => {
+                setShowAutoReadPrompt(false);
+                suppressAutoReadPrompt(studentId);
+              }}
+            />
+          )}
         </>
       }
     >
@@ -340,8 +392,14 @@ export function Practice({
 
       {feedback === null && (
         <NumberPad
-          onDigit={(d) => setAnswerInput((v) => v + d)}
-          onBackspace={() => setAnswerInput((v) => v.slice(0, -1))}
+          onDigit={(d) => {
+            setShowAutoReadPrompt(false);
+            setAnswerInput((v) => v + d);
+          }}
+          onBackspace={() => {
+            setShowAutoReadPrompt(false);
+            setAnswerInput((v) => v.slice(0, -1));
+          }}
         />
       )}
 
@@ -360,7 +418,14 @@ export function Practice({
         </div>
       )}
       {feedback === null && hintsShown < 2 && (
-        <button type="button" className="hint-button" onClick={() => setHintsShown((n) => n + 1)}>
+        <button
+          type="button"
+          className="hint-button"
+          onClick={() => {
+            setShowAutoReadPrompt(false);
+            setHintsShown((n) => n + 1);
+          }}
+        >
           {hintsShown === 0 ? "רמז 💡" : "עוד רמז 💡"}
         </button>
       )}
@@ -441,7 +506,14 @@ export function Practice({
             </p>
           )}
           {!revealed && (
-            <button type="button" className="link-button reveal-link" onClick={() => setAskedToSee(true)}>
+            <button
+              type="button"
+              className="link-button reveal-link"
+              onClick={() => {
+                setShowAutoReadPrompt(false);
+                setAskedToSee(true);
+              }}
+            >
               אני רוצה לראות את התשובה
             </button>
           )}

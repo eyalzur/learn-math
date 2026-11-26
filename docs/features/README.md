@@ -6,7 +6,12 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
-| תרגול שנקטע חוזר לנקודה המדויקת | 🟡 PR פתוח, ממתין לריוויו | [status](./resume-interrupted-practice/status.md) |
+| תרגול שנקטע חוזר לנקודה המדויקת | 🟢 done — מוזג ל-main | [status](./resume-interrupted-practice/status.md) |
+| פרופיל תלמיד ואווטר | 🟢 done — מוזג ל-main | [status](./student-profile-avatar/status.md) |
+| אותיות קודקוד על ציורי זוויות ומשולשים | 🟢 done — מוזג ל-main | [status](./triangle-vertex-labels/status.md) |
+| רמקול שקט בפינה + שיעור שדומה לתרגול | 🟢 done — מוזג ל-main | [status](./quiet-speaker-lesson-parity/status.md) |
+| שאלה לפני כיבוי הקראה אוטומטית | 🟢 done — מוזג ל-main | [status](./ask-before-disabling-autoread/status.md) |
+| מסכים שמתאימים למסך בלי גלילה | 🟢 done — מוזג ל-main | [status](./no-scroll-screens/status.md) |
 | טמפלייט משותף למסכי שאלה | 🟢 done — מוזג ל-main | [status](./question-screen-template/status.md) |
 | רענון חזותי של 5 מסכים (Stitch) | 🟢 done — מוזג ל-main | [status](./stitch-visual-refresh/status.md) |
 | השיעור הוא הכניסה הדיפולטיבית לנושא | 🟢 done — מוזג ל-main | [status](./lesson-always-first/status.md) |
@@ -42,6 +47,7 @@ architecture, implementation notes, and tests.
 | תיקוני שימושיות במחברת התרגול | 🟢 done — מוזג ל-main | [status](./notebook-usability-fixes/status.md) |
 | משוב לתלמיד/ה על מה שהמורה קראה | 🟢 done — מוזג ל-main | [status](./notebook-teacher-feedback/status.md) |
 | שעון וזמן — כיתה ב׳ | 🟢 done — מוזג ל-main | [status](./grade2-clock/status.md) |
+| חיבור וחיסור עד 100 בלבד — כיתה ב׳ | 🟢 done — מוזג ל-main | [status](./grade2-addsub-to-100/status.md) |
 | סילבוס מלא לכיתה ב׳ (כפל, צורות, טווח 1000) | 🟢 done — מוזג ל-main | [status](./grade2-syllabus/status.md) |
 | שמות קבועים לדמויות בדימויים | 🟢 done — מוזג ל-main | [status](./analogy-character-names/status.md) |
 | מחברת כמצב התרגול היחיד | 🟢 done — מוזג ל-main (כולל סבב רוויזיה א׳, גודל משטח הכתיבה) | [status](./notebook-default-practice/status.md) |
@@ -81,3 +87,4 @@ architecture, implementation notes, and tests.
 | חוקי בחירת מספרים לפי קושי — 12 המחוללים האדפטיביים | 🟢 done — מוזג ל-main | [status](./difficulty-number-scaling/status.md) |
 | פתיחת סוגריים בביטויים אלגבריים — מסבירה תהליך ומושגים | 🟢 done — מוזג ל-main | [status](./algebraic-brackets-teaching/status.md) |
 | קושי מסתגל למיקה — שלב א׳ (חיבור/חיסור עד 10, חיסור עד 100) | 🟢 done — מוזג ל-main | [status](./mika-adaptive-difficulty/status.md) |
+| מכסת שיעורים שבועית (שיעורים נוספים משותפים לכל הבית) | 🟢 done — מוזג ל-main | [status](./weekly-lesson-cap/status.md) |

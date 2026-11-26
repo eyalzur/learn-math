@@ -103,30 +103,19 @@ export function TopicLesson({ topicTitle, gradeLabel, questions, onBack, onPract
           דלג לתרגול →
         </button>
       }
-      headerRightLabel={gradeLabel}
-      title={
-        <h2>
-          {topicTitle}
-          {/* Condensed onto the title's own line, not a second stacked heading — this is
-             still just a small "you're looking at an example" marker, not content that
-             deserves its own full-width row. */}
-          {showTierHeadings && (
-            <span className="lesson-page-badge">{`דוגמה ${currentPage + 1} מתוך ${questions.length}`}</span>
-          )}
-        </h2>
-      }
-      standaloneSpeak={
+      // The "which example" counter lives where Practice puts "שאלה N מתוך M".
+      headerRightLabel={showTierHeadings ? `דוגמה ${currentPage + 1} מתוך ${questions.length}` : gradeLabel}
+      title={<h2 className="practice-title">{topicTitle}</h2>}
+      inlineSpeak={
         speechSupported() && (
-          <div className="question-speech">
-            <button
-              type="button"
-              className="speak-button"
-              onClick={toggleSpeak}
-              aria-label={speaking ? "עצרו את ההקראה" : "הקריאו לי את השיעור"}
-            >
-              {speaking ? "⏹" : "🔊"}
-            </button>
-          </div>
+          <button
+            type="button"
+            className="speak-button"
+            onClick={toggleSpeak}
+            aria-label={speaking ? "עצרו את ההקראה" : "הקריאו לי את השיעור"}
+          >
+            {speaking ? "⏹" : "🔊"}
+          </button>
         )
       }
       problemText={isWordProblem ? segmented(question.prompt) : <>{promptWithEquals(question.prompt)}</>}
