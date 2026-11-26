@@ -1,4 +1,4 @@
-import type { AngleShape as AngleShapeData } from "../data/angleShape";
+import { drawnLabels, type AngleShape as AngleShapeData } from "../data/angleShape";
 
 const WIDTH = 280;
 const HEIGHT = 170;
@@ -81,6 +81,13 @@ interface AngleShapeProps {
 
 export function AngleShape({ shape, label }: AngleShapeProps) {
   let body;
+  // Every vertex/line letter this figure draws, name -> position. Checked at the end
+  // against `drawnLabels(shape)` (the list the content rule reads), so the picture and the
+  // rule cannot drift apart.
+  const names: Record<string, Pt> = {};
+  // The congruence drawing has two different points both named C (shared vertex name in
+  // ABC ≅ EDC), so the second one cannot live in the by-name map.
+  const extra: { text: string; at: Pt }[] = [];
 
   if (shape.kind === "straightAngle") {
     const vertex: Pt = { x: 140, y: 130 };
@@ -109,6 +116,9 @@ export function AngleShape({ shape, label }: AngleShapeProps) {
     const B: Pt = { x: 68, y: 142 };
     const C: Pt = { x: 212, y: 142 };
     const extended = shape.exterior ? pointAt(C, 55, angleOfDeg(B, C)) : null;
+    names.A = { x: A.x, y: A.y - 13 };
+    names.B = { x: B.x - 12, y: B.y + 9 };
+    names.C = { x: C.x, y: C.y + 15 };
     body = (
       <>
         <path className="as-line" d={`M ${A.x} ${A.y} L ${B.x} ${B.y} L ${C.x} ${C.y} Z`} />
@@ -146,12 +156,27 @@ export function AngleShape({ shape, label }: AngleShapeProps) {
       from: { x: P2.x - 95, y: P2.y },
       to: { x: P2.x + 95, y: P2.y },
     };
-    const cStart = pointAt(P1, 22, cDir + 180);
+    // The top end of the transversal is extended to carry the name "c": the bottom end has no
+    // room (the second line sits low for steep angles), and the top end always has. Far
+    // enough out to clear line a even when the transversal is nearly parallel to it.
+    const cDist = Math.min(60, Math.max(36, 20 / Math.sin((shape.known * Math.PI) / 180)));
+    const cStart = pointAt(P1, cDist - 14, cDir + 180);
     const cEnd = pointAt(P2, 22, cDir);
     // The second arc's position is the geometric fact this picture illustrates: the same
     // straight transversal, at the same P1→P2 direction, puts corresponding/alternate/
     // co-interior angles at these specific rays relative to line b — not a stand-in
     // drawing, the actual angle relation named in the caption.
+    // Line names go just past whichever end of each line is on screen (line b slides sideways
+    // with the angle, so its right end can leave the picture for a small angle and its left
+    // end for a large one).
+    const lineName = (line: typeof lineA) =>
+      line.to.x + 12 <= WIDTH - 10 ? { x: line.to.x + 12, y: line.to.y } : { x: line.from.x - 12, y: line.from.y };
+    names.a = lineName(lineA);
+    names.b = lineName(lineB);
+    // For a very wide angle the lines are close together and the angle number sits between
+    // them, right beside the end of line b - so its name goes under the line instead.
+    if (shape.known >= 145) names.b = { x: names.b.x + 16, y: names.b.y + 10 };
+    names.c = pointAt(P1, cDist, cDir + 180);
     const secondArc =
       shape.relation === "corresponding"
         ? { from: 0, to: cDir }
@@ -190,16 +215,16 @@ export function AngleShape({ shape, label }: AngleShapeProps) {
     const E: Pt = { x: 215, y: 40 };
     const D: Pt = { x: 160, y: 140 };
     const C2: Pt = { x: 270, y: 140 };
+    names.A = { x: A.x, y: A.y - 13 };
+    names.B = { x: B.x - 6, y: B.y + 14 };
+    names.C = { x: C1.x + 6, y: C1.y + 14 };
+    names.E = { x: E.x, y: E.y - 13 };
+    names.D = { x: D.x - 6, y: D.y + 14 };
+    extra.push({ text: "C", at: { x: C2.x - 4, y: C2.y + 14 } });
     body = (
       <>
         <path className="as-line" d={`M ${A.x} ${A.y} L ${B.x} ${B.y} L ${C1.x} ${C1.y} Z`} />
         <path className="as-line" d={`M ${E.x} ${E.y} L ${D.x} ${D.y} L ${C2.x} ${C2.y} Z`} />
-        <text {...labelAt({ x: A.x, y: A.y - 8 })}>A</text>
-        <text {...labelAt({ x: B.x - 10, y: B.y + 4 })}>B</text>
-        <text {...labelAt({ x: C1.x + 8, y: C1.y + 4 })}>C</text>
-        <text {...labelAt({ x: E.x, y: E.y - 8 })}>E</text>
-        <text {...labelAt({ x: D.x - 10, y: D.y + 4 })}>D</text>
-        <text {...labelAt({ x: C2.x + 8, y: C2.y + 4 })}>C</text>
         {/* Six correspondences between ABC and EDC (three sides, three angles), per the
             congruence's own lettering (A↔E, B↔D, C↔C) — one/two/three tick or arc marks
             per pair, the standard convention for "these go together" without reading the
@@ -238,6 +263,10 @@ export function AngleShape({ shape, label }: AngleShapeProps) {
     const D: Pt = { x: 140, y: 145 };
     const apexLabel = shape.variant === "baseFromApex" ? `${shape.given}°` : "?";
     const baseLabel = shape.variant === "baseFromApex" ? "?" : `${shape.given}°`;
+    names.A = { x: A.x, y: A.y - 13 };
+    names.B = { x: B.x - 12, y: B.y + 9 };
+    names.C = { x: C.x + 12, y: C.y + 9 };
+    if (shape.variant === "medianRightAngle") names.D = { x: D.x, y: D.y + 14 };
     body = (
       <>
         <path className="as-line" d={`M ${A.x} ${A.y} L ${B.x} ${B.y} L ${C.x} ${C.y} Z`} />
@@ -267,10 +296,23 @@ export function AngleShape({ shape, label }: AngleShapeProps) {
     );
   }
 
+  const drawn = drawnLabels(shape);
+  for (const k of Object.keys(names)) {
+    if (!drawn.includes(k)) throw new Error(`AngleShape draws "${k}" but drawnLabels() omits it`);
+  }
+  for (const k of drawn) {
+    if (!names[k]) throw new Error(`drawnLabels() lists "${k}" but AngleShape has no position for it`);
+  }
+
   return (
     <div className="angle-figure-inline" role="img" aria-label={label}>
       <svg className="angle-shape" width={WIDTH} height={HEIGHT} viewBox={`0 0 ${WIDTH} ${HEIGHT}`}>
         {body}
+        {[...Object.entries(names).map(([text, at]) => ({ text, at })), ...extra].map(({ text, at }, i) => (
+          <text key={`${text}${i}`} {...labelAt(at)} className="as-label as-vertex" data-vertex={text}>
+            {text}
+          </text>
+        ))}
       </svg>
     </div>
   );

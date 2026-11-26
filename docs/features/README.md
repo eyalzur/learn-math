@@ -6,6 +6,7 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
+| אותיות קודקוד על ציורי זוויות ומשולשים | 🟢 done — מוזג ל-main | [status](./triangle-vertex-labels/status.md) |
 | רמקול שקט בפינה + שיעור שדומה לתרגול | 🟢 done — מוזג ל-main | [status](./quiet-speaker-lesson-parity/status.md) |
 | שאלה לפני כיבוי הקראה אוטומטית | 🟢 done — מוזג ל-main | [status](./ask-before-disabling-autoread/status.md) |
 | מסכים שמתאימים למסך בלי גלילה | 🟢 done — מוזג ל-main | [status](./no-scroll-screens/status.md) |

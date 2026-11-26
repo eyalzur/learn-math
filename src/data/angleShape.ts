@@ -293,6 +293,28 @@ function expectedAnswer(shape: AngleShape): number {
   }
 }
 
+/**
+ * The letters a drawing labels — vertices (A, B, C, D, E) or line names (a, b, c) — and the
+ * single source of truth for them: `AngleShape.tsx` draws exactly these and nothing else
+ * (it throws on a letter it has no position for), and a content rule (tests/e2e/
+ * angle-figure-labels.spec.ts) fails if any prompt names a letter this list lacks. So a new
+ * question pattern that names vertices cannot ship with an unlabelled picture.
+ */
+export function drawnLabels(shape: AngleShape): string[] {
+  switch (shape.kind) {
+    case "straightAngle":
+      return []; // the prompts name no vertices
+    case "triangleAngles":
+      return ["A", "B", "C"];
+    case "parallelLines":
+      return ["a", "b", "c"];
+    case "congruentTriangles":
+      return ["A", "B", "C", "D", "E"];
+    case "isoscelesTriangle":
+      return shape.variant === "medianRightAngle" ? ["A", "B", "C", "D"] : ["A", "B", "C"];
+  }
+}
+
 export function angleShape(question: Question): AngleShape | null {
   const shape = readShape(question.prompt);
   if (!shape) return null;
