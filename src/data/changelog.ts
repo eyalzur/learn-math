@@ -19,6 +19,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.64.0",
+    icon: "🦊",
+    description:
+      "כל תלמיד/ה בוחר/ת תמונה. לחיצה עליה פותחת פרופיל בצד: ההתקדמות, החלפת תמונה והחלפת תלמיד.",
+  },
+  {
     version: "1.63.0",
     icon: "🎟️",
     description:

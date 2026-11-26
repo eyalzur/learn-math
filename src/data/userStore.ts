@@ -9,7 +9,8 @@ import type { Student } from "./curriculum";
  */
 export interface UserStore {
   list(): Promise<Student[]>;
-  create(name: string, gradeId: string): Promise<Student>;
+  create(name: string, gradeId: string, avatar?: string): Promise<Student>;
+  setAvatar(id: string, avatar: string): Promise<void>;
   remove(id: string): Promise<void>;
 }
 
@@ -38,10 +39,15 @@ function writeAll(list: Student[]): void {
 
 export const localStorageUserStore: UserStore = {
   list: () => Promise.resolve(readAll()),
-  create: (name, gradeId) => {
+  create: (name, gradeId, avatar) => {
     const student: Student = { id: crypto.randomUUID(), name: name.trim(), gradeId };
+    if (avatar) student.avatar = avatar;
     writeAll([...readAll(), student]);
     return Promise.resolve(student);
+  },
+  setAvatar: (id, avatar) => {
+    writeAll(readAll().map((s) => (s.id === id ? { ...s, avatar } : s)));
+    return Promise.resolve();
   },
   remove: (id) => {
     writeAll(readAll().filter((s) => s.id !== id));

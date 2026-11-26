@@ -155,6 +155,9 @@ export interface Student {
    *  can actually practise in any grade (see `grades`); this is a label, not a filter.
    *  Chosen once at creation time (see `src/data/userStore.ts`) — not editable today. */
   gradeId: string;
+  /** Chosen avatar id (see avatars.ts). Optional: students saved before avatars existed
+   *  have none and get a default derived from `id`. */
+  avatar?: string;
 }
 
 const GRADE_1_TOPICS = [

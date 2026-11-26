@@ -9,6 +9,8 @@ import { History } from "./components/History";
 import { Practice } from "./components/Practice";
 import { Result } from "./components/Result";
 import { SettingsDialog } from "./components/SettingsDialog";
+import { ProfileDrawer } from "./components/ProfileDrawer";
+import { avatarFor } from "./data/avatars";
 import { LessonsDialog, type LessonsDialogMode } from "./components/LessonsDialog";
 import { grades, gradeById } from "./data/curriculum";
 import type { Student, Topic, Question } from "./data/curriculum";
@@ -214,6 +216,9 @@ function App() {
    *  (docs/features/notebook-hold-to-zoom/architecture.md, "סבב ו׳" — that warning was about
    *  a changing `key` specifically, not about where the state lives). */
   const [settingsOpen, setSettingsOpen] = useState(false);
+  /** The profile drawer (docs/features/student-profile-avatar/) — lives here for the same
+   *  reason as `settingsOpen`: the chip that opens it sits on two sibling screens. */
+  const [profileOpen, setProfileOpen] = useState(false);
   /** The weekly-lessons dialog (docs/features/weekly-lesson-cap/) — opened by the cap
    *  stopping a practice ("blocked") or by tapping the counter chip ("info"). Lives here,
    *  like `settingsOpen`, so it can sit on top of any screen. The tick re-reads the stored
@@ -257,8 +262,8 @@ function App() {
   /** New user: added to the roster but deliberately not auto-selected — stays on the
    *  picker (design.md's explicit call), so creating several students in a row doesn't
    *  jump into practice after each one. */
-  function createStudent(name: string, gradeId: string) {
-    userStore.create(name, gradeId).then((created) => {
+  function createStudent(name: string, gradeId: string, avatar?: string) {
+    userStore.create(name, gradeId, avatar).then((created) => {
       setStudents((prev) => [...prev, created]);
     });
   }
@@ -274,7 +279,17 @@ function App() {
     clearStudentAdaptiveTiers(id);
   }
 
+  /** Saved immediately, and mirrored into both the roster and the current student so the
+   *  chip and the picker's card update without a reload. */
+  function changeAvatar(avatarId: string) {
+    if (!student) return;
+    userStore.setAvatar(student.id, avatarId);
+    setStudents((prev) => prev.map((s) => (s.id === student.id ? { ...s, avatar: avatarId } : s)));
+    setStudent({ ...student, avatar: avatarId });
+  }
+
   function switchStudent() {
+    setProfileOpen(false);
     rememberStudent(null);
     setStudent(null);
     setGradeId(null);
@@ -421,6 +436,22 @@ function App() {
     );
   }
 
+  /** Rendered next to whichever main screen shows the chip. `extras` is the extension point
+   *  for more profile items (see docs/features/student-profile-avatar/architecture.md). */
+  const profileDrawer = profileOpen ? (
+    <ProfileDrawer
+      student={student}
+      gradeLabel={grades.find((g) => g.id === student.gradeId)?.label ?? ""}
+      onClose={() => setProfileOpen(false)}
+      onAvatarChange={changeAvatar}
+      onOpenHistory={() => {
+        setProfileOpen(false);
+        setScreen({ name: "history" });
+      }}
+      onSwitchStudent={switchStudent}
+    />
+  ) : null;
+
   // Checked before the grade gate below, not after: history needs a student but never a
   // grade, and the grade-choice screen's own history link would otherwise be unreachable
   // — clicking it sets `screen` to "history", but `gradeId` is still null, so the gate
@@ -433,12 +464,17 @@ function App() {
   // into `Screen`, see the `gradeId` declaration above.
   if (gradeId === null) {
     return (
-      <GradePicker
-        grades={grades}
-        onSelect={(g) => chooseGrade(g.id)}
-        onBack={switchStudent}
-        onHistory={() => setScreen({ name: "history" })}
-      />
+      <>
+        <GradePicker
+          grades={grades}
+          onSelect={(g) => chooseGrade(g.id)}
+          onBack={switchStudent}
+          onHistory={() => setScreen({ name: "history" })}
+          avatar={avatarFor(student)}
+          onOpenProfile={() => setProfileOpen(true)}
+        />
+        {profileDrawer}
+      </>
     );
   }
 
@@ -500,10 +536,13 @@ function App() {
           backLabel="← חזרה"
           onHistory={() => setScreen({ name: "history" })}
           onOpenSettings={() => setSettingsOpen(true)}
+          avatar={avatarFor(student)}
+          onOpenProfile={() => setProfileOpen(true)}
           lessonsLeft={lessonsLeft}
           onOpenLessons={() => setLessonsDialog("info")}
           {...settingsProps}
         />
+        {profileDrawer}
         {settingsOpen && <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} {...settingsProps} />}
       </>
     );
