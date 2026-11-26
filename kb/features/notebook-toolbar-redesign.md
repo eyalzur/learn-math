@@ -4,11 +4,13 @@ title: "מחברת: עמודת כפתורים ממוקדת + הצעת הפעול
 description: "שתי עמודות כפתורים עגולים (זום/ניקוי משמאל-למעלה, בחירת כלי מימין-למטה) וכפתור שגדל כדי להציע לתלמיד/ה מתי לעבור בין כתיבה להזזת התצוגה."
 tags: [feature, notebook, toolbar, redesign]
 aliases: ["notebook-toolbar-redesign"]
-status: stable
+status: deprecated
 sources:
   - {resource: ../../docs/features/notebook-toolbar-redesign/status.md, hash: "7fa74407"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
+> ⚠️ **הוסר** — מחברת הציור הוחלפה ב-[תרגול בתשובה סופית](/features/scored-answer-practice.md).
+
 # סיכום
 שתי עמודות כפתורים עגולים (זום/ניקוי משמאל-למעלה, בחירת כלי מימין-למטה) וכפתור שגדל כדי להציע לתלמיד/ה מתי לעבור בין כתיבה להזזת התצוגה.
 

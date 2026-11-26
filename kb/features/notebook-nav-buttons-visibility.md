@@ -4,11 +4,13 @@ title: "פאד הניווט במחברת: לצד שמאל, כבוי כברירת
 description: "עדכון לפאד הניווט הקיים (#78):"
 tags: [feature, notebook, nav, buttons, visibility]
 aliases: ["notebook-nav-buttons-visibility"]
-status: stable
+status: deprecated
 sources:
   - {resource: ../../docs/features/notebook-nav-buttons-visibility/status.md, hash: "fa9a1217"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
+> ⚠️ **הוסר** — מחברת הציור הוחלפה ב-[תרגול בתשובה סופית](/features/scored-answer-practice.md).
+
 # סיכום
 עדכון לפאד הניווט הקיים (#78): עובר לצד שמאל, כבוי כברירת מחדל עד שמדליקים אותו, ואפשר להגיע להגדרות ישירות מתוך מסך התרגול.
 

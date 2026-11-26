@@ -4,11 +4,13 @@ title: "השאלה כתובה על דף המחברת עצמו"
 description: "השאלה מוצגת כתובה בתוך דף המחברת עצמו (במרחב הפאן/זום שלו), במקום בתיבה נפרדת מעליו — מחליפה את התיבה הקיימת, לא מכפילה אותה."
 tags: [feature, notebook, question, page]
 aliases: ["notebook-question-on-page"]
-status: stable
+status: deprecated
 sources:
   - {resource: ../../docs/features/notebook-question-on-page/status.md, hash: "a555e17e"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
+> ⚠️ **הוסר** — מחברת הציור הוחלפה ב-[תרגול בתשובה סופית](/features/scored-answer-practice.md).
+
 # סיכום
 השאלה מוצגת כתובה בתוך דף המחברת עצמו (במרחב הפאן/זום שלו), במקום בתיבה נפרדת מעליו — מחליפה את התיבה הקיימת, לא מכפילה אותה.
 

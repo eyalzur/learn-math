@@ -4,11 +4,13 @@ title: "משוב לתלמיד/ה על מה שהמורה קראה"
 description: "דרך לתלמיד/ה לומר למורה בטקסט חופשי שהיא טעתה בקריאת הדף (או לא הצליחה לקרוא), ולתת לה תיקון — היא קוראת שוב ומחזירה קריאה מעודכנת, שמוזנת לאותה בדיקה מקומית."
 tags: [feature, notebook, teacher, feedback]
 aliases: ["notebook-teacher-feedback"]
-status: stable
+status: deprecated
 sources:
   - {resource: ../../docs/features/notebook-teacher-feedback/status.md, hash: "52dd465e"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
+> ⚠️ **הוסר** — מחברת הציור הוחלפה ב-[תרגול בתשובה סופית](/features/scored-answer-practice.md).
+
 # סיכום
 דרך לתלמיד/ה לומר למורה בטקסט חופשי שהיא טעתה בקריאת הדף (או לא הצליחה לקרוא), ולתת לה תיקון — היא קוראת שוב ומחזירה קריאה מעודכנת, שמוזנת לאותה בדיקה מקומית.
 

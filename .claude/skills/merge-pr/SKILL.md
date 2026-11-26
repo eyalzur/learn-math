@@ -1,6 +1,6 @@
 ---
 name: merge-pr
-description: Merges a PR the user has explicitly approved, and keeps the project's own bookkeeping honest while doing it — the feature's docs/features/<slug>/status.md, the docs/features/README.md row, and (when the PR was tracked there instead of in the pipeline) CLAUDE.md's "מה פתוח" table all get updated to say "done — מוזג" in the SAME commit that merges, not as an afterthought. Use this whenever about to merge a PR — after the user's explicit approval, never before it. Do not call the GitHub merge tool directly without running this first.
+description: Merges a PR the user has explicitly approved, and keeps the project's own bookkeeping honest while doing it — the feature's docs/features/<slug>/status.md, the docs/features/README.md row, and (when relevant) docs/BACKLOG.md and the kb/ concepts all get updated to say "done — מוזג" in the SAME commit that merges, not as an afterthought. Use this whenever about to merge a PR — after the user's explicit approval, never before it. Do not call the GitHub merge tool directly without running this first.
 ---
 
 # Merge PR
@@ -20,7 +20,7 @@ how much staleness accumulates otherwise).
 ## 1. Confirm this is actually authorized
 
 You need **explicit** approval for this specific PR from the user — see
-`../_shared/references/principles.md` and the merge rule in `CLAUDE.md` ("לא ממזגים בלי
+`../_shared/references/principles.md` and the merge rule in `CLAUDE.md` (section 4) ("לא ממזגים בלי
 אישור מפורש"). "Looks good" about what the PR *does* is not automatically approval to
 *merge* it — if there's any doubt which one you have, ask. Once you have it, proceed
 without asking again for the same PR.
@@ -52,20 +52,17 @@ Still on the PR's branch (or push one more commit to it), update:
 - Status cell → `🟢 done — מוזג ל-main` (or keep an existing more specific note, just
   make sure it no longer says "ממתין ל-PR" or "not opened yet")
 
-**`CLAUDE.md`, section "מה פתוח"** — only if this PR is listed in the
-"ממתין לריוויו ולמיזוג" table there (this happens for process/skill files that don't go
-through the full pipeline, like `/status` or `review-ready` were). If it's listed:
-- Remove its row from that table
-- Add it to the current day's "מוזג היום (<date>)" line (create one if today doesn't
-  have one yet), following the existing format of that section exactly
+**`docs/BACKLOG.md`** — only if this PR (or the idea behind it) is listed there. If it is, remove the
+item (or mark the finished part) in the same commit. Most PRs went through the pipeline and aren't
+listed — skip this part entirely and don't invent an entry.
 
-If the PR isn't tracked in `CLAUDE.md` at all (the normal case — it went through the
-pipeline and only lives in its own `docs/features/<slug>/` folder), skip this part
-entirely. Don't invent an entry for it there.
+**`kb/`** — if the merge changes a fact the knowledge base states (a decision, a trap, a rule, how
+something works), update that concept's file (and only that file) via `/kb-add`, then
+`npm run kb -- index && npm run kb -- lint`. The feature's own `kb/features/<slug>.md` gets `status: stable`.
 
 Commit these doc changes to the PR's branch:
 ```bash
-git add docs/features/<slug>/status.md docs/features/README.md CLAUDE.md
+git add docs/features/<slug>/status.md docs/features/README.md docs/BACKLOG.md kb
 git commit -m "Mark <slug> as merged in its docs"
 git push
 ```

@@ -4,11 +4,13 @@ title: "פריסה אוטומטית של השרת"
 description: "השרת (`server/`) ייפרס לגוגל קלאוד אוטומטית כשקוד שלו מגיע ל-`main`, כמו שהאתר כבר נפרס אוטומטית ל-GitHub Pages — במקום פקודת `gcloud` ידנית בכל פעם."
 tags: [feature, server, auto, deploy]
 aliases: ["server-auto-deploy"]
-status: stable
+status: deprecated
 sources:
   - {resource: ../../docs/features/server-auto-deploy/status.md, hash: "71601021"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
+> ⚠️ **הוסר** עם שרת המחברת (ראו [שרת הקראה](/infra/hebrew-tts-server.md)).
+
 # סיכום
 השרת (`server/`) ייפרס לגוגל קלאוד אוטומטית כשקוד שלו מגיע ל-`main`, כמו שהאתר כבר נפרס אוטומטית ל-GitHub Pages — במקום פקודת `gcloud` ידנית בכל פעם.
 

@@ -4,11 +4,13 @@ title: "גלילה אוטומטית במחברת לפי כיוון הכתיבה"
 description: "אחרי שמסיימים לכתוב תו רחוק מהקודם, האזור הגלוי במסך המחברת קופץ פעם אחת כדי לפנות מקום להמשך, עם בורר עוצמה/כיבוי per-student."
 tags: [feature, notebook, auto, scroll]
 aliases: ["notebook-auto-scroll"]
-status: stable
+status: deprecated
 sources:
   - {resource: ../../docs/features/notebook-auto-scroll/status.md, hash: "90b5ccc9"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
+> ⚠️ **הוסר** — מחברת הציור הוחלפה ב-[תרגול בתשובה סופית](/features/scored-answer-practice.md).
+
 # סיכום
 אחרי שמסיימים לכתוב תו רחוק מהקודם, האזור הגלוי במסך המחברת קופץ פעם אחת כדי לפנות מקום להמשך, עם בורר עוצמה/כיבוי per-student. **סבב ב׳ הושלם:** המנגנון הוחלף ממעקב רציף תוך כדי כתיבה (סבב א׳) לקפיצה בדידה בין תווים — ראו product-spec.md, "עדכון סבב ב׳".
 

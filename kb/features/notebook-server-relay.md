@@ -4,11 +4,13 @@ title: "שרת המחברת — שלב א׳: קבלת מטריצה והפיכת�
 description: "הפיצ'ר הראשון עם רכיב שרת אמיתי (גוגל קלאוד):"
 tags: [feature, notebook, server, relay]
 aliases: ["notebook-server-relay"]
-status: stable
+status: deprecated
 sources:
   - {resource: ../../docs/features/notebook-server-relay/status.md, hash: "d97ff8e5"}
 generated: {by: "process:kb-migration", at: "2026-11-26T00:00:00Z"}
 ---
+> ⚠️ **הוסר** — מחברת הציור הוחלפה ב-[תרגול בתשובה סופית](/features/scored-answer-practice.md).
+
 # סיכום
 הפיצ'ר הראשון עם רכיב שרת אמיתי (גוגל קלאוד): מקבל את נתוני דף המחברת ומחזיר תמונה. אין קריאה ל-Claude בשלב הזה — זו הוכחת תשתית לפני שמוסיפים LLM.
 
