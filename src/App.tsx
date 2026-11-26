@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { StudentPicker } from "./components/StudentPicker";
 import { GradePicker } from "./components/GradePicker";
 import { TopicPicker } from "./components/TopicPicker";
@@ -11,6 +11,7 @@ import { Result } from "./components/Result";
 import { SettingsDialog } from "./components/SettingsDialog";
 import { ProfileDrawer } from "./components/ProfileDrawer";
 import { avatarFor } from "./data/avatars";
+import { LessonsDialog, type LessonsDialogMode } from "./components/LessonsDialog";
 import { grades, gradeById } from "./data/curriculum";
 import type { Student, Topic, Question } from "./data/curriculum";
 import type { Lesson } from "./data/style";
@@ -23,6 +24,7 @@ import {
   saveAdaptiveTier,
   clearStudent as clearStudentAdaptiveTiers,
 } from "./data/adaptiveProgress";
+import { lessonAllowance } from "./data/lessonAllowance";
 import { userStore } from "./data/userStore";
 import { startIdleSpotlightObserver } from "./data/idleSpotlight";
 import {
@@ -217,6 +219,12 @@ function App() {
   /** The profile drawer (docs/features/student-profile-avatar/) — lives here for the same
    *  reason as `settingsOpen`: the chip that opens it sits on two sibling screens. */
   const [profileOpen, setProfileOpen] = useState(false);
+  /** The weekly-lessons dialog (docs/features/weekly-lesson-cap/) — opened by the cap
+   *  stopping a practice ("blocked") or by tapping the counter chip ("info"). Lives here,
+   *  like `settingsOpen`, so it can sit on top of any screen. The tick re-reads the stored
+   *  allowance after a pack is granted. */
+  const [lessonsDialog, setLessonsDialog] = useState<LessonsDialogMode | null>(null);
+  const [, setLessonsTick] = useState(0);
 
   /** Live state for a topic's runtime-generated questions — `null` outside one. Not part
    *  of `Screen`, for the same reason `gradeId` isn't: the questions for an adaptive
@@ -230,6 +238,18 @@ function App() {
     answeredCount: number;
     questions: Question[];
   } | null>(null);
+
+  /** Every way into a practice asks this first: at 0 lessons left the weekly-lessons
+   *  dialog opens instead, and nothing starts. Browsing, lessons and history never ask. */
+  function canStartPractice(): boolean {
+    if (student && lessonAllowance.remaining(student.id) <= 0) {
+      setLessonsDialog("blocked");
+      return false;
+    }
+    return true;
+  }
+
+  const paceLevel = paceLevelFor(student?.id ?? "");
 
   function selectStudent(next: Student) {
     rememberStudent(next.id);
@@ -296,6 +316,7 @@ function App() {
    *  caller's unchanged entry point, now just a thin wrapper over this. */
   function enterTopicInGrade(topic: Topic, forGradeId: string) {
     if (topic.adaptive) {
+      if (!canStartPractice()) return;
       if (student) rememberMenuPosition(student.id, { gradeId: forGradeId });
       const { adaptive } = topic;
       const savedTier = student ? loadAdaptiveTier(student.id, forGradeId, topic.id) : null;
@@ -403,6 +424,7 @@ function App() {
     });
   }
 
+  function renderScreen(): ReactNode {
   if (student === null) {
     return (
       <StudentPicker
@@ -457,8 +479,8 @@ function App() {
   }
 
   const grade = grades.find((g) => g.id === gradeId)!;
+  const lessonsLeft = lessonAllowance.remaining(student.id);
   const readAloud = readAloudFor(student.id);
-  const paceLevel = paceLevelFor(student.id);
 
   function finish(topic: Topic | null, lesson: Lesson, correctCount: number) {
     recordPractice({
@@ -516,6 +538,8 @@ function App() {
           onOpenSettings={() => setSettingsOpen(true)}
           avatar={avatarFor(student)}
           onOpenProfile={() => setProfileOpen(true)}
+          lessonsLeft={lessonsLeft}
+          onOpenLessons={() => setLessonsDialog("info")}
           {...settingsProps}
         />
         {profileDrawer}
@@ -550,7 +574,9 @@ function App() {
         heading={topic.title}
         subheading={grade.label}
         levels={topic.levels}
-        onSelect={(level) => setScreen({ name: "practice", topic, lesson: level })}
+        onSelect={(level) => {
+          if (canStartPractice()) setScreen({ name: "practice", topic, lesson: level });
+        }}
         onBack={() => {
           if (student && gradeId) rememberMenuPosition(student.id, { gradeId });
           setScreen({ name: "home" });
@@ -566,13 +592,14 @@ function App() {
         heading={topic.title}
         subheading={grade.label}
         styles={stylesOf(topic)}
-        onSelect={(style) =>
+        onSelect={(style) => {
+          if (!canStartPractice()) return;
           setScreen({
             name: "practice",
             topic,
             lesson: { title: style.title, questions: style.questions },
-          })
-        }
+          });
+        }}
         onBack={() => {
           if (student && gradeId) rememberMenuPosition(student.id, { gradeId });
           setScreen({ name: "home" });
@@ -615,7 +642,10 @@ function App() {
       <Result
         lesson={lesson}
         correctCount={correctCount}
-        onRetry={() => (topic?.adaptive ? enterTopic(topic) : setScreen({ name: "practice", topic, lesson }))}
+        onRetry={() => {
+          if (topic?.adaptive) enterTopic(topic);
+          else if (canStartPractice()) setScreen({ name: "practice", topic, lesson });
+        }}
         onHome={() => setScreen(insideTopic(topic))}
       />
     );
@@ -631,6 +661,24 @@ function App() {
     onHistory={() => setScreen({ name: "history" })}
     onOpenSettings={() => setSettingsOpen(true)}
   />;
+  }
+
+  return (
+    <>
+      {renderScreen()}
+      {student && lessonsDialog && (
+        <LessonsDialog
+          mode={lessonsDialog}
+          remaining={lessonAllowance.remaining(student.id)}
+          onGrant={(packId) => {
+            lessonAllowance.grantPack(packId);
+            setLessonsTick((n) => n + 1);
+          }}
+          onClose={() => setLessonsDialog(null)}
+        />
+      )}
+    </>
+  );
 }
 
 export default App;

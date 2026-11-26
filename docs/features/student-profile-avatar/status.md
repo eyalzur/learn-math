@@ -9,13 +9,13 @@
 - [x] Implementation — developer — 2026-11-26
 - [x] Tests — qa — 2026-11-26
 
-**Current phase:** done — ממתין לריוויו ומיזוג
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `feature/student-profile-avatar`
-**PR:** not opened yet
+**PR:** https://github.com/eyalzur/learn-math/pull/131 — מוזג 2026-11-26
 
 ## Open questions / blockers
 - **Review:** האם 12 החיות מתאימות לשלושת הילדים? ושאר ההחלטות ב-product-spec.md, "Decisions".
-- **Merge:** גרסה 1.63.0; ב-#126/#129 גם מעלים גרסה, צפוי bump מחדש במיזוג.
+- **Merge:** גרסה 1.64.0 (הועלתה במיזוג).
 
 ## Docs
 - [Product spec](./product-spec.md)
