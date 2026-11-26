@@ -10,7 +10,9 @@
     "preview": "vite preview",
     "test:e2e": "playwright test",
     "bump:feature": "node scripts/bump-version.mjs feature",
-    "bump:fix": "node scripts/bump-version.mjs fix"
+    "bump:fix": "node scripts/bump-version.mjs fix",
+    "kb": "node kb/tools/kb.mjs",
+    "kb:test": "node --test kb/tools/kb.test.mjs"
   },
   "dependencies": {
     "react": "^19.2.8",
