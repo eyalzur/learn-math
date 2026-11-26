@@ -10,8 +10,9 @@
 ## Progress
 - [x] Product / Design / Architecture / Implementation / Tests — 2026-11-26 (תיקון קטן, מסמך אחד)
 
-**Current phase:** ממתין לריוויו
+**Current phase:** done — מוזג ל-`main`
 **Branch:** `fix/triangle-vertex-labels`
+**PR:** https://github.com/eyalzur/learn-math/pull/130 — מוזג 2026-11-26
 
 ## Open questions / blockers
 None.
