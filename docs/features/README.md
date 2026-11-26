@@ -88,4 +88,4 @@ architecture, implementation notes, and tests.
 | פתיחת סוגריים בביטויים אלגבריים — מסבירה תהליך ומושגים | 🟢 done — מוזג ל-main | [status](./algebraic-brackets-teaching/status.md) |
 | קושי מסתגל למיקה — שלב א׳ (חיבור/חיסור עד 10, חיסור עד 100) | 🟢 done — מוזג ל-main | [status](./mika-adaptive-difficulty/status.md) |
 | מכסת שיעורים שבועית (שיעורים נוספים משותפים לכל הבית) | 🟢 done — מוזג ל-main | [status](./weekly-lesson-cap/status.md) |
-| בסיס ידע (KB) בפורמט OKF | 🟡 נבנה — ממתין לריוויו | [status](./knowledge-base/status.md) |
+| בסיס ידע (KB) בפורמט OKF | 🟢 done — מוזג ל-main | [status](./knowledge-base/status.md) |

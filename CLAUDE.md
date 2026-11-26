@@ -74,4 +74,3 @@ kb/             בסיס הידע (OKF v0.2) + kb/tools                         
 ### רק המשתמש יכול לעשות
 * **הגנת בראנץ'.** `main` נפרס אוטומטית ועדיין אין דרישה שהבדיקות יעברו לפני מיזוג: Settings → Branches → `main` → require `check` + `test`.
 * **תקרת שימוש ב-Anthropic.** לוודא ש-`$5`/חודש מוגדר ב-Rate limits של ה-workspace `Default` (לא אומת).
-* **בסיס הידע — ריוויו על התוכנית.** [`docs/features/knowledge-base/plan.md`](docs/features/knowledge-base/plan.md).
