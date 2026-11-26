@@ -6,7 +6,7 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
-| מנוי הורים — אפליקציית הורים, מסד נתונים ותשלום | 🟡 עיצוב נכתב, ממתין לארכיטקטורה | [status](./parent-subscription/status.md) |
+| מנוי הורים — אפליקציית הורים, מסד נתונים ותשלום | 🟡 מפרט, עיצוב וארכיטקטורה נכתבו — ממתין להחלטות | [status](./parent-subscription/status.md) |
 | תרגול שנקטע חוזר לנקודה המדויקת | 🟢 done — מוזג ל-main | [status](./resume-interrupted-practice/status.md) |
 | פרופיל תלמיד ואווטר | 🟢 done — מוזג ל-main | [status](./student-profile-avatar/status.md) |
 | אותיות קודקוד על ציורי זוויות ומשולשים | 🟢 done — מוזג ל-main | [status](./triangle-vertex-labels/status.md) |
