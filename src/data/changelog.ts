@@ -19,6 +19,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.65.0",
+    icon: "↩️",
+    description:
+      "תרגול שעוזבים באמצע (חזרה, סגירת האפליקציה, מעבר לתלמיד/ה אחר/ת) וחוזרים אליו תוך יום — ממשיך בדיוק מהשאלה שהפסיקו בה, לא מתחיל מהתחלה.",
+  },
+  {
     version: "1.64.0",
     icon: "🦊",
     description:

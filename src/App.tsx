@@ -24,6 +24,12 @@ import {
   saveAdaptiveTier,
   clearStudent as clearStudentAdaptiveTiers,
 } from "./data/adaptiveProgress";
+import {
+  loadInterruptedSession,
+  saveInterruptedSession,
+  clearInterruptedSession,
+  clearStudent as clearStudentInterruptedSessions,
+} from "./data/interruptedSession";
 import { lessonAllowance } from "./data/lessonAllowance";
 import { userStore } from "./data/userStore";
 import { startIdleSpotlightObserver } from "./data/idleSpotlight";
@@ -100,8 +106,20 @@ type Screen =
   | { name: "levels"; topic: Topic | null }
   | { name: "styles"; topic: Topic }
   | { name: "history" }
-  | { name: "practice"; topic: Topic | null; lesson: Lesson }
-  | { name: "result"; topic: Topic | null; lesson: Lesson; correctCount: number };
+  | {
+      name: "practice";
+      topic: Topic | null;
+      lesson: Lesson;
+      /** The level/style `id` this lesson was entered with — absent for an adaptive topic
+       *  (no level/style to pick). Carried on `screen` so the answer handler below knows
+       *  which key to write the interrupted-session snapshot to; see
+       *  docs/features/resume-interrupted-practice/architecture.md. */
+      lessonKey?: string;
+      /** Where to resume into `Practice` — set only when entering on top of a saved,
+       *  not-yet-finished run. Absent means start at question 1 as always. */
+      resume?: { index: number; correctCount: number };
+    }
+  | { name: "result"; topic: Topic | null; lesson: Lesson; lessonKey?: string; correctCount: number };
 
 /**
  * Where a topic is entered, and where leaving it returns to — computed, never remembered.
@@ -277,6 +295,7 @@ function App() {
     });
     clearStudentProgress(id);
     clearStudentAdaptiveTiers(id);
+    clearStudentInterruptedSessions(id);
   }
 
   /** Saved immediately, and mirrored into both the roster and the current student so the
@@ -319,6 +338,32 @@ function App() {
       if (!canStartPractice()) return;
       if (student) rememberMenuPosition(student.id, { gradeId: forGradeId });
       const { adaptive } = topic;
+      // An interrupted run (if fresh and still valid for today's content) always wins over
+      // starting a new one at a saved difficulty tier — resuming the exact same run makes
+      // "which tier to start a *new* run at" moot. See
+      // docs/features/resume-interrupted-practice/architecture.md.
+      const interrupted = student
+        ? loadInterruptedSession(student.id, forGradeId, topic.id, undefined, {
+            questionCount: adaptive.questionCount,
+            minDifficulty: adaptive.minDifficulty,
+            maxDifficulty: adaptive.maxDifficulty,
+          })
+        : null;
+      if (interrupted) {
+        setAdaptiveSession({
+          difficulty: interrupted.difficulty ?? adaptive.initialDifficulty,
+          streak: interrupted.streak ?? 0,
+          answeredCount: interrupted.answeredCount,
+          questions: interrupted.questions,
+        });
+        setScreen({
+          name: "practice",
+          topic,
+          lesson: { title: topic.title, questions: interrupted.questions },
+          resume: { index: interrupted.answeredCount, correctCount: interrupted.correctCount },
+        });
+        return;
+      }
       const savedTier = student ? loadAdaptiveTier(student.id, forGradeId, topic.id) : null;
       const startingDifficulty =
         savedTier === null
@@ -390,10 +435,16 @@ function App() {
 
   /** The one thing an adaptive lesson adds to answering a question: the next not-yet-seen
    *  question is regenerated at the updated difficulty. Questions already shown are left
-   *  alone — only what the child hasn't reached yet ever changes under them. */
-  function handleAdaptiveAnswered(topic: Topic, correct: boolean) {
-    const adaptive = topic.adaptive;
-    if (!adaptive || !adaptiveSession) return;
+   *  alone — only what the child hasn't reached yet ever changes under them.
+   *
+   *  Computes `difficulty`/`streak`/`questions` as plain local values, read from the
+   *  `adaptiveSession` closure rather than from `prev` inside an updater — the same
+   *  simplification `adaptive-lesson-start` already made (there is only one answer being
+   *  processed at a time), needed here so the freshly computed values are also available,
+   *  synchronously, to `handleAnswered` below for the interrupted-session write. */
+  function handleAdaptiveAnswered(topic: Topic & { adaptive: NonNullable<Topic["adaptive"]> }, correct: boolean) {
+    const { adaptive } = topic;
+    if (!adaptiveSession) return null;
     const streak = correct
       ? adaptiveSession.streak > 0
         ? adaptiveSession.streak + 1
@@ -402,26 +453,61 @@ function App() {
         ? adaptiveSession.streak - 1
         : -1;
     const difficulty = adaptive.nextDifficulty(adaptiveSession.difficulty, correct, streak, paceLevel);
+    const answeredCount = adaptiveSession.answeredCount + 1;
+    // Only the question at exactly `answeredCount` is ever shown as generated here — every
+    // index past it gets regenerated again (and discarded) the next time this runs, so only
+    // this one needs to avoid repeating the question just answered. See
+    // docs/features/no-repeat-consecutive-questions/architecture.md, "Edge Cases".
+    const questions = adaptiveSession.questions.map((q, i) => {
+      if (i < answeredCount) return q;
+      if (i === answeredCount) {
+        return withoutRepeatingPrompt(
+          () => adaptive.generate(difficulty),
+          adaptiveSession.questions[answeredCount - 1].prompt,
+        );
+      }
+      return adaptive.generate(difficulty);
+    });
     // Written on every answer, not only at the end of a session — this is also the save
     // point for a session abandoned via "חזרה" (there is no separate save there), see
     // docs/features/adaptive-lesson-start/architecture.md.
     if (student && gradeId) saveAdaptiveTier(student.id, gradeId, topic.id, difficulty);
-    setAdaptiveSession((prev) => {
-      if (!prev) return prev;
-      const answeredCount = prev.answeredCount + 1;
-      // Only the question at exactly `answeredCount` is ever shown as generated here — every
-      // index past it gets regenerated again (and discarded) the next time this runs, so only
-      // this one needs to avoid repeating the question just answered. See
-      // docs/features/no-repeat-consecutive-questions/architecture.md, "Edge Cases".
-      const questions = prev.questions.map((q, i) => {
-        if (i < answeredCount) return q;
-        if (i === answeredCount) {
-          return withoutRepeatingPrompt(() => adaptive.generate(difficulty), prev.questions[answeredCount - 1].prompt);
-        }
-        return adaptive.generate(difficulty);
+    setAdaptiveSession({ difficulty, streak, answeredCount, questions });
+    return { difficulty, streak, questions };
+  }
+
+  /** Fires after every answer, for every lesson — not only adaptive ones. Runs the
+   *  adaptive-only difficulty bookkeeping above when relevant, then always persists the
+   *  interrupted-session snapshot a later visit can resume from. See
+   *  docs/features/resume-interrupted-practice/architecture.md. */
+  function handleAnswered(
+    topic: Topic | null,
+    lesson: Lesson,
+    lessonKey: string | undefined,
+    correct: boolean,
+    progress: { answeredCount: number; correctCount: number },
+  ) {
+    if (!topic) return;
+    let questions = lesson.questions;
+    let difficulty: number | undefined;
+    let streak: number | undefined;
+    if (topic.adaptive) {
+      const result = handleAdaptiveAnswered(topic as Topic & { adaptive: NonNullable<Topic["adaptive"]> }, correct);
+      if (result) {
+        questions = result.questions;
+        difficulty = result.difficulty;
+        streak = result.streak;
+      }
+    }
+    if (student && gradeId) {
+      saveInterruptedSession(student.id, gradeId, topic.id, lessonKey, {
+        answeredCount: progress.answeredCount,
+        correctCount: progress.correctCount,
+        questions,
+        difficulty,
+        streak,
       });
-      return { difficulty, streak, answeredCount, questions };
-    });
+    }
   }
 
   function renderScreen(): ReactNode {
@@ -482,7 +568,16 @@ function App() {
   const lessonsLeft = lessonAllowance.remaining(student.id);
   const readAloud = readAloudFor(student.id);
 
-  function finish(topic: Topic | null, lesson: Lesson, correctCount: number) {
+  function finish(
+    topic: Topic | null,
+    lesson: Lesson,
+    correctCount: number,
+    lessonKey: string | undefined,
+  ) {
+    // A run that reached the result screen is done — no saved position should be offered
+    // back on the next visit (leaving mid-practice, not finishing, is the only thing that
+    // should resume). See docs/features/resume-interrupted-practice/architecture.md.
+    if (student && gradeId && topic) clearInterruptedSession(student.id, gradeId, topic.id, lessonKey);
     recordPractice({
       at: new Date().toISOString(),
       studentId: student!.id,
@@ -504,7 +599,7 @@ function App() {
     // handleAdaptiveAnswered) — clearing this in-memory session doesn't lose it, see
     // docs/features/adaptive-lesson-start/architecture.md.
     setAdaptiveSession(null);
-    setScreen({ name: "result", topic, lesson, correctCount });
+    setScreen({ name: "result", topic, lesson, lessonKey, correctCount });
   }
 
   // Shared between whichever screen's own ⚙️ button decides whether to show itself (via
@@ -575,7 +670,16 @@ function App() {
         subheading={grade.label}
         levels={topic.levels}
         onSelect={(level) => {
-          if (canStartPractice()) setScreen({ name: "practice", topic, lesson: level });
+          if (!canStartPractice()) return;
+          const interrupted =
+            student && gradeId ? loadInterruptedSession(student.id, gradeId, topic.id, level.id) : null;
+          setScreen({
+            name: "practice",
+            topic,
+            lesson: interrupted ? { title: level.title, questions: interrupted.questions } : level,
+            lessonKey: level.id,
+            resume: interrupted ? { index: interrupted.answeredCount, correctCount: interrupted.correctCount } : undefined,
+          });
         }}
         onBack={() => {
           if (student && gradeId) rememberMenuPosition(student.id, { gradeId });
@@ -594,10 +698,17 @@ function App() {
         styles={stylesOf(topic)}
         onSelect={(style) => {
           if (!canStartPractice()) return;
+          const interrupted =
+            student && gradeId ? loadInterruptedSession(student.id, gradeId, topic.id, style.id) : null;
           setScreen({
             name: "practice",
             topic,
-            lesson: { title: style.title, questions: style.questions },
+            lesson: {
+              title: style.title,
+              questions: interrupted ? interrupted.questions : style.questions,
+            },
+            lessonKey: style.id,
+            resume: interrupted ? { index: interrupted.answeredCount, correctCount: interrupted.correctCount } : undefined,
           });
         }}
         onBack={() => {
@@ -621,7 +732,7 @@ function App() {
       <>
         <Practice
           lesson={lesson}
-          onFinish={(correctCount) => finish(topic, lesson, correctCount)}
+          onFinish={(correctCount) => finish(topic, lesson, correctCount, screen.lessonKey)}
           onExit={() => {
             setAdaptiveSession(null);
             setScreen(insideTopic(topic));
@@ -629,7 +740,9 @@ function App() {
           readAloud={readAloud}
           studentId={student.id}
           onDisableReadAloud={() => settingsProps.onReadAloudChange(false)}
-          onAnswered={topic?.adaptive ? (correct) => handleAdaptiveAnswered(topic, correct) : undefined}
+          onAnswered={(correct, progress) => handleAnswered(topic, lesson, screen.lessonKey, correct, progress)}
+          initialIndex={screen.resume?.index}
+          initialCorrectCount={screen.resume?.correctCount}
         />
         {settingsOpen && <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} {...settingsProps} />}
       </>
@@ -637,14 +750,14 @@ function App() {
   }
 
   if (screen.name === "result") {
-    const { topic, lesson, correctCount } = screen;
+    const { topic, lesson, lessonKey, correctCount } = screen;
     return (
       <Result
         lesson={lesson}
         correctCount={correctCount}
         onRetry={() => {
           if (topic?.adaptive) enterTopic(topic);
-          else if (canStartPractice()) setScreen({ name: "practice", topic, lesson });
+          else if (canStartPractice()) setScreen({ name: "practice", topic, lesson, lessonKey });
         }}
         onHome={() => setScreen(insideTopic(topic))}
       />

@@ -42,9 +42,16 @@ interface PracticeProps {
    *  architecture.md. */
   onDisableReadAloud: () => void;
   /** Fires once per question, right after right/wrong is decided — before the child even
-   *  sees the feedback or explanation. Only an adaptive lesson supplies this; every other
-   *  lesson leaves it unset and nothing here changes for it. */
-  onAnswered?: (correct: boolean) => void;
+   *  sees the feedback or explanation. Always supplied (every lesson, not only adaptive
+   *  ones) — see docs/features/resume-interrupted-practice/architecture.md: the caller
+   *  uses this to persist exactly how far into the run the student has gotten, so leaving
+   *  mid-practice and coming back resumes at the same question. `answeredCount` and
+   *  `correctCount` are the run's totals *including* this answer. */
+  onAnswered: (correct: boolean, progress: { answeredCount: number; correctCount: number }) => void;
+  /** Where to start — a resumed run's saved position, or `0`/`0` for a fresh one (the
+   *  default). See docs/features/resume-interrupted-practice/architecture.md. */
+  initialIndex?: number;
+  initialCorrectCount?: number;
 }
 
 /** One burst-star particle's randomized path — picked once per correct answer in
@@ -86,11 +93,13 @@ export function Practice({
   studentId,
   onDisableReadAloud,
   onAnswered,
+  initialIndex = 0,
+  initialCorrectCount = 0,
 }: PracticeProps) {
-  const [index, setIndex] = useState(0);
+  const [index, setIndex] = useState(initialIndex);
   const [feedback, setFeedback] = useState<"correct" | "wrong" | null>(null);
   const [burst, setBurst] = useState<BurstStar[]>([]);
-  const [correctCount, setCorrectCount] = useState(0);
+  const [correctCount, setCorrectCount] = useState(initialCorrectCount);
   const [speakingBox, setSpeakingBox] = useState<SpeakingBox>(null);
   /** Shows the "stop auto-read-aloud?" ask (see `AutoReadPrompt`) right after the student
    *  manually stops a question/hint reading before it finished — see `toggleSpeech` below.
@@ -218,7 +227,11 @@ export function Practice({
       setCorrectCount((c) => c + 1);
       setBurst(randomBurst());
     }
-    onAnswered?.(isCorrect);
+    // Computed locally, not read back from `correctCount` state — `setCorrectCount` above
+    // hasn't applied yet at this point in the same call, so the state variable still holds
+    // the pre-increment value (see docs/features/scored-answer-practice/architecture.md).
+    const updatedCorrectCount = isCorrect ? correctCount + 1 : correctCount;
+    onAnswered(isCorrect, { answeredCount: index + 1, correctCount: updatedCorrectCount });
     if (!isCorrect) setDiagnosis(diagnose(question, parsed));
   }
 

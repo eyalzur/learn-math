@@ -6,6 +6,7 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
+| תרגול שנקטע חוזר לנקודה המדויקת | 🟢 done — מוזג ל-main | [status](./resume-interrupted-practice/status.md) |
 | פרופיל תלמיד ואווטר | 🟢 done — מוזג ל-main | [status](./student-profile-avatar/status.md) |
 | אותיות קודקוד על ציורי זוויות ומשולשים | 🟢 done — מוזג ל-main | [status](./triangle-vertex-labels/status.md) |
 | רמקול שקט בפינה + שיעור שדומה לתרגול | 🟢 done — מוזג ל-main | [status](./quiet-speaker-lesson-parity/status.md) |
