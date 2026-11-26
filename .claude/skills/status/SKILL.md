@@ -15,7 +15,7 @@ node scripts/status.mjs
 ```
 
 That prints every feature's phase checklist from `docs/features/*/status.md`, the open
-work in `CLAUDE.md` that never entered the pipeline, the open pull requests, and the git
+the ideas, requests and user-only items in `docs/BACKLOG.md`, the open pull requests, and the git
 state. **Read it rather than remembering** — a status assembled from memory is exactly the
 one that goes stale.
 
@@ -28,7 +28,7 @@ else; `xxx--` means it is planned down to the architecture and nobody has writte
 
 | Stage | What it means | What unblocks it |
 |---|---|---|
-| **רעיון** | Written down in `CLAUDE.md`, no folder in `docs/features/` | `/feature` — or a product decision from the user first |
+| **רעיון** | Written down in `docs/BACKLOG.md`, no folder in `docs/features/` | `/feature` — or a product decision from the user first |
 | **ספק** `x----` | What and why decided; no screens | `/designer` |
 | **עיצוב** `xx---` | Screens and copy decided; no technical plan | `/tech-lead` |
 | **מוכן לפיתוח** `xxx--` | Fully planned, nobody has written code | `/developer` |
@@ -69,6 +69,6 @@ Hebrew, like the rest of the project's user-facing text.
 ## 4. Anything genuinely ambiguous
 
 If an item's stage cannot be read off the docs — a `status.md` that disagrees with itself,
-or an idea in `CLAUDE.md` too vague to place — say so in one line under the table rather
+or an idea in `docs/BACKLOG.md` too vague to place — say so in one line under the table rather
 than guessing a stage for it. A status that quietly invents a stage is worse than one that
 admits a gap, because he will plan around it.
