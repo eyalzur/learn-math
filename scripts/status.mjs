@@ -77,10 +77,12 @@ for (const f of features) {
   console.log("");
 }
 
-console.log("=== OPEN WORK NOT IN THE PIPELINE (CLAUDE.md, 'מה פתוח') ===\n");
-const claude = readFileSync(join(ROOT, "CLAUDE.md"), "utf8");
-const open = claude.split("## מה פתוח")[1]?.split("\n## ")[0] ?? "";
-console.log(open.trim() || "(section not found)");
+console.log("=== BACKLOG: IDEAS, REQUESTS AND USER-ONLY ITEMS (docs/BACKLOG.md) ===\n");
+let backlog = "";
+try {
+  backlog = readFileSync(join(ROOT, "docs/BACKLOG.md"), "utf8");
+} catch {}
+console.log(backlog.trim() || "(docs/BACKLOG.md not found)");
 
 console.log("\n=== GIT ===\n");
 console.log("branch          ", sh("git branch --show-current"));
