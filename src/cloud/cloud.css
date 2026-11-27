@@ -62,3 +62,6 @@ html[data-app="parents"] body { background: var(--bg); }
 .cloud-landing .cloud-card { text-align: center; }
 .cloud-tabs-tools { flex: 1 1 100%; display: flex; gap: 6px; align-items: center; font-size: 0.8rem; }
 .cloud-tabs-tools button { flex: 0 0 auto; min-height: 28px; border-radius: 8px; border: 1px solid var(--accent-border); background: #fff; color: var(--text-h); font: inherit; font-size: 0.8rem; box-shadow: none; padding: 2px 8px; }
+
+.cloud-btn.whatsapp { display: flex; align-items: center; justify-content: center; text-decoration: none; background: #25d366; border-color: #1da851; color: #073b1a; }
+.cloud-btn.whatsapp::before { content: "💬"; margin-inline-end: 8px; }

@@ -40,6 +40,9 @@
 - `parentProgress(childId)` ← `GET /parent/children/:cid/progress`: `practicesThisWeek`, `topics[]` (נכון/סה"כ, אחוז, מספר תרגולים, רמה אדפטיבית, תרגול אחרון) ו-`recent` (10 אחרונים). מחושב מכל ההיסטוריה, לא רק 50 אחרונים.
 - בדיקות דפדפן רצות פעמיים: `PAYWALL=0` (ברירת מחדל) ו-`PAYWALL=1`.
 
+## עדכון 2026-11-27: שליחה בוואטסאפ
+קישור `https://wa.me/?text=<הודעה>` (בלי מספר: השולח בוחר נמען), `target=_blank`. אין שינוי בשרת ואין שמירת טלפונים. ההודעות ב-`inviteText` (`CodeCard.tsx`). לא נבדק בפועל מול אפליקציית וואטסאפ בטלפון — נבדק רק שהקישור נכון.
+
 ## Data / State Changes
 Firestore (תחת `households/{hid}`):
 - `households/{hid}` — `{ createdAt, subscription: { status: trial|active|expired, trialEndsAt, nextBillingAt, provider } }`

@@ -216,3 +216,25 @@ test('a child\'s profile is made with the same dialog as always: a name, a grade
   // nothing else about the child is asked for
   await expect(page.getByLabel(/מייל|טלפון|תאריך/)).toHaveCount(0);
 });
+
+test('every invitation can be sent by WhatsApp: the message carries the code and a link that opens the right app', async ({ page }) => {
+  await signInAsParent(page, uniqueEmail());
+  const childCode = await parentChildCode(page);
+  const forKids = page.getByRole('link', { name: 'שליחה בוואטסאפ' });
+  const kidsHref = new URL((await forKids.getAttribute('href'))!);
+  expect(kidsHref.origin + kidsHref.pathname).toBe('https://wa.me/');
+  const kidsText = kidsHref.searchParams.get('text')!;
+  expect(kidsText).toContain(childCode);
+  expect(kidsText).toMatch(new RegExp(`/learn-math/\\?code=${childCode}`)); // the kids' app, code filled in
+  expect(kidsText).not.toContain('/parents/');
+  await expect(forKids).toHaveAttribute('target', '_blank');
+
+  await page.getByRole('button', { name: '← חזרה' }).click();
+  await page.getByRole('button', { name: 'הזמנת הורה נוסף' }).click();
+  await expect(page.getByLabel('קוד', { exact: true })).toHaveText(/\d{4}/);
+  const joinCode = (await page.getByLabel('קוד', { exact: true }).innerText()).trim();
+  const parentHref = new URL((await page.getByRole('link', { name: 'שליחה בוואטסאפ' }).getAttribute('href'))!);
+  const parentText = parentHref.searchParams.get('text')!;
+  expect(parentText).toContain(joinCode);
+  expect(parentText).toContain(`/learn-math/parents/?join=${joinCode}`); // the parents' app, code filled in
+});

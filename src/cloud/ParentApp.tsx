@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { grades } from "../data/curriculum";
 import { pricing } from "../data/pricing";
 import { errorText } from "./errors";
-import { appLinks, CodeCard } from "./CodeCard";
+import { appLinks, CodeCard, inviteText } from "./CodeCard";
 import { type ChildView, type CloudApi, type HouseholdView, type ProgressView } from "./server/types";
 
 type View =
@@ -133,7 +133,7 @@ export function ParentApp({ api, joinCode, onSignOut }: { api: CloudApi; joinCod
     return (
       <Shell back={back} error={error} toast={toast} title="חיבור ילד/ה">
         <p style={{ textAlign: "center" }}>הילדים יוצרים פרופיל באפליקציה שלהם ומקלידים את הקוד, או סורקים אותו.</p>
-        <FreshCode make={api.parentChildCode} link={appLinks.kids} qrLabel="QR לחיבור ילד" run={run} />
+        <FreshCode make={api.parentChildCode} link={appLinks.kids} share={inviteText.child} qrLabel="QR לחיבור ילד" run={run} />
       </Shell>
     );
   }
@@ -142,7 +142,7 @@ export function ParentApp({ api, joinCode, onSignOut }: { api: CloudApi; joinCod
     return (
       <Shell back={back} error={error} toast={toast} title="הזמנת הורה נוסף">
         <p style={{ textAlign: "center" }}>ההורה השני פותח את אפליקציית ההורים ומקליד את הקוד בכניסה, או סורק אותו.</p>
-        <FreshCode make={api.parentInvite} link={appLinks.parents} qrLabel="QR להצטרפות הורה" run={run} />
+        <FreshCode make={api.parentInvite} link={appLinks.parents} share={inviteText.parent} qrLabel="QR להצטרפות הורה" run={run} />
       </Shell>
     );
   }
@@ -220,9 +220,10 @@ function Shell({ title, back, error, toast, children }: { title: string; back: (
 }
 
 /** Asks for a fresh code when the screen opens, and again on request. */
-function FreshCode({ make, link, qrLabel, run }: {
+function FreshCode({ make, link, share, qrLabel, run }: {
   make: () => Promise<{ code: string; expiresAt: string }>;
   link: (code: string) => string;
+  share: (code: string, link: string) => string;
   qrLabel: string;
   run: <T>(f: () => Promise<T>) => Promise<T | undefined>;
 }) {
@@ -234,7 +235,7 @@ function FreshCode({ make, link, qrLabel, run }: {
   useEffect(() => { void fresh(); }, [fresh]);
   return (
     <>
-      <CodeCard code={code} link={code ? link(code) : ""} qrLabel={qrLabel} />
+      <CodeCard code={code} link={code ? link(code) : ""} qrLabel={qrLabel} shareText={code ? share(code, link(code)) : undefined} />
       <button className="cloud-btn" onClick={fresh}>קוד חדש</button>
     </>
   );
