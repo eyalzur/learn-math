@@ -93,7 +93,7 @@ test('deleting a child needs confirmation, removes them, and the device is sent 
   await parent.getByRole('button', { name: '← חזרה' }).click();
   await parent.getByRole('button', { name: /מיקה/ }).click();
   await parent.getByRole('button', { name: 'מחק את הילד/ה' }).click();
-  await expect(parent.getByText(/יימחק הכל: ההתקדמות, לוח הזמנים והתזכורות/)).toBeVisible();
+  await expect(parent.getByText(/יימחק הכל: ההתקדמות וההגדרות/)).toBeVisible();
   await parent.getByRole('button', { name: 'ביטול' }).click();
   await expect(parent.getByRole('dialog')).toHaveCount(0);
   await parent.getByRole('button', { name: 'מחק את הילד/ה' }).click();
@@ -116,28 +116,4 @@ test('a second parent joins with a code; a third is refused', async ({ browser }
   await dad.getByRole('button', { name: 'חיבורים' }).click();
   await expect(dad.getByText('2/2')).toBeVisible();
   await expect(dad.getByRole('button', { name: 'הזמנת הורה נוסף' })).toHaveCount(0);
-});
-
-test('schedule saves, and a reminder reaches the child', async ({ browser }) => {
-  const parent = await (await browser.newContext()).newPage();
-  await signInAsParent(parent, uniqueEmail());
-  const code = await addChild(parent, 'רותם');
-  const child = await (await browser.newContext()).newPage();
-  await connectChildDevice(child, code);
-  await expect(child.getByText('שלום רותם!')).toBeVisible();
-
-  await parent.getByRole('button', { name: '← חזרה' }).click();
-  await parent.getByRole('button', { name: 'לוח זמנים' }).first().click();
-  await parent.getByRole('button', { name: 'ג', exact: true }).click();
-  await parent.getByLabel('שעה').fill('17:30');
-  await parent.getByRole('button', { name: 'שמור' }).click();
-  await expect(parent.getByText('נשמר')).toBeVisible();
-
-  await parent.getByRole('button', { name: '← חזרה' }).click();
-  await parent.getByRole('button', { name: 'שלח תזכורת' }).first().click();
-  await parent.getByRole('button', { name: 'הגיע הזמן לתרגל 🙂' }).click();
-  await expect(parent.getByText('נשלח ✓')).toBeVisible();
-
-  await child.getByRole('button', { name: '↻ רענון' }).click();
-  await expect(child.getByText('הגיע הזמן לתרגל 🙂')).toBeVisible();
 });

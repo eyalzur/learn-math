@@ -56,21 +56,6 @@ export interface HistoryEntry {
   total: number;
 }
 
-export interface Schedule {
-  days: number[];
-  /** "HH:MM" */
-  time: string;
-}
-
-export interface InboxMessage {
-  id: string;
-  at: string;
-  text: string;
-  read: boolean;
-}
-
-export const REMINDER_TEXTS = ["הגיע הזמן לתרגל 🙂", "כל הכבוד על השבוע!"] as const;
-
 export interface ChildSettings {
   readAloud: boolean;
   pace: "slow" | "medium" | "fast";
@@ -88,7 +73,6 @@ export interface ChildMe {
   child: ChildProfile;
   subscription: Pick<SubscriptionView, "status" | "active">;
   settings: ChildSettings;
-  unreadMessages: number;
 }
 
 /** A practice run held by the server: where the child is, and the questions. The questions
@@ -126,9 +110,6 @@ export interface CloudApi {
   parentInvite(): Promise<{ code: string; expiresAt: string }>;
   parentJoin(code: string): Promise<HouseholdView>;
   parentHistory(childId: string): Promise<HistoryEntry[]>;
-  parentSchedule(childId: string): Promise<Schedule | null>;
-  parentSetSchedule(childId: string, schedule: Schedule): Promise<Schedule>;
-  parentSendReminder(childId: string, textIndex: number): Promise<void>;
   /** Billing stub: no real payment — marks the next period as paid. Replaced by a real
    *  provider (Cardcom) later without touching the screens. */
   parentPay(): Promise<HouseholdView>;
@@ -141,6 +122,4 @@ export interface CloudApi {
   childAnswer(sessionId: string, correct: boolean): Promise<AnswerResult>;
   childFinish(sessionId: string): Promise<void>;
   childAbandon(sessionId: string): Promise<void>;
-  childInbox(): Promise<InboxMessage[]>;
-  childMarkInboxRead(): Promise<void>;
 }

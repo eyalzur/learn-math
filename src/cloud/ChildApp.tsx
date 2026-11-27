@@ -8,7 +8,7 @@ import { Practice } from "../components/Practice";
 import { Result } from "../components/Result";
 import { SettingsDialog } from "../components/SettingsDialog";
 import { TopicPicker } from "../components/TopicPicker";
-import { ApiError, type ChildMe, type CloudApi, type InboxMessage, type SessionView } from "./server/types";
+import { ApiError, type ChildMe, type CloudApi, type SessionView } from "./server/types";
 
 type Screen =
   | { name: "home" }
@@ -25,7 +25,6 @@ const STOP_TEXT = "בקשו מההורים להמשיך";
 export function ChildApp({ api, onLeave }: { api: CloudApi; onLeave: () => void }) {
   const [me, setMe] = useState<ChildMe | null>(null);
   const [screen, setScreen] = useState<Screen>({ name: "home" });
-  const [message, setMessage] = useState<InboxMessage | null>(null);
   const [stopped, setStopped] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [offline, setOffline] = useState(false);
@@ -35,10 +34,6 @@ export function ChildApp({ api, onLeave }: { api: CloudApi; onLeave: () => void 
       const next = await api.childMe();
       setMe(next);
       setOffline(false);
-      if (next.unreadMessages > 0) {
-        const unread = (await api.childInbox()).find((m) => !m.read);
-        setMessage(unread ?? null);
-      }
     } catch (e) {
       if (e instanceof ApiError && (e.code === "device_revoked" || e.code === "unauthorized")) onLeave();
       else setOffline(true);
@@ -79,12 +74,6 @@ export function ChildApp({ api, onLeave }: { api: CloudApi; onLeave: () => void 
     }
   }
 
-  const banner = message && (
-    <div className="cloud-banner" role="status" style={{ position: "fixed", top: 8, left: 8, right: 8, zIndex: 40 }}>
-      {message.text}{" "}
-      <button className="cloud-link link-button" onClick={async () => { await api.childMarkInboxRead(); setMessage(null); }} aria-label="סגור הודעה">✓</button>
-    </div>
-  );
   const offlineBar = offline && <div className="cloud-banner stopped" role="alert" style={{ position: "fixed", bottom: 8, left: 8, right: 8, zIndex: 40 }}>אין חיבור עכשיו</div>;
 
   if (screen.name === "practice") {
@@ -118,7 +107,6 @@ export function ChildApp({ api, onLeave }: { api: CloudApi; onLeave: () => void 
           }}
           onExit={() => setScreen({ name: "home" })}
         />
-        {banner}
         {offlineBar}
       </>
     );
@@ -149,7 +137,6 @@ export function ChildApp({ api, onLeave }: { api: CloudApi; onLeave: () => void 
         {...settingsProps}
       />
       {settingsOpen && <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} {...settingsProps} />}
-      {banner}
       {offlineBar}
     </>
   );

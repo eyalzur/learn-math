@@ -50,12 +50,6 @@ export function createApp(o: AppOptions) {
   app.post("/parent/children/:cid/code", h(async (q, r) => r.json(await svc.parentConnectCode(o.deps, await parent(q), q.params.cid))));
   app.post("/parent/children/:cid/disconnect", h(async (q, r) => r.json(await svc.parentDisconnectDevices(o.deps, await parent(q), q.params.cid))));
   app.get("/parent/children/:cid/history", h(async (q, r) => r.json(await svc.parentHistory(o.deps, await parent(q), q.params.cid))));
-  app.get("/parent/children/:cid/schedule", h(async (q, r) => r.json(await svc.parentSchedule(o.deps, await parent(q), q.params.cid))));
-  app.put("/parent/children/:cid/schedule", h(async (q, r) => r.json(await svc.parentSetSchedule(o.deps, await parent(q), q.params.cid, q.body))));
-  app.post("/parent/children/:cid/reminder", h(async (q, r) => {
-    await svc.parentSendReminder(o.deps, await parent(q), q.params.cid, Number(q.body?.textIndex));
-    r.json({ ok: true });
-  }));
   app.post("/parent/invite", h(async (q, r) => r.json(await svc.parentInvite(o.deps, await parent(q)))));
   app.post("/parent/join", h(async (q, r) => {
     const p = await parent(q);
@@ -86,8 +80,6 @@ export function createApp(o: AppOptions) {
   app.post("/child/session", h(async (q, r) => r.json(await svc.childStartSession(o.deps, child(q), q.body ?? {}))));
   app.post("/child/session/:sid/answer", h(async (q, r) => r.json(await svc.childAnswer(o.deps, child(q), q.params.sid, q.body?.correct === true))));
   app.post("/child/session/:sid/finish", h(async (q, r) => { await svc.childFinish(o.deps, child(q), q.params.sid); r.json({ ok: true }); }));
-  app.get("/child/inbox", h(async (q, r) => r.json(await svc.childInbox(o.deps, child(q)))));
-  app.post("/child/inbox/read", h(async (q, r) => { await svc.childMarkInboxRead(o.deps, child(q)); r.json({ ok: true }); }));
 
   // ── dev only
   if (o.devClock) {

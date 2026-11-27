@@ -33,9 +33,6 @@ export function createHttpApi(
     parentInvite: () => P("POST", "/parent/invite"),
     parentJoin: (code) => P("POST", "/parent/join", { code }),
     parentHistory: (id) => P("GET", `/parent/children/${id}/history`),
-    parentSchedule: (id) => P("GET", `/parent/children/${id}/schedule`),
-    parentSetSchedule: (id, s) => P("PUT", `/parent/children/${id}/schedule`, s),
-    parentSendReminder: async (id, textIndex) => void (await P("POST", `/parent/children/${id}/reminder`, { textIndex })),
     parentPay: () => P("POST", "/parent/subscription/pay"),
     parentCancel: () => P("POST", "/parent/subscription/cancel"),
     childConnect: (code) => call("none", "POST", "/child/connect", { code }),
@@ -45,7 +42,5 @@ export function createHttpApi(
     childAnswer: (sid, correct) => C("POST", `/child/session/${encodeURIComponent(sid)}/answer`, { correct }),
     childFinish: async (sid) => void (await C("POST", `/child/session/${encodeURIComponent(sid)}/finish`)),
     childAbandon: async () => {},
-    childInbox: () => C("GET", "/child/inbox"),
-    childMarkInboxRead: async () => void (await C("POST", "/child/inbox/read")),
   };
 }

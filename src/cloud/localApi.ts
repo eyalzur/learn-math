@@ -93,9 +93,6 @@ export function createLocalApi(tokens: { parent: () => string | undefined; child
     parentInvite: () => svc.parentInvite(deps, parent()),
     parentJoin: (code) => svc.parentJoin(deps, parent(), code),
     parentHistory: (id) => svc.parentHistory(deps, parent(), id),
-    parentSchedule: (id) => svc.parentSchedule(deps, parent(), id),
-    parentSetSchedule: (id, s) => svc.parentSetSchedule(deps, parent(), id, s),
-    parentSendReminder: (id, i) => svc.parentSendReminder(deps, parent(), id, i),
     parentPay: () => svc.parentPay(deps, parent()),
     parentCancel: () => svc.parentCancel(deps, parent()),
     childConnect: async (code) => {
@@ -108,7 +105,5 @@ export function createLocalApi(tokens: { parent: () => string | undefined; child
     childAnswer: (sid, correct) => svc.childAnswer(deps, child(), sid, correct),
     childFinish: (sid) => svc.childFinish(deps, child(), sid),
     childAbandon: (sid) => svc.childAbandon(deps, child(), sid),
-    childInbox: () => svc.childInbox(deps, child()),
-    childMarkInboxRead: () => svc.childMarkInboxRead(deps, child()),
   };
 }

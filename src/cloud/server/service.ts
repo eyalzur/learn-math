@@ -11,15 +11,12 @@ import { pricing } from "../../data/pricing";
 import type { Store } from "./store";
 import {
   ApiError,
-  REMINDER_TEXTS,
   type AnswerResult,
   type ChildMe,
   type ChildSettings,
   type ChildView,
   type HistoryEntry,
   type HouseholdView,
-  type InboxMessage,
-  type Schedule,
   type SessionView,
   type SubscriptionView,
 } from "./types";
@@ -193,7 +190,7 @@ export async function parentAddChild(
   return householdView(d, hid, h);
 }
 
-/** Deletes the child and every record of them (history, tiers, sessions, schedule, inbox). */
+/** Deletes the child and every record of them (history, difficulty tiers, sessions). */
 export async function parentDeleteChild(d: Deps, parent: ParentIdentity, cid: string): Promise<HouseholdView> {
   const { hid, h } = await childOfParent(d, parent, cid);
   await d.store.deleteTree(cPath(hid, cid));
@@ -253,30 +250,6 @@ export async function parentHistory(d: Deps, parent: ParentIdentity, cid: string
   return rows.map((r) => ({ ...r.data, id: r.id })).sort((a, b) => b.at.localeCompare(a.at)).slice(0, 50);
 }
 
-export async function parentSchedule(d: Deps, parent: ParentIdentity, cid: string): Promise<Schedule | null> {
-  const { hid } = await childOfParent(d, parent, cid);
-  return (await d.store.get<Schedule>(`${cPath(hid, cid)}/meta/schedule`)) ?? null;
-}
-
-export async function parentSetSchedule(d: Deps, parent: ParentIdentity, cid: string, s: Schedule): Promise<Schedule> {
-  const { hid } = await childOfParent(d, parent, cid);
-  const days = [...new Set(s.days)].filter((x) => Number.isInteger(x) && x >= 0 && x <= 6).sort();
-  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(s.time)) throw new ApiError(400, "bad_time");
-  const clean = { days, time: s.time };
-  await d.store.set(`${cPath(hid, cid)}/meta/schedule`, clean);
-  return clean;
-}
-
-/** Only the two canned texts for now (design.md) — no free text. Delivered to the child's
- *  inbox; the device picks it up the next time it opens or polls. */
-export async function parentSendReminder(d: Deps, parent: ParentIdentity, cid: string, textIndex: number): Promise<void> {
-  const { hid } = await childOfParent(d, parent, cid);
-  const text = REMINDER_TEXTS[textIndex];
-  if (!text) throw new ApiError(400, "bad_reminder");
-  const msg = { at: new Date(d.now()).toISOString(), text, read: false };
-  await d.store.set(`${cPath(hid, cid)}/inbox/${d.newId()}`, msg);
-}
-
 /** BILLING STUB. No real payment: marks the next period paid at the right price. A real
  *  provider (Cardcom) replaces this function's body and nothing above it changes. */
 export async function parentPay(d: Deps, parent: ParentIdentity): Promise<HouseholdView> {
@@ -320,12 +293,10 @@ export async function childConnect(d: Deps, code: string) {
 export async function childMe(d: Deps, who: ChildIdentity): Promise<ChildMe> {
   const { c, h } = await requireChild(d, who);
   const sub = subscriptionOf(h, d.now());
-  const inbox = await d.store.list<{ read: boolean }>(`${cPath(who.hid, who.cid)}/inbox`);
   return {
     child: { id: who.cid, name: c.name, gradeId: c.gradeId, avatar: c.avatar },
     subscription: { status: sub.status, active: sub.active },
     settings: c.settings,
-    unreadMessages: inbox.filter((m) => !m.data.read).length,
   };
 }
 
@@ -468,17 +439,3 @@ export async function childFinish(d: Deps, who: ChildIdentity, sessionId: string
 
 /** Leaving mid-run keeps the session on the server so the next visit resumes it. */
 export async function childAbandon(_d: Deps, _who: ChildIdentity, _sessionId: string): Promise<void> {}
-
-export async function childInbox(d: Deps, who: ChildIdentity): Promise<InboxMessage[]> {
-  await requireChild(d, who);
-  const rows = await d.store.list<Omit<InboxMessage, "id">>(`${cPath(who.hid, who.cid)}/inbox`);
-  return rows.map((r) => ({ ...r.data, id: r.id })).sort((a, b) => b.at.localeCompare(a.at)).slice(0, 20);
-}
-
-export async function childMarkInboxRead(d: Deps, who: ChildIdentity): Promise<void> {
-  await requireChild(d, who);
-  const base = `${cPath(who.hid, who.cid)}/inbox`;
-  for (const r of await d.store.list<{ read: boolean }>(base)) {
-    if (!r.data.read) await d.store.set(`${base}/${r.id}`, { ...r.data, read: true });
-  }
-}

@@ -165,16 +165,3 @@ test("second parent joins by code; third is refused", async () => {
   assert.equal(h.parents.length, 2);
   assert.equal(await code(svc.parentInvite(d, mom)), "parents_full");
 });
-
-test("schedule and reminders", async () => {
-  const { d, mom, who, cid } = await connected();
-  assert.equal(await svc.parentSchedule(d, mom, cid), null);
-  assert.deepEqual(await svc.parentSetSchedule(d, mom, cid, { days: [3, 1, 1, 9], time: "18:30" }), { days: [1, 3], time: "18:30" });
-  assert.equal(await code(svc.parentSetSchedule(d, mom, cid, { days: [1], time: "25:00" })), "bad_time");
-  await svc.parentSendReminder(d, mom, cid, 0);
-  assert.equal((await svc.childMe(d, who)).unreadMessages, 1);
-  assert.equal((await svc.childInbox(d, who))[0].text, "הגיע הזמן לתרגל 🙂");
-  await svc.childMarkInboxRead(d, who);
-  assert.equal((await svc.childMe(d, who)).unreadMessages, 0);
-  assert.equal(await code(svc.parentSendReminder(d, mom, cid, 7)), "bad_reminder");
-});

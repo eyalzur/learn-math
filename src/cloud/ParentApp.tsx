@@ -2,20 +2,17 @@ import { useCallback, useEffect, useState } from "react";
 import { grades } from "../data/curriculum";
 import { pricing } from "../data/pricing";
 import { errorText } from "./errors";
-import { REMINDER_TEXTS, type ChildView, type CloudApi, type HistoryEntry, type HouseholdView } from "./server/types";
+import { type ChildView, type CloudApi, type HistoryEntry, type HouseholdView } from "./server/types";
 
 type View =
   | { name: "home" }
   | { name: "child"; id: string }
-  | { name: "schedule"; id: string }
-  | { name: "reminder"; id: string }
   | { name: "subscription" }
   | { name: "connections" }
   | { name: "add" }
   | { name: "code"; id: string }
   | { name: "privacy" };
 
-const DAY_LETTERS = ["א", "ב", "ג", "ד", "ה", "ו", "ש"];
 const fmtDate = (iso: string) => new Date(iso).toLocaleDateString("he-IL", { day: "numeric", month: "numeric" });
 const gradeLabel = (id: string) => grades.find((g) => g.id === id)?.label ?? "";
 
@@ -101,11 +98,7 @@ export function ParentApp({ api, joinCode, onSignOut }: { api: CloudApi; joinCod
           ) : (
             <p className="cloud-footnote">כבר מחוברים {pricing.maxChildren} ילדים</p>
           )}
-          <div className="cloud-row">
-            <button className="cloud-btn" disabled={!hh.children.length} onClick={() => setView({ name: "schedule", id: hh.children[0].id })}>לוח זמנים</button>
-            <button className="cloud-btn" disabled={!hh.children.length} onClick={() => setView({ name: "reminder", id: hh.children[0].id })}>שלח תזכורת</button>
-            <button className="cloud-btn" onClick={() => setView({ name: "subscription" })}>מנוי</button>
-          </div>
+          <button className="cloud-btn" onClick={() => setView({ name: "subscription" })}>מנוי</button>
           <div className="cloud-row">
             <button className="cloud-link link-button" onClick={() => setView({ name: "connections" })}>חיבורים</button>
             <button className="cloud-link link-button" onClick={() => setView({ name: "privacy" })}>פרטיות</button>
@@ -125,8 +118,6 @@ export function ParentApp({ api, joinCode, onSignOut }: { api: CloudApi; joinCod
         api={api}
         child={c}
         onBack={back}
-        onSchedule={() => setView({ name: "schedule", id: c.id })}
-        onReminder={() => setView({ name: "reminder", id: c.id })}
         onCode={() => setView({ name: "code", id: c.id })}
         onChanged={setHh}
         run={run}
@@ -144,33 +135,6 @@ export function ParentApp({ api, joinCode, onSignOut }: { api: CloudApi; joinCod
   }} />;
 
   if (view.name === "code") return <CodeScreen api={api} childName={kid(view.id)?.name ?? ""} id={view.id} onBack={back} run={run} error={error} />;
-
-  if (view.name === "schedule" || view.name === "reminder") {
-    const id = view.id;
-    const picker = (
-      <label>
-        ילד/ה{" "}
-        <select className="cloud-input" value={id} onChange={(e) => setView(view.name === "schedule" ? { name: "schedule", id: e.target.value } : { name: "reminder", id: e.target.value })}>
-          {hh.children.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-        </select>
-      </label>
-    );
-    return view.name === "schedule" ? (
-      <Shell back={back} error={error} toast={toast} title="לוח זמנים">
-        {picker}
-        <Schedule key={id} api={api} id={id} run={run} onSaved={() => flash("נשמר")} />
-      </Shell>
-    ) : (
-      <Shell back={back} error={error} toast={toast} title="שלח תזכורת">
-        {picker}
-        {REMINDER_TEXTS.map((t, i) => (
-          <button key={i} className="cloud-btn" onClick={async () => { await run(() => api.parentSendReminder(id, i)); flash("נשלח ✓"); }}>
-            {t}
-          </button>
-        ))}
-      </Shell>
-    );
-  }
 
   if (view.name === "subscription") {
     return (
@@ -224,7 +188,7 @@ export function ParentApp({ api, joinCode, onSignOut }: { api: CloudApi; joinCod
   return (
     <Shell back={back} error={error} toast={toast} title="פרטיות">
       <p><strong>טיוטה — הנוסח הסופי יגיע.</strong></p>
-      <p>נשמרים רק: כינוי שהילד/ה בוחר/ת, כיתה, קצב ההתקדמות בתרגולים, לוח זמנים ותזכורות. לא שם מלא, לא תאריך לידה, לא תמונות.</p>
+      <p>נשמרים רק: כינוי שהילד/ה בוחר/ת, כיתה וקצב ההתקדמות בתרגולים. לא שם מלא, לא תאריך לידה, לא תמונות.</p>
       <p>רק ההורים בבית רואים את המידע. מחיקת ילד/ה מוחקת את כל המידע עליו/ה.</p>
     </Shell>
   );
@@ -298,38 +262,8 @@ function InviteParent({ api, run }: { api: CloudApi; run: <T>(f: () => Promise<T
   );
 }
 
-function Schedule({ api, id, run, onSaved }: { api: CloudApi; id: string; run: <T>(f: () => Promise<T>) => Promise<T | undefined>; onSaved: () => void }) {
-  const [days, setDays] = useState<number[]>([]);
-  const [time, setTime] = useState("18:00");
-  useEffect(() => {
-    void run(async () => {
-      const s = await api.parentSchedule(id);
-      if (s) { setDays(s.days); setTime(s.time); }
-    });
-  }, [api, id, run]);
-  return (
-    <>
-      <div className="cloud-days" role="group" aria-label="ימים">
-        {DAY_LETTERS.map((l, i) => (
-          <button
-            key={i}
-            type="button"
-            className={`cloud-day ${days.includes(i) ? "on" : ""}`}
-            aria-pressed={days.includes(i)}
-            onClick={() => setDays((d) => (d.includes(i) ? d.filter((x) => x !== i) : [...d, i]))}
-          >
-            {l}
-          </button>
-        ))}
-      </div>
-      <input className="cloud-input" type="time" dir="ltr" aria-label="שעה" value={time} onChange={(e) => setTime(e.target.value)} />
-      <button className="cloud-btn primary" onClick={async () => { if (await run(() => api.parentSetSchedule(id, { days, time }))) onSaved(); }}>שמור</button>
-    </>
-  );
-}
-
-function ChildScreen({ api, child, onBack, onSchedule, onReminder, onCode, onChanged, run, error }: {
-  api: CloudApi; child: ChildView; onBack: () => void; onSchedule: () => void; onReminder: () => void; onCode: () => void;
+function ChildScreen({ api, child, onBack, onCode, onChanged, run, error }: {
+  api: CloudApi; child: ChildView; onBack: () => void; onCode: () => void;
   onChanged: (h: HouseholdView) => void; run: <T>(f: () => Promise<T>) => Promise<T | undefined>; error: string;
 }) {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
@@ -349,10 +283,6 @@ function ChildScreen({ api, child, onBack, onSchedule, onReminder, onCode, onCha
           </ul>
         )}
         <div className="cloud-row">
-          <button className="cloud-btn" onClick={onSchedule}>לוח זמנים</button>
-          <button className="cloud-btn" onClick={onReminder}>שלח תזכורת</button>
-        </div>
-        <div className="cloud-row">
           <button className="cloud-btn" onClick={onCode}>קוד חיבור</button>
           <button className="cloud-btn" disabled={child.devicesCount === 0} onClick={async () => { const h = await run(() => api.parentDisconnectDevices(child.id)); if (h) onChanged(h); }}>
             נתק מכשירים ({child.devicesCount})
@@ -364,7 +294,7 @@ function ChildScreen({ api, child, onBack, onSchedule, onReminder, onCode, onCha
       {confirming && (
         <div className="cloud-overlay" role="dialog" aria-modal="true" aria-label="מחיקת ילד/ה">
           <div className="cloud-dialog">
-            <p>יימחק הכל: ההתקדמות, לוח הזמנים והתזכורות. אי אפשר לבטל.</p>
+            <p>יימחק הכל: ההתקדמות וההגדרות. אי אפשר לבטל.</p>
             <button className="cloud-btn danger" onClick={async () => { const h = await run(() => api.parentDeleteChild(child.id)); if (h) { onChanged(h); onBack(); } }}>מחק הכל</button>
             <button className="cloud-btn" onClick={() => setConfirming(false)}>ביטול</button>
           </div>
