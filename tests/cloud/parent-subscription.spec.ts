@@ -238,3 +238,57 @@ test('every invitation can be sent by WhatsApp: the message carries the code and
   expect(parentText).toContain(joinCode);
   expect(parentText).toContain(`/learn-math/parents/?join=${joinCode}`); // the parents' app, code filled in
 });
+
+test('a new phone: the parent makes a code for the child, the child types it, and keeps their profile; the old phone is detached', async ({ browser }) => {
+  const parent = await (await browser.newContext()).newPage();
+  await signInAsParent(parent, uniqueEmail());
+  const code = await parentChildCode(parent);
+  const oldPhone = await (await browser.newContext()).newPage();
+  await createKidProfile(oldPhone, 'רותם', 'כיתה ו׳', '/learn-math/', 'פנדה');
+  await linkKid(oldPhone, code);
+  await expect(oldPhone.locator('.topic-card').first()).toBeEnabled();
+
+  await parent.goto('/learn-math/parents/');
+  await parent.getByRole('button', { name: /רותם/ }).click();
+  await parent.getByRole('button', { name: 'מכשיר חדש' }).click();
+  await expect(parent.getByRole('img', { name: 'QR למכשיר חדש' })).toBeVisible();
+  await expect(parent.getByLabel('קוד', { exact: true })).toHaveText(/\d{4}/);
+  const deviceCode = (await parent.getByLabel('קוד', { exact: true }).innerText()).trim();
+  const wa = decodeURIComponent((await parent.getByRole('link', { name: 'שליחה בוואטסאפ' }).getAttribute('href'))!);
+  expect(wa).toContain(deviceCode);
+  expect(wa).toContain(`/learn-math/?device=${deviceCode}`);
+
+  const newPhone = await (await browser.newContext()).newPage();
+  await newPhone.goto('/learn-math/');
+  await newPhone.getByRole('button', { name: 'כבר יש לי פרופיל' }).click();
+  await newPhone.getByLabel('הקלידו את הקוד שההורים נתנו').fill('0000');
+  await newPhone.getByRole('button', { name: 'חיבור', exact: true }).click();
+  await expect(newPhone.getByText('הקוד לא נכון')).toBeVisible();
+  await newPhone.getByLabel('הקלידו את הקוד שההורים נתנו').fill(deviceCode);
+  await newPhone.getByRole('button', { name: 'חיבור', exact: true }).click();
+  await expect(newPhone.getByText(/שלום רותם!/)).toBeVisible();
+  await expect(newPhone.locator('.greeting')).toContainText('🐼'); // same profile, same picture
+  await expect(newPhone.locator('.topic-card').first()).toBeEnabled(); // still linked: nothing to type
+
+  await oldPhone.reload();
+  await expect(oldPhone.getByRole('button', { name: 'פרופיל חדש' })).toBeVisible();
+});
+
+test('a "new phone" link carries the code: opening it reconnects the child by itself', async ({ browser }) => {
+  const parent = await (await browser.newContext()).newPage();
+  await signInAsParent(parent, uniqueEmail());
+  const code = await parentChildCode(parent);
+  const oldPhone = await (await browser.newContext()).newPage();
+  await createKidProfile(oldPhone, 'מיקה', 'כיתה א׳');
+  await linkKid(oldPhone, code);
+
+  await parent.goto('/learn-math/parents/');
+  await parent.getByRole('button', { name: /מיקה/ }).click();
+  await parent.getByRole('button', { name: 'מכשיר חדש' }).click();
+  await expect(parent.getByLabel('קוד', { exact: true })).toHaveText(/\d{4}/);
+  const deviceCode = (await parent.getByLabel('קוד', { exact: true }).innerText()).trim();
+
+  const newPhone = await (await browser.newContext()).newPage();
+  await newPhone.goto(`/learn-math/?device=${deviceCode}`);
+  await expect(newPhone.getByText(/שלום מיקה!/)).toBeVisible();
+});

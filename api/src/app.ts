@@ -47,6 +47,7 @@ export function createApp(o: AppOptions) {
   app.get("/parent/household", h(async (q, r) => r.json(await svc.parentHousehold(o.deps, await parent(q)))));
   app.delete("/parent/children/:cid", h(async (q, r) => r.json(await svc.parentDeleteChild(o.deps, await parent(q), q.params.cid))));
   app.post("/parent/child-code", h(async (q, r) => r.json(await svc.parentChildCode(o.deps, await parent(q)))));
+  app.post("/parent/children/:cid/device-code", h(async (q, r) => r.json(await svc.parentDeviceCode(o.deps, await parent(q), q.params.cid))));
   app.post("/parent/children/:cid/disconnect", h(async (q, r) => r.json(await svc.parentDisconnectDevices(o.deps, await parent(q), q.params.cid))));
   app.get("/parent/children/:cid/progress", h(async (q, r) => r.json(await svc.parentProgress(o.deps, await parent(q), q.params.cid))));
   app.get("/parent/children/:cid/history", h(async (q, r) => r.json(await svc.parentHistory(o.deps, await parent(q), q.params.cid))));
@@ -75,6 +76,16 @@ export function createApp(o: AppOptions) {
     registrations.set(ip, [...recent, Date.now()]);
     const { token, who } = await svc.childRegister(o.deps, q.body ?? {});
     r.json({ token, me: await svc.childMe(o.deps, who) });
+  }));
+  app.post("/child/reconnect", h(async (q, r) => {
+    if (tooManyMisses(q.ip ?? "")) throw new ApiError(429, "too_many_attempts");
+    try {
+      const { token, who } = await svc.childReconnect(o.deps, String(q.body?.code ?? ""));
+      r.json({ token, me: await svc.childMe(o.deps, who) });
+    } catch (e) {
+      if (e instanceof ApiError && e.code === "bad_code") noteMiss(q.ip ?? "");
+      throw e;
+    }
   }));
   app.post("/child/link", h(async (q, r) => {
     const who = child(q);

@@ -133,6 +133,8 @@ export interface CloudApi {
   /** The code children type in their own app to join this household. */
   parentChildCode(): Promise<{ code: string; expiresAt: string }>;
   parentDisconnectDevices(childId: string): Promise<HouseholdView>;
+  /** A one-time code that moves this child's profile (progress included) to a new device. */
+  parentDeviceCode(childId: string): Promise<{ code: string; expiresAt: string }>;
   parentInvite(): Promise<{ code: string; expiresAt: string }>;
   parentJoin(code: string): Promise<HouseholdView>;
   parentHistory(childId: string): Promise<HistoryEntry[]>;
@@ -145,6 +147,8 @@ export interface CloudApi {
   // ── child
   /** The child makes their own profile (no parent involved yet). */
   childRegister(input: { name: string; gradeId: string; avatar?: string }): Promise<{ token: string; me: ChildMe }>;
+  /** A new phone: the child types the code their parent made for them and gets their profile back. */
+  childReconnect(code: string): Promise<{ token: string; me: ChildMe }>;
   /** The child types the parent's code: the profile joins the household. */
   childLink(code: string): Promise<ChildMe>;
   childMe(): Promise<ChildMe>;

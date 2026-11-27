@@ -227,3 +227,45 @@ test("a parent sees progress per topic: practices, accuracy, level, and the late
   await svc.parentHousehold(d, stranger);
   assert.equal(await code(svc.parentProgress(d, stranger, cid)), "no_child");
 });
+
+test("a new phone: the parent's one-time code moves the child's profile, with its progress, to the new device and detaches the old", async () => {
+  const { d, mom, who, cid } = await connected("6");
+  const { gradeById } = await import("../../src/data/curriculum.ts");
+  const topic = gradeById("6").topicSets.find((t) => t.adaptive)!;
+  const s = await svc.childStartSession(d, who, { gradeId: "6", topicId: topic.id });
+  for (let i = 0; i < s.questions.length; i++) await svc.childAnswer(d, who, s.sessionId, true);
+  await svc.childFinish(d, who, s.sessionId);
+
+  const { code: c } = await svc.parentDeviceCode(d, mom, cid);
+  assert.match(c, /^\d{4}$/);
+  const { who: fresh } = await svc.childReconnect(d, c);
+  assert.equal(fresh.cid, cid);
+  const me = await svc.childMe(d, fresh);
+  assert.equal(me.child.name, "רותם");
+  assert.equal(me.linked, true);
+  assert.equal((await svc.parentProgress(d, mom, cid)).topics.length, 1); // the progress is still there
+  assert.equal(await code(svc.childMe(d, who)), "device_revoked"); // the old phone is detached
+  assert.equal(await code(svc.childReconnect(d, c)), "bad_code"); // one time only
+});
+
+test("device codes, link codes and invitations are not interchangeable; strangers cannot make one", async () => {
+  const { d, mom, cid } = await connected("6");
+  const { code: deviceCode } = await svc.parentDeviceCode(d, mom, cid);
+  const { code: linkCode } = await svc.parentChildCode(d, mom);
+  const { code: inviteCode } = await svc.parentInvite(d, mom);
+  const { who: lone } = await svc.childRegister(d, { name: "לבד", gradeId: "1" });
+  assert.equal(await code(svc.childLink(d, lone, deviceCode)), "bad_code");
+  assert.equal(await code(svc.childReconnect(d, linkCode)), "bad_code");
+  assert.equal(await code(svc.childReconnect(d, inviteCode)), "bad_code");
+  assert.equal(await code(svc.parentJoin(d, { uid: "dad", email: "d@example.com" }, deviceCode)), "bad_code");
+  const stranger = { uid: "x", email: "x@example.com" };
+  await svc.parentHousehold(d, stranger);
+  assert.equal(await code(svc.parentDeviceCode(d, stranger, cid)), "no_child");
+});
+
+test("a device code expires after ten minutes", async () => {
+  const { d, mom, cid, advanceDays } = await connected("6");
+  const { code: c } = await svc.parentDeviceCode(d, mom, cid);
+  advanceDays(1);
+  assert.equal(await code(svc.childReconnect(d, c)), "bad_code");
+});

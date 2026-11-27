@@ -52,7 +52,7 @@ interface ChildDoc {
   devices: { id: string; at: string }[];
   settings: ChildSettings;
 }
-interface CodeDoc { kind: "child" | "parent"; hid: string; expiresAt: string }
+interface CodeDoc { kind: "child" | "parent" | "device"; hid: string; cid?: string; expiresAt: string }
 interface SessionDoc {
   gradeId: string;
   topicId: string;
@@ -212,6 +212,13 @@ export async function parentChildCode(d: Deps, parent: ParentIdentity) {
   return newCode(d, { kind: "child", hid });
 }
 
+/** "A new phone for this child": a one-time code that attaches the child's profile — with all its
+ *  progress — to another device, and detaches the old one. */
+export async function parentDeviceCode(d: Deps, parent: ParentIdentity, cid: string) {
+  const { hid } = await childOfParent(d, parent, cid);
+  return newCode(d, { kind: "device", hid, cid });
+}
+
 export async function parentDisconnectDevices(d: Deps, parent: ParentIdentity, cid: string): Promise<HouseholdView> {
   const { hid, h, c } = await childOfParent(d, parent, cid);
   await d.store.set(cPath(hid, cid), { ...c, devices: [] });
@@ -306,6 +313,21 @@ export async function parentCancel(d: Deps, parent: ParentIdentity): Promise<Hou
 }
 
 // ───────────────────────── child
+
+/** The child types the code their parent made for a new device: this device becomes the child's, and
+ *  every earlier one stops working. No account, no password — the parent decides who holds the profile. */
+export async function childReconnect(d: Deps, code: string) {
+  const key = String(code ?? "").trim();
+  const doc = await d.store.get<CodeDoc>(`connectCodes/${key}`);
+  if (!doc || doc.kind !== "device" || !doc.cid || Date.parse(doc.expiresAt) <= d.now()) throw new ApiError(404, "bad_code");
+  const c = await d.store.get<ChildDoc>(cPath(doc.hid, doc.cid));
+  if (!c) throw new ApiError(404, "bad_code");
+  const did = d.newId();
+  await d.store.set(cPath(doc.hid, doc.cid), { ...c, devices: [{ id: did, at: new Date(d.now()).toISOString() }] });
+  await d.store.delete(`connectCodes/${key}`);
+  const who: ChildIdentity = { cid: doc.cid, did };
+  return { token: d.issueChildToken(who), who };
+}
 
 /** A child makes their own profile in the kids' app. Nothing to practise yet: no parent has
  *  linked them, so there is no subscription behind them. */

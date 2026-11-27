@@ -91,6 +91,7 @@ export function createLocalApi(tokens: { parent: () => string | undefined; child
     parentHousehold: () => svc.parentHousehold(deps, parent()),
     parentDeleteChild: (id) => svc.parentDeleteChild(deps, parent(), id),
     parentChildCode: () => svc.parentChildCode(deps, parent()),
+    parentDeviceCode: (id) => svc.parentDeviceCode(deps, parent(), id),
     parentDisconnectDevices: (id) => svc.parentDisconnectDevices(deps, parent(), id),
     parentInvite: () => svc.parentInvite(deps, parent()),
     parentJoin: (code) => svc.parentJoin(deps, parent(), code),
@@ -100,6 +101,10 @@ export function createLocalApi(tokens: { parent: () => string | undefined; child
     parentCancel: () => svc.parentCancel(deps, parent()),
     childRegister: async (input) => {
       const { token, who } = await svc.childRegister(deps, input);
+      return { token, me: await svc.childMe(deps, who) };
+    },
+    childReconnect: async (code) => {
+      const { token, who } = await svc.childReconnect(deps, code);
       return { token, me: await svc.childMe(deps, who) };
     },
     childLink: (code) => svc.childLink(deps, child(), code),

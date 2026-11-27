@@ -33,11 +33,13 @@ export function WhatsAppButton({ text }: { text: string }) {
 /** What the message says. The link carries the code, so one tap opens the right app already filled in. */
 export const inviteText = {
   child: (code: string, link: string) => `הצטרפו אליי ללומדים חשבון 🧮\nהקוד שלי: ${code}\n${link}\n(הקוד תקף ${pricing.codeTtlMinutes} דקות)`,
+  device: (name: string, code: string, link: string) => `החלפת מכשיר ללומדים חשבון 🧮 (${name})\nהקוד: ${code}\n${link}\n(הקוד תקף ${pricing.codeTtlMinutes} דקות)`,
   parent: (code: string, link: string) => `הוזמנת לאפליקציית ההורים של לומדים חשבון 👪\nקוד הצטרפות: ${code}\n${link}\n(הקוד תקף ${pricing.codeTtlMinutes} דקות)`,
 };
 
 /** Where each app lives: the kids' app at the site root, the parents' app under /parents/. */
 export const appLinks = {
+  kidsDevice: (code: string) => `${window.location.origin}${import.meta.env.BASE_URL}?device=${code}`,
   kids: (code: string) => `${window.location.origin}${import.meta.env.BASE_URL}?code=${code}`,
   parents: (code: string) => `${window.location.origin}${import.meta.env.BASE_URL}parents/?join=${code}`,
 };

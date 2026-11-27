@@ -12,6 +12,7 @@ type View =
   | { name: "connections" }
   | { name: "childCode" }
   | { name: "invite" }
+  | { name: "deviceCode"; id: string }
   | { name: "privacy" };
 
 const fmtDate = (iso: string) => new Date(iso).toLocaleDateString("he-IL", { day: "numeric", month: "numeric" });
@@ -122,6 +123,7 @@ export function ParentApp({ api, joinCode, onSignOut }: { api: CloudApi; joinCod
         api={api}
         child={c}
         onBack={back}
+        onNewDevice={() => setView({ name: "deviceCode", id: c.id })}
         onChanged={setHh}
         run={run}
         error={error}
@@ -134,6 +136,19 @@ export function ParentApp({ api, joinCode, onSignOut }: { api: CloudApi; joinCod
       <Shell back={back} error={error} toast={toast} title="חיבור ילד/ה">
         <p style={{ textAlign: "center" }}>הילדים יוצרים פרופיל באפליקציה שלהם ומקלידים את הקוד, או סורקים אותו.</p>
         <FreshCode make={api.parentChildCode} link={appLinks.kids} share={inviteText.child} qrLabel="QR לחיבור ילד" run={run} />
+      </Shell>
+    );
+  }
+
+  if (view.name === "deviceCode") {
+    const kid = hh.children.find((c) => c.id === view.id);
+    const make = () => api.parentDeviceCode(view.id);
+    return (
+      <Shell back={back} error={error} toast={toast} title={`מכשיר חדש: ${kid?.name ?? ""}`}>
+        <p style={{ textAlign: "center" }}>
+          {kid?.name} מקלידים את הקוד באפליקציית הילדים במכשיר החדש ("כבר יש לי פרופיל"), או סורקים אותו. ההתקדמות נשמרת, והמכשיר הישן מתנתק.
+        </p>
+        <FreshCode make={make} link={appLinks.kidsDevice} share={(code, link) => inviteText.device(kid?.name ?? "", code, link)} qrLabel="QR למכשיר חדש" run={run} />
       </Shell>
     );
   }
@@ -248,8 +263,8 @@ function FreshCode({ make, link, share, qrLabel, run }: {
   );
 }
 
-function ChildScreen({ api, child, onBack, onChanged, run, error }: {
-  api: CloudApi; child: ChildView; onBack: () => void;
+function ChildScreen({ api, child, onBack, onNewDevice, onChanged, run, error }: {
+  api: CloudApi; child: ChildView; onBack: () => void; onNewDevice: () => void;
   onChanged: (h: HouseholdView) => void; run: <T>(f: () => Promise<T>) => Promise<T | undefined>; error: string;
 }) {
   const [progress, setProgress] = useState<ProgressView | null>(null);
@@ -286,6 +301,7 @@ function ChildScreen({ api, child, onBack, onChanged, run, error }: {
           </>
         )}
         <div className="cloud-row">
+          <button className="cloud-btn" onClick={onNewDevice}>מכשיר חדש</button>
           <button className="cloud-btn" disabled={child.devicesCount === 0} onClick={async () => { const h = await run(() => api.parentDisconnectDevices(child.id)); if (h) onChanged(h); }}>
             נתק מכשירים ({child.devicesCount})
           </button>
