@@ -11,7 +11,7 @@
 
 **Current phase:** done — ממתין לריוויו (בדיקות הפיצ'ר 9/9, content 44/44)
 **Branch:** `feature/two-choice-buttons`
-**PR:** not opened yet
+**PR:** https://github.com/eyalzur/learn-math/pull/136
 
 ## Open questions / blockers
 - **Product:** שלוש הכרעות זמניות (לחיצה = תשובה בלי "בדיקה", סדר הכפתורים כסדר השאלה, הגדרה מפורשת בנתונים לשאלת שתי-תשובות). לא חוסמות; מסומנות ב-product-spec.md.
