@@ -25,6 +25,7 @@ export function WhatsAppButton({ text }: { text: string }) {
       target="_blank"
       rel="noopener noreferrer"
     >
+      <span className="wa-icon" aria-hidden="true">💬</span>
       שליחה בוואטסאפ
     </a>
   );

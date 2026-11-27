@@ -19,6 +19,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.68.0",
+    icon: "🎨",
+    description:
+      "שיפור המראה של שתי האפליקציות החדשות (ילדים והורים): כפתורים מגיבים ללחיצה, שגיאות בולטות יותר ובצבע הנכון, כפתור מחובר מראה אישור, וטקסטים קריאים יותר. האתר החי לא השתנה.",
+  },
+  {
     version: "1.67.0",
     icon: "👪",
     description:

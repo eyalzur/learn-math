@@ -1,4 +1,5 @@
 import { ApiError } from "./server/types";
+import { feedback } from "./feedback";
 
 /** What a person sees for each thing that can go wrong — short, no codes, no blame. */
 export function errorText(e: unknown): string {
@@ -14,4 +15,10 @@ export function errorText(e: unknown): string {
       devices_full: "כבר מחוברים 3 מכשירים לילד/ה הזה",
     } as Record<string, string>
   )[code] ?? "משהו השתבש. נסו שוב";
+}
+
+/** Use at every place an error is shown: the same words, plus the soft failure pulse (feedback.ts). */
+export function showError(e: unknown): string {
+  feedback.fail();
+  return errorText(e);
 }

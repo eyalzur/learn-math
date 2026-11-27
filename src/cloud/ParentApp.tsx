@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { grades } from "../data/curriculum";
 import { pricing } from "../data/pricing";
-import { errorText } from "./errors";
+import { showError } from "./errors";
 import { appLinks, CodeCard, inviteText } from "./CodeCard";
 import { type ChildView, type CloudApi, type HouseholdView, type ProgressView } from "./server/types";
 
@@ -29,7 +29,7 @@ export function ParentApp({ api, joinCode, onSignOut }: { api: CloudApi; joinCod
     try {
       return await fn();
     } catch (e) {
-      setError(errorText(e));
+      setError(showError(e));
       return undefined;
     }
   }, []);
@@ -310,11 +310,11 @@ function ChildScreen({ api, child, onBack, onNewDevice, onChanged, run, error }:
         <div className="cloud-error" role="alert">{error}</div>
       </div>
       {confirming && (
-        <div className="cloud-overlay" role="dialog" aria-modal="true" aria-label="מחיקת ילד/ה">
+        <div className="cloud-overlay" role="dialog" aria-modal="true" aria-label="מחיקת ילד/ה" onKeyDown={(e) => { if (e.key === "Escape") setConfirming(false); }}>
           <div className="cloud-dialog">
             <p>יימחק הכל: ההתקדמות וההגדרות. אי אפשר לבטל.</p>
             <button className="cloud-btn danger" onClick={async () => { const h = await run(() => api.parentDeleteChild(child.id)); if (h) { onChanged(h); onBack(); } }}>מחק הכל</button>
-            <button className="cloud-btn" onClick={() => setConfirming(false)}>ביטול</button>
+            <button className="cloud-btn" autoFocus onClick={() => setConfirming(false)}>ביטול</button>
           </div>
         </div>
       )}

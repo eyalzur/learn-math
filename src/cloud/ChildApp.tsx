@@ -4,7 +4,8 @@ import type { Lesson } from "../data/style";
 import { avatarFor } from "../data/avatars";
 import type { PaceLevel } from "../data/adaptivePace";
 import { speak, speechSupported } from "../data/speech";
-import { errorText } from "./errors";
+import { showError } from "./errors";
+import { feedback } from "./feedback";
 import { Practice } from "../components/Practice";
 import { Result } from "../components/Result";
 import { SettingsDialog } from "../components/SettingsDialog";
@@ -131,7 +132,7 @@ export function ChildApp({ api, initialCode, onLeave }: { api: CloudApi; initial
   }
 
   return (
-    <>
+    <div className="cloud-kids-scope">
       <TopicPicker
         studentId={me.child.id}
         gradeLabel={gradeLine(me.child.name, grade.label, avatarFor({ id: me.child.id, avatar: me.child.avatar }).emoji)}
@@ -162,7 +163,7 @@ export function ChildApp({ api, initialCode, onLeave }: { api: CloudApi; initial
       )}
       {settingsOpen && <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} {...settingsProps} />}
       {offlineBar}
-    </>
+    </div>
   );
 }
 
@@ -186,15 +187,21 @@ function LockPanel({
   const [code, setCode] = useState(initialCode);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [linked, setLinked] = useState(false);
   const tried = useRef(false);
 
   async function link(value: string) {
     setBusy(true);
     setError("");
     try {
-      onLinked(await api.childLink(value));
+      const next = await api.childLink(value);
+      feedback.success('small');
+      // Visible success first (INTERACTIONS: 250ms), then the screen changes.
+      setLinked(true);
+      await new Promise((r) => setTimeout(r, 400));
+      onLinked(next);
     } catch (e) {
-      setError(errorText(e));
+      setError(showError(e));
     } finally {
       setBusy(false);
     }
@@ -233,11 +240,12 @@ function LockPanel({
             inputMode="numeric"
             maxLength={4}
             autoComplete="off"
+            placeholder="····"
             value={code}
             onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
           />
           <div className="cloud-error" role="alert">{error}</div>
-          <button className="cloud-btn primary" type="submit" disabled={busy || code.length !== 4}>חיבור</button>
+          <button className={`cloud-btn primary${linked ? " success" : ""}`} type="submit" disabled={busy || linked || code.length !== 4}>{linked ? "✓ מחוברים!" : "חיבור"}</button>
         </form>
       )}
     </div>
