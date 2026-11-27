@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- interactive-widget=resizes-content: on iOS/Android, opening the on-screen
+         keyboard normally pans a "visual viewport" while leaving the actual page layout
+         (what position:sticky/fixed measure against) the same size — so a sticky header
+         can be structurally "stuck" at the top and still end up off-screen, panned away
+         with everything else. This tells the browser to actually shrink the real layout
+         when the keyboard opens, so sticky/fixed positioning tracks what's truly visible.
+         Reported live, reproduced exactly: .practice-header (position:sticky) vanished
+         above the fold the moment the keyboard opened on a real phone. Requires Safari
+         16.4+ / Chrome 108+; on an older browser this is simply ignored, same as any
+         other viewport hint it doesn't understand. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content" />
+    <title>לומדים חשבון — הורים</title>
+    <!-- PWA install (docs/features/pwa-install/) — icon on the home screen on
+         iPhone/Android, standalone display (no browser address bar). -->
+    <link rel="manifest" href="/manifest-parents.json" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="theme-color" content="#ff6fae" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <!-- iOS doesn't read the manifest's short_name for the home-screen label —
+         without this it falls back to the full <title> above, which gets cut off. -->
+    <meta name="apple-mobile-web-app-title" content="הורים — משחקים במספרים" />
+    <!-- Playpen Sans Hebrew: .notebook-teacher-mark (docs/features/notebook-teacher-marks/,
+         "עדכון סבב ב׳"). Picked over the more cursive "Gveret Levin" after a real
+         screenshot comparison showed it clearly more legible for a first-grader still
+         learning to read.
+         Varela Round + Rubik: the app's global heading/body fonts (docs/features/
+         candy-redesign/). -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playpen+Sans+Hebrew:wght@400;700&family=Varela+Round&family=Rubik:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/parentsMain.tsx"></script>
+  </body>
+</html>

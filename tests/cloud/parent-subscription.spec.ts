@@ -23,6 +23,18 @@ test('a parent adds a child, the child connects with the code and starts practis
   await expect(parent.getByText('עוד לא תרגלו השבוע')).toBeVisible();
 });
 
+test('the kids app has no way into the parents app, and the parents app has no child screen', async ({ page }) => {
+  await page.goto('/learn-math/');
+  await expect(page.getByLabel('הקלידו את הקוד')).toBeVisible();
+  await expect(page.getByText('הורים')).toHaveCount(0);
+  await expect(page.getByLabel('מייל')).toHaveCount(0);
+  await page.goto('/learn-math/parents/');
+  await expect(page.getByLabel('מייל')).toBeVisible();
+  await expect(page.getByLabel('הקלידו את הקוד')).toHaveCount(0);
+  const manifest = await page.locator('link[rel=manifest]').getAttribute('href');
+  expect(manifest).toContain('manifest-parents.json');
+});
+
 test('a wrong code says so and does not connect', async ({ page }) => {
   await connectChildDevice(page, '0000');
   await expect(page.getByText('הקוד לא נכון')).toBeVisible();

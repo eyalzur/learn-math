@@ -35,3 +35,6 @@
 .cloud-demo { position: fixed; bottom: 6px; left: 6px; z-index: 60; display: flex; gap: 4px; flex-wrap: wrap; max-width: 80vw; font-size: 0.75rem; background: rgba(255,255,255,0.92); border: 1px dashed var(--accent); border-radius: 12px; padding: 4px 6px; direction: rtl; }
 .cloud-demo button { color: var(--text-h); width: auto; box-shadow: none; padding: 2px 8px; font: inherit; font-size: 0.75rem; min-height: 28px; border-radius: 8px; border: 1px solid var(--accent-border); background: #fff; cursor: pointer; }
 .cloud-footnote { font-size: 0.8rem; opacity: 0.75; text-align: center; }
+.cloud-tabs { position: fixed; top: 0; left: 0; right: 0; z-index: 55; display: flex; gap: 6px; padding: 6px; background: rgba(255,255,255,0.95); border-bottom: 1px dashed var(--accent); }
+.cloud-tabs button { flex: 1; min-height: 32px; border-radius: 10px; border: 1px solid var(--accent-border); background: #fff; color: var(--text-h); font: inherit; font-size: 0.85rem; box-shadow: none; padding: 2px 8px; }
+.cloud-tabs button.on { background: var(--accent); color: #fff; border-color: var(--accent); }

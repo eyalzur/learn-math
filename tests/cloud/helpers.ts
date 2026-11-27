@@ -4,17 +4,13 @@ export const API = 'http://localhost:8788';
 let n = 0;
 export const uniqueEmail = () => `parent${Date.now()}${++n}@example.com`;
 
+/** The parents' app is its own page. */
 export async function signInAsParent(page: Page, email: string, joinCode = '') {
-  await page.goto('/learn-math/');
-  await page.getByRole('button', { name: /הורים/ }).click();
-  const q = await page.locator('.cloud-card p .ltr').innerText();
-  const [a, b] = q.split('×').map((s) => parseInt(s));
-  await page.getByLabel('תשובה').fill(String(a * b));
-  await page.getByRole('button', { name: 'המשך' }).click();
+  await page.goto('/learn-math/parents/');
   await page.getByLabel('מייל').fill(email);
   if (joinCode) await page.getByLabel(/קוד הצטרפות/).fill(joinCode);
   await page.getByRole('button', { name: 'כניסה' }).click();
-  await expect(page.getByRole('heading', { name: 'הורים' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'הורים', exact: true })).toBeVisible();
 }
 
 export async function addChild(page: Page, name: string, grade = 'כיתה ו׳'): Promise<string> {

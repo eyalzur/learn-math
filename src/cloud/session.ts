@@ -1,25 +1,55 @@
-/** The only things kept on the device: which parent is signed in (dev/demo only — real Firebase
- *  keeps its own) and which child this device is bound to. Everything else lives on the server. */
-const KEY = "learn-math:cloud-session";
+import { useSyncExternalStore } from "react";
 
-export interface CloudSession {
-  parentToken?: string;
-  childToken?: string;
+/**
+ * The only things kept on a device. Two roles, two keys, because the kids' app and the parents'
+ * app are separate apps that happen to share a browser origin: a parent testing in the same
+ * browser must not be signed in as the child, or the other way round.
+ *   child  — the token that binds this device to one child
+ *   parent — dev/demo sign-in only (real Firebase keeps its own session)
+ * Kept in memory too, so a page whose storage is blocked still works until it is closed.
+ */
+export type Role = "parent" | "child";
+
+const key = (r: Role) => `learn-math:cloud-${r}-token`;
+const mem: Partial<Record<Role, string | undefined>> = {};
+const loaded: Partial<Record<Role, boolean>> = {};
+const listeners = new Set<() => void>();
+
+export function getToken(role: Role): string | undefined {
+  if (!loaded[role]) {
+    loaded[role] = true;
+    try {
+      mem[role] = localStorage.getItem(key(role)) ?? undefined;
+    } catch {
+      /* storage blocked: memory only */
+    }
+  }
+  return mem[role];
 }
 
-export function readSession(): CloudSession {
+export function setToken(role: Role, token: string | undefined): void {
+  loaded[role] = true;
+  mem[role] = token;
   try {
-    return JSON.parse(localStorage.getItem(KEY) ?? "{}");
+    if (token) localStorage.setItem(key(role), token);
+    else localStorage.removeItem(key(role));
   } catch {
-    return {};
+    /* memory only */
   }
+  listeners.forEach((l) => l());
 }
 
-export function writeSession(next: CloudSession): void {
-  try {
-    if (Object.keys(next).length === 0) localStorage.removeItem(KEY);
-    else localStorage.setItem(KEY, JSON.stringify(next));
-  } catch {
-    /* private mode: the session lasts until the page closes */
-  }
+export function clearAllTokens(): void {
+  setToken("parent", undefined);
+  setToken("child", undefined);
+}
+
+export function useToken(role: Role): string | undefined {
+  return useSyncExternalStore(
+    (cb) => {
+      listeners.add(cb);
+      return () => void listeners.delete(cb);
+    },
+    () => getToken(role),
+  );
 }

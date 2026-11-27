@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { grades } from "../data/curriculum";
 import { pricing } from "../data/pricing";
-import { errorText } from "./CloudApp";
+import { errorText } from "./errors";
 import { REMINDER_TEXTS, type ChildView, type CloudApi, type HistoryEntry, type HouseholdView } from "./server/types";
 
 type View =
