@@ -38,7 +38,7 @@ gcloud iam service-accounts add-iam-policy-binding \
 * **Secret** בשם `CHILD_TOKEN_SECRET`: מחרוזת אקראית ארוכה (למשל הפלט של `openssl rand -hex 32`). זה מה שחותם את החיבור של מכשירי הילדים.
 
 **4. פריסה:**
-* Actions ← "Deploy parents-and-kids API to Cloud Run" ← Run workflow. בסוף, בסיכום הריצה, יופיע הכתובת של השרת.
+* Actions ← "Deploy parents-and-kids API to Cloud Run" ← Run workflow. (עד שמבצעים את ההגדרה, הריצה הזו מסתיימת ירוקה עם הודעה "לא נפרס", זה תקין.) בסוף, בסיכום הריצה, יופיע הכתובת של השרת.
 * GitHub ← Variables (באותו מקום): `NEXT_API_URL` = אותה כתובת, ו-`NEXT_FIREBASE_CONFIG` = ה-JSON משלב 2 בשורה אחת.
 * Actions ← "Deploy to GitHub Pages" ← Run workflow. זה בונה את `/next/`.
 

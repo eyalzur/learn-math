@@ -36,30 +36,40 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Is the one-time setup done?
+      - id: setup
+        name: Is the one-time setup done?
         env:
           CHILD_TOKEN_SECRET: ${{ secrets.CHILD_TOKEN_SECRET }}
         run: |
           if [ -z "$CHILD_TOKEN_SECRET" ]; then
-            echo "CHILD_TOKEN_SECRET is not set (Settings → Secrets and variables → Actions). See api/README.md, step 3." | tee -a "$GITHUB_STEP_SUMMARY"
-            exit 1
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "Nothing deployed: the one-time setup (api/README.md) has not been done yet, so there is no CHILD_TOKEN_SECRET. This is expected until then, not an error." | tee -a "$GITHUB_STEP_SUMMARY"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
           fi
 
       - uses: actions/checkout@v5
+        if: steps.setup.outputs.ready == 'true'
       - uses: actions/setup-node@v5
+        if: steps.setup.outputs.ready == 'true'
         with:
           node-version: 24
           cache: npm
       - run: npm ci
+        if: steps.setup.outputs.ready == 'true'
       - run: npm run api:build
+        if: steps.setup.outputs.ready == 'true'
 
       - uses: google-github-actions/auth@v2
+        if: steps.setup.outputs.ready == 'true'
         with:
           workload_identity_provider: ${{ env.WIF_PROVIDER }}
           service_account: ${{ env.SERVICE_ACCOUNT }}
       - uses: google-github-actions/setup-gcloud@v2
+        if: steps.setup.outputs.ready == 'true'
 
       - name: Deploy to Cloud Run
+        if: steps.setup.outputs.ready == 'true'
         env:
           CHILD_TOKEN_SECRET: ${{ secrets.CHILD_TOKEN_SECRET }}
         run: |
