@@ -64,7 +64,7 @@ export function createLocalApi(tokens: { parent: () => string | undefined; child
     store,
     now: clock.now,
     rng: Math.random,
-    newId: () => crypto.randomUUID(),
+    newId: () => (typeof crypto.randomUUID === "function" ? crypto.randomUUID() : `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`),
     issueChildToken: (p) => JSON.stringify(p),
   };
 
