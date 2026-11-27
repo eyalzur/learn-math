@@ -9,9 +9,9 @@
 - [x] Implementation — developer — 2026-11-27
 - [x] Tests — qa — 2026-11-27
 
-**Current phase:** done — ממתין לריוויו (בדיקות הפיצ'ר 9/9, content 44/44)
+**Current phase:** done — מוזג ל-`main` (בדיקות הפיצ'ר 9/9, content 44/44, רגרסיה 74/74)
 **Branch:** `feature/two-choice-buttons`
-**PR:** https://github.com/eyalzur/learn-math/pull/136
+**PR:** https://github.com/eyalzur/learn-math/pull/136 — מוזג 2026-11-27
 
 ## Open questions / blockers
 - **Product:** שלוש הכרעות זמניות (לחיצה = תשובה בלי "בדיקה", סדר הכפתורים כסדר השאלה, הגדרה מפורשת בנתונים לשאלת שתי-תשובות). לא חוסמות; מסומנות ב-product-spec.md.
