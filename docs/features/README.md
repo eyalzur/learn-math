@@ -6,7 +6,7 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
-| מנוי הורים — אפליקציית הורים, מסד נתונים ותשלום | 🟡 מפרט, עיצוב וארכיטקטורה נכתבו — ממתין להחלטות | [status](./parent-subscription/status.md) |
+| מנוי הורים — שתי אפליקציות (ילדים והורים), שרת וקודי חיבור | 🟢 done — מוזג ל-main (לא פעיל עד הגדרת שרת) | [status](./parent-subscription/status.md) |
 | תרגול שנקטע חוזר לנקודה המדויקת | 🟢 done — מוזג ל-main | [status](./resume-interrupted-practice/status.md) |
 | פרופיל תלמיד ואווטר | 🟢 done — מוזג ל-main | [status](./student-profile-avatar/status.md) |
 | אותיות קודקוד על ציורי זוויות ומשולשים | 🟢 done — מוזג ל-main | [status](./triangle-vertex-labels/status.md) |
@@ -90,3 +90,4 @@ architecture, implementation notes, and tests.
 | קושי מסתגל למיקה — שלב א׳ (חיבור/חיסור עד 10, חיסור עד 100) | 🟢 done — מוזג ל-main | [status](./mika-adaptive-difficulty/status.md) |
 | מכסת שיעורים שבועית (שיעורים נוספים משותפים לכל הבית) | 🟢 done — מוזג ל-main | [status](./weekly-lesson-cap/status.md) |
 | בסיס ידע (KB) בפורמט OKF | 🟢 done — מוזג ל-main | [status](./knowledge-base/status.md) |
+| שתי תשובות — שני כפתורים | 🟢 done — מוזג ל-main | [status](./two-choice-buttons/status.md) |
