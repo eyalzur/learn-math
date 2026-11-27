@@ -22,9 +22,9 @@ export async function addChild(page: Page, name: string, grade = 'כיתה ו׳'
   await page.getByLabel('כינוי').fill(name);
   await page.getByLabel('כיתה').selectOption({ label: grade });
   await page.getByRole('button', { name: 'הוספה' }).click();
-  const code = (await page.getByLabel('קוד חיבור').innerText()).trim();
-  expect(code).toMatch(/^\d{4}$/);
-  return code;
+  // the code arrives from the server a moment after the screen opens
+  await expect(page.getByLabel('קוד חיבור')).toHaveText(/\d{4}/);
+  return (await page.getByLabel('קוד חיבור').innerText()).trim();
 }
 
 export async function connectChildDevice(page: Page, code: string) {

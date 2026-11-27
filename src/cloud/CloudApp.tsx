@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import "./cloud.css";
+import { startIdleSpotlightObserver } from "../data/idleSpotlight";
 import { apiUrl, cloudMode } from "./config";
 import { createHttpApi } from "./httpApi";
 import { createLocalApi, demoClock } from "./localApi";
@@ -34,6 +35,11 @@ export default function CloudApp() {
   const [joinCode, setJoinCode] = useState("");
   /** Bumped by the demo bar to make the open screen reload its data (no full page reload). */
   const [epoch, setEpoch] = useState(0);
+
+  // The app-wide "one button glows at a time" animation numbers the buttons through this observer
+  // (App.tsx starts it for the old app). Without it every button defaults to the same slot and
+  // they all pulse together.
+  useEffect(() => startIdleSpotlightObserver(), []);
 
   const api: CloudApi = useMemo(
     () =>
@@ -179,7 +185,7 @@ function Entry({ onConnect, onParents }: { onConnect: (code: string) => Promise<
         />
         <div className="cloud-error" role="alert">{error}</div>
         <button className="cloud-btn primary" type="submit" disabled={busy || code.length !== 4}>התחבר</button>
-        <button type="button" className="cloud-link" onClick={onParents}>👪 הורים</button>
+        <button type="button" className="cloud-link link-button" onClick={onParents}>👪 הורים</button>
       </form>
     </div>
   );
@@ -207,7 +213,7 @@ function ParentGate({ onPass, onBack }: { onPass: () => void; onBack: () => void
         <input className="cloud-input cloud-code-input" inputMode="numeric" aria-label="תשובה" value={value} onChange={(e) => setValue(e.target.value.replace(/\D/g, ""))} />
         <div className="cloud-error" role="alert">{wrong ? "לא מדויק. נסו שוב" : ""}</div>
         <button className="cloud-btn primary" type="submit" disabled={!value}>המשך</button>
-        <button type="button" className="cloud-link" onClick={onBack}>← חזרה</button>
+        <button type="button" className="cloud-link link-button" onClick={onBack}>← חזרה</button>
       </form>
     </div>
   );
@@ -265,7 +271,7 @@ function ParentSignIn({
         )}
         {!realAuth && <p className="cloud-footnote">מצב בדיקה: אין סיסמה. בגרסה האמיתית נכנסים עם גוגל או קישור במייל.</p>}
         <div className="cloud-toast" role="status">{msg}</div>
-        <button type="button" className="cloud-link" onClick={onBack}>← חזרה</button>
+        <button type="button" className="cloud-link link-button" onClick={onBack}>← חזרה</button>
       </form>
     </div>
   );
@@ -275,9 +281,9 @@ function DemoBar({ onAdvance, onReset, onSwitch }: { onAdvance: () => void; onRe
   return (
     <div className="cloud-demo" role="group" aria-label="כלי דמו">
       <span>🧪 דמו</span>
-      <button type="button" onClick={onAdvance}>⏩ +8 ימים</button>
-      <button type="button" onClick={onSwitch}>🔀 החלף תפקיד</button>
-      <button type="button" onClick={onReset}>🗑️ אפס הכל</button>
+      <button type="button" className="link-button" onClick={onAdvance}>⏩ +8 ימים</button>
+      <button type="button" className="link-button" onClick={onSwitch}>🔀 החלף תפקיד</button>
+      <button type="button" className="link-button" onClick={onReset}>🗑️ אפס הכל</button>
     </div>
   );
 }

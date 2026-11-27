@@ -107,9 +107,9 @@ export function ParentApp({ api, joinCode, onSignOut }: { api: CloudApi; joinCod
             <button className="cloud-btn" onClick={() => setView({ name: "subscription" })}>מנוי</button>
           </div>
           <div className="cloud-row">
-            <button className="cloud-link" onClick={() => setView({ name: "connections" })}>חיבורים</button>
-            <button className="cloud-link" onClick={() => setView({ name: "privacy" })}>פרטיות</button>
-            <button className="cloud-link" onClick={onSignOut}>יציאה</button>
+            <button className="cloud-link link-button" onClick={() => setView({ name: "connections" })}>חיבורים</button>
+            <button className="cloud-link link-button" onClick={() => setView({ name: "privacy" })}>פרטיות</button>
+            <button className="cloud-link link-button" onClick={onSignOut}>יציאה</button>
           </div>
           <div className="cloud-error" role="alert">{error}</div>
         </div>
@@ -191,7 +191,7 @@ export function ParentApp({ api, joinCode, onSignOut }: { api: CloudApi; joinCod
         <p className="cloud-footnote">שלב בדיקה — אין חיוב אמיתי. התשלום האמיתי יתחבר בהמשך.</p>
         {sub.status !== "expired" && (
           <button
-            className="cloud-link"
+            className="cloud-link link-button"
             onClick={async () => {
               if (!window.confirm("הילדים לא יוכלו לתרגל עד שתחדשו. לבטל את המנוי?")) return;
               const next = await run(() => api.parentCancel());
@@ -234,7 +234,7 @@ function Shell({ title, back, error, toast, children }: { title: string; back: (
   return (
     <div className="cloud">
       <div className="cloud-card">
-        <button className="cloud-link" onClick={back} style={{ alignSelf: "flex-start" }}>← חזרה</button>
+        <button className="cloud-link link-button" onClick={back} style={{ alignSelf: "flex-start" }}>← חזרה</button>
         <h1>{title}</h1>
         {children}
         <div className="cloud-error" role="alert">{error}</div>
@@ -250,7 +250,7 @@ function AddChild({ onBack, onAdd, error }: { onBack: () => void; onAdd: (name: 
   return (
     <div className="cloud">
       <form className="cloud-card" onSubmit={(e) => { e.preventDefault(); void onAdd(name, gradeId); }}>
-        <button type="button" className="cloud-link" onClick={onBack} style={{ alignSelf: "flex-start" }}>← חזרה</button>
+        <button type="button" className="cloud-link link-button" onClick={onBack} style={{ alignSelf: "flex-start" }}>← חזרה</button>
         <h1>חבר/י ילד/ה</h1>
         <label htmlFor="kid-name">כינוי</label>
         <input id="kid-name" className="cloud-input" maxLength={20} value={name} onChange={(e) => setName(e.target.value)} />
@@ -275,7 +275,7 @@ function CodeScreen({ api, id, childName, onBack, run, error }: { api: CloudApi;
   return (
     <div className="cloud">
       <div className="cloud-card">
-        <button className="cloud-link" onClick={onBack} style={{ alignSelf: "flex-start" }}>← חזרה</button>
+        <button className="cloud-link link-button" onClick={onBack} style={{ alignSelf: "flex-start" }}>← חזרה</button>
         <h1>{childName}</h1>
         <p style={{ textAlign: "center" }}>הקלידו את הקוד במכשיר של הילד/ה</p>
         <div className="cloud-code" aria-label="קוד חיבור"><span className="ltr">{code ?? "····"}</span></div>
@@ -338,7 +338,7 @@ function ChildScreen({ api, child, onBack, onSchedule, onReminder, onCode, onCha
   return (
     <div className="cloud">
       <div className="cloud-card">
-        <button className="cloud-link" onClick={onBack} style={{ alignSelf: "flex-start" }}>← חזרה</button>
+        <button className="cloud-link link-button" onClick={onBack} style={{ alignSelf: "flex-start" }}>← חזרה</button>
         <h1>{child.name}</h1>
         <p style={{ textAlign: "center" }}>{gradeLabel(child.gradeId)} · {child.practicesThisWeek > 0 ? `תרגלו ${child.practicesThisWeek} פעמים` : "עוד לא תרגלו השבוע"}</p>
         {history.length === 0 ? <p style={{ textAlign: "center" }}>עוד אין תרגולים.</p> : (
@@ -358,7 +358,7 @@ function ChildScreen({ api, child, onBack, onSchedule, onReminder, onCode, onCha
             נתק מכשירים ({child.devicesCount})
           </button>
         </div>
-        <button className="cloud-link" onClick={() => setConfirming(true)}>מחק את הילד/ה</button>
+        <button className="cloud-link link-button" onClick={() => setConfirming(true)}>מחק את הילד/ה</button>
         <div className="cloud-error" role="alert">{error}</div>
       </div>
       {confirming && (

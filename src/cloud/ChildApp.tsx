@@ -82,7 +82,7 @@ export function ChildApp({ api, onLeave }: { api: CloudApi; onLeave: () => void 
   const banner = message && (
     <div className="cloud-banner" role="status" style={{ position: "fixed", top: 8, left: 8, right: 8, zIndex: 40 }}>
       {message.text}{" "}
-      <button className="cloud-link" onClick={async () => { await api.childMarkInboxRead(); setMessage(null); }} aria-label="סגור הודעה">✓</button>
+      <button className="cloud-link link-button" onClick={async () => { await api.childMarkInboxRead(); setMessage(null); }} aria-label="סגור הודעה">✓</button>
     </div>
   );
   const offlineBar = offline && <div className="cloud-banner stopped" role="alert" style={{ position: "fixed", bottom: 8, left: 8, right: 8, zIndex: 40 }}>אין חיבור עכשיו</div>;
@@ -162,7 +162,7 @@ function StopScreen({ onRefresh }: { onRefresh: () => void }) {
         <div className="emoji" aria-hidden="true">🌙</div>
         <h1>{STOP_TEXT}</h1>
         {speechSupported() && <button className="cloud-btn" onClick={() => speak([STOP_TEXT])} aria-label="הקראה">🔊</button>}
-        <button className="cloud-link" onClick={onRefresh}>↻</button>
+        <button className="cloud-link link-button" onClick={onRefresh}>↻</button>
       </div>
     </div>
   );
