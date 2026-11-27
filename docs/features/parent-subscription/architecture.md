@@ -52,6 +52,9 @@
 - **שרת:** `api/` ב-Cloud Run (`deploy-api.yml`, אותו WIF כמו שרת ההקראה), Firestore, אימות Firebase. `api/README.md` — ההגדרה החד-פעמית.
 - **מה אי אפשר לבדוק מכאן:** Firebase וFirestore אמיתיים, ופריסה.
 
+## עדכון 2026-11-27: מכשיר חדש לילד
+`parentDeviceCode(cid)` (`POST /parent/children/:cid/device-code`) יוצר קוד חד-פעמי מסוג `device` עם `hid`+`cid`. `childReconnect(code)` (`POST /child/reconnect`, מוגבל בניחושים כמו `/child/link`) מחליף את רשימת המכשירים של הילד במכשיר החדש ומנפיק אסימון; הישן מקבל `device_revoked` ומוחזר למסך הפתיחה. סוגי הקודים (`child`, `parent`, `device`) לא מתחלפים. קישור: `/?device=CODE` מחבר אוטומטית.
+
 ## Data / State Changes
 Firestore (תחת `households/{hid}`):
 - `households/{hid}` — `{ createdAt, subscription: { status: trial|active|expired, trialEndsAt, nextBillingAt, provider } }`
