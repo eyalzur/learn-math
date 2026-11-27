@@ -407,6 +407,31 @@ test("no diagram ever disagrees with its own question", () => {
   expect(wrong, `\n${wrong.join("\n")}\n`).toEqual([]);
 });
 
+test("a two-answer question offers exactly the two numbers its prompt names, and the answer is one of them", () => {
+  // docs/features/two-choice-buttons/: `choices` swaps the number pad for two buttons, so a
+  // wrong or missing one is a question the child cannot answer correctly (or can only guess).
+  const wrong: string[] = [];
+  for (const { q } of everyQuestion()) {
+    if (!q.choices) continue;
+    const [a, b] = q.choices;
+    if (a === b) wrong.push(`${q.id}: both choices are ${a}`);
+    if (q.answer !== a && q.answer !== b) wrong.push(`${q.id}: the answer ${q.answer} is not one of the choices`);
+    const named = (q.prompt.match(/\d+(?:\.\d+)?/g) ?? []).map(Number);
+    if (named.length !== 2 || named[0] !== a || named[1] !== b) {
+      wrong.push(`${q.id}: choices [${a}, ${b}] are not the numbers the prompt names in order (${named.join(", ")})`);
+    }
+  }
+  expect(wrong, `\n${wrong.join("\n")}\n`).toEqual([]);
+});
+
+test("every grade-1 'bigger' or 'smaller' question is a two-answer question", () => {
+  // Otherwise a newly written one quietly goes back to the number pad.
+  const missing = everyQuestion()
+    .filter(({ gradeId, q }) => gradeId === "1" && (q.style === "bigger" || q.style === "smaller") && !q.choices)
+    .map(({ q }) => q.id);
+  expect(missing, `\n${missing.join("\n")}\n`).toEqual([]);
+});
+
 test("exactly a hundred and five questions write themselves in columns", () => {
   // Eligibility is recomputed here from the spec's own words — a bare `a + b` / `a − b`,
   // columns worth aligning, at most one borrowed column, and column arithmetic that lands

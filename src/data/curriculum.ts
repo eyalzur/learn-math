@@ -54,6 +54,15 @@ export interface Question {
    * and 8 are classified this moves onto `Question` and `StyledQuestion` goes away.
    */
   style?: string;
+  /**
+   * Marks a two-answer question ("מה גדול יותר, 6 או 2?"): the two numbers offered, in the
+   * order the prompt names them. Present means the practice screen shows two buttons instead
+   * of the number pad; absent (every other question) means the pad, exactly as before.
+   * Declared explicitly rather than guessed from the wording, so a new question can't switch
+   * interface by accident. `answer` must be one of the two — `content.spec.ts` checks it.
+   * See docs/features/two-choice-buttons/.
+   */
+  choices?: readonly [number, number];
 }
 
 /**
