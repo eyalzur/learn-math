@@ -23,6 +23,23 @@ import { expect, type Page } from "@playwright/test";
  * answered.
  */
 export async function answerQuestion(page: Page, value: number | string) {
+  // A two-answer question ("מה גדול יותר, 6 או 2?", docs/features/two-choice-buttons/) has two buttons
+  // and no number pad. Tapping one is the answer. A value that is not one of the two numbers is how
+  // callers say "answer this wrongly" (a sentinel like 999999), so the wrong button is tapped.
+  const choices = page.getByRole("group", { name: "בחרו תשובה" }).getByRole("button");
+  if ((await choices.count()) === 2) {
+    const labels = (await choices.allInnerTexts()).map((t) => t.trim());
+    let index = labels.findIndex((t) => t === String(value));
+    if (index < 0) {
+      const prompt = await page.locator(".problem-text").innerText();
+      const nums = (prompt.match(/\d+/g) ?? []).map(Number);
+      const right = prompt.includes("קטן יותר") ? Math.min(...nums) : Math.max(...nums);
+      index = labels.findIndex((t) => t !== String(right));
+    }
+    await choices.nth(index).click();
+    await expect(choices.nth(0)).toBeDisabled();
+    return;
+  }
   const input = page.locator(".answer-input");
   const pad = page.locator(".number-pad");
   for (const char of String(value)) {
@@ -50,6 +67,11 @@ export async function answerQuestion(page: Page, value: number | string) {
 export async function waitForNextQuestionOrEnd(page: Page) {
   await page.waitForFunction(() => {
     const input = document.querySelector(".answer-input") as HTMLInputElement | null;
-    return (input !== null && !input.disabled) || document.querySelector(".score") !== null;
+    const choice = document.querySelector(".two-choice button") as HTMLButtonElement | null;
+    return (
+      (input !== null && !input.disabled) ||
+      (choice !== null && !choice.disabled) ||
+      document.querySelector(".score") !== null
+    );
   });
 }

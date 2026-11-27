@@ -19,6 +19,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.66.0",
+    icon: "🔘",
+    description:
+      "בשאלה שיש לה שתי תשובות אפשריות (למשל \"מה גדול יותר, 6 או 2?\") מופיעים שני כפתורים גדולים, אחד לכל מספר, במקום מקלדת המספרים. לוחצים על המספר וזו התשובה. אחרי טעות הנכון מסומן בירוק.",
+  },
+  {
     version: "1.65.0",
     icon: "↩️",
     description:
