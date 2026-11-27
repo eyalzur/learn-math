@@ -38,3 +38,5 @@ dist-ssr
 # throwaway standalone-component preview harnesses (built, not shipped)
 .preview-scratch/
 dist-demo
+dist-next
+api/dist

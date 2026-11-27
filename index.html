@@ -17,7 +17,9 @@
     <title>לומדים חשבון</title>
     <!-- PWA install (docs/features/pwa-install/) — icon on the home screen on
          iPhone/Android, standalone display (no browser address bar). -->
-    <link rel="manifest" href="/manifest.json" />
+    <!-- Relative on purpose: the same page is built under /learn-math/ (the live site, manifest.json) and
+         /learn-math/next/ (the two-app version, manifest-kids.json) — see VITE_KIDS_MANIFEST. -->
+    <link rel="manifest" href="%VITE_KIDS_MANIFEST%" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <meta name="theme-color" content="#ff6fae" />
     <meta name="apple-mobile-web-app-capable" content="yes" />

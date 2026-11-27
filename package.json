@@ -1,7 +1,7 @@
 {
   "name": "learn-math",
   "private": true,
-  "version": "1.66.0",
+  "version": "1.67.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -12,9 +12,15 @@
     "bump:feature": "node scripts/bump-version.mjs feature",
     "bump:fix": "node scripts/bump-version.mjs fix",
     "kb": "node kb/tools/kb.mjs",
-    "kb:test": "node --test kb/tools/kb.test.mjs"
+    "kb:test": "node --test kb/tools/kb.test.mjs",
+    "test:cloud": "PAYWALL=0 playwright test -c playwright.cloud.config.ts --workers=1 && PAYWALL=1 playwright test -c playwright.cloud.config.ts --workers=1",
+    "api:test": "cd api && npm test",
+    "build:demo": "node scripts/build-demo.mjs",
+    "api:build": "esbuild api/src/index.ts --bundle --platform=node --target=node22 --format=esm --outfile=api/dist/index.mjs --external:firebase-admin --banner:js=\"import { createRequire as __cr } from 'module'; const require = __cr(import.meta.url);\""
   },
   "dependencies": {
+    "firebase": "^11.10.0",
+    "qrcode-generator": "^1.5.2",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },
@@ -25,6 +31,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.4",
     "oxlint": "^1.75.0",
+    "tsx": "^4.23.15",
     "typescript": "~6.0.2",
     "vite": "^8.2.0",
     "yaml": "^2.9.0"

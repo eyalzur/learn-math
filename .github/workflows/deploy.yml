@@ -39,7 +39,22 @@ jobs:
           # here keeps it version-controlled and reviewable. Service is public
           # (--allow-unauthenticated, see server/README.md).
           VITE_HEBREW_TTS_SERVER_URL: https://hebrew-tts-server-864901299725.me-west1.run.app
-      - uses: actions/upload-pages-artifact@v4
+      # The two-app version (kids at /next/, parents at /next/parents/), built a second time and
+      # published beside the live site, which it does not touch. Only when its server address is
+      # set (repository variable NEXT_API_URL — api/README.md, step 4); before that this is a no-op.
+      - name: Build the two-app version under /next/
+        if: ${{ vars.NEXT_API_URL != '' }}
+        env:
+          VITE_BASE: /learn-math/next/
+          VITE_CLOUD: "1"
+          VITE_API_URL: ${{ vars.NEXT_API_URL }}
+          # Public identifiers, not secrets (Firebase security comes from the server's checks).
+          VITE_FIREBASE_CONFIG: ${{ vars.NEXT_FIREBASE_CONFIG }}
+          VITE_KIDS_MANIFEST: manifest-kids.json
+        run: |
+          npx vite build --outDir dist-next
+          mv dist-next dist/next
+
         with:
           path: dist
 

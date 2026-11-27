@@ -6,6 +6,7 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
+| מנוי הורים — שתי אפליקציות (ילדים והורים), שרת וקודי חיבור | 🟢 done — מוזג ל-main (לא פעיל עד הגדרת שרת) | [status](./parent-subscription/status.md) |
 | תרגול שנקטע חוזר לנקודה המדויקת | 🟢 done — מוזג ל-main | [status](./resume-interrupted-practice/status.md) |
 | פרופיל תלמיד ואווטר | 🟢 done — מוזג ל-main | [status](./student-profile-avatar/status.md) |
 | אותיות קודקוד על ציורי זוויות ומשולשים | 🟢 done — מוזג ל-main | [status](./triangle-vertex-labels/status.md) |

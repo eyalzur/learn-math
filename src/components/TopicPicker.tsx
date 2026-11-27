@@ -38,6 +38,8 @@ interface TopicPickerProps {
    *  docs/features/weekly-lesson-cap/. Both absent → no chip. */
   lessonsLeft?: number;
   onOpenLessons?: () => void;
+  /** The topics are shown but cannot be opened (cloud mode: no subscription yet). */
+  locked?: boolean;
 }
 
 export function TopicPicker({
@@ -55,6 +57,7 @@ export function TopicPicker({
   onOpenProfile,
   lessonsLeft,
   onOpenLessons,
+  locked = false,
 }: TopicPickerProps) {
   /* Whether there is anything to open a dialog for at all — the invariant that the ⚙️
      button never leads to an empty dialog. Shared with `SettingsDialog` itself via the
@@ -127,7 +130,7 @@ export function TopicPicker({
               /* The real attribute, not just a class: it keeps the card out of the tab
                  order and announces it to a screen reader. Dimming alone would leave it
                  reachable by keyboard — a block you can walk around. */
-              disabled={!topic.reviewed}
+              disabled={!topic.reviewed || locked}
             >
               <span className="topic-title">{topic.title}</span>
               {/* Decorative, like Result.tsx's own .result-stars: an aria-label here (even
@@ -138,7 +141,8 @@ export function TopicPicker({
                   scored-answer-practice.spec.ts. The card's own title is still read by a
                   screen reader; the rating itself just isn't announced, same tradeoff
                   Result.tsx already made for its stars. */}
-              {topic.reviewed && (
+              {topic.reviewed && locked && <span className="topic-soon" aria-hidden="true">🔒</span>}
+              {topic.reviewed && !locked && (
                 <span className="topic-stars" aria-hidden="true">
                   {[1, 2, 3].map((n) => (
                     <span key={n} className={`topic-star ${n <= stars ? "topic-star-on" : ""}`}>
