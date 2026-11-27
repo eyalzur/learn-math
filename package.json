@@ -15,7 +15,8 @@
     "kb:test": "node --test kb/tools/kb.test.mjs",
     "test:cloud": "PAYWALL=0 playwright test -c playwright.cloud.config.ts --workers=1 && PAYWALL=1 playwright test -c playwright.cloud.config.ts --workers=1",
     "api:test": "cd api && npm test",
-    "build:demo": "node scripts/build-demo.mjs"
+    "build:demo": "node scripts/build-demo.mjs",
+    "api:build": "esbuild api/src/index.ts --bundle --platform=node --target=node22 --format=esm --outfile=api/dist/index.mjs --external:firebase-admin --banner:js=\"import { createRequire as __cr } from 'module'; const require = __cr(import.meta.url);\""
   },
   "dependencies": {
     "firebase": "^11.10.0",

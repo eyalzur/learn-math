@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { grades } from "../data/curriculum";
 import { pricing } from "../data/pricing";
 import { errorText } from "./errors";
@@ -232,7 +232,14 @@ function FreshCode({ make, link, share, qrLabel, run }: {
     const r = await run(make);
     if (r) setCode(r.code);
   }, [make, run]);
-  useEffect(() => { void fresh(); }, [fresh]);
+  // One code per visit, not two: React's development double-run of effects would otherwise show one
+  // code and then replace it with another a moment later.
+  const asked = useRef(false);
+  useEffect(() => {
+    if (asked.current) return;
+    asked.current = true;
+    void fresh();
+  }, [fresh]);
   return (
     <>
       <CodeCard code={code} link={code ? link(code) : ""} qrLabel={qrLabel} shareText={code ? share(code, link(code)) : undefined} />

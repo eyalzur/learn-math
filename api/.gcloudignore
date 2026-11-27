@@ -1,0 +1,6 @@
+# `gcloud run deploy --source api/` uploads this folder. Keep the built bundle (it is in .gitignore,
+# so without this file gcloud would skip it); leave out everything the image does not need.
+node_modules/
+src/
+test/
+README.md

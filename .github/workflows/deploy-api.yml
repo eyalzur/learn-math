@@ -1,0 +1,74 @@
+name: Deploy parents-and-kids API to Cloud Run
+
+# The server behind the two-app version (docs/features/parent-subscription/): accounts, children,
+# codes, questions, progress. Runs only when something it is made of changed — api/, or the shared
+# service code and the question data it imports. First-time setup (once, by a person) is in
+# api/README.md; until it is done this workflow stops at the first step with a plain message.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "api/**"
+      - "src/cloud/server/**"
+      - "src/data/**"
+      - ".github/workflows/deploy-api.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: deploy-api
+  cancel-in-progress: false
+
+env:
+  # Not secrets (Workload Identity Federation, same as the TTS server's workflow).
+  WIF_PROVIDER: projects/864901299725/locations/global/workloadIdentityPools/github/providers/github
+  SERVICE_ACCOUNT: github-deployer@learn-math-506923.iam.gserviceaccount.com
+  SERVICE_NAME: learn-math-api
+  REGION: me-west1
+  # Who the API itself runs as — needs Firestore access only. Passed on every deploy, because
+  # `gcloud run deploy` does not reliably carry the previous one forward.
+  RUNTIME_SERVICE_ACCOUNT: learn-math-api@learn-math-506923.iam.gserviceaccount.com
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Is the one-time setup done?
+        env:
+          CHILD_TOKEN_SECRET: ${{ secrets.CHILD_TOKEN_SECRET }}
+        run: |
+          if [ -z "$CHILD_TOKEN_SECRET" ]; then
+            echo "CHILD_TOKEN_SECRET is not set (Settings → Secrets and variables → Actions). See api/README.md, step 3." | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run api:build
+
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.SERVICE_ACCOUNT }}
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Deploy to Cloud Run
+        env:
+          CHILD_TOKEN_SECRET: ${{ secrets.CHILD_TOKEN_SECRET }}
+        run: |
+          gcloud run deploy "$SERVICE_NAME" \
+            --source api/ \
+            --region "$REGION" \
+            --service-account "$RUNTIME_SERVICE_ACCOUNT" \
+            --allow-unauthenticated \
+            --set-env-vars "STORE=firestore,FIREBASE_PROJECT_ID=learn-math-506923,ALLOWED_ORIGINS=https://eyalzur.github.io,PAYWALL=${{ vars.PAYWALL || '0' }},CHILD_TOKEN_SECRET=${CHILD_TOKEN_SECRET}" \
+            --quiet
+          url="$(gcloud run services describe "$SERVICE_NAME" --region "$REGION" --format='value(status.url)')"
+          echo "deployed: $url — put this in the repository variable NEXT_API_URL (api/README.md, step 4)" | tee -a "$GITHUB_STEP_SUMMARY"
