@@ -89,3 +89,4 @@ architecture, implementation notes, and tests.
 | קושי מסתגל למיקה — שלב א׳ (חיבור/חיסור עד 10, חיסור עד 100) | 🟢 done — מוזג ל-main | [status](./mika-adaptive-difficulty/status.md) |
 | מכסת שיעורים שבועית (שיעורים נוספים משותפים לכל הבית) | 🟢 done — מוזג ל-main | [status](./weekly-lesson-cap/status.md) |
 | בסיס ידע (KB) בפורמט OKF | 🟢 done — מוזג ל-main | [status](./knowledge-base/status.md) |
+| שתי תשובות — שני כפתורים | 🟡 in progress | [status](./two-choice-buttons/status.md) |
