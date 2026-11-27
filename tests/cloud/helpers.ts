@@ -13,20 +13,26 @@ export async function signInAsParent(page: Page, email: string, joinCode = '') {
   await expect(page.getByRole('heading', { name: 'הורים', exact: true })).toBeVisible();
 }
 
-export async function addChild(page: Page, name: string, grade = 'כיתה ו׳'): Promise<string> {
-  await page.getByRole('button', { name: 'חבר/י ילד/ה' }).click();
-  await page.getByLabel('כינוי').fill(name);
-  await page.getByLabel('כיתה').selectOption({ label: grade });
-  await page.getByRole('button', { name: 'הוספה' }).click();
-  // the code arrives from the server a moment after the screen opens
-  await expect(page.getByLabel('קוד חיבור')).toHaveText(/\d{4}/);
-  return (await page.getByLabel('קוד חיבור').innerText()).trim();
+/** A child makes their own profile in the kids' app — no parent involved. */
+export async function createKidProfile(page: Page, name: string, grade = 'כיתה ו׳', path = '/learn-math/') {
+  await page.goto(path);
+  await page.getByRole('button', { name: 'פרופיל חדש' }).click();
+  await page.getByLabel('איך קוראים לך?').fill(name);
+  await page.getByRole('button', { name: grade }).click();
+  await page.getByRole('button', { name: 'יצירת פרופיל' }).click();
+  await expect(page.getByText(`שלום ${name}!`)).toBeVisible();
 }
 
-export async function connectChildDevice(page: Page, code: string) {
-  await page.goto('/learn-math/');
-  await page.getByLabel('הקלידו את הקוד').fill(code);
-  await page.getByRole('button', { name: 'התחבר' }).click();
+/** The code the parent reads out for the children. */
+export async function parentChildCode(page: Page): Promise<string> {
+  await page.getByRole('button', { name: 'חיבור ילד/ה: קוד' }).click();
+  await expect(page.getByLabel('קוד', { exact: true })).toHaveText(/\d{4}/);
+  return (await page.getByLabel('קוד', { exact: true }).innerText()).trim();
+}
+
+export async function linkKid(page: Page, code: string) {
+  await page.getByLabel('הקלידו את הקוד של ההורים').fill(code);
+  await page.getByRole('button', { name: 'חיבור', exact: true }).click();
 }
 
 export const moveClock = (days: number) =>

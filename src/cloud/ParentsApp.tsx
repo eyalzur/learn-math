@@ -5,6 +5,10 @@ import { completeEmailLinkSignIn, currentIdToken, realAuth, sendSignInLink, sign
 import { setToken, useToken } from "./session";
 import type { CloudApi } from "./server/types";
 import { ParentApp } from "./ParentApp";
+import { InstallHint } from "./InstallHint";
+
+/** A code that came with the link a parent shared (`?join=1234`). */
+const joinFromUrl = () => new URLSearchParams(window.location.search).get("join")?.replace(/\D/g, "").slice(0, 4) || "";
 
 /** The parents' app: sign in, then everything about the household. A separate app from the
  *  kids' one (own page, own install) — it has no child screens and the kids' app has none of
@@ -15,6 +19,7 @@ export function ParentsApp({ api }: { api: CloudApi }) {
   const [firebaseIn, setFirebaseIn] = useState(false);
   const [booting, setBooting] = useState(realAuth);
   const [joinCode, setJoinCode] = useState("");
+  const [initialJoin] = useState(joinFromUrl);
 
   useEffect(() => {
     if (!realAuth) return;
@@ -46,6 +51,7 @@ export function ParentsApp({ api }: { api: CloudApi }) {
   }
   return (
     <ParentSignIn
+      initialJoin={initialJoin}
       onDevSignIn={(email, code) => {
         setJoinCode(code);
         setToken("parent", `dev:${email}`);
@@ -59,14 +65,16 @@ export function ParentsApp({ api }: { api: CloudApi }) {
 }
 
 export function ParentSignIn({
+  initialJoin,
   onDevSignIn,
   onFirebaseSignedIn,
 }: {
+  initialJoin: string;
   onDevSignIn: (email: string, joinCode: string) => void;
   onFirebaseSignedIn: (joinCode: string) => void;
 }) {
   const [email, setEmail] = useState("");
-  const [join, setJoin] = useState("");
+  const [join, setJoin] = useState(initialJoin);
   const [msg, setMsg] = useState("");
   return (
     <div className="cloud">
@@ -84,7 +92,9 @@ export function ParentSignIn({
           }
         }}
       >
-        <h1>לומדים חשבון — הורים</h1>
+        <div className="cloud-hero" aria-hidden="true">👪</div>
+        <h1>אפליקציית ההורים</h1>
+        <p className="cloud-lead">מנוי אחד לכל הבית. מחברים את הילדים ועוקבים אחרי התרגול.</p>
         <label htmlFor="parent-email">מייל</label>
         <input id="parent-email" className="cloud-input" type="email" dir="ltr" required value={email} onChange={(e) => setEmail(e.target.value)} />
         <label htmlFor="join-code">קוד הצטרפות (להורה השני, אם יש)</label>
@@ -108,6 +118,7 @@ export function ParentSignIn({
         )}
         {!realAuth && <p className="cloud-footnote">מצב בדיקה: אין סיסמה. בגרסה האמיתית נכנסים עם גוגל או קישור במייל.</p>}
         <div className="cloud-toast" role="status">{msg}</div>
+        <InstallHint appName="אפליקציית ההורים" />
       </form>
     </div>
   );

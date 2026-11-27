@@ -28,6 +28,13 @@
 - `src/components/StudentPicker.tsx` במכשיר ילד — מוחלף במסך קוד.
 - `src/App.tsx`, `public/` (service worker בשלב 4), `playwright.config.ts`.
 
+## עדכון 2026-11-27: ילדים מוסיפים את עצמם
+- **ילד נולד לבד:** `childRegister` יוצר `unlinkedChildren/{cid}` + `childIndex/{cid} = {hid: null}` ומנפיק אסימון מכשיר (`{cid, did}`). בלי משק בית אין מנוי, ולכן `childStartSession` מחזיר 402 והנושאים נעולים.
+- **קישור:** ההורה מבקש קוד (`parentChildCode`, `connectCodes/{code}` מסוג `child` עם `hid`, בלי ילד מסוים). הילד שולח `childLink(code)`: הפרופיל מועבר ל-`households/{hid}/children/{cid}`, ה-index מתעדכן, והנעילה נקבעת לפי המנוי של משק הבית. הקוד פעיל 10 דקות לכל הילדים עד המכסה (3).
+- **נתיבים:** `POST /child/register`, `POST /child/link`, `POST /parent/child-code`. הוסרו: הוספת ילד על ידי הורה וחיבור ילד בקוד פר-ילד.
+- **שני דפי פתיחה:** `index.html` (ילדים) ו-`parents/index.html` (הורים, `data-app="parents"` לצבעים, manifest ואייקונים משלו). QR: ספריית `qrcode-generator`, קישור שכולל `?code=` או `?join=`.
+- **סיכון:** `/child/register` פתוח (בלי אימות); מוגבל ל-20 לשעה לכתובת, וילדים שלא חוברו לעולם יצטברו — דרוש ניקוי תקופתי (לא נבנה).
+
 ## Data / State Changes
 Firestore (תחת `households/{hid}`):
 - `households/{hid}` — `{ createdAt, subscription: { status: trial|active|expired, trialEndsAt, nextBillingAt, provider } }`

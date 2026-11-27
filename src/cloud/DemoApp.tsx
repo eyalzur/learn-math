@@ -20,14 +20,14 @@ export function DemoApp() {
       <div className="cloud-tabs" role="tablist" aria-label="האפליקציות">
         <button role="tab" aria-selected={tab === "parents"} className={`link-button ${tab === "parents" ? "on" : ""}`} onClick={() => setTab("parents")}>📱 אפליקציית ההורים</button>
         <button role="tab" aria-selected={tab === "kids"} className={`link-button ${tab === "kids" ? "on" : ""}`} onClick={() => setTab("kids")}>📱 אפליקציית הילדים</button>
+        <span className="cloud-tabs-tools" role="group" aria-label="כלי דמו">
+          <span>🧪 דמו:</span>
+          <button type="button" className="link-button" onClick={() => { demoClock().advanceDays(8); setEpoch((n) => n + 1); }}>⏩ +8 ימים</button>
+          <button type="button" className="link-button" onClick={() => { demoClock().reset(); clearAllTokens(); window.location.reload(); }}>🗑️ אפס הכל</button>
+        </span>
       </div>
-      <div key={`${tab}-${epoch}`} style={{ paddingTop: 44 }}>
+      <div key={`${tab}-${epoch}`} style={{ paddingTop: 84 }}>
         {tab === "parents" ? <ParentsApp api={api} /> : <KidsApp api={api} />}
-      </div>
-      <div className="cloud-demo" role="group" aria-label="כלי דמו">
-        <span>🧪 דמו</span>
-        <button type="button" className="link-button" onClick={() => { demoClock().advanceDays(8); setEpoch((n) => n + 1); }}>⏩ +8 ימים</button>
-        <button type="button" className="link-button" onClick={() => { demoClock().reset(); clearAllTokens(); window.location.reload(); }}>🗑️ אפס הכל</button>
       </div>
     </>
   );

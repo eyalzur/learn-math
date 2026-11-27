@@ -29,7 +29,9 @@ export interface Deps {
   issueChildToken: (payload: ChildIdentity) => string;
 }
 export interface ParentIdentity { uid: string; email: string }
-export interface ChildIdentity { hid: string; cid: string; did: string }
+/** A child device: which child, which of their devices. Which household (if any) is looked up — a
+ *  child can exist before any parent has linked them. */
+export interface ChildIdentity { cid: string; did: string }
 
 interface HouseholdDoc {
   createdAt: string;
@@ -46,7 +48,7 @@ interface ChildDoc {
   devices: { id: string; at: string }[];
   settings: ChildSettings;
 }
-interface CodeDoc { kind: "child" | "parent"; hid: string; cid?: string; expiresAt: string }
+interface CodeDoc { kind: "child" | "parent"; hid: string; expiresAt: string }
 interface SessionDoc {
   gradeId: string;
   topicId: string;
@@ -61,6 +63,7 @@ interface SessionDoc {
 
 const DAY = 86_400_000;
 const hPath = (hid: string) => `households/${hid}`;
+const unlinkedPath = (cid: string) => `unlinkedChildren/${cid}`;
 const cPath = (hid: string, cid: string) => `households/${hid}/children/${cid}`;
 const sessionKey = (gradeId: string, topicId: string) => encodeURIComponent(`${gradeId}__${topicId}`);
 
@@ -99,13 +102,19 @@ async function childOfParent(d: Deps, parent: ParentIdentity, cid: string) {
   return { hid, h, cid, c };
 }
 
+/** Where this child lives now — in a household once a parent's code was entered, alone before. */
 async function requireChild(d: Deps, who: ChildIdentity) {
-  const c = await d.store.get<ChildDoc>(cPath(who.hid, who.cid));
+  const idx = await d.store.get<{ hid: string | null }>(`childIndex/${who.cid}`);
+  if (!idx) throw new ApiError(401, "device_revoked");
+  const path = idx.hid ? cPath(idx.hid, who.cid) : unlinkedPath(who.cid);
+  const c = await d.store.get<ChildDoc>(path);
   if (!c || !c.devices.some((x) => x.id === who.did)) throw new ApiError(401, "device_revoked");
-  const h = await d.store.get<HouseholdDoc>(hPath(who.hid));
-  if (!h) throw new ApiError(401, "device_revoked");
-  return { c, h };
+  const h = idx.hid ? await d.store.get<HouseholdDoc>(hPath(idx.hid)) : undefined;
+  if (idx.hid && !h) throw new ApiError(401, "device_revoked");
+  return { path, hid: idx.hid, c, h };
 }
+
+const canPractise = (d: Deps, h: HouseholdDoc | undefined) => (h ? subscriptionOf(h, d.now()).active : false);
 
 // ───────────────────────── views
 
@@ -164,39 +173,11 @@ function cleanName(raw: unknown): string {
   return name;
 }
 
-export async function parentAddChild(
-  d: Deps,
-  parent: ParentIdentity,
-  input: { name: string; gradeId: string; avatar?: string },
-): Promise<HouseholdView> {
-  const { hid, h } = await householdOf(d, parent);
-  const kids = await d.store.list<ChildDoc>(`${hPath(hid)}/children`);
-  if (kids.length >= pricing.maxChildren) throw new ApiError(409, "children_full");
-  const name = cleanName(input.name);
-  try {
-    gradeById(input.gradeId);
-  } catch {
-    throw new ApiError(400, "bad_grade");
-  }
-  const child: ChildDoc = {
-    name,
-    gradeId: input.gradeId,
-    avatar: typeof input.avatar === "string" ? input.avatar.slice(0, 30) : undefined,
-    createdAt: new Date(d.now()).toISOString(),
-    devices: [],
-    settings: { readAloud: false, pace: DEFAULT_PACE_LEVEL },
-  };
-  await d.store.set(cPath(hid, d.newId()), child);
-  return householdView(d, hid, h);
-}
-
 /** Deletes the child and every record of them (history, difficulty tiers, sessions). */
 export async function parentDeleteChild(d: Deps, parent: ParentIdentity, cid: string): Promise<HouseholdView> {
   const { hid, h } = await childOfParent(d, parent, cid);
   await d.store.deleteTree(cPath(hid, cid));
-  for (const code of await d.store.list<CodeDoc>("connectCodes")) {
-    if (code.data.cid === cid) await d.store.delete(`connectCodes/${code.id}`);
-  }
+  await d.store.delete(`childIndex/${cid}`);
   return householdView(d, hid, h);
 }
 
@@ -212,10 +193,13 @@ async function newCode(d: Deps, doc: Omit<CodeDoc, "expiresAt">): Promise<{ code
   throw new ApiError(503, "no_free_code");
 }
 
-export async function parentConnectCode(d: Deps, parent: ParentIdentity, cid: string) {
-  const { hid, c } = await childOfParent(d, parent, cid);
-  if (c.devices.length >= pricing.maxDevicesPerChild) throw new ApiError(409, "devices_full");
-  return newCode(d, { kind: "child", hid, cid });
+/** The code a parent reads out (or shows as a QR) for the children to type in their own app.
+ *  Works for any child within its 10 minutes, until the household is full. */
+export async function parentChildCode(d: Deps, parent: ParentIdentity) {
+  const { hid } = await householdOf(d, parent);
+  const kids = await d.store.list<ChildDoc>(`${hPath(hid)}/children`);
+  if (kids.length >= pricing.maxChildren) throw new ApiError(409, "children_full");
+  return newCode(d, { kind: "child", hid });
 }
 
 export async function parentDisconnectDevices(d: Deps, parent: ParentIdentity, cid: string): Promise<HouseholdView> {
@@ -277,36 +261,67 @@ export async function parentCancel(d: Deps, parent: ParentIdentity): Promise<Hou
 
 // ───────────────────────── child
 
-export async function childConnect(d: Deps, code: string) {
-  const key = String(code ?? "").trim();
-  const doc = await d.store.get<CodeDoc>(`connectCodes/${key}`);
-  if (!doc || doc.kind !== "child" || !doc.cid || Date.parse(doc.expiresAt) <= d.now()) throw new ApiError(404, "bad_code");
-  const c = await d.store.get<ChildDoc>(cPath(doc.hid, doc.cid));
-  if (!c) throw new ApiError(404, "bad_code");
+/** A child makes their own profile in the kids' app. Nothing to practise yet: no parent has
+ *  linked them, so there is no subscription behind them. */
+export async function childRegister(d: Deps, input: { name: string; gradeId: string; avatar?: string }) {
+  const name = cleanName(input.name);
+  try {
+    gradeById(input.gradeId);
+  } catch {
+    throw new ApiError(400, "bad_grade");
+  }
+  const cid = d.newId();
   const did = d.newId();
-  await d.store.set(cPath(doc.hid, doc.cid), { ...c, devices: [...c.devices, { id: did, at: new Date(d.now()).toISOString() }] });
-  await d.store.delete(`connectCodes/${key}`);
-  const who: ChildIdentity = { hid: doc.hid, cid: doc.cid, did };
+  const child: ChildDoc = {
+    name,
+    gradeId: input.gradeId,
+    avatar: typeof input.avatar === "string" ? input.avatar.slice(0, 30) : undefined,
+    createdAt: new Date(d.now()).toISOString(),
+    devices: [{ id: did, at: new Date(d.now()).toISOString() }],
+    settings: { readAloud: false, pace: DEFAULT_PACE_LEVEL },
+  };
+  await d.store.set(unlinkedPath(cid), child);
+  await d.store.set(`childIndex/${cid}`, { hid: null });
+  const who: ChildIdentity = { cid, did };
   return { token: d.issueChildToken(who), who };
 }
 
+/** The child types the code their parent shows: the profile joins that household, and from then
+ *  on the household's subscription decides whether they may practise. */
+export async function childLink(d: Deps, who: ChildIdentity, code: string): Promise<ChildMe> {
+  const here = await requireChild(d, who);
+  if (here.hid) throw new ApiError(409, "already_linked");
+  const key = String(code ?? "").trim();
+  const doc = await d.store.get<CodeDoc>(`connectCodes/${key}`);
+  if (!doc || doc.kind !== "child" || Date.parse(doc.expiresAt) <= d.now()) throw new ApiError(404, "bad_code");
+  const h = await d.store.get<HouseholdDoc>(hPath(doc.hid));
+  if (!h) throw new ApiError(404, "bad_code");
+  const kids = await d.store.list<ChildDoc>(`${hPath(doc.hid)}/children`);
+  if (kids.length >= pricing.maxChildren) throw new ApiError(409, "children_full");
+  await d.store.set(cPath(doc.hid, who.cid), here.c);
+  await d.store.set(`childIndex/${who.cid}`, { hid: doc.hid });
+  await d.store.delete(unlinkedPath(who.cid));
+  return childMe(d, who);
+}
+
 export async function childMe(d: Deps, who: ChildIdentity): Promise<ChildMe> {
-  const { c, h } = await requireChild(d, who);
-  const sub = subscriptionOf(h, d.now());
+  const { c, hid, h } = await requireChild(d, who);
+  const sub = h ? subscriptionOf(h, d.now()) : null;
   return {
     child: { id: who.cid, name: c.name, gradeId: c.gradeId, avatar: c.avatar },
-    subscription: { status: sub.status, active: sub.active },
+    linked: hid !== null,
+    subscription: { status: sub?.status ?? "expired", active: sub?.active ?? false },
     settings: c.settings,
   };
 }
 
 export async function childSetSettings(d: Deps, who: ChildIdentity, patch: Partial<ChildSettings>): Promise<ChildSettings> {
-  const { c } = await requireChild(d, who);
+  const { c, path } = await requireChild(d, who);
   const settings: ChildSettings = {
     readAloud: typeof patch.readAloud === "boolean" ? patch.readAloud : c.settings.readAloud,
     pace: patch.pace === "slow" || patch.pace === "medium" || patch.pace === "fast" ? patch.pace : c.settings.pace,
   };
-  await d.store.set(cPath(who.hid, who.cid), { ...c, settings });
+  await d.store.set(path, { ...c, settings });
   return settings;
 }
 
@@ -315,8 +330,8 @@ export async function childStartSession(
   who: ChildIdentity,
   input: { gradeId: string; topicId: string; levelId?: string },
 ): Promise<SessionView> {
-  const { h } = await requireChild(d, who);
-  if (!subscriptionOf(h, d.now()).active) throw new ApiError(402, "subscription_inactive");
+  const { path: base, h } = await requireChild(d, who);
+  if (!canPractise(d, h)) throw new ApiError(402, "subscription_inactive");
   let grade;
   try {
     grade = gradeById(input.gradeId);
@@ -326,7 +341,6 @@ export async function childStartSession(
   const topic = grade.topicSets.find((t) => t.id === input.topicId);
   if (!topic) throw new ApiError(404, "no_topic");
   const key = sessionKey(input.gradeId, input.topicId);
-  const base = `${cPath(who.hid, who.cid)}`;
 
   const existing = await d.store.get<SessionDoc>(`${base}/sessions/${key}`);
   if (existing && existing.answeredCount < existing.questions.length) {
@@ -383,8 +397,8 @@ function viewOf(key: string, s: SessionDoc, resume: SessionView["resume"]): Sess
 }
 
 export async function childAnswer(d: Deps, who: ChildIdentity, sessionId: string, correct: boolean): Promise<AnswerResult> {
-  const { c, h } = await requireChild(d, who);
-  const path = `${cPath(who.hid, who.cid)}/sessions/${sessionId}`;
+  const { c, path: base, h } = await requireChild(d, who);
+  const path = `${base}/sessions/${sessionId}`;
   const s = await d.store.get<SessionDoc>(path);
   if (!s || s.answeredCount >= s.questions.length) throw new ApiError(404, "no_session");
   const answeredCount = s.answeredCount + 1;
@@ -405,10 +419,10 @@ export async function childAnswer(d: Deps, who: ChildIdentity, sessionId: string
       if (i === answeredCount) return withoutRepeatingPrompt(() => adaptive.generate(difficulty, d.rng), s.questions[answeredCount - 1].prompt);
       return adaptive.generate(difficulty, d.rng);
     });
-    await d.store.set(`${cPath(who.hid, who.cid)}/adaptive/${sessionId}`, { difficulty });
+    await d.store.set(`${base}/adaptive/${sessionId}`, { difficulty });
   }
   await d.store.set(path, next);
-  const stopped = !subscriptionOf(h, d.now()).active;
+  const stopped = !canPractise(d, h);
   return {
     nextQuestion: stopped ? null : (next.questions[answeredCount] ?? null),
     index: answeredCount,
@@ -418,8 +432,7 @@ export async function childAnswer(d: Deps, who: ChildIdentity, sessionId: string
 }
 
 export async function childFinish(d: Deps, who: ChildIdentity, sessionId: string): Promise<void> {
-  await requireChild(d, who);
-  const base = cPath(who.hid, who.cid);
+  const { path: base } = await requireChild(d, who);
   const s = await d.store.get<SessionDoc>(`${base}/sessions/${sessionId}`);
   if (!s) return;
   const grade = gradeById(s.gradeId);

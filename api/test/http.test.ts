@@ -31,16 +31,22 @@ test("end to end over HTTP: parent, code, child, practice, expiry", async () => 
   try {
     assert.equal((await call(base, "/parent/household", null)).status, 401);
     assert.equal((await call(base, "/child/me", "garbage")).status, 401);
+    assert.equal((await call(base, "/child/link", null, "POST", { code: "1234" })).status, 401);
     const mom = "dev:mom@example.com";
     const hh = await call(base, "/parent/household", mom);
     assert.equal(hh.json.subscription.status, "trial");
-    const added = await call(base, "/parent/children", mom, "POST", { name: "רותם", gradeId: "6" });
-    const cid = added.json.children[0].id;
-    const code = (await call(base, `/parent/children/${cid}/code`, mom, "POST")).json.code;
-    assert.equal((await call(base, "/child/connect", null, "POST", { code: "0000x" })).status, 404);
-    const conn = await call(base, "/child/connect", null, "POST", { code });
-    assert.equal(conn.status, 200);
-    const tok = conn.json.token;
+    const reg = await call(base, "/child/register", null, "POST", { name: "רותם", gradeId: "6" });
+    assert.equal(reg.status, 200);
+    const tok = reg.json.token;
+    assert.equal(reg.json.me.linked, false);
+    const { gradeById: gb } = await import("../../src/data/curriculum.ts");
+    const early = await call(base, "/child/session", tok, "POST", { gradeId: "6", topicId: gb("6").topicSets.find((t) => t.adaptive)!.id });
+    assert.equal(early.status, 402); // not linked yet: topics are locked
+    const code = (await call(base, "/parent/child-code", mom, "POST")).json.code;
+    assert.equal((await call(base, "/child/link", tok, "POST", { code: "0000x" })).status, 404);
+    const linked = await call(base, "/child/link", tok, "POST", { code });
+    assert.equal(linked.status, 200);
+    assert.equal(linked.json.linked, true);
     assert.equal((await call(base, "/child/me", tok)).json.child.name, "רותם");
     const { gradeById } = await import("../../src/data/curriculum.ts");
     const topic = gradeById("6").topicSets.find((t) => t.adaptive)!.id;

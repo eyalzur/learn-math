@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { gradeById, type Question, type Topic } from "../data/curriculum";
 import type { Lesson } from "../data/style";
 import { avatarFor } from "../data/avatars";
 import type { PaceLevel } from "../data/adaptivePace";
 import { speak, speechSupported } from "../data/speech";
+import { errorText } from "./errors";
 import { Practice } from "../components/Practice";
 import { Result } from "../components/Result";
 import { SettingsDialog } from "../components/SettingsDialog";
@@ -17,12 +18,14 @@ type Screen =
 
 const STOP_TEXT = "בקשו מההורים להמשיך";
 
+const gradeLine = (name: string, label: string) => `שלום ${name}! · ${label}`;
+
 /**
  * The child's side in cloud mode. Everything about the child — who they are, whether they may
  * practise, which questions they get — comes from the server. The practice screen itself is the
  * same `Practice` component as before.
  */
-export function ChildApp({ api, onLeave }: { api: CloudApi; onLeave: () => void }) {
+export function ChildApp({ api, initialCode, onLeave }: { api: CloudApi; initialCode: string; onLeave: () => void }) {
   const [me, setMe] = useState<ChildMe | null>(null);
   const [screen, setScreen] = useState<Screen>({ name: "home" });
   const [stopped, setStopped] = useState(false);
@@ -50,11 +53,8 @@ export function ChildApp({ api, onLeave }: { api: CloudApi; onLeave: () => void 
     return <div className="cloud"><div className="cloud-card"><h1>{offline ? "אין חיבור עכשיו" : "רגע…"}</h1>{offline && <button className="cloud-btn" onClick={() => void load()}>נסו שוב</button>}</div></div>;
   }
 
-  if (stopped || !me.subscription.active) {
-    return <StopScreen onRefresh={() => { setStopped(false); setScreen({ name: "home" }); void load(); }} />;
-  }
-
   const grade = gradeById(me.child.gradeId);
+  const locked = stopped || !me.subscription.active;
   const readAloud = me.settings.readAloud;
   const setSettings = async (patch: Partial<ChildMe["settings"]>) => setMe({ ...me, settings: await api.childSetSettings(patch) });
   const settingsProps = {
@@ -69,8 +69,10 @@ export function ChildApp({ api, onLeave }: { api: CloudApi; onLeave: () => void 
       const session = await api.childStartSession({ gradeId: me!.child.gradeId, topicId: topic.id });
       setScreen({ name: "practice", session, questions: session.questions });
     } catch (e) {
-      if (e instanceof ApiError && e.code === "subscription_inactive") setStopped(true);
-      else setOffline(true);
+      if (e instanceof ApiError && e.code === "subscription_inactive") {
+        setStopped(true);
+        void load();
+      } else setOffline(true);
     }
   }
 
@@ -92,7 +94,10 @@ export function ChildApp({ api, onLeave }: { api: CloudApi; onLeave: () => void 
             api.childAnswer(session.sessionId, correct).then(
               (r) => {
                 setOffline(false);
-                if (r.stopped) setStopped(true);
+                if (r.stopped) {
+                  setStopped(true);
+                  void load();
+                }
                 // The next question is replaced with the one the server drew at the new
                 // difficulty — it is shown after the feedback, so there is time for this to land.
                 else if (r.nextQuestion) setScreen((s) => (s.name === "practice" ? { ...s, questions: s.questions.map((q, i) => (i === r.index ? r.nextQuestion! : q)) } : s));
@@ -127,7 +132,8 @@ export function ChildApp({ api, onLeave }: { api: CloudApi; onLeave: () => void 
     <>
       <TopicPicker
         studentId={me.child.id}
-        gradeLabel={`שלום ${me.child.name}! · ${grade.label}`}
+        gradeLabel={gradeLine(me.child.name, grade.label)}
+        locked={locked}
         topics={grade.topicSets}
         onSelect={(t) => void start(t)}
         onBack={() => void load()}
@@ -136,21 +142,102 @@ export function ChildApp({ api, onLeave }: { api: CloudApi; onLeave: () => void 
         avatar={avatarFor({ id: me.child.id, avatar: me.child.avatar })}
         {...settingsProps}
       />
+      {locked && <div aria-hidden="true" style={{ height: 220 }} />}
+      {locked && (
+        <LockPanel
+          me={me}
+          api={api}
+          initialCode={initialCode}
+          onLinked={(next) => {
+            setMe(next);
+            setStopped(false);
+          }}
+          onRefresh={() => {
+            setStopped(false);
+            void load();
+          }}
+        />
+      )}
       {settingsOpen && <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} {...settingsProps} />}
       {offlineBar}
     </>
   );
 }
 
-function StopScreen({ onRefresh }: { onRefresh: () => void }) {
+/**
+ * Why the topics are locked, and what to do about it. No profile link yet: type the parent's
+ * code. Linked but the subscription ended: nothing to do here, a parent has to renew.
+ */
+function LockPanel({
+  me,
+  api,
+  initialCode,
+  onLinked,
+  onRefresh,
+}: {
+  me: ChildMe;
+  api: CloudApi;
+  initialCode: string;
+  onLinked: (me: ChildMe) => void;
+  onRefresh: () => void;
+}) {
+  const [code, setCode] = useState(initialCode);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const tried = useRef(false);
+
+  async function link(value: string) {
+    setBusy(true);
+    setError("");
+    try {
+      onLinked(await api.childLink(value));
+    } catch (e) {
+      setError(errorText(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  // A code that arrived with the link (a scanned QR) is tried once, without a tap.
+  useEffect(() => {
+    if (me.linked || tried.current || initialCode.length !== 4) return;
+    tried.current = true;
+    void link(initialCode);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
-    <div className="cloud">
-      <div className="cloud-card cloud-stop">
-        <div className="emoji" aria-hidden="true">🌙</div>
-        <h1>{STOP_TEXT}</h1>
-        {speechSupported() && <button className="cloud-btn" onClick={() => speak([STOP_TEXT])} aria-label="הקראה">🔊</button>}
-        <button className="cloud-link link-button" onClick={onRefresh}>↻</button>
-      </div>
+    <div className="cloud-lock-panel" role="region" aria-label="נעול">
+      {me.linked ? (
+        <>
+          <strong>{STOP_TEXT}</strong>
+          <div className="cloud-row">
+            {speechSupported() && <button className="cloud-btn" onClick={() => speak([STOP_TEXT])} aria-label="הקראה">🔊</button>}
+            <button className="cloud-btn" onClick={onRefresh} aria-label="בדקו שוב">↻</button>
+          </div>
+        </>
+      ) : (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            void link(code);
+          }}
+          style={{ display: "flex", flexDirection: "column", gap: 8 }}
+        >
+          <label htmlFor="parent-code" style={{ fontWeight: 600, textAlign: "center" }}>הקלידו את הקוד של ההורים</label>
+          <input
+            id="parent-code"
+            className="cloud-input cloud-code-input"
+            inputMode="numeric"
+            maxLength={4}
+            autoComplete="off"
+            value={code}
+            onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+          />
+          <div className="cloud-error" role="alert">{error}</div>
+          <button className="cloud-btn primary" type="submit" disabled={busy || code.length !== 4}>חיבור</button>
+        </form>
+      )}
     </div>
   );
 }

@@ -77,7 +77,7 @@ export function createLocalApi(tokens: { parent: () => string | undefined; child
   const child = (): svc.ChildIdentity => {
     try {
       const p = JSON.parse(tokens.child() ?? "");
-      if (p.hid && p.cid && p.did) return p;
+      if (p.cid && p.did) return p;
     } catch {
       /* fall through */
     }
@@ -86,19 +86,19 @@ export function createLocalApi(tokens: { parent: () => string | undefined; child
 
   return {
     parentHousehold: () => svc.parentHousehold(deps, parent()),
-    parentAddChild: (i) => svc.parentAddChild(deps, parent(), i),
     parentDeleteChild: (id) => svc.parentDeleteChild(deps, parent(), id),
-    parentConnectCode: (id) => svc.parentConnectCode(deps, parent(), id),
+    parentChildCode: () => svc.parentChildCode(deps, parent()),
     parentDisconnectDevices: (id) => svc.parentDisconnectDevices(deps, parent(), id),
     parentInvite: () => svc.parentInvite(deps, parent()),
     parentJoin: (code) => svc.parentJoin(deps, parent(), code),
     parentHistory: (id) => svc.parentHistory(deps, parent(), id),
     parentPay: () => svc.parentPay(deps, parent()),
     parentCancel: () => svc.parentCancel(deps, parent()),
-    childConnect: async (code) => {
-      const { token, who } = await svc.childConnect(deps, code);
+    childRegister: async (input) => {
+      const { token, who } = await svc.childRegister(deps, input);
       return { token, me: await svc.childMe(deps, who) };
     },
+    childLink: (code) => svc.childLink(deps, child(), code),
     childMe: () => svc.childMe(deps, child()),
     childSetSettings: (s) => svc.childSetSettings(deps, child(), s),
     childStartSession: (i) => svc.childStartSession(deps, child(), i),

@@ -71,6 +71,8 @@ export interface ChildProfile {
 /** What the child's device learns about itself. */
 export interface ChildMe {
   child: ChildProfile;
+  /** False until a parent's code was entered: the profile exists, but no household stands behind it. */
+  linked: boolean;
   subscription: Pick<SubscriptionView, "status" | "active">;
   settings: ChildSettings;
 }
@@ -103,9 +105,9 @@ export interface AnswerResult {
 export interface CloudApi {
   // ── parent
   parentHousehold(): Promise<HouseholdView>;
-  parentAddChild(input: { name: string; gradeId: string; avatar?: string }): Promise<HouseholdView>;
   parentDeleteChild(childId: string): Promise<HouseholdView>;
-  parentConnectCode(childId: string): Promise<{ code: string; expiresAt: string }>;
+  /** The code children type in their own app to join this household. */
+  parentChildCode(): Promise<{ code: string; expiresAt: string }>;
   parentDisconnectDevices(childId: string): Promise<HouseholdView>;
   parentInvite(): Promise<{ code: string; expiresAt: string }>;
   parentJoin(code: string): Promise<HouseholdView>;
@@ -115,7 +117,10 @@ export interface CloudApi {
   parentPay(): Promise<HouseholdView>;
   parentCancel(): Promise<HouseholdView>;
   // ── child
-  childConnect(code: string): Promise<{ token: string; me: ChildMe }>;
+  /** The child makes their own profile (no parent involved yet). */
+  childRegister(input: { name: string; gradeId: string; avatar?: string }): Promise<{ token: string; me: ChildMe }>;
+  /** The child types the parent's code: the profile joins the household. */
+  childLink(code: string): Promise<ChildMe>;
   childMe(): Promise<ChildMe>;
   childSetSettings(settings: Partial<ChildSettings>): Promise<ChildSettings>;
   childStartSession(input: { gradeId: string; topicId: string; levelId?: string }): Promise<SessionView>;

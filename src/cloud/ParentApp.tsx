@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { grades } from "../data/curriculum";
 import { pricing } from "../data/pricing";
 import { errorText } from "./errors";
+import { appLinks, CodeCard } from "./CodeCard";
 import { type ChildView, type CloudApi, type HistoryEntry, type HouseholdView } from "./server/types";
 
 type View =
@@ -9,8 +10,8 @@ type View =
   | { name: "child"; id: string }
   | { name: "subscription" }
   | { name: "connections" }
-  | { name: "add" }
-  | { name: "code"; id: string }
+  | { name: "childCode" }
+  | { name: "invite" }
   | { name: "privacy" };
 
 const fmtDate = (iso: string) => new Date(iso).toLocaleDateString("he-IL", { day: "numeric", month: "numeric" });
@@ -81,7 +82,7 @@ export function ParentApp({ api, joinCode, onSignOut }: { api: CloudApi; joinCod
           <h1>הורים</h1>
           <div className={`cloud-banner ${sub.status === "expired" ? "stopped" : ""}`} role="status">{subLine}</div>
           <h2>מה עשו השבוע</h2>
-          {hh.children.length === 0 && <p>עוד לא חיברתם ילדים.</p>}
+          {hh.children.length === 0 && <p>עוד לא חיברתם ילדים. הילדים יוצרים פרופיל באפליקציה שלהם, ואתם נותנים להם קוד.</p>}
           {hh.children.map((c) => (
             <button key={c.id} className={`cloud-kid ${sub.status === "expired" ? "gray" : ""}`} onClick={() => setView({ name: "child", id: c.id })}>
               <span className={`cloud-dot ${c.lastPracticeAt && new Date(c.lastPracticeAt).toDateString() === new Date().toDateString() ? "on" : ""}`} aria-hidden="true" />
@@ -94,10 +95,11 @@ export function ParentApp({ api, joinCode, onSignOut }: { api: CloudApi; joinCod
             </button>
           ))}
           {hh.children.length < pricing.maxChildren ? (
-            <button className="cloud-btn primary" onClick={() => setView({ name: "add" })}>חבר/י ילד/ה</button>
+            <button className="cloud-btn primary" onClick={() => setView({ name: "childCode" })}>חיבור ילד/ה: קוד</button>
           ) : (
             <p className="cloud-footnote">כבר מחוברים {pricing.maxChildren} ילדים</p>
           )}
+          {hh.parents.length < pricing.maxParents && <button className="cloud-btn" onClick={() => setView({ name: "invite" })}>הזמנת הורה נוסף</button>}
           <button className="cloud-btn" onClick={() => setView({ name: "subscription" })}>מנוי</button>
           <div className="cloud-row">
             <button className="cloud-link link-button" onClick={() => setView({ name: "connections" })}>חיבורים</button>
@@ -118,7 +120,6 @@ export function ParentApp({ api, joinCode, onSignOut }: { api: CloudApi; joinCod
         api={api}
         child={c}
         onBack={back}
-        onCode={() => setView({ name: "code", id: c.id })}
         onChanged={setHh}
         run={run}
         error={error}
@@ -126,15 +127,23 @@ export function ParentApp({ api, joinCode, onSignOut }: { api: CloudApi; joinCod
     );
   }
 
-  if (view.name === "add") return <AddChild onBack={back} error={error} onAdd={async (name, gradeId) => {
-    const next = await run(() => api.parentAddChild({ name, gradeId }));
-    if (next) {
-      setHh(next);
-      setView({ name: "code", id: next.children[next.children.length - 1].id });
-    }
-  }} />;
+  if (view.name === "childCode") {
+    return (
+      <Shell back={back} error={error} toast={toast} title="חיבור ילד/ה">
+        <p style={{ textAlign: "center" }}>הילדים יוצרים פרופיל באפליקציה שלהם ומקלידים את הקוד, או סורקים אותו.</p>
+        <FreshCode make={api.parentChildCode} link={appLinks.kids} qrLabel="QR לחיבור ילד" run={run} />
+      </Shell>
+    );
+  }
 
-  if (view.name === "code") return <CodeScreen api={api} childName={kid(view.id)?.name ?? ""} id={view.id} onBack={back} run={run} error={error} />;
+  if (view.name === "invite") {
+    return (
+      <Shell back={back} error={error} toast={toast} title="הזמנת הורה נוסף">
+        <p style={{ textAlign: "center" }}>ההורה השני פותח את אפליקציית ההורים ומקליד את הקוד בכניסה, או סורק אותו.</p>
+        <FreshCode make={api.parentInvite} link={appLinks.parents} qrLabel="QR להצטרפות הורה" run={run} />
+      </Shell>
+    );
+  }
 
   if (view.name === "subscription") {
     return (
@@ -175,9 +184,9 @@ export function ParentApp({ api, joinCode, onSignOut }: { api: CloudApi; joinCod
         <p>הורים <span className="ltr">{hh.parents.length}/{pricing.maxParents}</span></p>
         <ul className="cloud-list">{hh.parents.map((p) => <li key={p.uid}><span className="ltr">{p.email}</span></li>)}</ul>
         <p>ילדים <span className="ltr">{hh.children.length}/{pricing.maxChildren}</span></p>
-        {hh.parents.length < pricing.maxParents && <InviteParent api={api} run={run} />}
+        {hh.parents.length < pricing.maxParents && <button className="cloud-btn" onClick={() => setView({ name: "invite" })}>הזמנת הורה נוסף</button>}
         {hh.children.length < pricing.maxChildren ? (
-          <button className="cloud-btn primary" onClick={() => setView({ name: "add" })}>חבר/י ילד/ה</button>
+          <button className="cloud-btn primary" onClick={() => setView({ name: "childCode" })}>חיבור ילד/ה: קוד</button>
         ) : (
           <p className="cloud-footnote">כבר מחוברים {pricing.maxChildren} ילדים</p>
         )}
@@ -208,62 +217,29 @@ function Shell({ title, back, error, toast, children }: { title: string; back: (
   );
 }
 
-function AddChild({ onBack, onAdd, error }: { onBack: () => void; onAdd: (name: string, gradeId: string) => Promise<void>; error: string }) {
-  const [name, setName] = useState("");
-  const [gradeId, setGradeId] = useState(grades[0].id);
-  return (
-    <div className="cloud">
-      <form className="cloud-card" onSubmit={(e) => { e.preventDefault(); void onAdd(name, gradeId); }}>
-        <button type="button" className="cloud-link link-button" onClick={onBack} style={{ alignSelf: "flex-start" }}>← חזרה</button>
-        <h1>חבר/י ילד/ה</h1>
-        <label htmlFor="kid-name">כינוי</label>
-        <input id="kid-name" className="cloud-input" maxLength={20} value={name} onChange={(e) => setName(e.target.value)} />
-        <label htmlFor="kid-grade">כיתה</label>
-        <select id="kid-grade" className="cloud-input" value={gradeId} onChange={(e) => setGradeId(e.target.value)}>
-          {grades.map((g) => <option key={g.id} value={g.id}>{g.label}</option>)}
-        </select>
-        <div className="cloud-error" role="alert">{error}</div>
-        <button className="cloud-btn primary" type="submit" disabled={!name.trim()}>הוספה</button>
-      </form>
-    </div>
-  );
-}
-
-function CodeScreen({ api, id, childName, onBack, run, error }: { api: CloudApi; id: string; childName: string; onBack: () => void; run: <T>(f: () => Promise<T>) => Promise<T | undefined>; error: string }) {
+/** Asks for a fresh code when the screen opens, and again on request. */
+function FreshCode({ make, link, qrLabel, run }: {
+  make: () => Promise<{ code: string; expiresAt: string }>;
+  link: (code: string) => string;
+  qrLabel: string;
+  run: <T>(f: () => Promise<T>) => Promise<T | undefined>;
+}) {
   const [code, setCode] = useState<string | null>(null);
   const fresh = useCallback(async () => {
-    const r = await run(() => api.parentConnectCode(id));
+    const r = await run(make);
     if (r) setCode(r.code);
-  }, [api, id, run]);
+  }, [make, run]);
   useEffect(() => { void fresh(); }, [fresh]);
   return (
-    <div className="cloud">
-      <div className="cloud-card">
-        <button className="cloud-link link-button" onClick={onBack} style={{ alignSelf: "flex-start" }}>← חזרה</button>
-        <h1>{childName}</h1>
-        <p style={{ textAlign: "center" }}>הקלידו את הקוד במכשיר של הילד/ה</p>
-        <div className="cloud-code" aria-label="קוד חיבור"><span className="ltr">{code ?? "····"}</span></div>
-        <p className="cloud-footnote">הקוד תקף {pricing.codeTtlMinutes} דקות ועובד פעם אחת.</p>
-        <div className="cloud-error" role="alert">{error}</div>
-        <button className="cloud-btn" onClick={fresh}>קוד חדש</button>
-      </div>
-    </div>
+    <>
+      <CodeCard code={code} link={code ? link(code) : ""} qrLabel={qrLabel} />
+      <button className="cloud-btn" onClick={fresh}>קוד חדש</button>
+    </>
   );
 }
 
-function InviteParent({ api, run }: { api: CloudApi; run: <T>(f: () => Promise<T>) => Promise<T | undefined> }) {
-  const [code, setCode] = useState<string | null>(null);
-  return code ? (
-    <div className="cloud-code" aria-label="קוד הצטרפות להורה"><span className="ltr">{code}</span></div>
-  ) : (
-    <button className="cloud-btn" onClick={async () => { const r = await run(() => api.parentInvite()); if (r) setCode(r.code); }}>
-      הזמנת הורה נוסף
-    </button>
-  );
-}
-
-function ChildScreen({ api, child, onBack, onCode, onChanged, run, error }: {
-  api: CloudApi; child: ChildView; onBack: () => void; onCode: () => void;
+function ChildScreen({ api, child, onBack, onChanged, run, error }: {
+  api: CloudApi; child: ChildView; onBack: () => void;
   onChanged: (h: HouseholdView) => void; run: <T>(f: () => Promise<T>) => Promise<T | undefined>; error: string;
 }) {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
@@ -283,7 +259,6 @@ function ChildScreen({ api, child, onBack, onCode, onChanged, run, error }: {
           </ul>
         )}
         <div className="cloud-row">
-          <button className="cloud-btn" onClick={onCode}>קוד חיבור</button>
           <button className="cloud-btn" disabled={child.devicesCount === 0} onClick={async () => { const h = await run(() => api.parentDisconnectDevices(child.id)); if (h) onChanged(h); }}>
             נתק מכשירים ({child.devicesCount})
           </button>

@@ -40,7 +40,7 @@ export function childTokens(secret: string) {
       if (want.length !== got.length || !timingSafeEqual(want, got)) return null;
       try {
         const p = JSON.parse(Buffer.from(body, "base64url").toString());
-        return p.hid && p.cid && p.did ? p : null;
+        return p.cid && p.did ? p : null;
       } catch {
         return null;
       }

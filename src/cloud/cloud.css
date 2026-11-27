@@ -35,6 +35,30 @@
 .cloud-demo { position: fixed; bottom: 6px; left: 6px; z-index: 60; display: flex; gap: 4px; flex-wrap: wrap; max-width: 80vw; font-size: 0.75rem; background: rgba(255,255,255,0.92); border: 1px dashed var(--accent); border-radius: 12px; padding: 4px 6px; direction: rtl; }
 .cloud-demo button { color: var(--text-h); width: auto; box-shadow: none; padding: 2px 8px; font: inherit; font-size: 0.75rem; min-height: 28px; border-radius: 8px; border: 1px solid var(--accent-border); background: #fff; cursor: pointer; }
 .cloud-footnote { font-size: 0.8rem; opacity: 0.75; text-align: center; }
-.cloud-tabs { position: fixed; top: 0; left: 0; right: 0; z-index: 55; display: flex; gap: 6px; padding: 6px; background: rgba(255,255,255,0.95); border-bottom: 1px dashed var(--accent); }
+.cloud-tabs { flex-wrap: wrap; position: fixed; top: 0; left: 0; right: 0; z-index: 55; display: flex; gap: 6px; padding: 6px; background: rgba(255,255,255,0.95); border-bottom: 1px dashed var(--accent); }
 .cloud-tabs button { flex: 1; min-height: 32px; border-radius: 10px; border: 1px solid var(--accent-border); background: #fff; color: var(--text-h); font: inherit; font-size: 0.85rem; box-shadow: none; padding: 2px 8px; }
 .cloud-tabs button.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+.cloud-qr { width: 180px; max-width: 60vw; margin: 4px auto; background: #fff; padding: 8px; border-radius: 16px; box-shadow: var(--shadow); }
+.cloud-qr svg { display: block; width: 100%; height: auto; }
+.cloud-hero { font-size: 4.5rem; text-align: center; line-height: 1; }
+.cloud-lead { text-align: center; font-size: 1.05rem; margin: 0; }
+.cloud-locked { text-align: center; margin-bottom: 8px; }
+
+/* The two apps look different on purpose, so nobody opens the wrong one: the kids' app keeps the
+   candy pink, the parents' app is blue (parents/index.html sets data-app="parents"). */
+html[data-app="parents"] {
+  --text: #3b4b6b;
+  --text-h: #1b2a4a;
+  --bg: #eef4ff;
+  --border: #cfe0ff;
+  --accent: #2f6fed;
+  --accent-bg: rgba(47, 111, 237, 0.1);
+  --accent-border: rgba(47, 111, 237, 0.45);
+  --social-bg: rgba(207, 224, 255, 0.5);
+  --shadow: rgba(27, 42, 74, 0.12) 0 10px 15px -3px, rgba(27, 42, 74, 0.08) 0 4px 6px -2px;
+}
+html[data-app="parents"] body { background: var(--bg); }
+.cloud-lock-panel { position: fixed; left: 8px; right: 8px; bottom: 8px; z-index: 40; background: #fff; border: 2px solid var(--accent-border); border-radius: 20px; padding: 12px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 8px; text-align: center; }
+.cloud-landing .cloud-card { text-align: center; }
+.cloud-tabs-tools { flex: 1 1 100%; display: flex; gap: 6px; align-items: center; font-size: 0.8rem; }
+.cloud-tabs-tools button { flex: 0 0 auto; min-height: 28px; border-radius: 8px; border: 1px solid var(--accent-border); background: #fff; color: var(--text-h); font: inherit; font-size: 0.8rem; box-shadow: none; padding: 2px 8px; }
