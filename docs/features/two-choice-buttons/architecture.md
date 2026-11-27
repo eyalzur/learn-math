@@ -42,3 +42,12 @@
 
 ## Open Questions
 None.
+
+## Implementation Notes
+נבנה לפי התכנון, בלי סטיות:
+- `Question.choices?: readonly [number, number]` ב-`curriculum.ts`; 11 שאלות grade1 (bigger ×7, smaller ×4) קיבלו `choices` בסדר הניסוח.
+- `TwoChoiceButtons.tsx` חדש; `Practice.tsx`: `checkAnswer` פוצל ל-`checkAnswer` (פרסור הקלדה) + `submitAnswer(parsed)` (השיפוט והרישום) + `choose(value)` (לחיצה); state `chosen`, מתאפס ב-`next()`. כש-`question.choices` קיים מרונדרים הכפתורים (ו"הבא"/"סיום" רק אחרי טעות) במקום שורת התשובה והמקלדת.
+- `App.css`: `.two-choice*`. הכפתור המושבת שומר על צבעי התוצאה (`opacity: 1`) כדי שה-dimming הגלובלי לא ימחק אותם.
+- `content.spec.ts`: שתי בדיקות נתונים חדשות (המספרים בשאלה = `choices` לפי הסדר ו-`answer` אחד מהם; כל "bigger"/"smaller" בכיתה א׳ חייב `choices`).
+- גרסה 1.65.0 ← 1.66.0. שימו לב: הענף `feature/parent-subscription` גם הוא על 1.66.0 — מי שממוזג שני יצטרך להעלות שוב.
+- `npm run build` נקי; lint בלי אזהרות חדשות; `content.spec.ts` 44/44.

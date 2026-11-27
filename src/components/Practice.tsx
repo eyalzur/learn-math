@@ -11,6 +11,7 @@ import { AngleShape } from "./AngleShape";
 import { AutoReadPrompt } from "./AutoReadPrompt";
 import { ClockFace } from "./ClockFace";
 import { NumberPad } from "./NumberPad";
+import { TwoChoiceButtons } from "./TwoChoiceButtons";
 import { QuantityDots } from "./QuantityDots";
 import { QuestionExplanation } from "./QuestionExplanation";
 import { QuestionScreenTemplate } from "./QuestionScreenTemplate";
@@ -113,6 +114,8 @@ export function Practice({
   const [hintsShown, setHintsShown] = useState(0);
   /** The student's typed final answer, not yet checked. */
   const [answerInput, setAnswerInput] = useState("");
+  /** For a two-answer question: which of the two buttons was tapped (docs/features/two-choice-buttons/). */
+  const [chosen, setChosen] = useState<number | null>(null);
 
   /** What the wrong answer says about the thinking behind it, when anything does. */
   const [diagnosis, setDiagnosis] = useState<Diagnosis | null>(null);
@@ -214,13 +217,27 @@ export function Practice({
     return speechParts([prompt, ...question.hints.slice(0, hintsShown)]);
   }
 
+  /** A typed answer, checked. The number pad's "בדיקה" and a physical Enter both land here. */
   function checkAnswer() {
-    setShowAutoReadPrompt(false);
-    if (feedback !== null) return;
     const trimmed = answerInput.trim();
     if (trimmed === "") return;
     const parsed = Number(trimmed);
     if (Number.isNaN(parsed)) return;
+    submitAnswer(parsed);
+  }
+
+  /** A tap on one of the two buttons: that tap is the answer. */
+  function choose(value: number) {
+    if (feedback !== null) return;
+    setChosen(value);
+    setAnswerInput(String(value));
+    submitAnswer(value);
+  }
+
+  /** The one place an answer — typed or tapped — is judged and recorded. */
+  function submitAnswer(parsed: number) {
+    setShowAutoReadPrompt(false);
+    if (feedback !== null) return;
     const isCorrect = parsed === question.answer;
     setFeedback(isCorrect ? "correct" : "wrong");
     if (isCorrect) {
@@ -255,6 +272,7 @@ export function Practice({
     setFeedback(null);
     setHintsShown(0);
     setAnswerInput("");
+    setChosen(null);
     setDiagnosis(null);
     setFollowUpInput("");
     setFollowUpResult(null);
@@ -355,6 +373,25 @@ export function Practice({
         </>
       }
     >
+      {question.choices ? (
+        <>
+          <TwoChoiceButtons
+            choices={question.choices}
+            answer={question.answer}
+            chosen={chosen}
+            feedback={feedback}
+            onChoose={choose}
+          />
+          {feedback === "wrong" && (
+            <div className="two-choice-next">
+              <button type="button" onClick={next}>
+                {isLast ? "סיום" : "הבא"}
+              </button>
+            </div>
+          )}
+        </>
+      ) : (
+        <>
       <div className="answer-row">
         <input
           type="text"
@@ -401,6 +438,8 @@ export function Practice({
             setAnswerInput((v) => v.slice(0, -1));
           }}
         />
+      )}
+        </>
       )}
 
       {/* Back at the bottom, below the keypad — reported live: moving it above the

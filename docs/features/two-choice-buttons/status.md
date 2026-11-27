@@ -6,10 +6,10 @@
 - [x] Product spec — product-manager — 2026-11-27
 - [x] Design — designer — 2026-11-27
 - [x] Architecture — tech-lead — 2026-11-27
-- [ ] Implementation — developer — not started
+- [x] Implementation — developer — 2026-11-27
 - [ ] Tests — qa — not started
 
-**Current phase:** developer
+**Current phase:** qa
 **Branch:** `feature/two-choice-buttons`
 **PR:** not opened yet
 

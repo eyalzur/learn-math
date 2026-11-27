@@ -2956,3 +2956,74 @@ body:has(
 .practice:not(:has(.number-pad)) > .clock-face > svg {
   height: auto;
 }
+
+/* ---- two-answer questions: two big buttons instead of the number pad
+   (docs/features/two-choice-buttons/) ---- */
+
+/* DOM order is the question's own order; the RTL page lays the first one out on the right,
+   which is how the sentence reads. */
+.two-choice {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  width: 100%;
+  max-width: 360px;
+  margin: 24px auto 8px;
+}
+
+.two-choice-button {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 112px;
+  padding: 0;
+  border-radius: 24px;
+  border: 3px solid var(--accent-border);
+  background: var(--code-bg);
+  color: var(--text-h);
+}
+
+/* The number is left-to-right inside the right-to-left page, same as .problem-box — "13"
+   must never read as "31". */
+.two-choice-number {
+  display: block;
+  font-size: 44px;
+  line-height: 1;
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+.two-choice-button.correct,
+.two-choice-button.reveal {
+  background: #d6f5dc;
+  border-color: #2f9e44;
+  color: #1b5e2b;
+}
+
+.two-choice-button.wrong {
+  background: #ffe0e8;
+  border-color: #d6336c;
+  color: #8a1c44;
+}
+
+/* Not colour alone: a mark in the corner says the same thing. */
+.two-choice-mark {
+  position: absolute;
+  top: 8px;
+  inset-inline-end: 12px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+/* A disabled button after an answer keeps its result colours at full strength — the global
+   `button:disabled` dimming would wash out exactly the thing the child needs to see. */
+.two-choice-button:disabled {
+  opacity: 1;
+  cursor: default;
+}
+
+.two-choice-next {
+  display: flex;
+  justify-content: center;
+  margin: 12px 0;
+}
