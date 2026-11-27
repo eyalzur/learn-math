@@ -13,13 +13,16 @@ export async function signInAsParent(page: Page, email: string, joinCode = '') {
   await expect(page.getByRole('heading', { name: 'הורים', exact: true })).toBeVisible();
 }
 
-/** A child makes their own profile in the kids' app — no parent involved. */
-export async function createKidProfile(page: Page, name: string, grade = 'כיתה ו׳', path = '/learn-math/') {
+/** A child makes their own profile in the kids' app — no parent involved. Same dialog as the app's
+ *  always had: a name, a grade card, optionally a picture. */
+export async function createKidProfile(page: Page, name: string, grade = 'כיתה ו׳', path = '/learn-math/', avatar?: string) {
   await page.goto(path);
   await page.getByRole('button', { name: 'פרופיל חדש' }).click();
-  await page.getByLabel('איך קוראים לך?').fill(name);
-  await page.getByRole('button', { name: grade }).click();
-  await page.getByRole('button', { name: 'יצירת פרופיל' }).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByLabel('שם', { exact: true }).fill(name);
+  await dialog.locator('.grade-card', { hasText: grade }).click();
+  if (avatar) await dialog.getByRole('button', { name: avatar }).click();
+  await dialog.getByRole('button', { name: 'יצירה' }).click();
   await expect(page.getByText(`שלום ${name}!`)).toBeVisible();
 }
 

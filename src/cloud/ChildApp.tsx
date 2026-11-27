@@ -18,7 +18,9 @@ type Screen =
 
 const STOP_TEXT = "בקשו מההורים להמשיך";
 
-const gradeLine = (name: string, label: string) => `שלום ${name}! · ${label}`;
+/** The picture the child chose sits in the greeting. (The old profile drawer belongs to the on-device
+ *  roster; here nothing about the child lives on the device, so there is no drawer yet.) */
+const gradeLine = (name: string, label: string, emoji: string) => `${emoji} שלום ${name}! · ${label}`;
 
 /**
  * The child's side in cloud mode. Everything about the child — who they are, whether they may
@@ -132,7 +134,7 @@ export function ChildApp({ api, initialCode, onLeave }: { api: CloudApi; initial
     <>
       <TopicPicker
         studentId={me.child.id}
-        gradeLabel={gradeLine(me.child.name, grade.label)}
+        gradeLabel={gradeLine(me.child.name, grade.label, avatarFor({ id: me.child.id, avatar: me.child.avatar }).emoji)}
         locked={locked}
         topics={grade.topicSets}
         onSelect={(t) => void start(t)}

@@ -208,3 +208,11 @@ test('a parent sees a child\'s progress per topic, with the share of right answe
   await expect(byTopic).toContainText(`${Math.round((100 * right) / n)}%`);
   await expect(parent.getByRole('list', { name: 'תרגולים אחרונים' }).getByRole('listitem')).toHaveCount(1);
 });
+
+test('a child\'s profile is made with the same dialog as always: a name, a grade card, and a picture of their choice', async ({ page }) => {
+  await createKidProfile(page, 'נועה', 'כיתה ב׳', '/learn-math/', 'פנדה');
+  // the picture they chose is in their greeting
+  await expect(page.locator('.greeting')).toContainText('🐼');
+  // nothing else about the child is asked for
+  await expect(page.getByLabel(/מייל|טלפון|תאריך/)).toHaveCount(0);
+});
