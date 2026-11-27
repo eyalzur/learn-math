@@ -3,7 +3,7 @@ import { grades } from "../data/curriculum";
 import { pricing } from "../data/pricing";
 import { errorText } from "./errors";
 import { appLinks, CodeCard } from "./CodeCard";
-import { type ChildView, type CloudApi, type HistoryEntry, type HouseholdView } from "./server/types";
+import { type ChildView, type CloudApi, type HouseholdView, type ProgressView } from "./server/types";
 
 type View =
   | { name: "home" }
@@ -67,6 +67,8 @@ export function ParentApp({ api, joinCode, onSignOut }: { api: CloudApi; joinCod
   }
 
   const sub = hh.subscription;
+  /** Prices, trial and lock are off for now (see `HouseholdView.paywall`): nothing about them is shown. */
+  const paywall = hh.paywall;
   const kid = (id: string): ChildView | undefined => hh.children.find((c) => c.id === id);
   const subLine =
     sub.status === "trial"
@@ -80,11 +82,11 @@ export function ParentApp({ api, joinCode, onSignOut }: { api: CloudApi; joinCod
       <div className="cloud">
         <div className="cloud-card">
           <h1>הורים</h1>
-          <div className={`cloud-banner ${sub.status === "expired" ? "stopped" : ""}`} role="status">{subLine}</div>
+          {paywall && <div className={`cloud-banner ${sub.status === "expired" ? "stopped" : ""}`} role="status">{subLine}</div>}
           <h2>מה עשו השבוע</h2>
           {hh.children.length === 0 && <p>עוד לא חיברתם ילדים. הילדים יוצרים פרופיל באפליקציה שלהם, ואתם נותנים להם קוד.</p>}
           {hh.children.map((c) => (
-            <button key={c.id} className={`cloud-kid ${sub.status === "expired" ? "gray" : ""}`} onClick={() => setView({ name: "child", id: c.id })}>
+            <button key={c.id} className={`cloud-kid ${paywall && sub.status === "expired" ? "gray" : ""}`} onClick={() => setView({ name: "child", id: c.id })}>
               <span className={`cloud-dot ${c.lastPracticeAt && new Date(c.lastPracticeAt).toDateString() === new Date().toDateString() ? "on" : ""}`} aria-hidden="true" />
               <span style={{ flex: 1 }}>
                 <strong>{c.name}</strong> · {gradeLabel(c.gradeId)}
@@ -100,7 +102,7 @@ export function ParentApp({ api, joinCode, onSignOut }: { api: CloudApi; joinCod
             <p className="cloud-footnote">כבר מחוברים {pricing.maxChildren} ילדים</p>
           )}
           {hh.parents.length < pricing.maxParents && <button className="cloud-btn" onClick={() => setView({ name: "invite" })}>הזמנת הורה נוסף</button>}
-          <button className="cloud-btn" onClick={() => setView({ name: "subscription" })}>מנוי</button>
+          {paywall && <button className="cloud-btn" onClick={() => setView({ name: "subscription" })}>מנוי</button>}
           <div className="cloud-row">
             <button className="cloud-link link-button" onClick={() => setView({ name: "connections" })}>חיבורים</button>
             <button className="cloud-link link-button" onClick={() => setView({ name: "privacy" })}>פרטיות</button>
@@ -242,21 +244,38 @@ function ChildScreen({ api, child, onBack, onChanged, run, error }: {
   api: CloudApi; child: ChildView; onBack: () => void;
   onChanged: (h: HouseholdView) => void; run: <T>(f: () => Promise<T>) => Promise<T | undefined>; error: string;
 }) {
-  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [progress, setProgress] = useState<ProgressView | null>(null);
   const [confirming, setConfirming] = useState(false);
-  useEffect(() => { void run(async () => setHistory(await api.parentHistory(child.id))); }, [api, child.id, run]);
+  useEffect(() => { void run(async () => setProgress(await api.parentProgress(child.id))); }, [api, child.id, run]);
   return (
     <div className="cloud">
       <div className="cloud-card">
         <button className="cloud-link link-button" onClick={onBack} style={{ alignSelf: "flex-start" }}>← חזרה</button>
         <h1>{child.name}</h1>
-        <p style={{ textAlign: "center" }}>{gradeLabel(child.gradeId)} · {child.practicesThisWeek > 0 ? `תרגלו ${child.practicesThisWeek} פעמים` : "עוד לא תרגלו השבוע"}</p>
-        {history.length === 0 ? <p style={{ textAlign: "center" }}>עוד אין תרגולים.</p> : (
-          <ul className="cloud-list" aria-label="תרגולים אחרונים">
-            {history.map((h) => (
-              <li key={h.id}>{h.topicTitle} · <span className="ltr">{h.correct}/{h.total}</span> · {fmtDate(h.at)}</li>
-            ))}
-          </ul>
+        <p style={{ textAlign: "center" }}>
+          {gradeLabel(child.gradeId)} · {(progress?.practicesThisWeek ?? child.practicesThisWeek) > 0 ? `תרגלו ${progress?.practicesThisWeek ?? child.practicesThisWeek} פעמים השבוע` : "עוד לא תרגלו השבוע"}
+        </p>
+        {progress && progress.topics.length === 0 && <p style={{ textAlign: "center" }}>עוד אין תרגולים.</p>}
+        {progress && progress.topics.length > 0 && (
+          <>
+            <h2>לפי נושא</h2>
+            <ul className="cloud-list" aria-label="התקדמות לפי נושא">
+              {progress.topics.map((t) => (
+                <li key={`${t.gradeLabel}-${t.topicId}`}>
+                  <strong>{t.topicTitle}</strong> · {t.gradeLabel}
+                  <br />
+                  <span className="ltr">{t.correct}/{t.total}</span> נכון (<span className="ltr">{t.percent}%</span>) · {t.practices} תרגולים
+                  {t.level !== null && <> · רמה <span className="ltr">{t.level}</span></>} · {fmtDate(t.lastAt)}
+                </li>
+              ))}
+            </ul>
+            <h2>תרגולים אחרונים</h2>
+            <ul className="cloud-list" aria-label="תרגולים אחרונים">
+              {progress.recent.map((h) => (
+                <li key={h.id}>{h.topicTitle} · <span className="ltr">{h.correct}/{h.total}</span> · {fmtDate(h.at)}</li>
+              ))}
+            </ul>
+          </>
         )}
         <div className="cloud-row">
           <button className="cloud-btn" disabled={child.devicesCount === 0} onClick={async () => { const h = await run(() => api.parentDisconnectDevices(child.id)); if (h) onChanged(h); }}>

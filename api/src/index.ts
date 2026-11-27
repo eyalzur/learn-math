@@ -31,6 +31,7 @@ const app = createApp({
     rng: Math.random,
     newId: () => randomUUID(),
     issueChildToken: tokens.issue,
+    paywall: process.env.PAYWALL === "1",
   },
   verifyParent: dev ? devParentVerifier() : await firebaseParentVerifier(process.env.FIREBASE_PROJECT_ID),
   verifyChildToken: tokens.verify,

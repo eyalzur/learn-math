@@ -23,7 +23,7 @@
 .cloud-dot.on { background: #2f9e44; }
 .cloud-row { display: flex; gap: 8px; flex-wrap: wrap; }
 .cloud-row > * { flex: 1 1 0; }
-.cloud-list { max-height: 36dvh; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+.cloud-list { padding: 0; margin: 0; max-height: 36dvh; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
 .cloud-list li { list-style: none; padding: 8px 12px; border-radius: 12px; background: #fff; border: 1px solid var(--border); }
 .cloud-days { display: flex; gap: 6px; justify-content: center; }
 .cloud-day { width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--accent-border); background: #fff; font: inherit; font-weight: 700; cursor: pointer; color: var(--text-h); }

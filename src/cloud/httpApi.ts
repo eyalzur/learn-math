@@ -32,6 +32,7 @@ export function createHttpApi(
     parentInvite: () => P("POST", "/parent/invite"),
     parentJoin: (code) => P("POST", "/parent/join", { code }),
     parentHistory: (id) => P("GET", `/parent/children/${id}/history`),
+    parentProgress: (id) => P("GET", `/parent/children/${id}/progress`),
     parentPay: () => P("POST", "/parent/subscription/pay"),
     parentCancel: () => P("POST", "/parent/subscription/cancel"),
     childRegister: (i) => call("none", "POST", "/child/register", i),

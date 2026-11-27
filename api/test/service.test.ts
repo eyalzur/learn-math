@@ -14,6 +14,7 @@ function setup() {
     rng: Math.random,
     newId: () => `id${++n}`,
     issueChildToken: (p) => JSON.stringify(p),
+    paywall: true, // the subscription rules are what most of these tests are about
   };
   const mom = { uid: "mom", email: "mom@example.com" };
   return { d, mom, advanceDays: (x: number) => (t += x * 86_400_000) };
@@ -185,4 +186,44 @@ test("second parent joins by code; third is refused", async () => {
   const h = await svc.parentJoin(d, dad, c);
   assert.equal(h.parents.length, 2);
   assert.equal(await code(svc.parentInvite(d, mom)), "parents_full");
+});
+
+test("with the paywall off (the default) a linked child can always practise, and no subscription is needed", async () => {
+  const { d, mom, advanceDays } = setup();
+  d.paywall = false;
+  await svc.parentHousehold(d, mom);
+  const who = await kid(d, mom);
+  const { gradeById } = await import("../../src/data/curriculum.ts");
+  const topic = gradeById("6").topicSets.find((t) => t.adaptive)!.id;
+  advanceDays(60); // long after the free week
+  assert.equal((await svc.childMe(d, who)).subscription.active, true);
+  await svc.childStartSession(d, who, { gradeId: "6", topicId: topic });
+  assert.equal((await svc.parentHousehold(d, mom)).paywall, false);
+  // ...but a profile no parent has linked still cannot
+  const { who: lone } = await svc.childRegister(d, { name: "לבד", gradeId: "6" });
+  assert.equal(await code(svc.childStartSession(d, lone, { gradeId: "6", topicId: topic })), "subscription_inactive");
+});
+
+test("a parent sees progress per topic: practices, accuracy, level, and the latest sessions", async () => {
+  const { d, mom, who, cid } = await connected("6");
+  const { gradeById } = await import("../../src/data/curriculum.ts");
+  const topic = gradeById("6").topicSets.find((t) => t.adaptive)!;
+  for (let run = 0; run < 2; run++) {
+    const s = await svc.childStartSession(d, who, { gradeId: "6", topicId: topic.id });
+    for (let i = 0; i < s.questions.length; i++) await svc.childAnswer(d, who, s.sessionId, i % 2 === 0);
+    await svc.childFinish(d, who, s.sessionId);
+  }
+  const p = await svc.parentProgress(d, mom, cid);
+  assert.equal(p.practicesThisWeek, 2);
+  assert.equal(p.topics.length, 1);
+  const t = p.topics[0];
+  assert.equal(t.topicId, topic.id);
+  assert.equal(t.practices, 2);
+  assert.equal(t.total, 2 * topic.adaptive!.questionCount);
+  assert.equal(t.percent, Math.round((100 * t.correct) / t.total));
+  assert.ok(t.level !== null);
+  assert.equal(p.recent.length, 2);
+  const stranger = { uid: "x", email: "x@example.com" };
+  await svc.parentHousehold(d, stranger);
+  assert.equal(await code(svc.parentProgress(d, stranger, cid)), "no_child");
 });

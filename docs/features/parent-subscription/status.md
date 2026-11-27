@@ -7,9 +7,10 @@
 - [x] Design — designer — 2026-11-26
 - [x] Architecture — tech-lead — 2026-11-26
 - [x] Implementation — developer — 2026-11-27 (מצב ענן מאחורי דגל; שרת+דמו+מסכי הורים+ילד; ראו Implementation Notes ב-architecture.md)
-- [x] Tests — 2026-11-27 (12 בדיקות שרת, 8 e2e מצב ענן; ראו tests.md. לא נבדק מול Firebase/Firestore אמיתיים)
+- [x] Tests — 2026-11-27 (14 בדיקות שרת, 9 e2e מצב ענן (x2 הרצות); ראו tests.md. לא נבדק מול Firebase/Firestore אמיתיים)
 
-**Current phase:** נבנה ונבדק מקומית במצב ענן (דגל בנייה), כולל "ילדים יוצרים פרופיל + קוד הורים", QR ושני דפי פתיחה/PWA; ממתין לבדיקה של המשתמש. עוד לא PR.
+**Current phase:** (עודכן) מתחילים בלי מחירים/נעילה: ההורים רואים התקדמות.
+**Phase detail:** נבנה ונבדק מקומית במצב ענן (דגל בנייה), כולל "ילדים יוצרים פרופיל + קוד הורים", QR ושני דפי פתיחה/PWA; ממתין לבדיקה של המשתמש. עוד לא PR.
 **Branch:** `feature/parent-subscription`
 **PR:** not opened yet
 

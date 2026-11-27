@@ -66,6 +66,7 @@ export function createLocalApi(tokens: { parent: () => string | undefined; child
     rng: Math.random,
     newId: () => (typeof crypto.randomUUID === "function" ? crypto.randomUUID() : `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`),
     issueChildToken: (p) => JSON.stringify(p),
+    paywall: import.meta.env.VITE_PAYWALL === "1",
   };
 
   const parent = (): svc.ParentIdentity => {
@@ -92,6 +93,7 @@ export function createLocalApi(tokens: { parent: () => string | undefined; child
     parentInvite: () => svc.parentInvite(deps, parent()),
     parentJoin: (code) => svc.parentJoin(deps, parent(), code),
     parentHistory: (id) => svc.parentHistory(deps, parent(), id),
+    parentProgress: (id) => svc.parentProgress(deps, parent(), id),
     parentPay: () => svc.parentPay(deps, parent()),
     parentCancel: () => svc.parentCancel(deps, parent()),
     childRegister: async (input) => {

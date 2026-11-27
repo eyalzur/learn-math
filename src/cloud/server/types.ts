@@ -39,9 +39,33 @@ export interface ChildView {
 
 export interface HouseholdView {
   id: string;
+  /** Is the subscription enforced? Off at first: children can practise as soon as a parent has linked them,
+   *  and the screens show no prices. The subscription machinery stays, switched off. */
+  paywall: boolean;
   parents: { uid: string; email: string }[];
   children: ChildView[];
   subscription: SubscriptionView;
+}
+
+/** One topic as a parent sees it: how much, how well, how recently, and where the difficulty stands. */
+export interface TopicProgress {
+  gradeLabel: string;
+  topicId: string;
+  topicTitle: string;
+  practices: number;
+  correct: number;
+  total: number;
+  /** correct / total, whole percent. */
+  percent: number;
+  lastAt: string;
+  /** The adaptive difficulty the child has reached in this topic (null for a fixed-level topic). */
+  level: number | null;
+}
+
+export interface ProgressView {
+  practicesThisWeek: number;
+  topics: TopicProgress[];
+  recent: HistoryEntry[];
 }
 
 export interface HistoryEntry {
@@ -112,6 +136,8 @@ export interface CloudApi {
   parentInvite(): Promise<{ code: string; expiresAt: string }>;
   parentJoin(code: string): Promise<HouseholdView>;
   parentHistory(childId: string): Promise<HistoryEntry[]>;
+  /** What a parent sees about one child: this week, per topic, and the latest practices. */
+  parentProgress(childId: string): Promise<ProgressView>;
   /** Billing stub: no real payment — marks the next period as paid. Replaced by a real
    *  provider (Cardcom) later without touching the screens. */
   parentPay(): Promise<HouseholdView>;

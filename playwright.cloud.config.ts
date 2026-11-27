@@ -6,6 +6,8 @@ import { existsSync } from 'node:fs';
  * Separate from the main suite on purpose — the live site still runs the old app.
  * Serial: one server, one shared clock (the tests move it to expire subscriptions).
  */
+/** Run twice (see package.json): with the paywall off, the default, and on. */
+const PAYWALL = process.env.PAYWALL === '1' ? '1' : '0';
 const launchOptions = existsSync('/opt/pw-browsers/chromium') ? { executablePath: '/opt/pw-browsers/chromium' } : {};
 
 export default defineConfig({
@@ -15,7 +17,7 @@ export default defineConfig({
   use: { baseURL: 'http://localhost:5174', viewport: { width: 390, height: 664 } },
   webServer: [
     {
-      command: 'cd api && DEV_AUTH=1 PORT=8788 node --import tsx src/index.ts',
+      command: `cd api && DEV_AUTH=1 PAYWALL=${PAYWALL} PORT=8788 node --import tsx src/index.ts`,
       url: 'http://localhost:8788/health',
       reuseExistingServer: false,
     },

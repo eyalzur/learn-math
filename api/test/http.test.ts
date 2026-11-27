@@ -10,7 +10,7 @@ async function boot() {
   let n = 0;
   const clock = { offsetMs: 0 };
   const app = createApp({
-    deps: { store: new MemoryStore(), now: () => Date.now() + clock.offsetMs, rng: Math.random, newId: () => `id${++n}`, issueChildToken: tokens.issue },
+    deps: { store: new MemoryStore(), now: () => Date.now() + clock.offsetMs, rng: Math.random, newId: () => `id${++n}`, issueChildToken: tokens.issue, paywall: true },
     verifyParent: devParentVerifier(),
     verifyChildToken: tokens.verify,
     devClock: clock,

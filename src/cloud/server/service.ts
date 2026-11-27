@@ -16,6 +16,8 @@ import {
   type ChildSettings,
   type ChildView,
   type HistoryEntry,
+  type ProgressView,
+  type TopicProgress,
   type HouseholdView,
   type SessionView,
   type SubscriptionView,
@@ -27,6 +29,8 @@ export interface Deps {
   rng: () => number;
   newId: () => string;
   issueChildToken: (payload: ChildIdentity) => string;
+  /** Enforce the subscription? Default off — see `HouseholdView.paywall`. */
+  paywall?: boolean;
 }
 export interface ParentIdentity { uid: string; email: string }
 /** A child device: which child, which of their devices. Which household (if any) is looked up — a
@@ -114,7 +118,10 @@ async function requireChild(d: Deps, who: ChildIdentity) {
   return { path, hid: idx.hid, c, h };
 }
 
-const canPractise = (d: Deps, h: HouseholdDoc | undefined) => (h ? subscriptionOf(h, d.now()).active : false);
+/** No household, no practice (a parent has to link the profile). With the paywall off that is the only
+ *  requirement; with it on, the household's subscription must also be active. */
+const canPractise = (d: Deps, h: HouseholdDoc | undefined) =>
+  h ? !d.paywall || subscriptionOf(h, d.now()).active : false;
 
 // ───────────────────────── views
 
@@ -141,7 +148,7 @@ async function householdView(d: Deps, hid: string, h: HouseholdDoc): Promise<Hou
   const children = await Promise.all(
     kids.sort((a, b) => a.data.createdAt.localeCompare(b.data.createdAt)).map((k) => childView(d, hid, k.id, k.data)),
   );
-  return { id: hid, parents, children, subscription: subscriptionOf(h, d.now()) };
+  return { id: hid, paywall: !!d.paywall, parents, children, subscription: subscriptionOf(h, d.now()) };
 }
 
 // ───────────────────────── parent
@@ -234,6 +241,42 @@ export async function parentHistory(d: Deps, parent: ParentIdentity, cid: string
   return rows.map((r) => ({ ...r.data, id: r.id })).sort((a, b) => b.at.localeCompare(a.at)).slice(0, 50);
 }
 
+/** What a parent sees about one child. Counts every practice, not only the latest 50. */
+export async function parentProgress(d: Deps, parent: ParentIdentity, cid: string): Promise<ProgressView> {
+  const { hid } = await childOfParent(d, parent, cid);
+  const base = cPath(hid, cid);
+  const rows = (await d.store.list<Omit<HistoryEntry, "id">>(`${base}/history`)).map((r) => ({ ...r.data, id: r.id }));
+  const weekAgo = d.now() - 7 * DAY;
+  const groups = new Map<string, HistoryEntry[]>();
+  for (const r of rows) {
+    const k = `${r.gradeId}__${r.topicId}`;
+    groups.set(k, [...(groups.get(k) ?? []), r]);
+  }
+  const topics: TopicProgress[] = [];
+  for (const [k, list] of groups) {
+    const correct = list.reduce((n, r) => n + r.correct, 0);
+    const total = list.reduce((n, r) => n + r.total, 0);
+    const tier = await d.store.get<{ difficulty: number }>(`${base}/adaptive/${encodeURIComponent(k)}`);
+    const newest = list.reduce((a, b) => (a.at > b.at ? a : b));
+    topics.push({
+      gradeLabel: newest.gradeLabel,
+      topicId: newest.topicId,
+      topicTitle: newest.topicTitle,
+      practices: list.length,
+      correct,
+      total,
+      percent: total ? Math.round((100 * correct) / total) : 0,
+      lastAt: newest.at,
+      level: tier?.difficulty ?? null,
+    });
+  }
+  return {
+    practicesThisWeek: rows.filter((r) => Date.parse(r.at) >= weekAgo).length,
+    topics: topics.sort((a, b) => b.lastAt.localeCompare(a.lastAt)),
+    recent: rows.sort((a, b) => b.at.localeCompare(a.at)).slice(0, 10),
+  };
+}
+
 /** BILLING STUB. No real payment: marks the next period paid at the right price. A real
  *  provider (Cardcom) replaces this function's body and nothing above it changes. */
 export async function parentPay(d: Deps, parent: ParentIdentity): Promise<HouseholdView> {
@@ -310,7 +353,7 @@ export async function childMe(d: Deps, who: ChildIdentity): Promise<ChildMe> {
   return {
     child: { id: who.cid, name: c.name, gradeId: c.gradeId, avatar: c.avatar },
     linked: hid !== null,
-    subscription: { status: sub?.status ?? "expired", active: sub?.active ?? false },
+    subscription: { status: sub?.status ?? "expired", active: canPractise(d, h) },
     settings: c.settings,
   };
 }

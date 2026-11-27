@@ -1,4 +1,6 @@
 import { test, expect } from '@playwright/test';
+import { API } from './helpers';
+import { gradeById } from '../../src/data/curriculum';
 import { createKidProfile, linkKid, moveClock, parentChildCode, signInAsParent, uniqueEmail } from './helpers';
 
 test('the two apps are different pages: own look, own name, own install manifest, nothing of the other', async ({ page }) => {
@@ -26,6 +28,8 @@ test('the two apps are different pages: own look, own name, own install manifest
   expect(parentsAccent, 'the parents app has its own colour').not.toBe(kidsAccent);
 });
 
+const PAYWALL = process.env.PAYWALL === '1';
+
 test('a parent does not add children: there is no such form, only a code for them', async ({ page }) => {
   await signInAsParent(page, uniqueEmail());
   await expect(page.getByLabel('כינוי')).toHaveCount(0);
@@ -38,7 +42,8 @@ test('a parent does not add children: there is no such form, only a code for the
 test('a child makes their own profile, sees the topics locked, and the parent\'s code opens them', async ({ browser }) => {
   const parent = await (await browser.newContext()).newPage();
   await signInAsParent(parent, uniqueEmail());
-  await expect(parent.getByText('שבוע ניסיון — נשארו 7 ימים')).toBeVisible();
+  if (PAYWALL) await expect(parent.getByText('שבוע ניסיון — נשארו 7 ימים')).toBeVisible();
+  else await expect(parent.getByText(/ניסיון|₪|מנוי/)).toHaveCount(0);
   const code = await parentChildCode(parent);
 
   const kid = await (await browser.newContext()).newPage();
@@ -67,7 +72,24 @@ test('a link or QR carries the code: opening it links the new profile by itself'
   await expect(kid.locator('.topic-card').first()).toBeEnabled();
 });
 
+test('paywall off (the default): no prices, trial or subscription anywhere, and a linked child is never locked out', async ({ browser }) => {
+  test.skip(PAYWALL, 'covered by the paywall-on run');
+  const parent = await (await browser.newContext()).newPage();
+  await signInAsParent(parent, uniqueEmail());
+  await expect(parent.getByRole('button', { name: 'מנוי' })).toHaveCount(0);
+  await expect(parent.getByText(/₪|ניסיון|המנוי/)).toHaveCount(0);
+  const code = await parentChildCode(parent);
+  const kid = await (await browser.newContext()).newPage();
+  await createKidProfile(kid, 'עומר', 'כיתה ח׳');
+  await linkKid(kid, code);
+  await moveClock(60); // far past any free week
+  await kid.reload();
+  await expect(kid.locator('.topic-card').first()).toBeEnabled();
+  await expect(kid.getByText('בקשו מההורים להמשיך')).toHaveCount(0);
+});
+
 test('when the subscription ends the topics lock; paying opens them; cancelling locks them at once', async ({ browser }) => {
+  test.skip(!PAYWALL, 'the subscription is off by default');
   const parent = await (await browser.newContext()).newPage();
   await signInAsParent(parent, uniqueEmail());
   const code = await parentChildCode(parent);
@@ -155,4 +177,34 @@ test('a second parent joins with a code, or with the link; a third is refused', 
   await dad.getByRole('button', { name: 'חיבורים' }).click();
   await expect(dad.getByText('2/2')).toBeVisible();
   await expect(dad.getByRole('button', { name: 'הזמנת הורה נוסף' })).toHaveCount(0);
+});
+
+test('a parent sees a child\'s progress per topic, with the share of right answers and the latest practices', async ({ browser }) => {
+  const parent = await (await browser.newContext()).newPage();
+  await signInAsParent(parent, uniqueEmail());
+  const code = await parentChildCode(parent);
+  const kid = await (await browser.newContext()).newPage();
+  await createKidProfile(kid, 'רותם');
+  await linkKid(kid, code);
+  await expect(kid.locator('.topic-card').first()).toBeEnabled();
+
+  // One finished practice, driven through the same calls the app makes: every second answer right.
+  const token = await kid.evaluate(() => localStorage.getItem('learn-math:cloud-child-token'));
+  const post = (path: string, body?: unknown) =>
+    fetch(API + path, { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` }, body: JSON.stringify(body ?? {}) }).then((r) => r.json());
+  const topic = gradeById('6').topicSets.find((t) => t.adaptive)!;
+  const session = await post('/child/session', { gradeId: '6', topicId: topic.id });
+  const n = session.questions.length;
+  for (let i = 0; i < n; i++) await post(`/child/session/${encodeURIComponent(session.sessionId)}/answer`, { correct: i % 2 === 0 });
+  await post(`/child/session/${encodeURIComponent(session.sessionId)}/finish`);
+  const right = Math.ceil(n / 2);
+
+  await parent.goto('/learn-math/parents/');
+  await expect(parent.getByText('תרגלו 1 פעמים')).toBeVisible();
+  await parent.getByRole('button', { name: /רותם/ }).click();
+  const byTopic = parent.getByRole('list', { name: 'התקדמות לפי נושא' });
+  await expect(byTopic).toContainText(topic.title);
+  await expect(byTopic).toContainText(`${right}/${n}`);
+  await expect(byTopic).toContainText(`${Math.round((100 * right) / n)}%`);
+  await expect(parent.getByRole('list', { name: 'תרגולים אחרונים' }).getByRole('listitem')).toHaveCount(1);
 });

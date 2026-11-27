@@ -35,6 +35,11 @@
 - **שני דפי פתיחה:** `index.html` (ילדים) ו-`parents/index.html` (הורים, `data-app="parents"` לצבעים, manifest ואייקונים משלו). QR: ספריית `qrcode-generator`, קישור שכולל `?code=` או `?join=`.
 - **סיכון:** `/child/register` פתוח (בלי אימות); מוגבל ל-20 לשעה לכתובת, וילדים שלא חוברו לעולם יצטברו — דרוש ניקוי תקופתי (לא נבנה).
 
+## עדכון 2026-11-27: בלי נעילת מנוי בינתיים
+- `Deps.paywall` (שרת: משתנה סביבה `PAYWALL=1`; דמו: `VITE_PAYWALL=1`; ברירת מחדל כבוי). כבוי: ילד מקושר תמיד יכול לתרגל, והלקוח לא מציג מחירים, ניסיון, "מנוי" או ביטול (מפעיל `HouseholdView.paywall`). מנגנון המנוי נשאר ונבדק, כבוי.
+- `parentProgress(childId)` ← `GET /parent/children/:cid/progress`: `practicesThisWeek`, `topics[]` (נכון/סה"כ, אחוז, מספר תרגולים, רמה אדפטיבית, תרגול אחרון) ו-`recent` (10 אחרונים). מחושב מכל ההיסטוריה, לא רק 50 אחרונים.
+- בדיקות דפדפן רצות פעמיים: `PAYWALL=0` (ברירת מחדל) ו-`PAYWALL=1`.
+
 ## Data / State Changes
 Firestore (תחת `households/{hid}`):
 - `households/{hid}` — `{ createdAt, subscription: { status: trial|active|expired, trialEndsAt, nextBillingAt, provider } }`
