@@ -7,9 +7,9 @@
 - [x] Design — designer — 2026-11-27
 - [x] Architecture — tech-lead — 2026-11-27
 - [x] Implementation — developer — 2026-11-27
-- [ ] Tests — qa — not started
+- [x] Tests — qa — 2026-11-27
 
-**Current phase:** qa
+**Current phase:** done — ממתין לריוויו (בדיקות הפיצ'ר 9/9, content 44/44)
 **Branch:** `feature/two-choice-buttons`
 **PR:** not opened yet
 
