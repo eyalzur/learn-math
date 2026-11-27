@@ -23,6 +23,29 @@ jobs:
       - run: npm run kb:test
       - run: npm run kb -- lint
 
+  # Parent subscription (cloud mode): the api's own tests, then the app in cloud mode against
+  # the real api (DEV_AUTH + in-memory store). Not part of the shards: separate servers, one
+  # shared clock — it runs serially.
+  cloud:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: cd api && npm ci
+      - run: npm run api:test
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:cloud
+      - uses: actions/upload-artifact@v5
+        if: failure()
+        with:
+          name: playwright-cloud-report
+          path: playwright-report/
+          retention-days: 7
+
   test:
     runs-on: ubuntu-latest
     # Split across 4 isolated runners instead of 1 — each gets its own checkout, its own

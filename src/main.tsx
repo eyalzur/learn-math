@@ -2,9 +2,11 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
+import CloudApp from './cloud/CloudApp.tsx'
+import { cloudMode } from './cloud/config.ts'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    {cloudMode === 'off' ? <App /> : <CloudApp />}
   </StrictMode>,
 )

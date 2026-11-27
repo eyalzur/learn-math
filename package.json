@@ -1,7 +1,7 @@
 {
   "name": "learn-math",
   "private": true,
-  "version": "1.65.0",
+  "version": "1.66.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -12,9 +12,12 @@
     "bump:feature": "node scripts/bump-version.mjs feature",
     "bump:fix": "node scripts/bump-version.mjs fix",
     "kb": "node kb/tools/kb.mjs",
-    "kb:test": "node --test kb/tools/kb.test.mjs"
+    "kb:test": "node --test kb/tools/kb.test.mjs",
+    "test:cloud": "playwright test -c playwright.cloud.config.ts --workers=1",
+    "api:test": "cd api && npm test"
   },
   "dependencies": {
+    "firebase": "^11.10.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },

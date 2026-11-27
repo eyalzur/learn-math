@@ -1,0 +1,37 @@
+/* Cloud mode screens (parents + connect + stop). Same candy palette as the rest of the app. */
+.cloud { min-height: 100dvh; display: flex; flex-direction: column; align-items: center; padding: 16px; box-sizing: border-box; color: var(--text-h); }
+.cloud-card { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 12px; }
+.cloud h1 { font-family: var(--heading); font-size: 1.6rem; margin: 4px 0; text-align: center; }
+.cloud h2 { font-size: 1.15rem; margin: 4px 0; }
+.cloud .ltr { direction: ltr; unicode-bidi: isolate; display: inline-block; }
+.cloud-btn { min-height: 48px; padding: 10px 18px; border-radius: 16px; border: 2px solid var(--accent-border); background: #fff; color: var(--text-h); font: inherit; font-weight: 600; cursor: pointer; box-shadow: var(--shadow); }
+.cloud-btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.cloud-btn.danger { background: #d6336c; border-color: #d6336c; color: #fff; }
+.cloud-btn:disabled { opacity: 0.5; cursor: default; }
+.cloud-link { background: none; border: none; color: var(--text); text-decoration: underline; font: inherit; cursor: pointer; min-height: 44px; }
+.cloud-input { min-height: 48px; padding: 8px 12px; border-radius: 14px; border: 2px solid var(--border); font: inherit; background: #fff; color: var(--text-h); width: 100%; box-sizing: border-box; }
+.cloud-code-input { font-size: 2rem; letter-spacing: 0.5em; text-align: center; direction: ltr; }
+.cloud-code { font-size: 3rem; letter-spacing: 0.4em; font-weight: 700; text-align: center; background: #fff; border-radius: 20px; padding: 12px; box-shadow: var(--shadow); }
+.cloud-error { color: #b42318; font-weight: 600; text-align: center; min-height: 1.3em; }
+.cloud-toast { text-align: center; color: #2b8a3e; font-weight: 700; min-height: 1.3em; }
+.cloud-pill { border-radius: 999px; padding: 6px 14px; background: var(--accent-bg); border: 1px solid var(--accent-border); text-align: center; font-weight: 600; }
+.cloud-banner { width: 100%; box-sizing: border-box; padding: 10px 14px; border-radius: 14px; background: #fff3bf; border: 1px solid #f2c94c; text-align: center; font-weight: 600; }
+.cloud-banner.stopped { background: #ffe3e3; border-color: #f5a3a3; }
+.cloud-kid { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 18px; background: #fff; box-shadow: var(--shadow); border: 2px solid var(--border); cursor: pointer; text-align: start; font: inherit; color: inherit; width: 100%; }
+.cloud-kid.gray { opacity: 0.55; filter: grayscale(0.7); }
+.cloud-dot { width: 12px; height: 12px; border-radius: 50%; background: #bbb; flex: none; }
+.cloud-dot.on { background: #2f9e44; }
+.cloud-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.cloud-row > * { flex: 1 1 0; }
+.cloud-list { max-height: 36dvh; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+.cloud-list li { list-style: none; padding: 8px 12px; border-radius: 12px; background: #fff; border: 1px solid var(--border); }
+.cloud-days { display: flex; gap: 6px; justify-content: center; }
+.cloud-day { width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--accent-border); background: #fff; font: inherit; font-weight: 700; cursor: pointer; color: var(--text-h); }
+.cloud-day.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+.cloud-overlay { position: fixed; inset: 0; background: rgba(92, 42, 82, 0.45); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 50; }
+.cloud-dialog { background: #fff; border-radius: 20px; padding: 18px; max-width: 360px; width: 100%; display: flex; flex-direction: column; gap: 12px; }
+.cloud-stop { justify-content: center; flex: 1; gap: 18px; text-align: center; }
+.cloud-stop .emoji { font-size: 4rem; }
+.cloud-demo { position: fixed; bottom: 6px; left: 6px; z-index: 60; display: flex; gap: 4px; flex-wrap: wrap; max-width: 80vw; font-size: 0.75rem; background: rgba(255,255,255,0.92); border: 1px dashed var(--accent); border-radius: 12px; padding: 4px 6px; direction: rtl; }
+.cloud-demo button { color: var(--text-h); width: auto; box-shadow: none; padding: 2px 8px; font: inherit; font-size: 0.75rem; min-height: 28px; border-radius: 8px; border: 1px solid var(--accent-border); background: #fff; cursor: pointer; }
+.cloud-footnote { font-size: 0.8rem; opacity: 0.75; text-align: center; }

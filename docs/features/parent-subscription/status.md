@@ -6,10 +6,10 @@
 - [x] Product spec — product-manager — 2026-11-26
 - [x] Design — designer — 2026-11-26
 - [x] Architecture — tech-lead — 2026-11-26
-- [ ] Implementation — developer — not started
-- [ ] Tests — qa — not started
+- [x] Implementation — developer — 2026-11-27 (מצב ענן מאחורי דגל; שרת+דמו+מסכי הורים+ילד; ראו Implementation Notes ב-architecture.md)
+- [x] Tests — 2026-11-27 (13 בדיקות שרת, 7 e2e מצב ענן; ראו tests.md. לא נבדק מול Firebase/Firestore אמיתיים)
 
-**Current phase:** כל החלטות המוצר התקבלו (2026-11-26); מוכן לפירוק טכני ב-`/tech-lead` (מסמכים בלבד, בלי קוד)
+**Current phase:** נבנה ונבדק מקומית במצב ענן (דגל בנייה); ממתין לבדיקה של המשתמש. עוד לא PR.
 **Branch:** `feature/parent-subscription`
 **PR:** not opened yet
 
