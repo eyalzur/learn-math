@@ -32,4 +32,5 @@ React + TypeScript + Vite.
    npm run build && npm run lint && npx playwright test --workers=1
    ```
    `--workers=1` מקומית חובה (הסיבה: `/kb-ask ריצות מקבילות`).
-4. **תיעוד:** כל פיצ'ר ב-`docs/features/<slug>/` (האינדקס: `docs/features/README.md`). כשמוזג PR — skill `merge-pr` מעדכן את `status.md`, את האינדקס ואת ה-KB.
+4. **הרצת סקילי העיצוב** (`app-design-system`, `motion-feedback-rewards`, `ui-ux-polish`): קודם `/kb-ask הרצת סקילי העיצוב` — יש גבולות (היקף, זהות, בדיקות, החלטות שדורשות את המשתמש).
+5. **תיעוד:** כל פיצ'ר ב-`docs/features/<slug>/` (האינדקס: `docs/features/README.md`). כשמוזג PR — skill `merge-pr` מעדכן את `status.md`, את האינדקס ואת ה-KB.
