@@ -6,6 +6,7 @@ import { setToken, useToken } from "./session";
 import type { CloudApi } from "./server/types";
 import { ParentApp } from "./ParentApp";
 import { InstallHint } from "./InstallHint";
+import { useDemoLogins } from "./demoContext";
 
 /** A code that came with the link a parent shared (`?join=1234`). */
 const joinFromUrl = () => new URLSearchParams(window.location.search).get("join")?.replace(/\D/g, "").slice(0, 4) || "";
@@ -75,6 +76,7 @@ export function ParentSignIn({
 }) {
   const [email, setEmail] = useState("");
   const [join, setJoin] = useState(initialJoin);
+  const demo = useDemoLogins();
   const [msg, setMsg] = useState("");
   return (
     <div className="cloud">
@@ -119,6 +121,14 @@ export function ParentSignIn({
         {!realAuth && <p className="cloud-footnote">מצב בדיקה: אין סיסמה. בגרסה האמיתית נכנסים עם גוגל או קישור במייל.</p>}
         <div className="cloud-toast" role="status">{msg}</div>
         <InstallHint appName="אפליקציית ההורים" />
+        {demo && (
+          <div className="cloud-demo-logins" role="group" aria-label="כניסה מהירה לדמו">
+            <span>🧪 דמו, כניסה מהירה:</span>
+            {demo.parents.map((p) => (
+              <button key={p.name} type="button" className="cloud-btn" onClick={() => onDevSignIn(p.token.slice(4), "")}>כניסה כ{p.name}</button>
+            ))}
+          </div>
+        )}
       </form>
     </div>
   );

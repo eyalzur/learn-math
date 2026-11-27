@@ -11,7 +11,8 @@ import { join } from "node:path";
 const out = process.argv[2] ?? "demo.html";
 execFileSync("npx", ["vite", "build", "-c", "vite.demo.config.ts"], {
   stdio: "inherit",
-  env: { ...process.env, VITE_CLOUD: "mock" },
+  // The preview shows the full thing, free week included; the real apps start with the paywall off.
+  env: { ...process.env, VITE_CLOUD: "mock", VITE_PAYWALL: process.env.VITE_PAYWALL ?? "1" },
 });
 const dir = "dist-demo/assets";
 const read = (ext) => readdirSync(dir).filter((f) => f.endsWith(ext)).map((f) => readFileSync(join(dir, f), "utf8")).join("\n");

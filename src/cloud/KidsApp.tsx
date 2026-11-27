@@ -5,6 +5,7 @@ import { startIdleSpotlightObserver } from "../data/idleSpotlight";
 import { CreateStudentDialog } from "../components/CreateStudentDialog";
 import { errorText } from "./errors";
 import { InstallHint } from "./InstallHint";
+import { useDemoLogins } from "./demoContext";
 import { setToken, useToken } from "./session";
 import type { CloudApi } from "./server/types";
 import { ChildApp } from "./ChildApp";
@@ -50,6 +51,7 @@ export function KidsApp({ api }: { api: CloudApi }) {
 
 /** The kids' front door. Big, friendly, one button. */
 function Landing({ onStart, error }: { onStart: () => void; error: string }) {
+  const demo = useDemoLogins();
   return (
     <div className="cloud cloud-landing">
       <div className="cloud-card" style={{ justifyContent: "center", flex: 1 }}>
@@ -59,6 +61,14 @@ function Landing({ onStart, error }: { onStart: () => void; error: string }) {
         <div className="cloud-error" role="alert">{error}</div>
         <button className="cloud-btn primary" onClick={onStart}>פרופיל חדש</button>
         <InstallHint appName="לומדים חשבון" />
+        {demo && (
+          <div className="cloud-demo-logins" role="group" aria-label="כניסה מהירה לדמו">
+            <span>🧪 דמו, כניסה מהירה:</span>
+            {demo.kids.map((k) => (
+              <button key={k.name} type="button" className="cloud-btn" onClick={() => setToken("child", k.token)}>{k.name} · {k.grade}</button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

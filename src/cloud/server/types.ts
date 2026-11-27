@@ -42,7 +42,7 @@ export interface HouseholdView {
   /** Is the subscription enforced? Off at first: children can practise as soon as a parent has linked them,
    *  and the screens show no prices. The subscription machinery stays, switched off. */
   paywall: boolean;
-  parents: { uid: string; email: string }[];
+  parents: { uid: string; email: string; name?: string }[];
   children: ChildView[];
   subscription: SubscriptionView;
 }

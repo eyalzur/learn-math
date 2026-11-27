@@ -1,7 +1,10 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./cloud.css";
 import { demoClock } from "./localApi";
-import { makeApi } from "./makeApi";
+import { createLocalApi } from "./localApi";
+import { DemoLoginsContext } from "./demoContext";
+import type { DemoLogins } from "./demoSeed";
+import type { CloudApi } from "./server/types";
 import { clearAllTokens, getToken } from "./session";
 import { gradeById } from "../data/curriculum";
 import { KidsApp } from "./KidsApp";
@@ -14,7 +17,7 @@ import { ParentsApp } from "./ParentsApp";
  */
 /** Demo shortcut: the connected child "practises" once (every second answer right) through the same
  *  calls the app makes — so the parents' progress screen has something to show without answering 20 questions. */
-async function samplePractice(api: ReturnType<typeof makeApi>): Promise<string> {
+async function samplePractice(api: CloudApi): Promise<string> {
   if (!getToken("child")) return "קודם יוצרים פרופיל ילד באפליקציית הילדים";
   const me = await api.childMe();
   if (!me.subscription.active) return "הילד עוד לא מחובר להורים";
@@ -26,12 +29,17 @@ async function samplePractice(api: ReturnType<typeof makeApi>): Promise<string> 
 }
 
 export function DemoApp() {
-  const api = useMemo(() => makeApi(), []);
+  const api = useMemo(() => createLocalApi({ parent: () => getToken("parent"), child: () => getToken("child") }), []);
+  const [logins, setLogins] = useState<DemoLogins | null>(null);
+  useEffect(() => {
+    void api.seedDemo().then(setLogins);
+  }, [api]);
   const [tab, setTab] = useState<"parents" | "kids">("parents");
   const [epoch, setEpoch] = useState(0);
   const [note, setNote] = useState("");
+  if (!logins) return <div className="cloud"><div className="cloud-card"><h1>מכינים את הדמו…</h1></div></div>;
   return (
-    <>
+    <DemoLoginsContext.Provider value={logins}>
       <div className="cloud-tabs" role="tablist" aria-label="האפליקציות">
         <button role="tab" aria-selected={tab === "parents"} className={`link-button ${tab === "parents" ? "on" : ""}`} onClick={() => setTab("parents")}>📱 אפליקציית ההורים</button>
         <button role="tab" aria-selected={tab === "kids"} className={`link-button ${tab === "kids" ? "on" : ""}`} onClick={() => setTab("kids")}>📱 אפליקציית הילדים</button>
@@ -45,9 +53,9 @@ export function DemoApp() {
         </span>
         {note && <span className="cloud-tabs-tools" role="status">{note}</span>}
       </div>
-      <div key={`${tab}-${epoch}`} style={{ paddingTop: 84 }}>
+      <div key={`${tab}-${epoch}`} style={{ paddingTop: 104 }}>
         {tab === "parents" ? <ParentsApp api={api} /> : <KidsApp api={api} />}
       </div>
-    </>
+    </DemoLoginsContext.Provider>
   );
 }

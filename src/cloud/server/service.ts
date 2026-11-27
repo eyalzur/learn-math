@@ -32,7 +32,7 @@ export interface Deps {
   /** Enforce the subscription? Default off — see `HouseholdView.paywall`. */
   paywall?: boolean;
 }
-export interface ParentIdentity { uid: string; email: string }
+export interface ParentIdentity { uid: string; email: string; name?: string }
 /** A child device: which child, which of their devices. Which household (if any) is looked up — a
  *  child can exist before any parent has linked them. */
 export interface ChildIdentity { cid: string; did: string }
@@ -142,7 +142,10 @@ async function childView(d: Deps, hid: string, cid: string, c: ChildDoc): Promis
 
 async function householdView(d: Deps, hid: string, h: HouseholdDoc): Promise<HouseholdView> {
   const parents = await Promise.all(
-    h.parentUids.map(async (uid) => ({ uid, email: (await d.store.get<{ email: string }>(`parents/${uid}`))?.email ?? "" })),
+    h.parentUids.map(async (uid) => {
+      const doc = await d.store.get<{ email: string; name?: string }>(`parents/${uid}`);
+      return { uid, email: doc?.email ?? "", name: doc?.name };
+    }),
   );
   const kids = await d.store.list<ChildDoc>(`${hPath(hid)}/children`);
   const children = await Promise.all(
@@ -170,7 +173,7 @@ export async function parentHousehold(d: Deps, parent: ParentIdentity): Promise<
     payments: [],
   };
   await d.store.set(hPath(hid), h);
-  await d.store.set(`parents/${parent.uid}`, { householdId: hid, email: parent.email });
+  await d.store.set(`parents/${parent.uid}`, { householdId: hid, email: parent.email, name: parent.name });
   return householdView(d, hid, h);
 }
 
@@ -230,7 +233,7 @@ export async function parentJoin(d: Deps, parent: ParentIdentity, code: string):
   if (h.parentUids.length >= pricing.maxParents) throw new ApiError(409, "parents_full");
   const next = { ...h, parentUids: [...h.parentUids, parent.uid] };
   await d.store.set(hPath(doc.hid), next);
-  await d.store.set(`parents/${parent.uid}`, { householdId: doc.hid, email: parent.email });
+  await d.store.set(`parents/${parent.uid}`, { householdId: doc.hid, email: parent.email, name: parent.name });
   await d.store.delete(`connectCodes/${String(code).trim()}`);
   return householdView(d, doc.hid, next);
 }

@@ -1,6 +1,7 @@
 import * as svc from "./server/service";
 import { MemoryStore } from "./server/store";
 import { ApiError, type CloudApi } from "./server/types";
+import { seedDemo, type DemoLogins } from "./demoSeed";
 
 /**
  * The real service running in the page, with its "database" in localStorage — for the demo
@@ -45,7 +46,7 @@ export function demoClock() {
   };
 }
 
-export function createLocalApi(tokens: { parent: () => string | undefined; child: () => string | undefined }): CloudApi {
+export function createLocalApi(tokens: { parent: () => string | undefined; child: () => string | undefined }): CloudApi & { seedDemo: () => Promise<DemoLogins> } {
   const clock = demoClock();
   let saved: Record<string, unknown> | undefined;
   try {
@@ -86,6 +87,7 @@ export function createLocalApi(tokens: { parent: () => string | undefined; child
   };
 
   return {
+    seedDemo: () => seedDemo(deps),
     parentHousehold: () => svc.parentHousehold(deps, parent()),
     parentDeleteChild: (id) => svc.parentDeleteChild(deps, parent(), id),
     parentChildCode: () => svc.parentChildCode(deps, parent()),

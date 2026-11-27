@@ -184,7 +184,7 @@ export function ParentApp({ api, joinCode, onSignOut }: { api: CloudApi; joinCod
     return (
       <Shell back={back} error={error} toast={toast} title="חיבורים">
         <p>הורים <span className="ltr">{hh.parents.length}/{pricing.maxParents}</span></p>
-        <ul className="cloud-list">{hh.parents.map((p) => <li key={p.uid}><span className="ltr">{p.email}</span></li>)}</ul>
+        <ul className="cloud-list">{hh.parents.map((p) => <li key={p.uid}>{p.name ? <strong>{p.name} · </strong> : null}<span className="ltr">{p.email}</span></li>)}</ul>
         <p>ילדים <span className="ltr">{hh.children.length}/{pricing.maxChildren}</span></p>
         {hh.parents.length < pricing.maxParents && <button className="cloud-btn" onClick={() => setView({ name: "invite" })}>הזמנת הורה נוסף</button>}
         {hh.children.length < pricing.maxChildren ? (
