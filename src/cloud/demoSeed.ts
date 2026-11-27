@@ -27,7 +27,20 @@ function lcg(seed: number) {
   return () => ((s = (Math.imul(s, 1664525) + 1013904223) >>> 0) / 2 ** 32);
 }
 
-export async function seedDemo(deps: svc.Deps): Promise<DemoLogins> {
+// React StrictMode runs effects twice in development: two seeds on one store would register each
+// child twice and fail with children_full. One seeding per store, shared by every caller.
+const seeding = new WeakMap<object, Promise<DemoLogins>>();
+
+export function seedDemo(deps: svc.Deps): Promise<DemoLogins> {
+  let p = seeding.get(deps.store);
+  if (!p) {
+    p = seedOnce(deps);
+    seeding.set(deps.store, p);
+  }
+  return p;
+}
+
+async function seedOnce(deps: svc.Deps): Promise<DemoLogins> {
   const existing = await deps.store.get<DemoLogins>("demo/logins");
   if (existing) return existing;
 
