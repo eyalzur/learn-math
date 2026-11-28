@@ -40,3 +40,4 @@ dist-ssr
 dist-demo
 dist-next
 api/dist
+/.ux-polish/

@@ -1,19 +1,55 @@
 /* Cloud mode screens (parents + connect + stop). Same candy palette as the rest of the app. */
-.cloud { min-height: 100dvh; display: flex; flex-direction: column; align-items: center; padding: 16px; box-sizing: border-box; color: var(--text-h); }
+
+/* Cloud-only tokens (ui-polish-two-apps). Named new so nothing shared with the live app moves.
+   --accent is the decorative pink; --accent-strong is the fill behind WHITE text, because
+   white on #ff6fae is 2.58:1 (fails 4.5:1). See DESIGN.md, "צבעים". */
+:root {
+  --accent-strong: #c4257a;   /* white text on it: 5.39:1 */
+  --success-text: #237032;    /* success text on white: 6.11:1 */
+  --focus-color: #c4257a;     /* keyboard focus outline, 3:1+ against white and --bg */
+  /* Motion tokens (ms). Mirror of `motion` in feedback.ts — change both together. */
+  --dur-instant: 80ms;
+  --dur-fast: 150ms;
+  --dur-base: 250ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Pressed state for every cloud control: press in fast (80ms), release springs back (150ms). */
+.cloud-btn, .cloud-kid, .cloud-link, .cloud-tabs button {
+  transition: transform var(--dur-fast) var(--ease-spring), filter var(--dur-fast) ease-out;
+}
+.cloud-btn:active:not(:disabled), .cloud-kid:active, .cloud-link:active, .cloud-tabs button:active {
+  transform: scale(0.97);
+  filter: brightness(0.92);
+  transition-duration: var(--dur-instant);
+  transition-timing-function: ease-out;
+}
+/* Reduced motion (OS setting): no movement, the darker shade stays so the press is still visible. */
+@media (prefers-reduced-motion: reduce) {
+  .cloud-btn, .cloud-kid, .cloud-link, .cloud-tabs button { transition: none; }
+  .cloud-btn:active:not(:disabled), .cloud-kid:active, .cloud-link:active, .cloud-tabs button:active {
+    transform: none;
+  }
+}
+.cloud {min-height: 100dvh; display: flex; flex-direction: column; align-items: center; padding: 16px; box-sizing: border-box; color: var(--text-h); }
 .cloud-card { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 12px; }
 .cloud h1 { font-family: var(--heading); font-size: 1.6rem; margin: 4px 0; text-align: center; }
 .cloud h2 { font-size: 1.15rem; margin: 4px 0; }
 .cloud .ltr { direction: ltr; unicode-bidi: isolate; display: inline-block; }
 .cloud-btn { min-height: 48px; padding: 10px 18px; border-radius: 16px; border: 2px solid var(--accent-border); background: #fff; color: var(--text-h); font: inherit; font-weight: 600; cursor: pointer; box-shadow: var(--shadow); }
-.cloud-btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.cloud-btn.primary { background: var(--accent-strong); border-color: var(--accent-strong); color: #fff; }
+.cloud-btn.success, .cloud-btn.success:disabled { background: var(--success-text); border-color: var(--success-text); color: #fff; opacity: 1; }
+.cloud :is(button, a, input, [role="button"]):focus-visible { outline: 3px solid var(--focus-color); outline-offset: 3px; }
 .cloud-btn.danger { background: #d6336c; border-color: #d6336c; color: #fff; }
 .cloud-btn:disabled { opacity: 0.5; cursor: default; }
 .cloud-link { background: none; border: none; color: var(--text); text-decoration: underline; font: inherit; cursor: pointer; min-height: 44px; }
+.cloud label { display: block; font-weight: 600; margin-bottom: 4px; }
 .cloud-input { min-height: 48px; padding: 8px 12px; border-radius: 14px; border: 2px solid var(--border); font: inherit; background: #fff; color: var(--text-h); width: 100%; box-sizing: border-box; }
 .cloud-code-input { font-size: 2rem; letter-spacing: 0.5em; text-align: center; direction: ltr; }
 .cloud-code { font-size: 3rem; letter-spacing: 0.4em; font-weight: 700; text-align: center; background: #fff; border-radius: 20px; padding: 12px; box-shadow: var(--shadow); }
 .cloud-error { color: #b42318; font-weight: 600; text-align: center; min-height: 1.3em; }
-.cloud-toast { text-align: center; color: #2b8a3e; font-weight: 700; min-height: 1.3em; }
+.cloud-toast { text-align: center; color: var(--success-text); font-weight: 700; min-height: 1.3em; }
 .cloud-pill { border-radius: 999px; padding: 6px 14px; background: var(--accent-bg); border: 1px solid var(--accent-border); text-align: center; font-weight: 600; }
 .cloud-banner { width: 100%; box-sizing: border-box; padding: 10px 14px; border-radius: 14px; background: #fff3bf; border: 1px solid #f2c94c; text-align: center; font-weight: 600; }
 .cloud-banner.stopped { background: #ffe3e3; border-color: #f5a3a3; }
@@ -23,21 +59,16 @@
 .cloud-dot.on { background: #2f9e44; }
 .cloud-row { display: flex; gap: 8px; flex-wrap: wrap; }
 .cloud-row > * { flex: 1 1 0; }
-.cloud-list { padding: 0; margin: 0; max-height: 36dvh; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+.cloud-list { padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
 .cloud-list li { list-style: none; padding: 8px 12px; border-radius: 12px; background: #fff; border: 1px solid var(--border); }
-.cloud-days { display: flex; gap: 6px; justify-content: center; }
-.cloud-day { width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--accent-border); background: #fff; font: inherit; font-weight: 700; cursor: pointer; color: var(--text-h); }
-.cloud-day.on { background: var(--accent); color: #fff; border-color: var(--accent); }
 .cloud-overlay { position: fixed; inset: 0; background: rgba(92, 42, 82, 0.45); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 50; }
 .cloud-dialog { background: #fff; border-radius: 20px; padding: 18px; max-width: 360px; width: 100%; display: flex; flex-direction: column; gap: 12px; }
-.cloud-stop { justify-content: center; flex: 1; gap: 18px; text-align: center; }
-.cloud-stop .emoji { font-size: 4rem; }
 .cloud-demo { position: fixed; bottom: 6px; left: 6px; z-index: 60; display: flex; gap: 4px; flex-wrap: wrap; max-width: 80vw; font-size: 0.75rem; background: rgba(255,255,255,0.92); border: 1px dashed var(--accent); border-radius: 12px; padding: 4px 6px; direction: rtl; }
 .cloud-demo button { color: var(--text-h); width: auto; box-shadow: none; padding: 2px 8px; font: inherit; font-size: 0.75rem; min-height: 28px; border-radius: 8px; border: 1px solid var(--accent-border); background: #fff; cursor: pointer; }
-.cloud-footnote { font-size: 0.8rem; opacity: 0.75; text-align: center; }
+.cloud-footnote { font-size: 0.875rem; color: var(--text); text-align: center; }
 .cloud-tabs { flex-wrap: wrap; position: fixed; top: 0; left: 0; right: 0; z-index: 5; display: flex; gap: 6px; padding: 6px; background: rgba(255,255,255,0.95); border-bottom: 1px dashed var(--accent); }
-.cloud-tabs button { flex: 1; min-height: 32px; border-radius: 10px; border: 1px solid var(--accent-border); background: #fff; color: var(--text-h); font: inherit; font-size: 0.85rem; box-shadow: none; padding: 2px 8px; }
-.cloud-tabs button.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+.cloud-tabs button { flex: 1; min-height: 44px; border-radius: 10px; border: 1px solid var(--accent-border); background: #fff; color: var(--text-h); font: inherit; font-size: 0.85rem; box-shadow: none; padding: 2px 8px; }
+.cloud-tabs button.on { background: var(--accent-strong); color: #fff; border-color: var(--accent-strong); }
 .cloud-qr { width: 180px; max-width: 60vw; margin: 4px auto; background: #fff; padding: 8px; border-radius: 16px; box-shadow: var(--shadow); }
 .cloud-qr svg { display: block; width: 100%; height: auto; }
 .cloud-hero { font-size: 4.5rem; text-align: center; line-height: 1; }
@@ -55,15 +86,36 @@ html[data-app="parents"] {
   --accent-bg: rgba(47, 111, 237, 0.1);
   --accent-border: rgba(47, 111, 237, 0.45);
   --social-bg: rgba(207, 224, 255, 0.5);
+  --accent-strong: #2b5fcf;   /* white on it: 5.77:1 (was #2f6fed, 4.55:1 — on the edge) */
+  --success-text: #1f6b2c;
+  --focus-color: #2b5fcf;
   --shadow: rgba(27, 42, 74, 0.12) 0 10px 15px -3px, rgba(27, 42, 74, 0.08) 0 4px 6px -2px;
 }
 html[data-app="parents"] body { background: var(--bg); }
-.cloud-lock-panel { position: fixed; left: 8px; right: 8px; bottom: 8px; z-index: 40; background: #fff; border: 2px solid var(--accent-border); border-radius: 20px; padding: 12px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 8px; text-align: center; }
+.cloud-lock-panel { position: fixed; left: 50%; right: auto; width: min(420px, calc(100% - 16px)); box-sizing: border-box; translate: -50% 0; bottom: 8px; z-index: 40; background: #fff; border: 2px solid var(--accent-border); border-radius: 20px; padding: 12px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 8px; text-align: center; }
 .cloud-landing .cloud-card { text-align: center; }
 .cloud-tabs-tools { flex: 1 1 100%; display: flex; gap: 6px; align-items: center; font-size: 0.8rem; }
 .cloud-tabs-tools button { flex: 0 0 auto; min-height: 28px; border-radius: 8px; border: 1px solid var(--accent-border); background: #fff; color: var(--text-h); font: inherit; font-size: 0.8rem; box-shadow: none; padding: 2px 8px; }
 
 .cloud-btn.whatsapp { display: flex; align-items: center; justify-content: center; text-decoration: none; background: #25d366; border-color: #1da851; color: #073b1a; }
-.cloud-btn.whatsapp::before { content: "💬"; margin-inline-end: 8px; }
+.cloud-btn.whatsapp .wa-icon { margin-inline-end: 8px; }
 
 .cloud-demo-logins { display: flex; flex-direction: column; gap: 6px; padding: 8px; border: 1px dashed var(--accent); border-radius: 14px; font-size: 0.85rem; }
+
+/* Kids' app only. TopicPicker (shared, not edited) renders inside .cloud-kids-scope (ChildApp.tsx).
+   The wrapper is display:contents, so it changes no layout; the rules below keep App.css's global
+   link-button / topic-card styles from reaching the parents' app or the live site. */
+.cloud-kids-scope { display: contents; }
+.cloud-kids-scope .link-button { color: var(--text-h); background: #fff; border: 2px solid var(--accent-border); border-radius: 999px; padding: 6px 14px; }
+.cloud-kids-scope .settings-button { min-width: 44px; min-height: 44px; }
+.cloud-kids-scope .topic-card, .cloud-kids-scope .settings-button, .cloud-kids-scope .lessons-chip, .cloud-kids-scope .link-button {
+  transition: transform var(--dur-fast) var(--ease-spring);
+}
+.cloud-kids-scope .topic-card:active:not(:disabled), .cloud-kids-scope .settings-button:active, .cloud-kids-scope .lessons-chip:active, .cloud-kids-scope .link-button:active {
+  transform: scale(0.97);
+  transition-duration: var(--dur-instant);
+}
+@media (prefers-reduced-motion: reduce) {
+  .cloud-kids-scope .topic-card, .cloud-kids-scope .settings-button, .cloud-kids-scope .lessons-chip, .cloud-kids-scope .link-button { transition: none; }
+  .cloud-kids-scope .topic-card:active:not(:disabled), .cloud-kids-scope .settings-button:active, .cloud-kids-scope .lessons-chip:active, .cloud-kids-scope .link-button:active { transform: none; }
+}

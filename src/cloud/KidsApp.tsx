@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import "./cloud.css";
+import { installFeedback } from "./feedback";
 import { grades } from "../data/curriculum";
 import { startIdleSpotlightObserver } from "../data/idleSpotlight";
 import { CreateStudentDialog } from "../components/CreateStudentDialog";
-import { errorText } from "./errors";
+import { showError } from "./errors";
 import { InstallHint } from "./InstallHint";
 import { useDemoLogins } from "./demoContext";
 import { setToken, useToken } from "./session";
@@ -23,6 +24,7 @@ const linkCodeFromUrl = () => new URLSearchParams(window.location.search).get("c
 export function KidsApp({ api }: { api: CloudApi }) {
   // Numbers the buttons for the app-wide "one glows at a time" animation (see App.tsx).
   useEffect(() => startIdleSpotlightObserver(), []);
+  useEffect(() => installFeedback(), []);
   const token = useToken("child");
   const [creating, setCreating] = useState(false);
   const [oldProfile, setOldProfile] = useState(false);
@@ -39,7 +41,7 @@ export function KidsApp({ api }: { api: CloudApi }) {
     api.childReconnect(initialDevice).then(
       (r) => setToken("child", r.token),
       (e) => {
-        setError(errorText(e));
+        setError(showError(e));
         setReconnecting(false);
       },
     );
@@ -68,7 +70,7 @@ export function KidsApp({ api }: { api: CloudApi }) {
             (r) => setToken("child", r.token),
             (e) => {
               setCreating(false);
-              setError(errorText(e));
+              setError(showError(e));
             },
           );
         }}
@@ -119,7 +121,7 @@ function Reconnect({ onBack, onReconnect }: { onBack: () => void; onReconnect: (
           try {
             await onReconnect(code);
           } catch (err) {
-            setError(errorText(err));
+            setError(showError(err));
           } finally {
             setBusy(false);
           }

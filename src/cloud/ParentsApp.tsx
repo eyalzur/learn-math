@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import "./cloud.css";
+import { feedback, installFeedback } from "./feedback";
 import { startIdleSpotlightObserver } from "../data/idleSpotlight";
 import { completeEmailLinkSignIn, currentIdToken, realAuth, sendSignInLink, signInWithGoogle, signOutParent } from "./parentAuth";
 import { setToken, useToken } from "./session";
@@ -16,6 +17,7 @@ const joinFromUrl = () => new URLSearchParams(window.location.search).get("join"
  *  these, so there is no gate to get past. */
 export function ParentsApp({ api }: { api: CloudApi }) {
   useEffect(() => startIdleSpotlightObserver(), []);
+  useEffect(() => installFeedback(), []);
   const token = useToken("parent");
   const [firebaseIn, setFirebaseIn] = useState(false);
   const [booting, setBooting] = useState(realAuth);
@@ -77,20 +79,26 @@ export function ParentSignIn({
   const [email, setEmail] = useState("");
   const [join, setJoin] = useState(initialJoin);
   const demo = useDemoLogins();
-  const [msg, setMsg] = useState("");
+  const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
+  const [sending, setSending] = useState(false);
   return (
     <div className="cloud">
       <form
         className="cloud-card"
         onSubmit={async (e) => {
           e.preventDefault();
-          setMsg("");
+          setMsg(null);
           if (!realAuth) return onDevSignIn(email.trim(), join.trim());
+          setSending(true);
           try {
             await sendSignInLink(email.trim());
-            setMsg("שלחנו קישור למייל. פתחו אותו במכשיר הזה");
+            feedback.success("small");
+            setMsg({ text: "שלחנו קישור למייל. פתחו אותו במכשיר הזה", ok: true });
           } catch {
-            setMsg("לא הצלחנו לשלוח. נסו שוב");
+            feedback.fail();
+            setMsg({ text: "לא הצלחנו לשלוח. נסו שוב", ok: false });
+          } finally {
+            setSending(false);
           }
         }}
       >
@@ -98,10 +106,10 @@ export function ParentSignIn({
         <h1>אפליקציית ההורים</h1>
         <p className="cloud-lead">מנוי אחד לכל הבית. מחברים את הילדים ועוקבים אחרי התרגול.</p>
         <label htmlFor="parent-email">מייל</label>
-        <input id="parent-email" className="cloud-input" type="email" dir="ltr" required value={email} onChange={(e) => setEmail(e.target.value)} />
+        <input id="parent-email" className="cloud-input" type="email" dir="ltr" autoComplete="email" autoCapitalize="none" spellCheck={false} required value={email} onChange={(e) => setEmail(e.target.value)} />
         <label htmlFor="join-code">קוד הצטרפות (להורה השני, אם יש)</label>
         <input id="join-code" className="cloud-input" inputMode="numeric" maxLength={4} dir="ltr" value={join} onChange={(e) => setJoin(e.target.value.replace(/\D/g, ""))} />
-        <button className="cloud-btn primary" type="submit">{realAuth ? "שלחו לי קישור למייל" : "כניסה"}</button>
+        <button className="cloud-btn primary" type="submit" disabled={sending} aria-busy={sending}>{sending ? "שולחים…" : realAuth ? "שלחו לי קישור למייל" : "כניסה"}</button>
         {realAuth && (
           <button
             type="button"
@@ -111,7 +119,8 @@ export function ParentSignIn({
                 await signInWithGoogle();
                 onFirebaseSignedIn(join.trim());
               } catch {
-                setMsg("הכניסה עם גוגל לא הצליחה");
+                feedback.fail();
+                setMsg({ text: "הכניסה עם גוגל לא הצליחה", ok: false });
               }
             }}
           >
@@ -119,7 +128,7 @@ export function ParentSignIn({
           </button>
         )}
         {!realAuth && <p className="cloud-footnote">מצב בדיקה: אין סיסמה. בגרסה האמיתית נכנסים עם גוגל או קישור במייל.</p>}
-        <div className="cloud-toast" role="status">{msg}</div>
+        <div className={msg && !msg.ok ? "cloud-error" : "cloud-toast"} role={msg && !msg.ok ? "alert" : "status"}>{msg?.text}</div>
         <InstallHint appName="אפליקציית ההורים" />
         {demo && (
           <div className="cloud-demo-logins" role="group" aria-label="כניסה מהירה לדמו">

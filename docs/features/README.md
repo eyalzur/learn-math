@@ -6,6 +6,7 @@ architecture, implementation notes, and tests.
 
 | Feature | Status | Details |
 |---|---|---|
+| שיפור UI לשתי האפליקציות החדשות — משוב, ניגודיות, נגישות | 🟢 done — מוזג ל-main (2026-11-28); בדיקה במכשיר פתוחה | [status](./ui-polish-two-apps/status.md) |
 | מנוי הורים — שתי אפליקציות (ילדים והורים), שרת וקודי חיבור | 🟢 done — מוזג ל-main (לא פעיל עד הגדרת שרת) | [status](./parent-subscription/status.md) |
 | תרגול שנקטע חוזר לנקודה המדויקת | 🟢 done — מוזג ל-main | [status](./resume-interrupted-practice/status.md) |
 | פרופיל תלמיד ואווטר | 🟢 done — מוזג ל-main | [status](./student-profile-avatar/status.md) |
