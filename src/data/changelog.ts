@@ -19,6 +19,11 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.68.2",
+    icon: "🛠️",
+    description: "תיקון פריסת השרת: הבנייה לא מצאה את החבילות של השרת. עכשיו הן מותקנות לפני הבנייה.",
+  },
+  {
     version: "1.68.1",
     icon: "🛠️",
     description:
