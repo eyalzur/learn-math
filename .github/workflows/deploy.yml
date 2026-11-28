@@ -54,7 +54,7 @@ jobs:
         run: |
           npx vite build --outDir dist-next
           mv dist-next dist/next
-
+      - uses: actions/upload-pages-artifact@v4
         with:
           path: dist
 
