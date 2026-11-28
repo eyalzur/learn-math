@@ -57,6 +57,7 @@ jobs:
           cache: npm
       - run: npm ci
         if: steps.setup.outputs.ready == 'true'
+      - run: npm ci --prefix api
       - run: npm run api:build
         if: steps.setup.outputs.ready == 'true'
 
