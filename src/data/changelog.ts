@@ -19,6 +19,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.68.1",
+    icon: "🛠️",
+    description:
+      "תיקון פריסה: קובץ הפריסה לאתר נשבר ולכן האתר לא התעדכן מאז המיזוג האחרון. עכשיו הפריסה חוזרת לעבוד.",
+  },
+  {
     version: "1.68.0",
     icon: "🎨",
     description:
